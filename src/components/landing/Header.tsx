@@ -9,13 +9,13 @@ const Header = () => {
         </span>
         
         <nav className="hidden md:flex items-center gap-10">
-          <a href="#como-funciona" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
+          <a href="/#como-funciona" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Cómo funciona
           </a>
-          <a href="#precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
+          <a href="/precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Precios
           </a>
-          <a href="#faq" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
+          <a href="/#faq" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             FAQ
           </a>
         </nav>
