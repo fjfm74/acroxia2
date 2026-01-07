@@ -14,6 +14,7 @@ import {
   CalendarX,
   ArrowRight
 } from "lucide-react";
+import FadeIn from "@/components/animations/FadeIn";
 
 const categories = [
   {
@@ -184,62 +185,64 @@ const FAQCategories = () => {
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto">
           {categories.map((category, categoryIndex) => (
-            <div key={category.id} className="mb-16 last:mb-0">
-              {/* Category Header */}
-              <div className="flex items-start gap-4 mb-8">
-                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
-                  <category.icon className="w-6 h-6 text-foreground" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-2xl md:text-3xl font-semibold text-foreground mb-2">
-                    {category.title}
-                  </h2>
-                  <p className="text-muted-foreground">
-                    {category.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* FAQs Accordion */}
-              <Accordion type="single" collapsible className="space-y-3">
-                {category.faqs.map((faq, faqIndex) => (
-                  <AccordionItem
-                    key={faqIndex}
-                    value={`${category.id}-${faqIndex}`}
-                    className="border border-border rounded-xl px-6 bg-background data-[state=open]:bg-muted/30"
-                  >
-                    <AccordionTrigger className="text-left font-medium text-foreground hover:no-underline py-5 text-base">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-
-              {/* CTA after each category */}
-              {categoryIndex === 1 && (
-                <div className="mt-8 p-6 bg-muted rounded-2xl border border-border">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div>
-                      <p className="font-medium text-foreground mb-1">
-                        ¿Tu contrato tiene cláusulas abusivas?
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Analízalo gratis en menos de 2 minutos con nuestra IA
-                      </p>
-                    </div>
-                    <Button asChild className="rounded-full px-6">
-                      <Link to="/">
-                        Analizar mi contrato
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
+            <FadeIn key={category.id} delay={categoryIndex * 0.1}>
+              <div className="mb-16 last:mb-0">
+                {/* Category Header */}
+                <div className="flex items-start gap-4 mb-8">
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                    <category.icon className="w-6 h-6 text-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="font-serif text-2xl md:text-3xl font-semibold text-foreground mb-2">
+                      {category.title}
+                    </h2>
+                    <p className="text-muted-foreground">
+                      {category.description}
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
+
+                {/* FAQs Accordion */}
+                <Accordion type="single" collapsible className="space-y-3">
+                  {category.faqs.map((faq, faqIndex) => (
+                    <AccordionItem
+                      key={faqIndex}
+                      value={`${category.id}-${faqIndex}`}
+                      className="border border-border rounded-xl px-6 bg-background data-[state=open]:bg-muted/30"
+                    >
+                      <AccordionTrigger className="text-left font-medium text-foreground hover:no-underline py-5 text-base">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+
+                {/* CTA after each category */}
+                {categoryIndex === 1 && (
+                  <div className="mt-8 p-6 bg-muted rounded-2xl border border-border">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium text-foreground mb-1">
+                          ¿Tu contrato tiene cláusulas abusivas?
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Analízalo gratis en menos de 2 minutos con nuestra IA
+                        </p>
+                      </div>
+                      <Button asChild className="rounded-full px-6">
+                        <Link to="/">
+                          Analizar mi contrato
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </FadeIn>
           ))}
         </div>
       </div>

@@ -57,7 +57,7 @@ const Blog = () => {
                       MÁS ARTÍCULOS
                     </span>
                     <div className="grid sm:grid-cols-2 gap-6">
-                      {otherPosts.map((post) => (
+                      {otherPosts.map((post, index) => (
                         <BlogCard
                           key={post.slug}
                           slug={post.slug}
@@ -67,6 +67,7 @@ const Blog = () => {
                           readTime={post.readTime}
                           date={post.date}
                           image={post.image}
+                          index={index}
                         />
                       ))}
                     </div>
