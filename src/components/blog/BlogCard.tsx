@@ -8,18 +8,24 @@ interface BlogCardProps {
   category: string;
   readTime: string;
   date: string;
+  image: string;
   featured?: boolean;
 }
 
-const BlogCard = ({ slug, title, excerpt, category, readTime, date, featured = false }: BlogCardProps) => {
+const BlogCard = ({ slug, title, excerpt, category, readTime, date, image, featured = false }: BlogCardProps) => {
   if (featured) {
     return (
       <Link 
         to={`/blog/${slug}`} 
         className="group block bg-background border border-border rounded-3xl overflow-hidden hover:shadow-lg transition-all duration-300"
       >
-        <div className="aspect-[16/9] bg-muted relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-charcoal/5 to-charcoal/20" />
+        <div className="aspect-[16/9] relative overflow-hidden">
+          <img 
+            src={image} 
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent" />
           <div className="absolute bottom-6 left-6">
             <span className="inline-block bg-background text-foreground text-xs font-medium px-3 py-1.5 rounded-full">
               {category}
@@ -54,8 +60,13 @@ const BlogCard = ({ slug, title, excerpt, category, readTime, date, featured = f
       to={`/blog/${slug}`} 
       className="group block bg-background border border-border rounded-2xl overflow-hidden hover:shadow-md transition-all duration-300"
     >
-      <div className="aspect-[16/10] bg-muted relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-charcoal/5 to-charcoal/15" />
+      <div className="aspect-[16/10] relative overflow-hidden">
+        <img 
+          src={image} 
+          alt={title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 to-transparent" />
         <div className="absolute bottom-4 left-4">
           <span className="inline-block bg-background text-foreground text-xs font-medium px-3 py-1 rounded-full">
             {category}

@@ -1,12 +1,13 @@
 import { Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
     <footer className="bg-muted">
       <div className="container mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
           {/* Brand */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <span className="font-serif text-2xl font-semibold text-foreground block mb-4">
               ACROXIA
             </span>
@@ -24,24 +25,23 @@ const Footer = () => {
             </div>
           </div>
           
-          {/* Links */}
+          {/* Producto */}
           <div>
             <h4 className="font-medium text-foreground mb-4">Producto</h4>
             <ul className="space-y-3">
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cómo funciona</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Precios</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Para empresas</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">API</a></li>
+              <li><a href="/#como-funciona" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cómo funciona</a></li>
+              <li><Link to="/precios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Precios</Link></li>
+              <li><a href="/precios#b2b" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Para empresas</a></li>
             </ul>
           </div>
-          
+
+          {/* Recursos */}
           <div>
-            <h4 className="font-medium text-foreground mb-4">Legal</h4>
+            <h4 className="font-medium text-foreground mb-4">Recursos</h4>
             <ul className="space-y-3">
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Términos de uso</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Política de privacidad</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cookies</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">GDPR</a></li>
+              <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Preguntas frecuentes</Link></li>
+              <li><Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Blog</Link></li>
+              <li><Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Guías y consejos</Link></li>
             </ul>
           </div>
           
@@ -67,7 +67,7 @@ const Footer = () => {
         
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © 2024 ACROXIA. Todos los derechos reservados.
+            © 2025 ACROXIA. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
