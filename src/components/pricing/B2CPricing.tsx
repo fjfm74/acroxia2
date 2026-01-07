@@ -1,0 +1,139 @@
+import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+
+const plans = [
+  {
+    name: "Gratis",
+    price: "0",
+    period: "",
+    description: "Tu primer análisis para descubrir ACROXIA",
+    features: [
+      "1 análisis básico",
+      "Identificación de tipos de cláusulas",
+      "Resumen general del contrato",
+    ],
+    cta: "Empezar gratis",
+    highlighted: false,
+  },
+  {
+    name: "Análisis Único",
+    price: "39,99",
+    period: "",
+    description: "Análisis completo para un contrato específico",
+    features: [
+      "1 análisis completo",
+      "Informe detallado en PDF",
+      "Cláusulas ilegales destacadas",
+      "Recomendaciones personalizadas",
+      "Soporte por email",
+    ],
+    cta: "Analizar contrato",
+    highlighted: false,
+  },
+  {
+    name: "Pack Comparador",
+    price: "79,99",
+    period: "",
+    description: "Ideal para comparar varios pisos antes de decidir",
+    features: [
+      "3 análisis completos",
+      "Comparativa entre contratos",
+      "Informe detallado en PDF",
+      "Cláusulas ilegales destacadas",
+      "Recomendaciones personalizadas",
+      "Soporte prioritario",
+    ],
+    cta: "Comparar contratos",
+    highlighted: true,
+    badge: "Más popular",
+  },
+  {
+    name: "Suscripción Anual",
+    price: "12,99",
+    period: "/año",
+    description: "Para quienes firman contratos frecuentemente",
+    features: [
+      "Análisis ilimitados",
+      "Acceso a todas las funciones",
+      "Historial de análisis",
+      "Alertas de renovación",
+      "Soporte prioritario",
+    ],
+    cta: "Suscribirse",
+    highlighted: false,
+  },
+];
+
+const B2CPricing = () => {
+  return (
+    <section className="py-24 bg-background">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          <p className="text-sm font-medium text-charcoal/60 uppercase tracking-widest mb-4">
+            Para inquilinos
+          </p>
+          <h2 className="font-serif text-4xl md:text-5xl font-semibold text-charcoal">
+            Protege tu próximo alquiler
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative bg-white rounded-2xl p-8 transition-all duration-300 hover:shadow-lg ${
+                plan.highlighted
+                  ? "ring-2 ring-charcoal shadow-xl"
+                  : "border border-charcoal/10 shadow-sm"
+              }`}
+            >
+              {plan.badge && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-charcoal text-cream text-xs font-medium px-4 py-1.5 rounded-full">
+                    {plan.badge}
+                  </span>
+                </div>
+              )}
+
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-charcoal mb-2">
+                  {plan.name}
+                </h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-serif text-4xl font-semibold text-charcoal">
+                    €{plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className="text-charcoal/60 text-sm">{plan.period}</span>
+                  )}
+                </div>
+                <p className="text-sm text-charcoal/60 mt-3">{plan.description}</p>
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <Check className="w-4 h-4 text-charcoal mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-charcoal/80">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                className={`w-full rounded-full font-medium ${
+                  plan.highlighted
+                    ? "bg-charcoal text-cream hover:bg-charcoal/90"
+                    : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
+                }`}
+              >
+                {plan.cta}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default B2CPricing;
