@@ -1,0 +1,87 @@
+import { Shield, Mail, Phone, MapPin } from "lucide-react";
+
+const Footer = () => {
+  return (
+    <footer className="bg-primary text-primary-foreground">
+      <div className="container mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* Brand */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+                <Shield className="w-6 h-6 text-accent-foreground" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight">ACROXIA</span>
+            </div>
+            <p className="text-primary-foreground/70 text-sm leading-relaxed mb-6">
+              Tu escudo legal contra contratos de alquiler abusivos. 
+              Análisis con IA en menos de 2 minutos.
+            </p>
+            <div className="flex items-center gap-4">
+              <a href="#" className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+              </a>
+              <a href="#" className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+              </a>
+            </div>
+          </div>
+          
+          {/* Links */}
+          <div>
+            <h4 className="font-semibold text-lg mb-4">Producto</h4>
+            <ul className="space-y-3">
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">Cómo funciona</a></li>
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">Precios</a></li>
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">Para empresas</a></li>
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">API</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold text-lg mb-4">Legal</h4>
+            <ul className="space-y-3">
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">Términos de uso</a></li>
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">Política de privacidad</a></li>
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">Cookies</a></li>
+              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">GDPR</a></li>
+            </ul>
+          </div>
+          
+          {/* Contact */}
+          <div>
+            <h4 className="font-semibold text-lg mb-4">Contacto</h4>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-3 text-primary-foreground/70 text-sm">
+                <Mail className="w-4 h-4" />
+                <span>hola@acroxia.com</span>
+              </li>
+              <li className="flex items-center gap-3 text-primary-foreground/70 text-sm">
+                <Phone className="w-4 h-4" />
+                <span>+34 900 000 000</span>
+              </li>
+              <li className="flex items-start gap-3 text-primary-foreground/70 text-sm">
+                <MapPin className="w-4 h-4 mt-0.5" />
+                <span>Barcelona, España</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-primary-foreground/60 text-sm">
+            © 2024 ACROXIA. Todos los derechos reservados.
+          </p>
+          <div className="flex items-center gap-6">
+            <span className="text-primary-foreground/60 text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-400"></span>
+              Todos los sistemas operativos
+            </span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
