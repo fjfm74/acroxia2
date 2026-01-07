@@ -5,6 +5,7 @@ export interface BlogPost {
   category: string;
   readTime: string;
   date: string;
+  image: string;
   content: string;
   metaDescription: string;
   keywords: string[];
@@ -18,6 +19,7 @@ export const blogPosts: BlogPost[] = [
     category: "Cláusulas Abusivas",
     readTime: "8 min",
     date: "5 Enero, 2025",
+    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&q=80",
     metaDescription: "Guía completa sobre las 13 cláusulas abusivas más frecuentes en contratos de alquiler en España 2025. Aprende a identificarlas y reclamar.",
     keywords: ["cláusulas abusivas contrato alquiler", "cláusulas ilegales alquiler", "contrato alquiler ilegal"],
     content: `
@@ -102,6 +104,7 @@ El primer análisis es **completamente gratis**.
     category: "Fianza",
     readTime: "6 min",
     date: "3 Enero, 2025",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80",
     metaDescription: "Guía paso a paso para recuperar tu fianza de alquiler si el casero no quiere devolverla. Incluye plantilla de burofax y plazos legales 2025.",
     keywords: ["recuperar fianza alquiler", "casero no devuelve fianza", "reclamar fianza alquiler"],
     content: `
@@ -197,6 +200,7 @@ Para cantidades menores y casos claros, **puedes hacerlo tú mismo** con el proc
     category: "Subida Alquiler",
     readTime: "5 min",
     date: "1 Enero, 2025",
+    image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1200&q=80",
     metaDescription: "Guía completa sobre el índice IRAV 2025: cuánto puede subir tu alquiler, cómo calcularlo y qué hacer ante subidas ilegales.",
     keywords: ["subida alquiler 2025", "índice IRAV", "cuánto puede subir el alquiler", "IRAV alquiler"],
     content: `

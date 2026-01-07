@@ -46,6 +46,7 @@ const Blog = () => {
                       category={featuredPost.category}
                       readTime={featuredPost.readTime}
                       date={featuredPost.date}
+                      image={featuredPost.image}
                       featured
                     />
                   </div>
@@ -65,6 +66,7 @@ const Blog = () => {
                           category={post.category}
                           readTime={post.readTime}
                           date={post.date}
+                          image={post.image}
                         />
                       ))}
                     </div>
