@@ -7,6 +7,7 @@ import BlogSidebar from "@/components/blog/BlogSidebar";
 import { Button } from "@/components/ui/button";
 import { getPostBySlug, blogPosts } from "@/data/blogPosts";
 import ReactMarkdown from "react-markdown";
+import FadeIn from "@/components/animations/FadeIn";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -100,22 +101,28 @@ const BlogPost = () => {
           <section className="bg-muted pb-12 pt-8">
             <div className="container mx-auto px-6">
               <div className="max-w-4xl mx-auto text-center">
-                <span className="inline-block bg-background text-foreground text-sm font-medium px-4 py-1.5 rounded-full mb-6">
-                  {post.category}
-                </span>
-                <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6 leading-tight">
-                  {post.title}
-                </h1>
-                <div className="flex flex-wrap items-center justify-center gap-6 text-muted-foreground">
-                  <span className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    {post.date}
+                <FadeIn>
+                  <span className="inline-block bg-background text-foreground text-sm font-medium px-4 py-1.5 rounded-full mb-6">
+                    {post.category}
                   </span>
-                  <span className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    {post.readTime} de lectura
-                  </span>
-                </div>
+                </FadeIn>
+                <FadeIn delay={0.1}>
+                  <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6 leading-tight">
+                    {post.title}
+                  </h1>
+                </FadeIn>
+                <FadeIn delay={0.2}>
+                  <div className="flex flex-wrap items-center justify-center gap-6 text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      {post.date}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      {post.readTime} de lectura
+                    </span>
+                  </div>
+                </FadeIn>
               </div>
             </div>
           </section>
@@ -123,15 +130,17 @@ const BlogPost = () => {
           {/* Featured Image */}
           <section className="bg-muted pb-16">
             <div className="container mx-auto px-6">
-              <div className="max-w-5xl mx-auto">
-                <div className="aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
-                  <img 
-                    src={post.image} 
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                  />
+              <FadeIn delay={0.3}>
+                <div className="max-w-5xl mx-auto">
+                  <div className="aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
+                    <img 
+                      src={post.image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
-              </div>
+              </FadeIn>
             </div>
           </section>
 
@@ -141,90 +150,96 @@ const BlogPost = () => {
               <div className="grid lg:grid-cols-3 gap-12">
                 {/* Main Content */}
                 <article className="lg:col-span-2">
-                  <div className="prose prose-lg max-w-none 
-                    prose-headings:font-serif prose-headings:text-foreground prose-headings:font-semibold
-                    prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:pb-3 prose-h2:border-b prose-h2:border-border
-                    prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4
-                    prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6
-                    prose-strong:text-foreground prose-strong:font-semibold
-                    prose-li:text-muted-foreground prose-li:leading-relaxed
-                    prose-ul:my-6 prose-ol:my-6
-                    prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline
-                    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-muted prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-foreground
-                    prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
-                  ">
-                    <ReactMarkdown
-                      components={{
-                        ul: ({ children }) => (
-                          <ul className="space-y-3 my-6">
-                            {children}
-                          </ul>
-                        ),
-                        li: ({ children }) => (
-                          <li className="flex items-start gap-3 text-muted-foreground">
-                            <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span>{children}</span>
-                          </li>
-                        ),
-                      }}
-                    >
-                      {post.content}
-                    </ReactMarkdown>
-                  </div>
+                  <FadeIn delay={0.4}>
+                    <div className="prose prose-lg max-w-none 
+                      prose-headings:font-serif prose-headings:text-foreground prose-headings:font-semibold
+                      prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:pb-3 prose-h2:border-b prose-h2:border-border
+                      prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4
+                      prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6
+                      prose-strong:text-foreground prose-strong:font-semibold
+                      prose-li:text-muted-foreground prose-li:leading-relaxed
+                      prose-ul:my-6 prose-ol:my-6
+                      prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                      prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-muted prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-foreground
+                      prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
+                    ">
+                      <ReactMarkdown
+                        components={{
+                          ul: ({ children }) => (
+                            <ul className="space-y-3 my-6">
+                              {children}
+                            </ul>
+                          ),
+                          li: ({ children }) => (
+                            <li className="flex items-start gap-3 text-muted-foreground">
+                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span>{children}</span>
+                            </li>
+                          ),
+                        }}
+                      >
+                        {post.content}
+                      </ReactMarkdown>
+                    </div>
+                  </FadeIn>
 
                   {/* CTA after article */}
-                  <div className="mt-12 p-8 bg-foreground text-background rounded-2xl">
-                    <h3 className="font-serif text-2xl font-semibold mb-4">
-                      ¿Quieres analizar tu contrato?
-                    </h3>
-                    <p className="text-background/70 mb-6">
-                      Nuestra IA detecta cláusulas abusivas en menos de 2 minutos. 
-                      El primer análisis es gratis.
-                    </p>
-                    <Button 
-                      asChild 
-                      variant="secondary" 
-                      className="rounded-full bg-background text-foreground hover:bg-background/90"
-                    >
-                      <Link to="/">
-                        Analizar mi contrato gratis
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
+                  <FadeIn delay={0.5}>
+                    <div className="mt-12 p-8 bg-foreground text-background rounded-2xl">
+                      <h3 className="font-serif text-2xl font-semibold mb-4">
+                        ¿Quieres analizar tu contrato?
+                      </h3>
+                      <p className="text-background/70 mb-6">
+                        Nuestra IA detecta cláusulas abusivas en menos de 2 minutos. 
+                        El primer análisis es gratis.
+                      </p>
+                      <Button 
+                        asChild 
+                        variant="secondary" 
+                        className="rounded-full bg-background text-foreground hover:bg-background/90"
+                      >
+                        <Link to="/">
+                          Analizar mi contrato gratis
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </FadeIn>
 
                   {/* Related Articles */}
                   {relatedPosts.length > 0 && (
-                    <div className="mt-16">
-                      <h3 className="font-serif text-2xl font-semibold text-foreground mb-8">
-                        Artículos relacionados
-                      </h3>
-                      <div className="grid sm:grid-cols-2 gap-6">
-                        {relatedPosts.map((relatedPost) => (
-                          <Link
-                            key={relatedPost.slug}
-                            to={`/blog/${relatedPost.slug}`}
-                            className="group block overflow-hidden bg-muted rounded-xl hover:shadow-md transition-all"
-                          >
-                            <div className="aspect-[16/9] overflow-hidden">
-                              <img 
-                                src={relatedPost.image} 
-                                alt={relatedPost.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                            <div className="p-6">
-                              <span className="text-xs text-muted-foreground mb-2 block">
-                                {relatedPost.category}
-                              </span>
-                              <h4 className="font-serif text-lg font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                                {relatedPost.title}
-                              </h4>
-                            </div>
-                          </Link>
-                        ))}
+                    <FadeIn delay={0.6}>
+                      <div className="mt-16">
+                        <h3 className="font-serif text-2xl font-semibold text-foreground mb-8">
+                          Artículos relacionados
+                        </h3>
+                        <div className="grid sm:grid-cols-2 gap-6">
+                          {relatedPosts.map((relatedPost) => (
+                            <Link
+                              key={relatedPost.slug}
+                              to={`/blog/${relatedPost.slug}`}
+                              className="group block overflow-hidden bg-muted rounded-xl hover:shadow-md transition-all"
+                            >
+                              <div className="aspect-[16/9] overflow-hidden">
+                                <img 
+                                  src={relatedPost.image} 
+                                  alt={relatedPost.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+                              <div className="p-6">
+                                <span className="text-xs text-muted-foreground mb-2 block">
+                                  {relatedPost.category}
+                                </span>
+                                <h4 className="font-serif text-lg font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                                  {relatedPost.title}
+                                </h4>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    </FadeIn>
                   )}
                 </article>
 

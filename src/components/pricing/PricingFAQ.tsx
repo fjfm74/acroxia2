@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import FadeIn from "@/components/animations/FadeIn";
 
 const faqs = [
   {
@@ -43,31 +44,35 @@ const PricingFAQ = () => {
     <section className="py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl md:text-4xl font-semibold text-charcoal mb-4">
-              Preguntas frecuentes
-            </h2>
-            <p className="text-charcoal/70">
-              Todo lo que necesitas saber sobre nuestros planes
-            </p>
-          </div>
+          <FadeIn>
+            <div className="text-center mb-12">
+              <h2 className="font-serif text-3xl md:text-4xl font-semibold text-charcoal mb-4">
+                Preguntas frecuentes
+              </h2>
+              <p className="text-charcoal/70">
+                Todo lo que necesitas saber sobre nuestros planes
+              </p>
+            </div>
+          </FadeIn>
 
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, index) => (
-              <AccordionItem
-                key={index}
-                value={`item-${index}`}
-                className="border border-charcoal/10 rounded-xl px-6 data-[state=open]:bg-muted/50"
-              >
-                <AccordionTrigger className="text-left font-medium text-charcoal hover:no-underline py-5">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-charcoal/70 pb-5">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <FadeIn delay={0.1}>
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqs.map((faq, index) => (
+                <AccordionItem
+                  key={index}
+                  value={`item-${index}`}
+                  className="border border-charcoal/10 rounded-xl px-6 data-[state=open]:bg-muted/50"
+                >
+                  <AccordionTrigger className="text-left font-medium text-charcoal hover:no-underline py-5">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-charcoal/70 pb-5">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </FadeIn>
         </div>
       </div>
     </section>

@@ -1,3 +1,5 @@
+import FadeIn from "@/components/animations/FadeIn";
+
 const steps = [
   {
     number: "01",
@@ -23,38 +25,42 @@ const HowItWorksSection = () => {
   return (
     <section id="como-funciona" className="py-32 bg-background">
       <div className="container mx-auto px-6">
-        <div className="max-w-3xl mb-20">
-          <p className="text-sm font-medium text-muted-foreground mb-4 tracking-wide uppercase">
-            Proceso simple
-          </p>
-          <h2 className="font-serif text-4xl md:text-5xl font-medium text-foreground leading-tight">
-            Cómo funciona
-          </h2>
-        </div>
+        <FadeIn>
+          <div className="max-w-3xl mb-20">
+            <p className="text-sm font-medium text-muted-foreground mb-4 tracking-wide uppercase">
+              Proceso simple
+            </p>
+            <h2 className="font-serif text-4xl md:text-5xl font-medium text-foreground leading-tight">
+              Cómo funciona
+            </h2>
+          </div>
+        </FadeIn>
         
         <div className="grid md:grid-cols-3 gap-8">
           {steps.map((step, index) => (
-            <div key={index} className="group">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-8">
-                <img
-                  src={step.image}
-                  alt={step.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+            <FadeIn key={index} delay={index * 0.15}>
+              <div className="group">
+                <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-8">
+                  <img
+                    src={step.image}
+                    alt={step.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                
+                <span className="font-serif text-5xl font-medium text-muted-foreground/30 block mb-4">
+                  {step.number}
+                </span>
+                
+                <h3 className="font-serif text-2xl font-medium text-foreground mb-3">
+                  {step.title}
+                </h3>
+                
+                <p className="text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
               </div>
-              
-              <span className="font-serif text-5xl font-medium text-muted-foreground/30 block mb-4">
-                {step.number}
-              </span>
-              
-              <h3 className="font-serif text-2xl font-medium text-foreground mb-3">
-                {step.title}
-              </h3>
-              
-              <p className="text-muted-foreground leading-relaxed">
-                {step.description}
-              </p>
-            </div>
+            </FadeIn>
           ))}
         </div>
       </div>
