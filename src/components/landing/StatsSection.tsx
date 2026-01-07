@@ -1,57 +1,47 @@
-import { TrendingUp, Users, Gavel, Clock } from "lucide-react";
-
 const stats = [
   {
-    icon: TrendingUp,
     value: "632.369",
-    label: "Contratos de alquiler",
-    description: "vencerán en España en 2026",
+    context: "contratos de alquiler vencerán en España en 2026",
   },
   {
-    icon: Users,
     value: "73%",
-    label: "De inquilinos",
-    description: "desconocen sus derechos según la LAU",
+    context: "de inquilinos desconocen sus derechos según la LAU",
   },
   {
-    icon: Gavel,
     value: "€850",
-    label: "Coste medio",
-    description: "de una consulta legal tradicional",
+    context: "es el coste medio de una consulta legal tradicional",
   },
   {
-    icon: Clock,
     value: "<2 min",
-    label: "Tiempo de análisis",
-    description: "con tecnología IA de ACROXIA",
+    context: "es el tiempo de análisis con tecnología IA de ACROXIA",
   },
 ];
 
 const StatsSection = () => {
   return (
-    <section className="py-20 bg-background">
+    <section className="py-32 bg-muted">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+        <div className="max-w-3xl mb-20">
+          <h2 className="font-serif text-4xl md:text-5xl font-medium text-foreground leading-tight mb-6">
             El problema es más grande de lo que piensas
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Miles de inquilinos en España firman contratos con cláusulas abusivas sin saberlo
+          <p className="text-lg text-muted-foreground">
+            Miles de inquilinos en España firman contratos con cláusulas abusivas sin saberlo. Los datos hablan por sí solos.
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 gap-x-16 gap-y-16">
           {stats.map((stat, index) => (
             <div 
               key={index}
-              className="group relative bg-card rounded-2xl p-8 border border-border hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300"
+              className="border-t border-border pt-8"
             >
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-accent/10 transition-colors">
-                <stat.icon className="w-7 h-7 text-primary group-hover:text-accent transition-colors" />
-              </div>
-              <p className="text-4xl font-bold text-foreground mb-2">{stat.value}</p>
-              <p className="text-lg font-semibold text-foreground mb-1">{stat.label}</p>
-              <p className="text-muted-foreground text-sm">{stat.description}</p>
+              <p className="font-serif text-6xl md:text-7xl font-medium text-foreground mb-4">
+                {stat.value}
+              </p>
+              <p className="text-muted-foreground text-lg max-w-sm">
+                {stat.context}
+              </p>
             </div>
           ))}
         </div>
