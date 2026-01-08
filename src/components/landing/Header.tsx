@@ -57,7 +57,7 @@ const Header = () => {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[280px] bg-cream border-l border-charcoal/10">
+          <SheetContent side="right" className="w-[300px] bg-cream border-l border-border px-6">
             <nav className="flex flex-col gap-6 mt-8">
               <a 
                 href="/#como-funciona" 
