@@ -6,17 +6,57 @@ import FAQCategories from "@/components/faq/FAQCategories";
 import FAQContactCTA from "@/components/faq/FAQContactCTA";
 
 const FAQ = () => {
-  // Schema markup for FAQPage
+  // Schema markup for FAQPage - optimizado para Google AI Overviews 2026
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
       {
         "@type": "Question",
+        "name": "¿Cuánto puede subir mi alquiler en 2026?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Desde enero de 2026, las subidas de alquiler están limitadas al índice IRAV (Índice de Referencia de Arrendamientos de Vivienda), que ronda el 2-3% anual. Tu casero no puede subir más de este porcentaje en la actualización anual."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el IRAV y cómo afecta a mi alquiler?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El IRAV es el índice creado por la Ley de Vivienda para limitar las subidas de alquiler, sustituyendo al IPC. Es más estable (2-3%) y solo aplica en la actualización anual de contratos vigentes de vivienda habitual."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuál es la penalización legal por irme antes de tiempo del alquiler?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "La LAU permite una penalización máxima de 1 mensualidad por cada año que falte por cumplir, prorrateada por meses. Ejemplo: si te faltan 8 meses, la penalización máxima sería 8/12 = 0,67 mensualidades. Cualquier penalización mayor es abusiva."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Tengo que pagar los gastos de comunidad como inquilino?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Solo si está expresamente pactado en el contrato. Si el contrato no dice nada sobre gastos de comunidad, corresponden al propietario. Si hay pacto, debe especificar la cantidad mensual o el porcentaje."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Es legal que el inquilino pague el IBI?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No en vivienda habitual según la LAU. El IBI es un impuesto sobre la propiedad y corresponde siempre al propietario. Si tu contrato incluye una cláusula que te obliga a pagar el IBI, esa cláusula es nula."
+        }
+      },
+      {
+        "@type": "Question",
         "name": "¿Cuáles son mis derechos básicos como inquilino en España?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Como inquilino en España tienes derecho a: ocupar la vivienda durante el plazo acordado (mínimo 5 años si el arrendador es persona física, 7 si es jurídica), prórrogas obligatorias, a que te devuelvan la fianza en 30 días, a no pagar gastos de gestión inmobiliaria, y a que el casero realice las reparaciones necesarias para mantener la habitabilidad del inmueble."
+          "text": "Como inquilino tienes derecho a: ocupar la vivienda durante el plazo acordado (mínimo 5 años si el arrendador es persona física, 7 si es jurídica), prórrogas obligatorias, devolución de fianza en 30 días, y a no pagar gastos de gestión inmobiliaria."
         }
       },
       {
@@ -24,7 +64,7 @@ const FAQ = () => {
         "name": "¿Qué es una cláusula abusiva en un contrato de alquiler?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Una cláusula abusiva es aquella que va contra la Ley de Arrendamientos Urbanos (LAU) o que genera un desequilibrio importante entre los derechos del inquilino y el arrendador. Estas cláusulas son nulas de pleno derecho, es decir, no tienen ningún efecto legal aunque las hayas firmado."
+          "text": "Una cláusula abusiva es aquella que va contra la LAU o genera un desequilibrio importante entre inquilino y arrendador. Son nulas de pleno derecho: no tienen efecto legal aunque las hayas firmado."
         }
       },
       {
@@ -37,10 +77,10 @@ const FAQ = () => {
       },
       {
         "@type": "Question",
-        "name": "¿Cuánto puede subir mi alquiler en 2025?",
+        "name": "¿Quién paga las derramas extraordinarias en un alquiler?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Desde enero de 2025, las subidas de alquiler están limitadas al índice IRAV (Índice de Referencia de Arrendamientos de Vivienda), que sustituye al IPC. El IRAV actualmente ronda el 2-3% anual."
+          "text": "Las derramas para mejoras o reparaciones estructurales corresponden al propietario, no al inquilino. Solo podrían repercutirte servicios que disfrutes directamente, y aun así es discutible legalmente."
         }
       },
       {
@@ -48,7 +88,7 @@ const FAQ = () => {
         "name": "¿Puede el casero echarme antes de que termine el contrato?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Solo en casos muy específicos: impago de rentas, daños graves a la vivienda, actividades molestas o ilícitas, subarriendo no autorizado, o si necesita la vivienda para sí mismo o familiares de primer grado."
+          "text": "Solo en casos específicos: impago de rentas, daños graves a la vivienda, actividades molestas o ilícitas, subarriendo no autorizado, o si necesita la vivienda para sí mismo o familiares de primer grado."
         }
       }
     ]
@@ -57,14 +97,14 @@ const FAQ = () => {
   return (
     <>
       <Helmet>
-        <title>Preguntas Frecuentes sobre Alquiler en España | ACROXIA</title>
+        <title>Preguntas Frecuentes sobre Alquiler en España 2026 | ACROXIA</title>
         <meta 
           name="description" 
-          content="Resuelve tus dudas sobre alquiler en España: derechos del inquilino, cláusulas abusivas, fianzas, subidas de renta y más. Respuestas actualizadas a 2025." 
+          content="Resuelve tus dudas sobre alquiler en España: IRAV 2026, penalizaciones por resolución anticipada, gastos de comunidad, derechos del inquilino y cláusulas abusivas. Actualizado enero 2026." 
         />
         <meta 
           name="keywords" 
-          content="preguntas alquiler españa, derechos inquilino, cláusulas abusivas contrato, fianza alquiler, subida alquiler 2025, LAU" 
+          content="preguntas alquiler españa 2026, IRAV 2026, subida alquiler, gastos comunidad inquilino, penalización alquiler, derechos inquilino, cláusulas abusivas, fianza alquiler, LAU 2026" 
         />
         <link rel="canonical" href="https://acroxia.com/faq" />
         <script type="application/ld+json">
