@@ -473,10 +473,11 @@ serve(async (req) => {
     console.log(`RAG search query: ${searchQuery}`);
     console.log(`Detected territory: ${territorialFilter || "none"}`);
 
-    // Search legal knowledge base with enhanced query
+    // Search legal knowledge base with enhanced query and territorial filter
     const { data: legalChunks } = await supabase.rpc("search_legal_chunks", {
       search_query: searchQuery,
       match_count: 25,
+      territorial_filter: territorialFilter,
     });
 
     // Build legal context with verification metadata
