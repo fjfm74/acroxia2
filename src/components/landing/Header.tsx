@@ -15,6 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { User, LogOut, FileText, LayoutDashboard, Menu } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const Header = () => {
   const { user, profile, signOut } = useAuth();
@@ -136,18 +137,9 @@ const Header = () => {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link 
-                    to="/login" 
-                    onClick={closeMobileMenu}
-                    className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
-                  >
-                    Iniciar sesión
-                  </Link>
-                  <Button asChild className="bg-foreground text-background hover:bg-foreground/90 rounded-full text-sm font-medium">
-                    <Link to="/registro" onClick={closeMobileMenu}>Registrarse</Link>
-                  </Button>
-                </>
+                <Badge variant="secondary" className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-2 text-center">
+                  Próximamente
+                </Badge>
               )}
             </div>
           </SheetContent>
@@ -191,14 +183,9 @@ const Header = () => {
               </Button>
             </>
           ) : (
-            <>
-              <Button variant="ghost" asChild className="text-foreground/70 hover:text-foreground hover:bg-transparent text-sm font-medium">
-                <Link to="/login">Iniciar sesión</Link>
-              </Button>
-              <Button asChild className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6 text-sm font-medium">
-                <Link to="/registro">Analizar contrato</Link>
-              </Button>
-            </>
+            <Badge variant="secondary" className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-1.5">
+              Próximamente
+            </Badge>
           )}
         </div>
       </div>
