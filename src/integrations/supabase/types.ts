@@ -199,6 +199,7 @@ export type Database = {
           is_active: boolean
           jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"] | null
           source: string | null
+          territorial_entity: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
           updated_at: string
@@ -214,6 +215,7 @@ export type Database = {
             | Database["public"]["Enums"]["legal_jurisdiction"]
             | null
           source?: string | null
+          territorial_entity?: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
           updated_at?: string
@@ -229,6 +231,7 @@ export type Database = {
             | Database["public"]["Enums"]["legal_jurisdiction"]
             | null
           source?: string | null
+          territorial_entity?: string | null
           title?: string
           type?: Database["public"]["Enums"]["legal_doc_type"]
           updated_at?: string
@@ -345,25 +348,54 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
-      search_legal_chunks: {
-        Args: { match_count?: number; search_query: string }
-        Returns: {
-          article_reference: string
-          content: string
-          document_id: string
-          document_title: string
-          document_type: Database["public"]["Enums"]["legal_doc_type"]
-          id: string
-          rank: number
-          section_title: string
-        }[]
-      }
+      search_legal_chunks:
+        | {
+            Args: { match_count?: number; search_query: string }
+            Returns: {
+              article_reference: string
+              content: string
+              document_id: string
+              document_title: string
+              document_type: Database["public"]["Enums"]["legal_doc_type"]
+              id: string
+              rank: number
+              section_title: string
+            }[]
+          }
+        | {
+            Args: {
+              match_count?: number
+              search_query: string
+              territorial_filter?: string
+            }
+            Returns: {
+              article_reference: string
+              content: string
+              document_id: string
+              document_title: string
+              document_type: Database["public"]["Enums"]["legal_doc_type"]
+              id: string
+              jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"]
+              rank: number
+              section_title: string
+              territorial_entity: string
+            }[]
+          }
     }
     Enums: {
       app_role: "admin" | "user"
       blog_post_status: "draft" | "published"
       contract_status: "pending" | "processing" | "completed" | "failed"
-      legal_doc_type: "ley" | "boe" | "jurisprudencia" | "guia" | "decreto"
+      legal_doc_type:
+        | "ley"
+        | "boe"
+        | "jurisprudencia"
+        | "guia"
+        | "decreto"
+        | "real_decreto"
+        | "orden_ministerial"
+        | "sentencia"
+        | "otro"
       legal_jurisdiction:
         | "jurisprudencia"
         | "estatal"
@@ -500,7 +532,17 @@ export const Constants = {
       app_role: ["admin", "user"],
       blog_post_status: ["draft", "published"],
       contract_status: ["pending", "processing", "completed", "failed"],
-      legal_doc_type: ["ley", "boe", "jurisprudencia", "guia", "decreto"],
+      legal_doc_type: [
+        "ley",
+        "boe",
+        "jurisprudencia",
+        "guia",
+        "decreto",
+        "real_decreto",
+        "orden_ministerial",
+        "sentencia",
+        "otro",
+      ],
       legal_jurisdiction: [
         "jurisprudencia",
         "estatal",

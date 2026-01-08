@@ -46,6 +46,7 @@ interface LegalDocument {
   description: string | null;
   type: string;
   jurisdiction: string | null;
+  territorial_entity: string | null;
   source: string | null;
   effective_date: string | null;
   is_active: boolean;
@@ -56,9 +57,20 @@ interface LegalDocument {
 const documentTypes = [
   { value: "ley", label: "Ley" },
   { value: "real_decreto", label: "Real Decreto" },
+  { value: "decreto", label: "Decreto" },
   { value: "orden_ministerial", label: "Orden Ministerial" },
+  { value: "boe", label: "BOE (Publicación)" },
   { value: "sentencia", label: "Sentencia" },
+  { value: "jurisprudencia", label: "Jurisprudencia" },
+  { value: "guia", label: "Guía" },
   { value: "otro", label: "Otro" },
+];
+
+const comunidadesAutonomas = [
+  "Andalucía", "Aragón", "Asturias", "Baleares", "Canarias",
+  "Cantabria", "Castilla-La Mancha", "Castilla y León", "Cataluña",
+  "Comunidad Valenciana", "Extremadura", "Galicia", "La Rioja",
+  "Madrid", "Murcia", "Navarra", "País Vasco", "Ceuta", "Melilla"
 ];
 
 const jurisdictions = [
@@ -92,6 +104,7 @@ const AdminDocuments = () => {
     description: "",
     type: "ley" as string,
     jurisdiction: "estatal" as string,
+    territorial_entity: "",
     source: "",
     effective_date: "",
     file: null as File | null,
@@ -178,8 +191,9 @@ const AdminDocuments = () => {
         .insert({
           title: newDoc.title,
           description: newDoc.description || null,
-          type: newDoc.type as "boe" | "jurisprudencia" | "ley" | "guia" | "decreto",
+          type: newDoc.type as "ley" | "real_decreto" | "decreto" | "orden_ministerial" | "boe" | "sentencia" | "jurisprudencia" | "guia" | "otro",
           jurisdiction: newDoc.jurisdiction as "autonomica" | "estatal" | "jurisprudencia" | "local" | "provincial",
+          territorial_entity: newDoc.territorial_entity || null,
           source: newDoc.source || null,
           effective_date: newDoc.effective_date || null,
           file_path: fileName,
@@ -219,6 +233,7 @@ const AdminDocuments = () => {
         description: "",
         type: "ley",
         jurisdiction: "estatal",
+        territorial_entity: "",
         source: "",
         effective_date: "",
         file: null,
@@ -425,7 +440,7 @@ const AdminDocuments = () => {
                     <Label>Jurisdicción</Label>
                     <Select
                       value={newDoc.jurisdiction}
-                      onValueChange={(value) => setNewDoc({ ...newDoc, jurisdiction: value })}
+                      onValueChange={(value) => setNewDoc({ ...newDoc, jurisdiction: value, territorial_entity: "" })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -440,6 +455,52 @@ const AdminDocuments = () => {
                     </Select>
                   </div>
                 </div>
+
+                {/* Campo condicional de entidad territorial */}
+                {newDoc.jurisdiction === "autonomica" && (
+                  <div className="space-y-2">
+                    <Label>Comunidad Autónoma</Label>
+                    <Select
+                      value={newDoc.territorial_entity}
+                      onValueChange={(value) => setNewDoc({ ...newDoc, territorial_entity: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una comunidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {comunidadesAutonomas.map((ca) => (
+                          <SelectItem key={ca} value={ca}>
+                            {ca}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {newDoc.jurisdiction === "provincial" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="doc-province">Provincia</Label>
+                    <Input
+                      id="doc-province"
+                      value={newDoc.territorial_entity}
+                      onChange={(e) => setNewDoc({ ...newDoc, territorial_entity: e.target.value })}
+                      placeholder="Ej: Barcelona, Valencia..."
+                    />
+                  </div>
+                )}
+
+                {newDoc.jurisdiction === "local" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="doc-municipality">Ayuntamiento</Label>
+                    <Input
+                      id="doc-municipality"
+                      value={newDoc.territorial_entity}
+                      onChange={(e) => setNewDoc({ ...newDoc, territorial_entity: e.target.value })}
+                      placeholder="Ej: Ayuntamiento de Madrid"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="doc-source">Fuente</Label>
@@ -538,7 +599,10 @@ const AdminDocuments = () => {
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                        <Badge variant="outline">{getJurisdictionLabel(doc.jurisdiction)}</Badge>
+                        <Badge variant="outline">
+                          {getJurisdictionLabel(doc.jurisdiction)}
+                          {doc.territorial_entity && ` (${doc.territorial_entity})`}
+                        </Badge>
                         <span>•</span>
                         <span>{doc.chunks_count} fragmentos indexados</span>
                         {doc.effective_date && (
