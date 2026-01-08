@@ -34,7 +34,7 @@ const LegalPageLayout = ({ title, metaDescription, lastUpdated, children }: Lega
                 </p>
               </header>
               
-              <article>
+              <article className="text-foreground leading-relaxed">
                 {children}
               </article>
             </div>
