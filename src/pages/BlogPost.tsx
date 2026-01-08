@@ -5,8 +5,8 @@ import { ArrowLeft, Clock, Calendar, ArrowRight, CheckCircle2 } from "lucide-rea
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import BlogSidebar from "@/components/blog/BlogSidebar";
-import BlogCard from "@/components/blog/BlogCard";
 import TableOfContents from "@/components/blog/TableOfContents";
+import AuthorBox from "@/components/blog/AuthorBox";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
@@ -21,7 +21,10 @@ const BlogPost = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('*')
+        .select(`
+          *,
+          author:authors(*)
+        `)
         .eq('slug', slug)
         .eq('status', 'published')
         .single();
@@ -97,7 +100,7 @@ const BlogPost = () => {
     ? new Date(post.published_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     : '';
 
-  // Article schema
+  // Article schema with E-E-A-T author data
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -106,7 +109,16 @@ const BlogPost = () => {
     "image": post.image,
     "datePublished": post.published_at,
     "dateModified": post.updated_at,
-    "author": {
+    "author": post.author ? {
+      "@type": "Person",
+      "name": post.author.name,
+      "jobTitle": post.author.role,
+      "url": `https://acroxia.com/autores/${post.author.slug}`,
+      "sameAs": [
+        post.author.linkedin_url,
+        post.author.twitter_url
+      ].filter(Boolean)
+    } : {
       "@type": "Organization",
       "name": "ACROXIA"
     },
@@ -270,6 +282,9 @@ const BlogPost = () => {
                       </ReactMarkdown>
                     </div>
                   </FadeIn>
+
+                  {/* Author Box */}
+                  {post.author && <AuthorBox author={post.author} />}
 
                   {/* CTA after article */}
                   <FadeIn delay={0.5}>
