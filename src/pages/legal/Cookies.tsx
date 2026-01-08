@@ -157,8 +157,8 @@ const Cookies = () => {
           <h2 className="font-serif text-2xl font-semibold mb-4">7. Contacto</h2>
           <p className="text-muted-foreground">
             Si tienes alguna pregunta sobre nuestra Política de Cookies, puedes contactarnos en:{" "}
-            <a href="mailto:privacidad@acroxia.com" className="text-primary hover:underline">
-              privacidad@acroxia.com
+            <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">
+              legal@acroxia.com
             </a>
           </p>
         </section>

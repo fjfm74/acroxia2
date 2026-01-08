@@ -148,8 +148,8 @@ const Accesibilidad = () => {
             <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium">Email de accesibilidad</p>
-              <a href="mailto:accesibilidad@acroxia.com" className="text-primary hover:underline">
-                accesibilidad@acroxia.com
+              <a href="mailto:contacto@acroxia.com" className="text-primary hover:underline">
+                contacto@acroxia.com
               </a>
             </div>
           </div>

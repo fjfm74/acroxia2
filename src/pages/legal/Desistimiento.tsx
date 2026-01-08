@@ -10,7 +10,7 @@ const Desistimiento = () => {
 
 A la atención de:
 ACROXIA TECH S.L.
-Email: desistimiento@acroxia.com
+Email: legal@acroxia.com
 
 Por la presente comunico que desisto del contrato de prestación del siguiente servicio:
 
@@ -47,7 +47,7 @@ Lugar: ____________________________
 INSTRUCCIONES DE ENVÍO:
 1. Cumplimente todos los campos marcados con líneas.
 2. Firme y feche el documento.
-3. Envíelo por email a: desistimiento@acroxia.com
+3. Envíelo por email a: legal@acroxia.com
 4. Recibirá confirmación de recepción en 24-48 horas laborables.
 5. El reembolso se procesará en un máximo de 14 días.
 `;
@@ -124,8 +124,8 @@ INSTRUCCIONES DE ENVÍO:
                 <p className="text-sm text-muted-foreground mb-2">
                   Envía el formulario cumplimentado o una comunicación clara a:
                 </p>
-                <a href="mailto:desistimiento@acroxia.com" className="text-primary hover:underline">
-                  desistimiento@acroxia.com
+                <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">
+                  legal@acroxia.com
                 </a>
               </div>
             </div>
@@ -215,8 +215,8 @@ INSTRUCCIONES DE ENVÍO:
           <h2 className="font-serif text-2xl font-semibold mb-4">7. Contacto</h2>
           <p className="text-muted-foreground">
             Para cualquier consulta sobre el derecho de desistimiento:{" "}
-            <a href="mailto:desistimiento@acroxia.com" className="text-primary hover:underline">
-              desistimiento@acroxia.com
+            <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">
+              legal@acroxia.com
             </a>
           </p>
         </section>
