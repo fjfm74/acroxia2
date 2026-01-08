@@ -54,6 +54,10 @@ const Footer = () => {
               <li><Link to="/aviso-legal" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Aviso Legal</Link></li>
               <li><Link to="/privacidad" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Política de Privacidad</Link></li>
               <li><Link to="/terminos" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Términos y Condiciones</Link></li>
+              <li><Link to="/cookies" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Política de Cookies</Link></li>
+              <li><Link to="/transparencia-ia" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Transparencia IA</Link></li>
+              <li><Link to="/desistimiento" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Desistimiento</Link></li>
+              <li><Link to="/accesibilidad" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Accesibilidad</Link></li>
             </ul>
           </div>
           
@@ -85,6 +89,21 @@ const Footer = () => {
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
             Todos los sistemas operativos
           </div>
+        </div>
+        
+        {/* ODR Platform - Consumer Rights */}
+        <div className="border-t border-border mt-6 pt-6 text-center">
+          <p className="text-xs text-muted-foreground">
+            Resolución de litigios en línea de la UE:{" "}
+            <a 
+              href="https://ec.europa.eu/consumers/odr" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              ec.europa.eu/consumers/odr
+            </a>
+          </p>
         </div>
       </div>
     </footer>

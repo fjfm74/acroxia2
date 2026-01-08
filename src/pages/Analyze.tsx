@@ -274,6 +274,18 @@ const Analyze = () => {
                         </div>
                       )}
 
+                      {/* AI Disclaimer - Legal Compliance */}
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                        <p className="font-medium text-blue-800 mb-2">
+                          ℹ️ Información importante sobre el análisis
+                        </p>
+                        <ul className="text-blue-700 space-y-1 list-disc list-inside">
+                          <li>Este análisis es generado por inteligencia artificial</li>
+                          <li>Tiene carácter <strong>informativo</strong>, NO es asesoramiento legal</li>
+                          <li>Para decisiones legales, consulta con un abogado colegiado</li>
+                        </ul>
+                      </div>
+
                       <Button
                         onClick={handleAnalyze}
                         disabled={!file || !profile || profile.credits < 1}
