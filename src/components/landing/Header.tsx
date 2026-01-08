@@ -89,6 +89,9 @@ const Header = () => {
           <Link to="/blog" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Blog
           </Link>
+          <Link to="/contacto" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
+            Contacto
+          </Link>
         </nav>
         
         {/* Menú móvil */}
@@ -127,6 +130,13 @@ const Header = () => {
                 className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
               >
                 Blog
+              </Link>
+              <Link 
+                to="/contacto" 
+                onClick={closeMobileMenu}
+                className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
+              >
+                Contacto
               </Link>
               
               {/* Guías SEO en móvil */}
