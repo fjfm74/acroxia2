@@ -52,9 +52,11 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
         if (error) throw error;
 
-        // Save terms acceptance timestamp
+        // Save terms acceptance timestamp and log consent
         if (data.user) {
           const now = new Date().toISOString();
+          
+          // Update profile with acceptance timestamps
           await supabase
             .from("profiles")
             .update({
@@ -62,6 +64,20 @@ const AuthForm = ({ mode }: AuthFormProps) => {
               privacy_accepted_at: now,
             })
             .eq("id", data.user.id);
+
+          // Log consent in audit log
+          await supabase.from("consent_logs").insert({
+            user_id: data.user.id,
+            consent_type: "terms_and_privacy",
+            accepted: true,
+            user_agent: navigator.userAgent,
+            document_version: "2026-01-08",
+            metadata: {
+              terms_version: "2026-01-08",
+              privacy_version: "2026-01-08",
+              registration_email: email,
+            },
+          });
         }
 
         toast({

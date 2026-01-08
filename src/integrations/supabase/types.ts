@@ -165,6 +165,42 @@ export type Database = {
           },
         ]
       }
+      consent_logs: {
+        Row: {
+          accepted: boolean
+          consent_type: string
+          created_at: string
+          document_version: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted?: boolean
+          consent_type: string
+          created_at?: string
+          document_version?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted?: boolean
+          consent_type?: string
+          created_at?: string
+          document_version?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           created_at: string
