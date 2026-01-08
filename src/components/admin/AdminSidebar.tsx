@@ -5,7 +5,7 @@ import {
   FolderOpen, 
   Users, 
   ArrowLeft,
-  PenSquare
+  Home
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +70,18 @@ const AdminSidebar = () => {
             );
           })}
         </nav>
+
+        {/* Separator */}
+        <div className="my-6 border-t border-border" />
+
+        {/* User Dashboard Link */}
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
+        >
+          <Home className="h-4 w-4" />
+          Dashboard Usuario
+        </Link>
       </div>
     </aside>
   );
