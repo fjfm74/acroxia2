@@ -13,7 +13,7 @@ const PricingHero = () => {
           </FadeIn>
           
           <FadeIn delay={0.1}>
-            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-semibold text-charcoal leading-tight mb-6">
+            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-medium text-charcoal leading-tight mb-6">
               Precios transparentes,
               <br />
               sin sorpresas

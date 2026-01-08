@@ -74,7 +74,7 @@ const B2CPricing = () => {
             <p className="text-sm font-medium text-charcoal/60 uppercase tracking-widest mb-4">
               Para inquilinos
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl font-semibold text-charcoal">
+            <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal">
               Protege tu próximo alquiler
             </h2>
           </div>
@@ -99,7 +99,7 @@ const B2CPricing = () => {
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-lg font-medium text-charcoal mb-2">
+                  <h3 className="font-serif text-lg font-medium text-charcoal mb-2">
                     {plan.name}
                   </h3>
                   <div className="flex items-baseline gap-1">
