@@ -25,7 +25,7 @@ const Privacidad = () => {
             <p><strong className="text-foreground">CIF:</strong> B-12345678</p>
             <p><strong className="text-foreground">Domicilio:</strong> Calle Diagonal 456, 4ª Planta, 08006 Barcelona, España</p>
             <p><strong className="text-foreground">Email de contacto:</strong> legal@acroxia.com</p>
-            <p><strong className="text-foreground">Delegado de Protección de Datos (DPO):</strong> dpo@acroxia.com</p>
+            <p><strong className="text-foreground">Delegado de Protección de Datos (DPO):</strong> legal@acroxia.com</p>
           </div>
         </section>
 
@@ -225,7 +225,7 @@ const Privacidad = () => {
             <li><strong className="text-foreground">Retirada del consentimiento:</strong> Retirar tu consentimiento en cualquier momento.</li>
           </ul>
           <p className="mb-4 leading-relaxed">
-            Para ejercer estos derechos, puedes contactarnos en <strong className="text-foreground">dpo@acroxia.com</strong> adjuntando una copia de tu documento de identidad.
+            Para ejercer estos derechos, puedes contactarnos en <strong className="text-foreground">legal@acroxia.com</strong> adjuntando una copia de tu documento de identidad.
           </p>
           <p className="leading-relaxed">
             Asimismo, tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) si consideras que tus derechos han sido vulnerados: <a href="https://www.aepd.es" className="text-foreground underline hover:no-underline" target="_blank" rel="noopener noreferrer">www.aepd.es</a>
@@ -272,7 +272,7 @@ const Privacidad = () => {
           </p>
           <div className="bg-muted rounded-2xl p-6 mt-4 space-y-2">
             <p><strong className="text-foreground">Email general:</strong> legal@acroxia.com</p>
-            <p><strong className="text-foreground">Delegado de Protección de Datos:</strong> dpo@acroxia.com</p>
+            <p><strong className="text-foreground">Delegado de Protección de Datos:</strong> legal@acroxia.com</p>
             <p><strong className="text-foreground">Dirección postal:</strong> ACROXIA TECH S.L., Calle Diagonal 456, 4ª Planta, 08006 Barcelona, España</p>
           </div>
         </section>

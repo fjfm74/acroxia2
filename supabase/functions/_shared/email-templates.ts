@@ -157,7 +157,7 @@ const baseTemplate = (content: string) => `
       <div class="footer">
         <p class="footer-text">ACROXIA - Tu escudo legal para el alquiler</p>
         <p class="footer-text">
-          <a href="mailto:hola@acroxia.com" class="footer-link">hola@acroxia.com</a> | Barcelona
+          <a href="mailto:contacto@acroxia.com" class="footer-link">contacto@acroxia.com</a> | Barcelona
         </p>
         <p class="footer-text" style="margin-top: 16px;">
           © 2026 ACROXIA. Todos los derechos reservados.

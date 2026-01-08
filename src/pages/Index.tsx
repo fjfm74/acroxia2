@@ -22,7 +22,7 @@ const Index = () => {
     "contactPoint": {
       "@type": "ContactPoint",
       "contactType": "customer service",
-      "email": "hola@acroxia.com",
+      "email": "contacto@acroxia.com",
       "availableLanguage": "Spanish"
     }
   };

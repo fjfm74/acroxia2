@@ -120,8 +120,8 @@ const TransparenciaIA = () => {
           </ul>
           <p className="text-muted-foreground mb-4">
             Si crees que el sistema ha cometido un error significativo, puedes reportarlo a{" "}
-            <a href="mailto:soporte@acroxia.com" className="text-primary hover:underline">
-              soporte@acroxia.com
+            <a href="mailto:contacto@acroxia.com" className="text-primary hover:underline">
+              contacto@acroxia.com
             </a>{" "}
             para su revisión.
           </p>
@@ -233,8 +233,8 @@ const TransparenciaIA = () => {
             Si tienes preguntas sobre el uso de IA en ACROXIA, puedes contactarnos:
           </p>
           <ul className="text-muted-foreground space-y-2">
-            <li><strong>Email:</strong> <a href="mailto:ia@acroxia.com" className="text-primary hover:underline">ia@acroxia.com</a></li>
-            <li><strong>Delegado de Protección de Datos:</strong> <a href="mailto:dpo@acroxia.com" className="text-primary hover:underline">dpo@acroxia.com</a></li>
+            <li><strong>Email:</strong> <a href="mailto:contacto@acroxia.com" className="text-primary hover:underline">contacto@acroxia.com</a></li>
+            <li><strong>Delegado de Protección de Datos:</strong> <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">legal@acroxia.com</a></li>
           </ul>
         </section>
       </div>
