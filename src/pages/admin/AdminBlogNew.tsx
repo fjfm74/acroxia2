@@ -230,7 +230,7 @@ const AdminBlogNew = () => {
                   <h2 className="font-serif text-lg">{post.title}</h2>
                   <p className="text-muted-foreground text-sm">{post.excerpt}</p>
                   <div className="max-h-[300px] overflow-y-auto">
-                    <ReactMarkdown>{post.content.slice(0, 1000)}...</ReactMarkdown>
+                    <ReactMarkdown>{`${post.content.slice(0, 1000)}...`}</ReactMarkdown>
                   </div>
                 </CardContent>
               </Card>
