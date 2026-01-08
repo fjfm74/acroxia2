@@ -1,0 +1,341 @@
+import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import ChatMessage from "./ChatMessage";
+import ChatBubble from "./ChatBubble";
+import ChatContactForm from "./ChatContactForm";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`;
+
+const ChatAssistant = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [showBubble, setShowBubble] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [bubbleMessage, setBubbleMessage] = useState("¿Dudas sobre nuestros planes?");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const bubbleTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch assistant config
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const { data } = await supabase
+        .from("site_config")
+        .select("value")
+        .eq("key", "assistant_config")
+        .single();
+
+      if (data?.value) {
+        const config = data.value as { welcome_message?: string; bubble_message?: string };
+        if (config.welcome_message) setWelcomeMessage(config.welcome_message);
+        if (config.bubble_message) setBubbleMessage(config.bubble_message);
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
+  // Show bubble after 10 seconds
+  useEffect(() => {
+    const hasSeenBubble = sessionStorage.getItem("chat-bubble-dismissed");
+    
+    if (!hasSeenBubble && !isOpen) {
+      bubbleTimerRef.current = setTimeout(() => {
+        setShowBubble(true);
+      }, 10000);
+    }
+
+    return () => {
+      if (bubbleTimerRef.current) {
+        clearTimeout(bubbleTimerRef.current);
+      }
+    };
+  }, [isOpen]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Focus input when chat opens
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Initialize with welcome message
+  useEffect(() => {
+    if (isOpen && messages.length === 0 && welcomeMessage) {
+      setMessages([{ role: "assistant", content: welcomeMessage }]);
+    }
+  }, [isOpen, welcomeMessage, messages.length]);
+
+  const handleOpenChat = () => {
+    setIsOpen(true);
+    setShowBubble(false);
+    sessionStorage.setItem("chat-bubble-dismissed", "true");
+  };
+
+  const handleCloseBubble = () => {
+    setShowBubble(false);
+    sessionStorage.setItem("chat-bubble-dismissed", "true");
+  };
+
+  const streamChat = useCallback(
+    async (userMessages: Message[]) => {
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: userMessages }),
+      });
+
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        throw new Error(errorData.error || "Error al procesar la solicitud");
+      }
+
+      if (!resp.body) throw new Error("No response body");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let assistantSoFar = "";
+      let streamDone = false;
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") {
+            streamDone = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantSoFar += content;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) =>
+                    i === prev.length - 1 ? { ...m, content: assistantSoFar } : m
+                  );
+                }
+                return [...prev, { role: "assistant", content: assistantSoFar }];
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Check if the response suggests contact
+      if (
+        assistantSoFar.includes("ponerte en contacto") ||
+        assistantSoFar.includes("contactar con nuestro equipo")
+      ) {
+        setTimeout(() => setShowContactForm(true), 500);
+      }
+    },
+    []
+  );
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: input.trim() };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInput("");
+    setIsLoading(true);
+    setShowContactForm(false);
+
+    try {
+      await streamChat(newMessages);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            error instanceof Error
+              ? error.message
+              : "Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleContactSuccess = () => {
+    setShowContactForm(false);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: "¡Perfecto! Hemos recibido tu mensaje. Nuestro equipo te contactará pronto. ¿Hay algo más en lo que pueda ayudarte?",
+      },
+    ]);
+  };
+
+  return (
+    <div className="fixed bottom-20 right-4 z-50">
+      {/* Chat bubble */}
+      <ChatBubble
+        isVisible={showBubble && !isOpen}
+        message={bubbleMessage}
+        onClose={handleCloseBubble}
+        onClick={handleOpenChat}
+      />
+
+      {/* Chat toggle button */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleOpenChat}
+            className="w-14 h-14 rounded-full bg-charcoal text-cream shadow-lg flex items-center justify-center hover:bg-charcoal/90 transition-colors"
+            aria-label="Abrir asistente"
+          >
+            <MessageCircle className="w-6 h-6" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Chat popover */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="absolute bottom-0 right-0 w-[380px] max-w-[calc(100vw-2rem)] bg-cream rounded-2xl shadow-2xl overflow-hidden border border-charcoal/5"
+          >
+            {/* Header */}
+            <div className="bg-charcoal text-cream px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-cream/20 flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Asistente ACROXIA</p>
+                  <p className="text-xs text-cream/70">Online</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-cream hover:bg-cream/10"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Messages */}
+            <ScrollArea className="h-[350px] p-4" ref={scrollRef}>
+              <div className="space-y-1">
+                {messages.map((msg, i) => (
+                  <ChatMessage key={i} role={msg.role} content={msg.content} />
+                ))}
+                {isLoading && messages[messages.length - 1]?.role === "user" && (
+                  <ChatMessage role="assistant" content="" isTyping />
+                )}
+              </div>
+
+              {/* Contact form */}
+              {showContactForm && (
+                <div className="mt-3">
+                  <ChatContactForm
+                    onClose={() => setShowContactForm(false)}
+                    onSuccess={handleContactSuccess}
+                  />
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Input */}
+            <div className="p-3 border-t border-charcoal/5">
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Escribe tu pregunta..."
+                  className="flex-1 h-10 bg-muted border-charcoal/10 rounded-full px-4"
+                  maxLength={500}
+                  disabled={isLoading}
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim() || isLoading}
+                  className="h-10 w-10 rounded-full bg-charcoal text-cream hover:bg-charcoal/90 p-0"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">
+                Solo respondo sobre planes, precios y funcionamiento de ACROXIA
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default ChatAssistant;
