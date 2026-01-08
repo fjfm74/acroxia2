@@ -117,9 +117,9 @@ Asegúrate de que el artículo sea completo, informativo y útil para inquilinos
       throw new Error("Error parsing blog post from AI response");
     }
 
-    // Generate a placeholder image URL (Unsplash related to real estate/contracts)
-    const imageKeywords = encodeURIComponent("contract document legal");
-    blogPost.image = `https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop`;
+    // Return the blog post without a hardcoded image
+    // The admin can use the "Buscar otra imagen" button to generate one
+    blogPost.image = "";
 
     return new Response(JSON.stringify(blogPost), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

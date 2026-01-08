@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Wand2, Save, Eye } from "lucide-react";
+import { Sparkles, Wand2, Save, Eye, RefreshCw, ImageIcon } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +47,7 @@ const AdminBlogNew = () => {
   const { user } = useAuth();
   
   const [generating, setGenerating] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
   
@@ -100,6 +101,47 @@ const AdminBlogNew = () => {
       });
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const regenerateImage = async () => {
+    if (!post.title) {
+      toast({
+        title: "Título requerido",
+        description: "Añade un título para generar una imagen contextual",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingImage(true);
+    try {
+      const response = await supabase.functions.invoke("generate-blog-image", {
+        body: {
+          title: post.title,
+          excerpt: post.excerpt,
+          category: post.category,
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      if (response.data?.image_url) {
+        setPost({ ...post, image: response.data.image_url });
+        toast({
+          title: "Imagen generada",
+          description: "Se ha creado una nueva imagen para el post",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error generating image:", error);
+      toast({
+        title: "Error al generar imagen",
+        description: error.message || "No se pudo generar la imagen",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
@@ -297,13 +339,45 @@ const AdminBlogNew = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="image">URL de imagen destacada</Label>
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      Imagen destacada
+                    </Label>
+                    
+                    {/* Image Preview */}
+                    {post.image && (
+                      <div className="relative rounded-lg overflow-hidden border border-border">
+                        <img 
+                          src={post.image} 
+                          alt="Vista previa de imagen destacada" 
+                          className="w-full h-48 object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=400&auto=format&fit=crop";
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Regenerate Button */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={regenerateImage}
+                      disabled={generatingImage || !post.title}
+                      className="w-full rounded-full"
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${generatingImage ? "animate-spin" : ""}`} />
+                      {generatingImage ? "Generando imagen..." : "Buscar otra imagen (IA)"}
+                    </Button>
+                    
+                    {/* Manual URL Input */}
                     <Input
                       id="image"
                       value={post.image}
                       onChange={(e) => setPost({ ...post, image: e.target.value })}
-                      placeholder="https://..."
+                      placeholder="O introduce URL manualmente..."
+                      className="text-sm"
                     />
                   </div>
 
