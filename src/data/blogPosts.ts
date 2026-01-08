@@ -14,13 +14,13 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "clausulas-abusivas-contrato-alquiler",
-    title: "Las 13 Cláusulas Abusivas Más Comunes en Contratos de Alquiler en España (2025)",
+    title: "Las 13 Cláusulas Abusivas Más Comunes en Contratos de Alquiler en España (2026)",
     excerpt: "Descubre las cláusulas ilegales que podrían estar en tu contrato de alquiler y cómo reclamar si las encuentras. Guía actualizada según la LAU.",
     category: "Cláusulas Abusivas",
     readTime: "8 min",
-    date: "5 Enero, 2025",
+    date: "5 Enero, 2026",
     image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&q=80",
-    metaDescription: "Guía completa sobre las 13 cláusulas abusivas más frecuentes en contratos de alquiler en España 2025. Aprende a identificarlas y reclamar.",
+    metaDescription: "Guía completa sobre las 13 cláusulas abusivas más frecuentes en contratos de alquiler en España 2026. Aprende a identificarlas y reclamar.",
     keywords: ["cláusulas abusivas contrato alquiler", "cláusulas ilegales alquiler", "contrato alquiler ilegal"],
     content: `
 ## ¿Qué es una cláusula abusiva según la LAU?
@@ -65,7 +65,7 @@ Tu domicilio es **inviolable** (Art. 18 de la Constitución). El propietario no 
 
 ### 9. Subidas de renta no pactadas o superiores al índice legal
 
-Las subidas de alquiler durante el contrato están **limitadas al IRAV desde 2025**. Cualquier cláusula que permita subidas discrecionales o superiores al índice es abusiva.
+Las subidas de alquiler durante el contrato están **limitadas al IRAV desde 2026**. Cualquier cláusula que permita subidas discrecionales o superiores al índice es abusiva.
 
 ### 10. Repercusión de obras de mejora
 
@@ -103,9 +103,9 @@ El primer análisis es **completamente gratis**.
     excerpt: "¿Tu casero no te devuelve la fianza? Aprende paso a paso cómo reclamarla legalmente, incluyendo plantillas de burofax y plazos legales.",
     category: "Fianza",
     readTime: "6 min",
-    date: "3 Enero, 2025",
+    date: "3 Enero, 2026",
     image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80",
-    metaDescription: "Guía paso a paso para recuperar tu fianza de alquiler si el casero no quiere devolverla. Incluye plantilla de burofax y plazos legales 2025.",
+    metaDescription: "Guía paso a paso para recuperar tu fianza de alquiler si el casero no quiere devolverla. Incluye plantilla de burofax y plazos legales 2026.",
     keywords: ["recuperar fianza alquiler", "casero no devuelve fianza", "reclamar fianza alquiler"],
     content: `
 ## Tus derechos sobre la fianza según la LAU
@@ -172,7 +172,7 @@ Si nada funciona, puedes interponer una **demanda de reclamación de cantidad**:
 
 ## Calculadora de intereses
 
-Desde el día 31 tras la entrega de llaves, la fianza genera **intereses legales**. En 2025, el interés legal del dinero es del 3,25% anual.
+Desde el día 31 tras la entrega de llaves, la fianza genera **intereses legales**. En 2026, el interés legal del dinero es del 3,25% anual.
 
 **Ejemplo:** Si tu fianza era de 800€ y han pasado 6 meses:
 - Intereses = 800€ × 3,25% × (6/12) = 13€
@@ -194,25 +194,25 @@ Para cantidades menores y casos claros, **puedes hacerlo tú mismo** con el proc
     `
   },
   {
-    slug: "subida-alquiler-2025-irav",
-    title: "Subida del Alquiler 2025: Todo lo que Necesitas Saber sobre el Nuevo Índice IRAV",
-    excerpt: "El IRAV sustituye al IPC para las subidas de alquiler. Descubre cuánto puede subir tu renta en 2025 y qué hacer si te aplican una subida ilegal.",
+    slug: "subida-alquiler-2026-irav",
+    title: "Subida del Alquiler 2026: Todo lo que Necesitas Saber sobre el Nuevo Índice IRAV",
+    excerpt: "El IRAV sustituye al IPC para las subidas de alquiler. Descubre cuánto puede subir tu renta en 2026 y qué hacer si te aplican una subida ilegal.",
     category: "Subida Alquiler",
     readTime: "5 min",
-    date: "1 Enero, 2025",
+    date: "1 Enero, 2026",
     image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1200&q=80",
-    metaDescription: "Guía completa sobre el índice IRAV 2025: cuánto puede subir tu alquiler, cómo calcularlo y qué hacer ante subidas ilegales.",
-    keywords: ["subida alquiler 2025", "índice IRAV", "cuánto puede subir el alquiler", "IRAV alquiler"],
+    metaDescription: "Guía completa sobre el índice IRAV 2026: cuánto puede subir tu alquiler, cómo calcularlo y qué hacer ante subidas ilegales.",
+    keywords: ["subida alquiler 2026", "índice IRAV", "cuánto puede subir el alquiler", "IRAV alquiler"],
     content: `
 ## Adiós al IPC: el nuevo índice IRAV explicado
 
-Desde enero de 2025, las subidas de alquiler en España ya **no se rigen por el IPC**. La Ley de Vivienda ha introducido un nuevo índice específico: el **IRAV** (Índice de Referencia de Arrendamientos de Vivienda).
+Desde enero de 2026, las subidas de alquiler en España ya **no se rigen por el IPC**. La Ley de Vivienda ha introducido un nuevo índice específico: el **IRAV** (Índice de Referencia de Arrendamientos de Vivienda).
 
 ¿Por qué este cambio? El IPC incluye elementos muy volátiles (energía, alimentos) que provocaban subidas bruscas en los alquileres. El IRAV está diseñado para ser **más estable y predecible**.
 
-## ¿Cuál es el IRAV en 2025?
+## ¿Cuál es el IRAV en 2026?
 
-El IRAV lo publica el Instituto Nacional de Estadística (INE) mensualmente. A enero de 2025, el índice se sitúa en torno al **2,2%**.
+El IRAV lo publica el Instituto Nacional de Estadística (INE) mensualmente. A enero de 2026, el índice se sitúa en torno al **2,2%**.
 
 Esto significa que, si te toca actualización de renta, **tu casero no puede subir más del 2,2%** (o el valor del IRAV en el mes de tu actualización).
 
@@ -233,7 +233,7 @@ La fórmula es sencilla:
 
 **Ejemplo práctico:**
 - Renta actual: 900€/mes
-- IRAV enero 2025: 2,2%
+- IRAV enero 2026: 2,2%
 - Subida máxima: 900€ × 2,2% = 19,80€
 - Nueva renta máxima: 919,80€/mes
 
@@ -243,7 +243,7 @@ Hay una distinción importante:
 
 **Contratos anteriores a mayo 2023:**
 - Seguían el régimen transitorio (tope 2% en 2023, 3% en 2024)
-- Desde 2025, ya aplica el IRAV
+- Desde 2026, ya aplica el IRAV
 
 **Contratos posteriores a mayo 2023:**
 - Aplican el IRAV desde el inicio

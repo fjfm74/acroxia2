@@ -45,8 +45,8 @@ const BlogPost = () => {
     "headline": post.title,
     "description": post.metaDescription,
     "image": post.image,
-    "datePublished": "2025-01-05",
-    "dateModified": "2025-01-05",
+    "datePublished": "2026-01-05",
+    "dateModified": "2026-01-08",
     "author": {
       "@type": "Organization",
       "name": "ACROXIA"
