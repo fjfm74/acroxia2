@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer className="bg-muted">
       <div className="container mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-2">
             <span className="font-serif text-2xl font-semibold text-foreground block mb-4">
@@ -41,7 +41,16 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Preguntas frecuentes</Link></li>
               <li><Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Blog</Link></li>
-              <li><Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Guías y consejos</Link></li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="font-medium text-foreground mb-4">Legal</h4>
+            <ul className="space-y-3">
+              <li><Link to="/aviso-legal" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Aviso Legal</Link></li>
+              <li><Link to="/privacidad" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Política de Privacidad</Link></li>
+              <li><Link to="/terminos" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Términos y Condiciones</Link></li>
             </ul>
           </div>
           

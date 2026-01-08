@@ -25,6 +25,9 @@ import AdminBlogEdit from "./pages/admin/AdminBlogEdit";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminUsers from "./pages/admin/AdminUsers";
 import NotFound from "./pages/NotFound";
+import AvisoLegal from "./pages/legal/AvisoLegal";
+import Privacidad from "./pages/legal/Privacidad";
+import Terminos from "./pages/legal/Terminos";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +57,9 @@ const App = () => (
               <Route path="/admin/blog/editar/:id" element={<AdminRoute><AdminBlogEdit /></AdminRoute>} />
               <Route path="/admin/documentos" element={<AdminRoute><AdminDocuments /></AdminRoute>} />
               <Route path="/admin/usuarios" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+              <Route path="/aviso-legal" element={<AvisoLegal />} />
+              <Route path="/privacidad" element={<Privacidad />} />
+              <Route path="/terminos" element={<Terminos />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
