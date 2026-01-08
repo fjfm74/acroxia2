@@ -6,6 +6,9 @@ interface Profile {
   id: string;
   email: string;
   full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
   credits: number;
 }
 

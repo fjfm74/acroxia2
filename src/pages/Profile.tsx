@@ -34,12 +34,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { User, CreditCard, Shield, Trash2, Calendar, Mail, Coins, Lock, ExternalLink } from "lucide-react";
+import { User, CreditCard, Shield, Trash2, Calendar, Mail, Coins, Lock, ExternalLink, Infinity, Phone } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Link } from "react-router-dom";
 
 const Profile = () => {
   const { user, profile, refreshProfile } = useAuth();
-  const [fullName, setFullName] = useState(profile?.full_name || "");
+  const { isAdmin } = useIsAdmin();
+  const [firstName, setFirstName] = useState(profile?.first_name || "");
+  const [lastName, setLastName] = useState(profile?.last_name || "");
+  const [phone, setPhone] = useState(profile?.phone || "");
   const [isSaving, setIsSaving] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -72,7 +76,12 @@ const Profile = () => {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ full_name: fullName })
+        .update({ 
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone || null,
+          full_name: `${firstName} ${lastName}`.trim() || null
+        })
         .eq("id", user.id);
 
       if (error) throw error;
@@ -201,19 +210,45 @@ const Profile = () => {
                 <CardContent className="space-y-6">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Nombre completo</Label>
+                      <Label htmlFor="firstName">Nombre</Label>
                       <Input
-                        id="fullName"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                         placeholder="Tu nombre"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Apellidos</Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Tus apellidos"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">{profile?.email}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Teléfono (opcional)</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+34 600 000 000"
+                          className="pl-10"
+                        />
                       </div>
                     </div>
                   </div>
@@ -231,7 +266,7 @@ const Profile = () => {
 
                   <Button 
                     onClick={handleSaveProfile} 
-                    disabled={isSaving || fullName === profile?.full_name}
+                    disabled={isSaving || (firstName === profile?.first_name && lastName === profile?.last_name && phone === (profile?.phone || ""))}
                     className="rounded-full"
                   >
                     {isSaving ? "Guardando..." : "Guardar cambios"}
@@ -274,9 +309,18 @@ const Profile = () => {
                         <Coins className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">Créditos disponibles</span>
                       </div>
-                      <p className="text-3xl font-semibold">{profile?.credits || 0}</p>
+                      <p className="text-3xl font-semibold">
+                        {isAdmin ? (
+                          <span className="flex items-center gap-2">
+                            <Infinity className="h-6 w-6" />
+                            Ilimitados
+                          </span>
+                        ) : (
+                          profile?.credits || 0
+                        )}
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        Cada análisis consume 1 crédito
+                        {isAdmin ? "Los administradores no consumen créditos" : "Cada análisis consume 1 crédito"}
                       </p>
                     </div>
                   </div>
