@@ -1,17 +1,71 @@
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import BlogSidebar from "@/components/blog/BlogSidebar";
+import BlogCard from "@/components/blog/BlogCard";
 import { Button } from "@/components/ui/button";
-import { getPostBySlug, blogPosts } from "@/data/blogPosts";
+import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import FadeIn from "@/components/animations/FadeIn";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
-  const post = slug ? getPostBySlug(slug) : undefined;
+
+  const { data: post, isLoading } = useQuery({
+    queryKey: ['blog-post', slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug,
+  });
+
+  const { data: relatedPosts = [] } = useQuery({
+    queryKey: ['related-posts', post?.category, slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('status', 'published')
+        .neq('slug', slug!)
+        .limit(2);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="py-24">
+          <div className="container mx-auto px-6">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <Skeleton className="h-8 w-1/2" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-64 w-full rounded-2xl" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -38,15 +92,19 @@ const BlogPost = () => {
     );
   }
 
+  const formattedDate = post.published_at 
+    ? new Date(post.published_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+
   // Article schema
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": post.title,
-    "description": post.metaDescription,
+    "description": post.meta_description,
     "image": post.image,
-    "datePublished": "2026-01-05",
-    "dateModified": "2026-01-08",
+    "datePublished": post.published_at,
+    "dateModified": post.updated_at,
     "author": {
       "@type": "Organization",
       "name": "ACROXIA"
@@ -61,17 +119,14 @@ const BlogPost = () => {
     }
   };
 
-  // Get related posts (excluding current)
-  const relatedPosts = blogPosts.filter(p => p.slug !== post.slug).slice(0, 2);
-
   return (
     <>
       <Helmet>
         <title>{post.title} | ACROXIA Blog</title>
-        <meta name="description" content={post.metaDescription} />
-        <meta name="keywords" content={post.keywords.join(", ")} />
+        <meta name="description" content={post.meta_description || post.excerpt} />
+        <meta name="keywords" content={post.keywords?.join(", ") || ""} />
         <link rel="canonical" href={`https://acroxia.com/blog/${post.slug}`} />
-        <meta property="og:image" content={post.image} />
+        <meta property="og:image" content={post.image || ""} />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -115,11 +170,11 @@ const BlogPost = () => {
                   <div className="flex flex-wrap items-center justify-center gap-6 text-muted-foreground">
                     <span className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      {post.date}
+                      {formattedDate}
                     </span>
                     <span className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
-                      {post.readTime} de lectura
+                      {post.read_time} de lectura
                     </span>
                   </div>
                 </FadeIn>
@@ -128,21 +183,23 @@ const BlogPost = () => {
           </section>
 
           {/* Featured Image */}
-          <section className="bg-muted pb-16">
-            <div className="container mx-auto px-6">
-              <FadeIn delay={0.3}>
-                <div className="max-w-5xl mx-auto">
-                  <div className="aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
-                    <img 
-                      src={post.image} 
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
+          {post.image && (
+            <section className="bg-muted pb-16">
+              <div className="container mx-auto px-6">
+                <FadeIn delay={0.3}>
+                  <div className="max-w-5xl mx-auto">
+                    <div className="aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
+                      <img 
+                        src={post.image} 
+                        alt={post.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
-                </div>
-              </FadeIn>
-            </div>
-          </section>
+                </FadeIn>
+              </div>
+            </section>
+          )}
 
           {/* Article Content */}
           <section className="py-16">
@@ -220,13 +277,15 @@ const BlogPost = () => {
                               to={`/blog/${relatedPost.slug}`}
                               className="group block overflow-hidden bg-muted rounded-xl hover:shadow-md transition-all"
                             >
-                              <div className="aspect-[16/9] overflow-hidden">
-                                <img 
-                                  src={relatedPost.image} 
-                                  alt={relatedPost.title}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                              </div>
+                              {relatedPost.image && (
+                                <div className="aspect-[16/9] overflow-hidden">
+                                  <img 
+                                    src={relatedPost.image} 
+                                    alt={relatedPost.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                              )}
                               <div className="p-6">
                                 <span className="text-xs text-muted-foreground mb-2 block">
                                   {relatedPost.category}

@@ -1,22 +1,41 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { FileSearch, ArrowRight, BookOpen } from "lucide-react";
+import { FileSearch, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BlogSidebar = () => {
-  const popularPosts = [
-    {
-      title: "Las 13 cláusulas abusivas más comunes",
-      slug: "clausulas-abusivas-contrato-alquiler"
+  const { data: popularPosts = [], isLoading } = useQuery({
+    queryKey: ['popular-posts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('slug, title')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      return data;
     },
-    {
-      title: "Cómo recuperar tu fianza del alquiler",
-      slug: "recuperar-fianza-alquiler"
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['blog-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('category')
+        .eq('status', 'published');
+
+      if (error) throw error;
+      
+      // Get unique categories
+      const uniqueCategories = [...new Set(data.map(post => post.category))];
+      return uniqueCategories;
     },
-    {
-      title: "Subida del alquiler 2025: guía IRAV",
-      slug: "subida-alquiler-2025-irav"
-    }
-  ];
+  });
 
   return (
     <aside className="space-y-8">
@@ -48,18 +67,26 @@ const BlogSidebar = () => {
         <h3 className="font-medium text-foreground mb-4">
           Artículos populares
         </h3>
-        <ul className="space-y-4">
-          {popularPosts.map((post, index) => (
-            <li key={index}>
-              <Link 
-                to={`/blog/${post.slug}`}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors block"
-              >
-                {post.title}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        ) : (
+          <ul className="space-y-4">
+            {popularPosts.map((post, index) => (
+              <li key={index}>
+                <Link 
+                  to={`/blog/${post.slug}`}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors block"
+                >
+                  {post.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Categories */}
@@ -68,7 +95,7 @@ const BlogSidebar = () => {
           Categorías
         </h3>
         <div className="flex flex-wrap gap-2">
-          {["Cláusulas Abusivas", "Fianza", "Derechos", "Subida Alquiler", "LAU"].map((cat) => (
+          {categories.map((cat) => (
             <span 
               key={cat}
               className="text-xs bg-muted text-muted-foreground px-3 py-1.5 rounded-full"
