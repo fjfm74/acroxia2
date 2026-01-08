@@ -7,6 +7,7 @@ import Footer from "@/components/landing/Footer";
 import BlogSidebar from "@/components/blog/BlogSidebar";
 import TableOfContents from "@/components/blog/TableOfContents";
 import AuthorBox from "@/components/blog/AuthorBox";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
@@ -148,25 +149,15 @@ const BlogPost = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main>
-          {/* Breadcrumb */}
-          <div className="bg-muted py-4">
-            <div className="container mx-auto px-6">
-              <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Link to="/" className="hover:text-foreground transition-colors">
-                  Inicio
-                </Link>
-                <span>/</span>
-                <Link to="/blog" className="hover:text-foreground transition-colors">
-                  Blog
-                </Link>
-                <span>/</span>
-                <span className="text-foreground">{post.category}</span>
-              </nav>
-            </div>
-          </div>
+          <Breadcrumbs 
+            items={[
+              { label: "Blog", href: "/blog" },
+              { label: post.category }
+            ]} 
+          />
 
           {/* Article Header */}
-          <section className="bg-muted pb-12 pt-8">
+          <section className="bg-muted pb-12">
             <div className="container mx-auto px-6">
               <div className="max-w-4xl mx-auto text-center">
                 <FadeIn>
