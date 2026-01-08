@@ -34,7 +34,8 @@ type ContactFormData = z.infer<typeof contactSchema>;
 
 const ContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error' | 'rate_limited'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -57,9 +58,10 @@ const ContactForm = () => {
 
     setIsSubmitting(true);
     setSubmitStatus('idle');
+    setErrorMessage(null);
 
     try {
-      const { error } = await supabase.functions.invoke('send-email', {
+      const { data: responseData, error } = await supabase.functions.invoke('send-email', {
         body: {
           type: 'contact',
           to: 'contacto@acroxia.com',
@@ -72,11 +74,19 @@ const ContactForm = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a rate limit error (429)
+        if (error.message?.includes('429') || responseData?.rateLimited) {
+          setSubmitStatus('rate_limited');
+          setErrorMessage(responseData?.error || 'Has enviado demasiados mensajes. Por favor, espera una hora.');
+          return;
+        }
+        throw error;
+      }
 
       setSubmitStatus('success');
       form.reset();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error sending contact form:', error);
       setSubmitStatus('error');
     } finally {
@@ -215,6 +225,13 @@ const ContactForm = () => {
             <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-xl">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>Ha ocurrido un error. Por favor, inténtalo de nuevo.</span>
+            </div>
+          )}
+
+          {submitStatus === 'rate_limited' && (
+            <div className="flex items-center gap-2 text-amber-700 text-sm bg-amber-50 border border-amber-200 p-3 rounded-xl">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errorMessage || 'Has enviado demasiados mensajes. Por favor, espera una hora.'}</span>
             </div>
           )}
 
