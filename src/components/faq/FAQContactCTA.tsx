@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileSearch, ArrowRight, BookOpen } from "lucide-react";
+import { FileSearch, ArrowRight, MessageSquare } from "lucide-react";
+import ContactForm from "@/components/ContactForm";
 
 const FAQContactCTA = () => {
   return (
     <section className="py-24 bg-muted">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8">
             {/* Primary CTA - Análisis */}
             <div className="bg-foreground text-background rounded-3xl p-8 md:p-10">
               <div className="w-14 h-14 rounded-2xl bg-background/10 flex items-center justify-center mb-6">
@@ -33,28 +34,22 @@ const FAQContactCTA = () => {
               </Button>
             </div>
 
-            {/* Secondary CTA - Blog */}
-            <div className="bg-background border border-border rounded-3xl p-8 md:p-10">
-              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-6">
-                <BookOpen className="w-7 h-7 text-foreground" />
+            {/* Contact Form */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-6 h-6 text-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl font-semibold text-foreground">
+                    ¿Necesitas ayuda?
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    Escríbenos y te respondemos en 24-48h
+                  </p>
+                </div>
               </div>
-              <h3 className="font-serif text-2xl md:text-3xl font-semibold text-foreground mb-4">
-                Aprende más en nuestro blog
-              </h3>
-              <p className="text-muted-foreground mb-8 leading-relaxed">
-                Guías detalladas, plantillas gratuitas y consejos de expertos 
-                para proteger tus derechos como inquilino.
-              </p>
-              <Button 
-                asChild 
-                variant="outline" 
-                className="rounded-full px-8"
-              >
-                <Link to="/blog">
-                  Explorar artículos
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
+              <ContactForm />
             </div>
           </div>
 
