@@ -168,7 +168,7 @@ const AdminDocuments = () => {
         .insert({
           title: newDoc.title,
           description: newDoc.description || null,
-          type: newDoc.type as "boe" | "jurisprudencia" | "ley" | "real_decreto" | "otro",
+          type: newDoc.type as "boe" | "jurisprudencia" | "ley" | "guia" | "decreto",
           jurisdiction: newDoc.jurisdiction as "autonomica" | "estatal" | "jurisprudencia" | "local" | "provincial",
           source: newDoc.source || null,
           effective_date: newDoc.effective_date || null,
