@@ -1,10 +1,75 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import mammoth from "https://esm.sh/mammoth@1.6.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+function getFileType(filePath: string, mimeType?: string): "pdf" | "docx" | "image" {
+  if (mimeType?.includes("pdf") || filePath.toLowerCase().endsWith(".pdf")) return "pdf";
+  if (mimeType?.includes("wordprocessingml") || filePath.toLowerCase().endsWith(".docx") || filePath.toLowerCase().endsWith(".doc")) return "docx";
+  return "image";
+}
+
+async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
+  const uint8Array = new Uint8Array(buffer);
+  const decoder = new TextDecoder("utf-8", { fatal: false });
+  const rawText = decoder.decode(uint8Array);
+  
+  const textSegments = rawText.match(/[\x20-\x7E\xC0-\xFF\n\r\t]+/g) || [];
+  return textSegments
+    .filter(segment => segment.length > 10)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
+  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  return result.value;
+}
+
+async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: string): Promise<string> {
+  const uint8Array = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < uint8Array.length; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  const base64 = btoa(binary);
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: [
+          { 
+            type: "text", 
+            text: "Transcribe TODO el texto visible en esta imagen de un contrato de alquiler español. Extrae el texto completo manteniendo la estructura del documento. Si hay varias páginas o secciones, transcríbelas todas. Devuelve SOLO el texto transcrito sin comentarios adicionales." 
+          },
+          { 
+            type: "image_url", 
+            image_url: { url: `data:${mimeType};base64,${base64}` } 
+          }
+        ]
+      }]
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al procesar la imagen con OCR");
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,7 +77,7 @@ serve(async (req) => {
   }
 
   try {
-    const { contractId, filePath } = await req.json();
+    const { contractId, filePath, fileType: mimeType } = await req.json();
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -22,39 +87,40 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Download PDF
+    // Download file
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("contracts")
       .download(filePath);
 
     if (downloadError) throw downloadError;
 
-    // Extract text from PDF - try to get as much text as possible
-    const pdfBuffer = await fileData.arrayBuffer();
-    const uint8Array = new Uint8Array(pdfBuffer);
-    
-    // Simple PDF text extraction - looks for text between stream markers
-    let pdfText = "";
-    const decoder = new TextDecoder("utf-8", { fatal: false });
-    const rawText = decoder.decode(uint8Array);
-    
-    // Extract readable text segments (removing binary data)
-    const textSegments = rawText.match(/[\x20-\x7E\xC0-\xFF\n\r\t]+/g) || [];
-    pdfText = textSegments
-      .filter(segment => segment.length > 10) // Filter out short segments
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
+    // Determine file type and extract text
+    const detectedType = getFileType(filePath, mimeType);
+    const buffer = await fileData.arrayBuffer();
+    let contractText = "";
 
-    // If we couldn't extract much text, try the basic text() method
-    if (pdfText.length < 500) {
-      const fallbackText = await fileData.text();
-      if (fallbackText.length > pdfText.length) {
-        pdfText = fallbackText;
-      }
+    console.log(`Processing file as: ${detectedType}`);
+
+    switch (detectedType) {
+      case "pdf":
+        contractText = await extractPdfText(buffer);
+        // Fallback if extraction was poor
+        if (contractText.length < 500) {
+          const fallbackText = await fileData.text();
+          if (fallbackText.length > contractText.length) {
+            contractText = fallbackText;
+          }
+        }
+        break;
+      case "docx":
+        contractText = await extractDocxText(buffer);
+        break;
+      case "image":
+        contractText = await extractImageText(buffer, mimeType || "image/jpeg", lovableApiKey);
+        break;
     }
 
-    console.log(`Extracted ${pdfText.length} characters from PDF`);
+    console.log(`Extracted ${contractText.length} characters from ${detectedType}`);
 
     // Search legal knowledge base
     const { data: legalChunks } = await supabase.rpc("search_legal_chunks", {
@@ -112,7 +178,7 @@ Responde SIEMPRE en formato JSON válido con esta estructura:
           },
           {
             role: "user",
-            content: `Analiza el siguiente contrato de alquiler. Si el texto parece corrupto o ilegible, intenta identificar las cláusulas que puedas reconocer:\n\n${pdfText.substring(0, 20000)}`
+            content: `Analiza el siguiente contrato de alquiler. Si el texto parece corrupto o ilegible, intenta identificar las cláusulas que puedas reconocer:\n\n${contractText.substring(0, 20000)}`
           }
         ],
       }),
