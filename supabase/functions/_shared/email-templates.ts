@@ -180,6 +180,8 @@ export interface EmailData {
   illegalClauses?: number;
   riskLevel?: string;
   creditsRemaining?: number;
+  subject?: string;
+  message?: string;
 }
 
 // Email: Confirmación de cuenta
@@ -355,6 +357,30 @@ export const lowCreditsEmail = (data: EmailData) => ({
   `)
 });
 
+// Email: Formulario de contacto (interno)
+export const contactFormEmail = (data: EmailData) => ({
+  subject: `[Contacto Web] ${data.subject || 'Nueva consulta'}`,
+  html: baseTemplate(`
+    <div class="content">
+      <h2 class="title">Nueva consulta desde la web</h2>
+      <div class="stats-box" style="text-align: left;">
+        <p style="margin: 0 0 8px 0;"><strong>Nombre:</strong> ${data.userName || 'No indicado'}</p>
+        <p style="margin: 0 0 8px 0;"><strong>Email:</strong> <a href="mailto:${data.email}" style="color: #1F1D1B;">${data.email}</a></p>
+        <p style="margin: 0;"><strong>Asunto:</strong> ${data.subject || 'Sin asunto'}</p>
+      </div>
+      <div class="divider"></div>
+      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Mensaje:</h3>
+      <div style="background-color: #FFFFFF; border: 1px solid #E8E6E3; border-radius: 12px; padding: 20px;">
+        <p class="text" style="margin: 0; white-space: pre-wrap;">${data.message || 'Sin mensaje'}</p>
+      </div>
+      <div class="divider"></div>
+      <div class="button-container">
+        <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject || 'Tu consulta en ACROXIA')}" class="button">Responder</a>
+      </div>
+    </div>
+  `)
+});
+
 export const getEmailTemplate = (type: string, data: EmailData) => {
   switch (type) {
     case 'confirmation':
@@ -369,6 +395,8 @@ export const getEmailTemplate = (type: string, data: EmailData) => {
       return analysisCompletedEmail(data);
     case 'low_credits':
       return lowCreditsEmail(data);
+    case 'contact':
+      return contactFormEmail(data);
     default:
       throw new Error(`Unknown email type: ${type}`);
   }

@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 interface SendEmailRequest {
-  type: 'confirmation' | 'welcome' | 'password_reset' | 'password_changed' | 'analysis_completed' | 'low_credits';
+  type: 'confirmation' | 'welcome' | 'password_reset' | 'password_changed' | 'analysis_completed' | 'low_credits' | 'contact';
   to: string;
   data: EmailData;
 }
