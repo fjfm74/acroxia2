@@ -41,6 +41,7 @@ import Accesibilidad from "./pages/legal/Accesibilidad";
 import ClausulasAbusivas from "./pages/seo/ClausulasAbusivas";
 import DevolucionFianza from "./pages/seo/DevolucionFianza";
 import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
+import Contacto from "./pages/Contacto";
 import CookieBanner from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/precios" element={<Pricing />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/contacto" element={<Contacto />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/login" element={<Login />} />
