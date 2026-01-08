@@ -327,6 +327,65 @@ export type Database = {
         }
         Relationships: []
       }
+      social_posts: {
+        Row: {
+          author_id: string | null
+          caption: string | null
+          content_type: Database["public"]["Enums"]["social_content_type"]
+          created_at: string
+          hashtags: string[] | null
+          id: string
+          image_urls: string[] | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          scheduled_for: string | null
+          slides: Json | null
+          source_blog_id: string | null
+          status: Database["public"]["Enums"]["social_post_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          caption?: string | null
+          content_type: Database["public"]["Enums"]["social_content_type"]
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          image_urls?: string[] | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          scheduled_for?: string | null
+          slides?: Json | null
+          source_blog_id?: string | null
+          status?: Database["public"]["Enums"]["social_post_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          caption?: string | null
+          content_type?: Database["public"]["Enums"]["social_content_type"]
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          image_urls?: string[] | null
+          platform?: Database["public"]["Enums"]["social_platform"]
+          scheduled_for?: string | null
+          slides?: Json | null
+          source_blog_id?: string | null
+          status?: Database["public"]["Enums"]["social_post_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_source_blog_id_fkey"
+            columns: ["source_blog_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -455,6 +514,19 @@ export type Database = {
         | "autonomica"
         | "provincial"
         | "local"
+      social_content_type:
+        | "post"
+        | "carousel"
+        | "story"
+        | "reel_script"
+        | "thread"
+      social_platform:
+        | "instagram"
+        | "tiktok"
+        | "facebook"
+        | "linkedin"
+        | "twitter"
+      social_post_status: "draft" | "ready" | "published"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -603,6 +675,21 @@ export const Constants = {
         "provincial",
         "local",
       ],
+      social_content_type: [
+        "post",
+        "carousel",
+        "story",
+        "reel_script",
+        "thread",
+      ],
+      social_platform: [
+        "instagram",
+        "tiktok",
+        "facebook",
+        "linkedin",
+        "twitter",
+      ],
+      social_post_status: ["draft", "ready", "published"],
     },
   },
 } as const
