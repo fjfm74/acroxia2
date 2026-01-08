@@ -166,7 +166,54 @@ const TransparenciaIA = () => {
         </section>
 
         <section>
-          <h2 className="font-serif text-2xl font-semibold mb-4">8. Marco legal aplicable</h2>
+          <h2 className="font-serif text-2xl font-semibold mb-4 flex items-center gap-2">
+            <Shield className="h-6 w-6" />
+            8. Datos de terceros y procesamiento por IA
+          </h2>
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+            <p className="font-medium text-amber-800 mb-2">
+              Información importante sobre datos de terceros
+            </p>
+            <p className="text-amber-700 mb-4">
+              Los contratos de alquiler contienen datos personales tanto tuyos como del arrendador y posibles terceros (inmobiliarias, avalistas, etc.). A continuación explicamos cómo tratamos esta información.
+            </p>
+          </div>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">8.1. Qué datos se procesan</h3>
+          <p className="text-muted-foreground mb-4">
+            Para realizar el análisis, el texto completo del contrato (incluyendo nombres, DNI, direcciones y datos bancarios de todas las partes) se envía a nuestros sistemas de procesamiento.
+          </p>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">8.2. Proveedores de IA utilizados</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+            <li><strong>Google Gemini</strong> (a través de Lovable AI Gateway): Modelo de lenguaje utilizado para analizar el contenido del contrato e identificar cláusulas problemáticas.</li>
+            <li>Los datos se transmiten de forma segura y cifrada.</li>
+            <li>Existen acuerdos de procesamiento de datos (DPA) con los proveedores.</li>
+          </ul>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">8.3. Medidas de anonimización</h3>
+          <p className="text-muted-foreground mb-4">
+            Para minimizar la exposición de datos sensibles de terceros, aplicamos las siguientes medidas <strong>antes</strong> de enviar el texto al modelo de IA:
+          </p>
+          <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+            <li><strong>DNI/NIE:</strong> Se ocultan parcialmente (ej: ****5678*)</li>
+            <li><strong>IBAN y cuentas bancarias:</strong> Se anonimizan completamente</li>
+            <li><strong>Números de teléfono:</strong> Se ocultan parcialmente</li>
+          </ul>
+          <p className="text-muted-foreground mb-4">
+            Esta anonimización permite que la IA analice las cláusulas legales sin necesidad de procesar datos identificativos completos.
+          </p>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">8.4. Uso de los datos por los proveedores</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+            <li>Los proveedores de IA <strong>NO utilizan</strong> los datos de tus contratos para entrenar sus modelos.</li>
+            <li>Los datos se procesan únicamente para generar la respuesta solicitada.</li>
+            <li>No se almacenan de forma permanente en los servidores de los proveedores.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="font-serif text-2xl font-semibold mb-4">9. Marco legal aplicable</h2>
           <p className="text-muted-foreground mb-4">
             Esta información de transparencia se proporciona en cumplimiento de:
           </p>
@@ -180,7 +227,7 @@ const TransparenciaIA = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4 flex items-center gap-2">
             <HelpCircle className="h-6 w-6" />
-            9. Contacto
+            10. Contacto
           </h2>
           <p className="text-muted-foreground mb-4">
             Si tienes preguntas sobre el uso de IA en ACROXIA, puedes contactarnos:

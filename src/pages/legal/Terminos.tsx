@@ -101,15 +101,32 @@ const Terminos = () => {
           <p className="mb-4 leading-relaxed">
             Te comprometes a utilizar el Servicio únicamente para fines legales y de acuerdo con estos Términos. Queda expresamente prohibido:
           </p>
-          <ul className="list-disc list-inside space-y-2 ml-4">
+          <ul className="list-disc list-inside space-y-2 ml-4 mb-6">
             <li>Utilizar el Servicio para fines fraudulentos o ilegales.</li>
             <li>Subir documentos que contengan malware o código malicioso.</li>
             <li>Intentar acceder a sistemas, datos o cuentas de otros usuarios.</li>
             <li>Realizar ingeniería inversa o intentar extraer el código fuente de nuestros algoritmos.</li>
             <li>Utilizar el Servicio para competir directamente con ACROXIA.</li>
             <li>Revender o redistribuir el Servicio sin autorización.</li>
-            <li>Subir documentos de terceros sin su consentimiento.</li>
+            <li>Subir contratos de terceros en los que no seas parte.</li>
           </ul>
+
+          <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-2xl mb-4">
+            <p className="font-semibold text-foreground mb-3">⚠️ RESPONSABILIDAD SOBRE DATOS DE TERCEROS</p>
+            <p className="leading-relaxed mb-3">
+              Al subir un contrato de alquiler, declaras y garantizas que:
+            </p>
+            <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
+              <li><strong className="text-foreground">Eres parte legítima del contrato</strong> (arrendatario, potencial arrendatario evaluando una propuesta, o persona autorizada).</li>
+              <li><strong className="text-foreground">Tienes interés legítimo</strong> en analizar el documento para conocer tus derechos como inquilino.</li>
+              <li><strong className="text-foreground">No utilizarás</strong> el análisis para fines ilícitos, difamatorios o perjudiciales contra el arrendador o terceros.</li>
+              <li><strong className="text-foreground">Comprendes</strong> que el contrato puede contener datos personales de terceros (arrendador, inmobiliaria, avalistas) que serán tratados conforme a nuestra Política de Privacidad.</li>
+            </ul>
+          </div>
+
+          <p className="leading-relaxed">
+            ACROXIA queda exonerada de cualquier responsabilidad derivada del uso indebido de la plataforma para analizar contratos en los que el usuario no tenga un interés legítimo o sobre los cuales no tenga derecho a acceder.
+          </p>
         </section>
 
         {/* Precios y pagos */}
