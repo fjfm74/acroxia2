@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Loader2, ArrowLeft, Save, Download, Copy, Plus } from "lucide-react";
+import { Sparkles, Loader2, ArrowLeft, Save, Plus } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import SlideEditor, { Slide } from "@/components/admin/social/SlideEditor";
 import CaptionEditor from "@/components/admin/social/CaptionEditor";
 import HashtagEditor from "@/components/admin/social/HashtagEditor";
 import SocialPreviewMockup from "@/components/admin/social/SocialPreviewMockup";
+import PublishActions from "@/components/admin/social/PublishActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -225,12 +226,6 @@ const AdminSocialNew = () => {
     setSlides(updated);
   };
 
-  // Copy caption to clipboard
-  const copyCaption = () => {
-    const fullCaption = caption + (hashtags.length > 0 ? "\n\n" + hashtags.map(h => `#${h}`).join(" ") : "");
-    navigator.clipboard.writeText(fullCaption);
-    toast({ title: "Caption copiado" });
-  };
 
   return (
     <AdminLayout
@@ -324,16 +319,21 @@ const AdminSocialNew = () => {
           {/* Caption editor */}
           {caption && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">Caption</h3>
-                <Button variant="ghost" size="sm" onClick={copyCaption}>
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copiar
-                </Button>
-              </div>
+              <h3 className="font-medium">Caption</h3>
               <CaptionEditor value={caption} onChange={setCaption} platform={platform} />
               <HashtagEditor hashtags={hashtags} onChange={setHashtags} platform={platform} />
             </div>
+          )}
+
+          {/* Publish actions */}
+          {(caption || slides.length > 0) && (
+            <PublishActions
+              platform={platform}
+              title={title}
+              caption={caption}
+              hashtags={hashtags}
+              slides={slides}
+            />
           )}
 
           {/* Slides editor */}
