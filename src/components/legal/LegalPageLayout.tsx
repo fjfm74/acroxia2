@@ -34,7 +34,7 @@ const LegalPageLayout = ({ title, metaDescription, lastUpdated, children }: Lega
                 </p>
               </header>
               
-              <article className="prose prose-lg max-w-none">
+              <article>
                 {children}
               </article>
             </div>
