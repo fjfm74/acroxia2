@@ -69,6 +69,16 @@ const jurisdictions = [
   { value: "jurisprudencia", label: "Jurisprudencia" },
 ];
 
+// Sanitiza nombres de archivo para evitar errores de Supabase Storage
+const sanitizeFileName = (fileName: string): string => {
+  return fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9._-]/g, "")
+    .toLowerCase();
+};
+
 const AdminDocuments = () => {
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,7 +165,7 @@ const AdminDocuments = () => {
     setUploading(true);
     try {
       // Upload file to storage
-      const fileName = `${Date.now()}-${newDoc.file.name}`;
+      const fileName = `${Date.now()}-${sanitizeFileName(newDoc.file.name)}`;
       const { error: uploadError } = await supabase.storage
         .from("legal-docs")
         .upload(fileName, newDoc.file);
