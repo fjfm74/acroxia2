@@ -40,10 +40,10 @@ const Breadcrumbs = ({ items, className = "" }: BreadcrumbsProps) => {
       />
       <nav 
         aria-label="Breadcrumb" 
-        className={`bg-muted py-4 ${className}`}
+        className={`bg-muted pt-24 pb-4 ${className}`}
       >
         <div className="container mx-auto px-6">
-          <ol className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+          <ol className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
             <li className="flex items-center gap-2">
               <Link 
                 to="/" 

@@ -127,7 +127,7 @@ const ClausulasAbusivas = () => {
         />
         
         {/* Hero Section */}
-        <section className="pt-32 pb-20 bg-muted">
+        <section className="pb-20 bg-muted">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center">
               <FadeIn>
