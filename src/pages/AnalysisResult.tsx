@@ -26,7 +26,8 @@ import {
   Lightbulb,
   MapPin,
   Building2,
-  User
+  User,
+  Bot
 } from "lucide-react";
 
 interface LegalReference {
@@ -292,6 +293,20 @@ const AnalysisResult = () => {
                   </Button>
                 )}
               </div>
+
+              {/* AI Disclaimer - Legal Compliance */}
+              <Alert className="mb-6 border-blue-200 bg-blue-50">
+                <Bot className="h-4 w-4 text-blue-600" />
+                <AlertTitle className="text-blue-800">Contenido generado por Inteligencia Artificial</AlertTitle>
+                <AlertDescription className="text-blue-700">
+                  Este análisis ha sido generado automáticamente por un sistema de IA y tiene carácter 
+                  <strong> meramente informativo</strong>. No constituye asesoramiento legal profesional. 
+                  Para decisiones legales importantes, te recomendamos consultar con un abogado colegiado.{" "}
+                  <Link to="/transparencia-ia" className="underline hover:no-underline">
+                    Más información sobre nuestra IA
+                  </Link>
+                </AlertDescription>
+              </Alert>
             </FadeIn>
 
             {/* Contract Metadata */}
