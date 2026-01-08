@@ -70,6 +70,23 @@ const AnalysisResult = () => {
     fetchAnalysis();
   }, [id]);
 
+  const handleDownloadLetter = () => {
+    if (!analysis?.full_report?.generated_letter) return;
+    
+    const fileName = analysis.contracts?.file_name?.replace(/\.pdf$/i, '') || 'contrato';
+    const letterContent = analysis.full_report.generated_letter;
+    
+    const blob = new Blob([letterContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `carta-reclamacion-${fileName}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const getClauseIcon = (type: string) => {
     switch (type) {
       case "valid":
@@ -160,7 +177,7 @@ const AnalysisResult = () => {
                   </p>
                 </div>
                 {analysis.full_report?.generated_letter && (
-                  <Button>
+                  <Button onClick={handleDownloadLetter}>
                     <Download className="mr-2 h-4 w-4" />
                     Descargar carta de reclamación
                   </Button>

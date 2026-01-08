@@ -29,19 +29,44 @@ serve(async (req) => {
 
     if (downloadError) throw downloadError;
 
-    const pdfText = await fileData.text();
+    // Extract text from PDF - try to get as much text as possible
+    const pdfBuffer = await fileData.arrayBuffer();
+    const uint8Array = new Uint8Array(pdfBuffer);
+    
+    // Simple PDF text extraction - looks for text between stream markers
+    let pdfText = "";
+    const decoder = new TextDecoder("utf-8", { fatal: false });
+    const rawText = decoder.decode(uint8Array);
+    
+    // Extract readable text segments (removing binary data)
+    const textSegments = rawText.match(/[\x20-\x7E\xC0-\xFF\n\r\t]+/g) || [];
+    pdfText = textSegments
+      .filter(segment => segment.length > 10) // Filter out short segments
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // If we couldn't extract much text, try the basic text() method
+    if (pdfText.length < 500) {
+      const fallbackText = await fileData.text();
+      if (fallbackText.length > pdfText.length) {
+        pdfText = fallbackText;
+      }
+    }
+
+    console.log(`Extracted ${pdfText.length} characters from PDF`);
 
     // Search legal knowledge base
     const { data: legalChunks } = await supabase.rpc("search_legal_chunks", {
-      search_query: "alquiler arrendamiento fianza clausula",
-      match_count: 10,
+      search_query: "alquiler arrendamiento fianza clausula abusiva ilegal",
+      match_count: 15,
     });
 
     const legalContext = legalChunks?.map((chunk: any) => 
       `[${chunk.document_title} - ${chunk.article_reference || ""}]\n${chunk.content}`
     ).join("\n\n") || "";
 
-    // Call Lovable AI
+    // Call Lovable AI for contract analysis
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -60,24 +85,34 @@ ${legalContext}
 
 Analiza contratos de alquiler y detecta cláusulas ilegales, abusivas o sospechosas. Para cada cláusula problemática, cita el artículo de ley específico.
 
+IMPORTANTE: Identifica al menos las siguientes cláusulas típicas de un contrato de alquiler:
+- Duración del contrato y prórrogas
+- Renta mensual y actualizaciones
+- Fianza y garantías adicionales
+- Gastos y suministros
+- Obras y reformas
+- Subarriendo
+- Causas de resolución
+- Penalizaciones
+
 Responde SIEMPRE en formato JSON válido con esta estructura:
 {
   "clauses": [
     {
-      "text": "texto de la cláusula",
+      "text": "título o resumen corto de la cláusula (máx 50 caracteres)",
       "type": "valid|suspicious|illegal",
-      "explanation": "explicación detallada",
-      "legalReference": "artículo de ley si aplica",
-      "recommendation": "recomendación si aplica"
+      "explanation": "explicación detallada de por qué es válida, sospechosa o ilegal",
+      "legalReference": "artículo de ley específico si aplica (ej: Art. 36.1 LAU)",
+      "recommendation": "recomendación para el inquilino si la cláusula es problemática"
     }
   ],
-  "overall_assessment": "evaluación general del contrato",
-  "summary": "resumen breve de 2-3 líneas"
+  "overall_assessment": "evaluación general del contrato y nivel de riesgo",
+  "summary": "resumen ejecutivo de 2-3 líneas para el inquilino"
 }`
           },
           {
             role: "user",
-            content: `Analiza el siguiente contrato de alquiler:\n\n${pdfText.substring(0, 15000)}`
+            content: `Analiza el siguiente contrato de alquiler. Si el texto parece corrupto o ilegible, intenta identificar las cláusulas que puedas reconocer:\n\n${pdfText.substring(0, 20000)}`
           }
         ],
       }),
@@ -86,6 +121,16 @@ Responde SIEMPRE en formato JSON válido con esta estructura:
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error("AI error:", errorText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: "Servicio temporalmente no disponible. Por favor, intenta de nuevo en unos minutos." 
+        }), { 
+          status: 429, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
+      }
+      
       throw new Error("Error en el análisis de IA");
     }
 
@@ -97,6 +142,7 @@ Responde SIEMPRE en formato JSON válido con esta estructura:
       const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
       analysis = JSON.parse(jsonMatch ? jsonMatch[0] : analysisText);
     } catch {
+      console.error("Failed to parse AI response:", analysisText);
       analysis = { clauses: [], overall_assessment: analysisText, summary: "" };
     }
 
@@ -104,6 +150,46 @@ Responde SIEMPRE en formato JSON válido con esta estructura:
     const validCount = clauses.filter((c: any) => c.type === "valid").length;
     const suspiciousCount = clauses.filter((c: any) => c.type === "suspicious").length;
     const illegalCount = clauses.filter((c: any) => c.type === "illegal").length;
+
+    // If there are illegal clauses, generate a claim letter
+    if (illegalCount > 0) {
+      const illegalClauses = clauses.filter((c: any) => c.type === "illegal");
+      
+      const letterResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "system",
+              content: `Eres un abogado experto en derecho inmobiliario español. Genera cartas de reclamación formales y profesionales para inquilinos que han encontrado cláusulas ilegales en sus contratos de alquiler.
+
+La carta debe:
+1. Ser formal y respetuosa pero firme
+2. Identificar claramente cada cláusula ilegal
+3. Citar los artículos de ley que la hacen ilegal
+4. Solicitar la modificación o eliminación de dichas cláusulas
+5. Indicar que el inquilino se reserva el derecho de acudir a las autoridades competentes
+
+Formato: Carta formal en español, con fecha, destinatario (propietario/arrendador), cuerpo y firma.`
+            },
+            {
+              role: "user",
+              content: `Genera una carta de reclamación formal basada en estas cláusulas ilegales encontradas en un contrato de alquiler:\n\n${JSON.stringify(illegalClauses, null, 2)}`
+            }
+          ],
+        }),
+      });
+
+      if (letterResponse.ok) {
+        const letterData = await letterResponse.json();
+        analysis.generated_letter = letterData.choices?.[0]?.message?.content || null;
+      }
+    }
 
     // Save results
     await supabase.from("analysis_results").insert({
@@ -119,14 +205,14 @@ Responde SIEMPRE en formato JSON válido con esta estructura:
     // Update contract status
     await supabase.from("contracts").update({ status: "completed" }).eq("id", contractId);
 
-    // Deduct credit
+    // Deduct credit - using the correct RPC function
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user } } = await supabase.auth.getUser(token);
       if (user) {
-        await supabase.from("profiles").update({ credits: supabase.rpc("decrement_credits") }).eq("id", user.id);
         await supabase.rpc("decrement_credit", { user_id: user.id });
+        console.log(`Credit deducted for user ${user.id}`);
       }
     }
 
