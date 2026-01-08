@@ -12,7 +12,7 @@ const MarketplaceTeaser = () => {
               Próximamente
             </Badge>
             
-            <h2 className="font-serif text-3xl md:text-4xl font-semibold text-charcoal mb-4">
+            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal mb-4">
               Marketplace Legal
             </h2>
             

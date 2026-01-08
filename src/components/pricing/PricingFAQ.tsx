@@ -46,7 +46,7 @@ const PricingFAQ = () => {
         <div className="max-w-3xl mx-auto">
           <FadeIn>
             <div className="text-center mb-12">
-              <h2 className="font-serif text-3xl md:text-4xl font-semibold text-charcoal mb-4">
+              <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal mb-4">
                 Preguntas frecuentes
               </h2>
               <p className="text-charcoal/70">

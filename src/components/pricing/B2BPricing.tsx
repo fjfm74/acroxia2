@@ -49,7 +49,7 @@ const B2BPricing = () => {
             <p className="text-sm font-medium text-cream/60 uppercase tracking-widest mb-4">
               Para profesionales
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl font-semibold text-cream">
+            <h2 className="font-serif text-4xl md:text-5xl font-medium text-cream">
               Soluciones empresariales
             </h2>
             <p className="text-cream/70 mt-4 max-w-xl mx-auto">
@@ -68,7 +68,7 @@ const B2BPricing = () => {
                   </div>
                   <div>
                     <p className="text-sm text-cream/60">{plan.audience}</p>
-                    <h3 className="text-xl font-medium text-cream">{plan.name}</h3>
+                    <h3 className="font-serif text-xl font-medium text-cream">{plan.name}</h3>
                   </div>
                 </div>
 
