@@ -271,14 +271,21 @@ Formato: Carta formal en español, con fecha, destinatario (propietario/arrendad
     // Update contract status
     await supabase.from("contracts").update({ status: "completed" }).eq("id", contractId);
 
-    // Deduct credit - using the correct RPC function
+    // Deduct credit - skip for admin users
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user } } = await supabase.auth.getUser(token);
       if (user) {
-        await supabase.rpc("decrement_credit", { user_id: user.id });
-        console.log(`Credit deducted for user ${user.id}`);
+        // Check if user is admin
+        const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
+        
+        if (isAdmin) {
+          console.log(`Admin user ${user.id} - no credit deducted`);
+        } else {
+          await supabase.rpc("decrement_credit", { user_id: user.id });
+          console.log(`Credit deducted for user ${user.id}`);
+        }
       }
     }
 

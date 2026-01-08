@@ -240,24 +240,33 @@ export type Database = {
           created_at: string
           credits: number
           email: string
+          first_name: string | null
           full_name: string | null
           id: string
+          last_name: string | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           credits?: number
           email: string
+          first_name?: string | null
           full_name?: string | null
           id: string
+          last_name?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           credits?: number
           email?: string
+          first_name?: string | null
           full_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -335,6 +344,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { check_user_id: string }; Returns: boolean }
       search_legal_chunks: {
         Args: { match_count?: number; search_query: string }
         Returns: {
