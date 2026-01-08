@@ -26,6 +26,8 @@ const contactSchema = z.object({
     .trim()
     .min(20, { message: "El mensaje debe tener al menos 20 caracteres" })
     .max(2000, { message: "El mensaje no puede exceder 2000 caracteres" }),
+  // Honeypot field - should remain empty
+  website: z.string().max(0, { message: "" }).optional(),
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
@@ -41,10 +43,18 @@ const ContactForm = () => {
       email: "",
       subject: "",
       message: "",
+      website: "", // Honeypot
     },
   });
 
   const onSubmit = async (data: ContactFormData) => {
+    // Honeypot check - if filled, silently reject (bots fill hidden fields)
+    if (data.website && data.website.length > 0) {
+      // Fake success to not alert bots
+      setSubmitStatus('success');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
@@ -175,6 +185,31 @@ const ContactForm = () => {
               </FormItem>
             )}
           />
+
+          {/* Honeypot field - hidden from humans, visible to bots */}
+          <div 
+            className="absolute -left-[9999px] opacity-0 h-0 w-0 overflow-hidden"
+            aria-hidden="true"
+            tabIndex={-1}
+          >
+            <FormField
+              control={form.control}
+              name="website"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Website (leave empty)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      autoComplete="off"
+                      tabIndex={-1}
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
 
           {submitStatus === 'error' && (
             <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-xl">
