@@ -5,7 +5,8 @@ import {
   FolderOpen, 
   Users, 
   ArrowLeft,
-  Home
+  Home,
+  Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,11 @@ const menuItems = [
     title: "Blog",
     href: "/admin/blog",
     icon: FileText,
+  },
+  {
+    title: "Social Media",
+    href: "/admin/social",
+    icon: Share2,
   },
   {
     title: "Documentos Legales",

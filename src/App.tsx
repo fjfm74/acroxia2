@@ -23,6 +23,9 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminBlogNew from "./pages/admin/AdminBlogNew";
 import AdminBlogEdit from "./pages/admin/AdminBlogEdit";
+import AdminSocial from "./pages/admin/AdminSocial";
+import AdminSocialNew from "./pages/admin/AdminSocialNew";
+import AdminSocialEdit from "./pages/admin/AdminSocialEdit";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminUsers from "./pages/admin/AdminUsers";
 import NotFound from "./pages/NotFound";
@@ -60,6 +63,9 @@ const App = () => (
               <Route path="/admin/blog" element={<AdminRoute><AdminBlog /></AdminRoute>} />
               <Route path="/admin/blog/nuevo" element={<AdminRoute><AdminBlogNew /></AdminRoute>} />
               <Route path="/admin/blog/editar/:id" element={<AdminRoute><AdminBlogEdit /></AdminRoute>} />
+              <Route path="/admin/social" element={<AdminRoute><AdminSocial /></AdminRoute>} />
+              <Route path="/admin/social/nuevo" element={<AdminRoute><AdminSocialNew /></AdminRoute>} />
+              <Route path="/admin/social/editar/:id" element={<AdminRoute><AdminSocialEdit /></AdminRoute>} />
               <Route path="/admin/documentos" element={<AdminRoute><AdminDocuments /></AdminRoute>} />
               <Route path="/admin/usuarios" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/aviso-legal" element={<AvisoLegal />} />

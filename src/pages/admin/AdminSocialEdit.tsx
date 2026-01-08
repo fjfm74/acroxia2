@@ -122,7 +122,7 @@ const AdminSocialEdit = () => {
           platform,
           content_type: contentType,
           caption,
-          slides: slides as unknown as Record<string, unknown>,
+          slides: JSON.parse(JSON.stringify(slides)),
           hashtags,
           image_urls: imageUrls,
           status: newStatus || status,
