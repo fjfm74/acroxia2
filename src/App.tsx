@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
+import Profile from "./pages/Profile";
 import FAQ from "./pages/FAQ";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Register />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/analizar" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
               <Route path="/resultado/:id" element={<ProtectedRoute><AnalysisResult /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
