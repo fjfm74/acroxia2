@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,18 +9,9 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-// Helper function to convert ArrayBuffer to base64 without stack overflow
+// Convert ArrayBuffer to base64 without using spread/apply (avoids stack overflow)
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 8192; // Process in 8KB chunks to avoid stack limits
-  let binary = '';
-  
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.slice(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, Array.from(chunk));
-  }
-  
-  return btoa(binary);
+  return base64Encode(buffer);
 }
 
 serve(async (req) => {
@@ -61,7 +53,7 @@ serve(async (req) => {
     // Convert PDF to text using AI (since we can't use pdf-parse in Deno easily)
     // We'll send the PDF as base64 and ask AI to extract text
     const arrayBuffer = await fileData.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const base64 = arrayBufferToBase64(arrayBuffer);
 
     // Use AI to extract and structure the text
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -118,7 +110,7 @@ Máximo 50 fragmentos. Prioriza los artículos más relevantes para contratos de
     if (!response.ok) {
       // If multimodal fails, try text-only approach with a simpler prompt
       console.log("Multimodal processing failed, using fallback...");
-      
+
       // For now, create a single chunk with the document title as placeholder
       // In production, you'd want to use a proper PDF parser
       const { error: insertError } = await supabase.from("legal_chunks").insert({
@@ -134,12 +126,12 @@ Máximo 50 fragmentos. Prioriza los artículos más relevantes para contratos de
       }
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           chunks_created: 1,
-          message: "Documento registrado. Procesamiento completo pendiente."
+          message: "Documento registrado. Procesamiento completo pendiente.",
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -174,27 +166,25 @@ Máximo 50 fragmentos. Prioriza los artículos más relevantes para contratos de
       chunk_index: index,
     }));
 
-    const { error: insertError } = await supabase
-      .from("legal_chunks")
-      .insert(chunksToInsert);
+    const { error: insertError } = await supabase.from("legal_chunks").insert(chunksToInsert);
 
     if (insertError) {
       throw new Error(`Error inserting chunks: ${insertError.message}`);
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         chunks_created: chunks.length,
-        message: `Documento procesado: ${chunks.length} fragmentos indexados`
+        message: `Documento procesado: ${chunks.length} fragmentos indexados`,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("Error processing document:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
