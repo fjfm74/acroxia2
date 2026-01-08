@@ -277,14 +277,26 @@ const BlogPost = () => {
                   {/* Author Box */}
                   {post.author && <AuthorBox author={post.author} />}
 
-                  {/* CTA after article */}
+                  {/* Legal Disclaimer */}
                   <FadeIn delay={0.5}>
-                    <div className="mt-12 p-8 bg-foreground text-background rounded-2xl">
+                    <div className="mt-8 p-4 bg-muted rounded-lg border border-border text-sm text-muted-foreground">
+                      <p>
+                        <strong>Aviso:</strong> Este artículo tiene carácter meramente informativo y no constituye 
+                        asesoramiento legal. La información puede variar según la legislación vigente en cada momento 
+                        y las circunstancias particulares de cada caso. Para situaciones específicas, recomendamos 
+                        consultar con un profesional del derecho.
+                      </p>
+                    </div>
+                  </FadeIn>
+
+                  {/* CTA after article */}
+                  <FadeIn delay={0.6}>
+                    <div className="mt-8 p-8 bg-foreground text-background rounded-2xl">
                       <h3 className="font-serif text-2xl font-semibold mb-4">
                         ¿Quieres analizar tu contrato?
                       </h3>
                       <p className="text-background/70 mb-6">
-                        Nuestra IA detecta cláusulas abusivas en menos de 2 minutos. 
+                        Nuestra IA analiza tu contrato e identifica cláusulas potencialmente problemáticas en menos de 2 minutos. 
                         El primer análisis es gratis.
                       </p>
                       <Button 
