@@ -169,7 +169,7 @@ const AdminSocialNew = () => {
           platform,
           content_type: contentType,
           caption,
-          slides: slides as unknown as Record<string, unknown>,
+          slides: JSON.parse(JSON.stringify(slides)),
           hashtags,
           image_urls: imageUrls,
           source_blog_id: selectedBlogId || null,
