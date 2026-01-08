@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Upload, FileText, Trash2, Filter, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Upload, FileText, Trash2, Filter, CheckCircle, Clock, XCircle, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -280,6 +280,58 @@ const AdminDocuments = () => {
     }
   };
 
+  const reprocessDocument = async (doc: LegalDocument) => {
+    try {
+      // Get file path from the document
+      const { data: docData, error: docError } = await supabase
+        .from("legal_documents")
+        .select("file_path")
+        .eq("id", doc.id)
+        .single();
+
+      if (docError || !docData?.file_path) {
+        throw new Error("No se encontró el archivo asociado");
+      }
+
+      // Delete existing chunks first
+      await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
+
+      toast({
+        title: "Reprocesando...",
+        description: "El documento se está procesando",
+      });
+
+      // Process document with edge function
+      const { error: processError } = await supabase.functions.invoke(
+        "process-legal-document",
+        {
+          body: {
+            documentId: doc.id,
+            filePath: docData.file_path,
+          },
+        }
+      );
+
+      if (processError) {
+        throw processError;
+      }
+
+      toast({
+        title: "Documento reprocesado",
+        description: "Los fragmentos se han indexado correctamente",
+      });
+
+      fetchDocuments();
+    } catch (error: any) {
+      console.error("Error reprocessing document:", error);
+      toast({
+        title: "Error al reprocesar",
+        description: error.message || "No se pudo reprocesar el documento",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getJurisdictionLabel = (value: string | null) => {
     return jurisdictions.find((j) => j.value === value)?.label || value || "N/A";
   };
@@ -497,6 +549,16 @@ const AdminDocuments = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {doc.chunks_count === 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => reprocessDocument(doc)}
+                          title="Reprocesar documento"
+                        >
+                          <RefreshCw className="h-4 w-4 text-amber-600" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
