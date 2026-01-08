@@ -116,6 +116,70 @@ const Privacidad = () => {
           </ul>
         </section>
 
+        {/* Datos de terceros en documentos */}
+        <section>
+          <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
+            6. Datos de Terceros Contenidos en Documentos
+          </h2>
+          <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-2xl mb-6">
+            <p className="font-semibold text-foreground mb-3">⚠️ INFORMACIÓN IMPORTANTE</p>
+            <p className="leading-relaxed">
+              Los contratos de alquiler que subas a nuestra plataforma pueden contener datos personales de <strong className="text-foreground">terceras personas</strong> (arrendadores, propietarios, inmobiliarias, avalistas, etc.), como nombres, DNI, direcciones, teléfonos o datos bancarios.
+            </p>
+          </div>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.1. Base legal del tratamiento</h3>
+          <p className="mb-4 leading-relaxed">
+            El tratamiento de estos datos de terceros se realiza en base a:
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
+            <li><strong className="text-foreground">Interés legítimo del usuario</strong> (Art. 6.1.f RGPD): Tienes un interés legítimo en analizar un contrato del que eres parte para conocer tus derechos.</li>
+            <li><strong className="text-foreground">Ejecución del servicio</strong> (Art. 6.1.b RGPD): El análisis del contrato completo es necesario para prestarte el servicio solicitado.</li>
+          </ul>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.2. Tipos de datos de terceros que pueden tratarse</h3>
+          <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
+            <li>Nombre y apellidos del arrendador/propietario</li>
+            <li>DNI/NIE/CIF</li>
+            <li>Dirección postal</li>
+            <li>Datos bancarios (IBAN, número de cuenta)</li>
+            <li>Teléfono y email de contacto</li>
+            <li>Datos de representantes legales o inmobiliarias</li>
+          </ul>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.3. Medidas de protección aplicadas</h3>
+          <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
+            <li><strong className="text-foreground">Anonimización previa al procesamiento por IA:</strong> Antes de enviar el texto del contrato a nuestros sistemas de inteligencia artificial, aplicamos técnicas de anonimización automática para ocultar DNI, IBAN y números de teléfono.</li>
+            <li><strong className="text-foreground">Cifrado en reposo y tránsito:</strong> Todos los documentos se almacenan cifrados.</li>
+            <li><strong className="text-foreground">Retención limitada:</strong> Los documentos originales se eliminan automáticamente a los 30 días.</li>
+            <li><strong className="text-foreground">Acceso restringido:</strong> Solo tú y los sistemas automatizados tienen acceso a tus documentos.</li>
+          </ul>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.4. Lo que NO hacemos con datos de terceros</h3>
+          <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
+            <li>NO los utilizamos para marketing o perfilado</li>
+            <li>NO los cedemos a terceros (salvo obligación legal)</li>
+            <li>NO los utilizamos para entrenar modelos de IA</li>
+            <li>NO creamos perfiles de arrendadores o inmobiliarias</li>
+          </ul>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.5. Información a los terceros afectados</h3>
+          <p className="mb-4 leading-relaxed">
+            Conforme al artículo 14.5.b) del RGPD, no informamos directamente a los terceros cuyos datos aparecen en los contratos debido a que:
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
+            <li>Supondría un esfuerzo desproporcionado dado el volumen de documentos</li>
+            <li>El tratamiento es mínimo (solo análisis automatizado puntual)</li>
+            <li>Los datos se anonimizan y eliminan en plazos cortos</li>
+            <li>No existe perjuicio para los intereses del tercero</li>
+          </ul>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.6. Recomendaciones para el usuario</h3>
+          <p className="leading-relaxed">
+            Aunque no es obligatorio, te recomendamos informar a la otra parte del contrato de que vas a utilizar herramientas de análisis automatizado. Esto refuerza la transparencia en vuestra relación contractual.
+          </p>
+        </section>
+
         {/* Destinatarios */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">

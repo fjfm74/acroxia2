@@ -63,6 +63,60 @@ function detectTerritory(text: string): string | null {
   return null;
 }
 
+// Anonimizar datos sensibles antes de enviar a la IA (protección de terceros)
+function sanitizeSensitiveData(text: string): string {
+  let sanitized = text;
+  
+  // Anonimizar DNI/NIE: 12345678A o X1234567A -> ****5678* o X***4567*
+  sanitized = sanitized.replace(
+    /\b([A-Z]?)(\d{7,8})([A-Z])\b/gi, 
+    (match, prefix, digits, suffix) => {
+      const visibleDigits = digits.slice(-4, -1);
+      return prefix ? `${prefix}***${visibleDigits}*` : `****${visibleDigits}*`;
+    }
+  );
+  
+  // Anonimizar IBAN español: ES12 3456 7890 1234 5678 9012 -> ES** **** **** **** ****
+  sanitized = sanitized.replace(
+    /\b(ES)\s?(\d{2})\s?(\d{4})\s?(\d{4})\s?(\d{4})\s?(\d{4})\s?(\d{4})\b/gi,
+    '[IBAN-ANONIMIZADO]'
+  );
+  
+  // Anonimizar otros IBAN europeos
+  sanitized = sanitized.replace(
+    /\b([A-Z]{2})\s?(\d{2})\s?([\d\s]{10,30})\b/gi,
+    (match, country, check, account) => {
+      if (/^[A-Z]{2}$/.test(country) && account.replace(/\s/g, '').length >= 10) {
+        return '[IBAN-ANONIMIZADO]';
+      }
+      return match;
+    }
+  );
+  
+  // Anonimizar números de cuenta bancaria (20 dígitos españoles)
+  sanitized = sanitized.replace(
+    /\b(\d{4})\s?(\d{4})\s?(\d{2})\s?(\d{10})\b/g,
+    '[CUENTA-ANONIMIZADA]'
+  );
+  
+  // Anonimizar teléfonos españoles: +34 612 345 678 o 612345678 -> +34 6** *** ***
+  sanitized = sanitized.replace(
+    /(\+34\s?)?([6789])(\d{2})\s?(\d{3})\s?(\d{3})/g,
+    (match, prefix, first, rest1, rest2, rest3) => {
+      return `${prefix || ''}${first}** *** ***`;
+    }
+  );
+  
+  // Anonimizar teléfonos fijos españoles: 91 234 56 78 -> 9* *** ** **
+  sanitized = sanitized.replace(
+    /\b([89]\d)\s?(\d{3})\s?(\d{2})\s?(\d{2})\b/g,
+    (match, prefix) => `${prefix[0]}* *** ** **`
+  );
+  
+  console.log(`Sanitized ${text.length - sanitized.length} characters of sensitive data`);
+  return sanitized;
+}
+
 async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
   const uint8Array = new Uint8Array(buffer);
   const decoder = new TextDecoder("utf-8", { fatal: false });
@@ -473,6 +527,10 @@ serve(async (req) => {
     console.log(`RAG search query: ${searchQuery}`);
     console.log(`Detected territory: ${territorialFilter || "none"}`);
 
+    // Sanitize sensitive data (DNI, IBAN, phone) before sending to AI
+    const sanitizedContractText = sanitizeSensitiveData(contractText);
+    console.log(`Contract text sanitized. Original: ${contractText.length} chars, Sanitized: ${sanitizedContractText.length} chars`);
+
     // Search legal knowledge base with enhanced query and territorial filter
     const { data: legalChunks } = await supabase.rpc("search_legal_chunks", {
       search_query: searchQuery,
@@ -528,9 +586,11 @@ Contenido: ${chunk.content}
 
 Si el texto parece incompleto o parcialmente ilegible, analiza las partes que puedas identificar e indica las limitaciones.
 
+NOTA: Algunos datos sensibles (DNI, IBAN, teléfonos) han sido anonimizados por motivos de privacidad. Esto no afecta al análisis de las cláusulas.
+
 CONTRATO A ANALIZAR:
 ====================
-${contractText.substring(0, 25000)}`
+${sanitizedContractText.substring(0, 25000)}`
           }
         ],
       }),

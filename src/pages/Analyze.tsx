@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,10 @@ import FadeIn from "@/components/animations/FadeIn";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, X, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, X, Loader2, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -25,6 +27,7 @@ const Analyze = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [analysisStep, setAnalysisStep] = useState("");
+  const [acceptedThirdPartyData, setAcceptedThirdPartyData] = useState(false);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -274,6 +277,39 @@ const Analyze = () => {
                         </div>
                       )}
 
+                      {/* Third Party Data Declaration - Legal Compliance */}
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div className="flex items-start gap-3 mb-4">
+                          <ShieldAlert className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-medium text-amber-800 mb-2">
+                              Declaración sobre datos de terceros
+                            </p>
+                            <p className="text-sm text-amber-700 mb-3">
+                              El contrato que vas a subir puede contener datos personales de terceras personas 
+                              (arrendador, propietario, inmobiliaria, avalistas), incluyendo nombres, DNI/NIE, 
+                              direcciones y datos bancarios.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-3 ml-8">
+                          <Checkbox
+                            id="thirdPartyData"
+                            checked={acceptedThirdPartyData}
+                            onCheckedChange={(checked) => setAcceptedThirdPartyData(checked as boolean)}
+                            className="mt-1"
+                          />
+                          <Label htmlFor="thirdPartyData" className="text-sm text-amber-800 leading-relaxed cursor-pointer">
+                            Declaro que <strong>soy parte del contrato</strong> (arrendatario o potencial arrendatario) 
+                            y tengo interés legítimo en analizarlo. He leído la información sobre el{" "}
+                            <Link to="/privacidad#datos-terceros" className="underline hover:no-underline" target="_blank">
+                              tratamiento de datos de terceros
+                            </Link>.
+                          </Label>
+                        </div>
+                      </div>
+
                       {/* AI Disclaimer - Legal Compliance */}
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
                         <p className="font-medium text-blue-800 mb-2">
@@ -288,7 +324,7 @@ const Analyze = () => {
 
                       <Button
                         onClick={handleAnalyze}
-                        disabled={!file || !profile || profile.credits < 1}
+                        disabled={!file || !profile || profile.credits < 1 || !acceptedThirdPartyData}
                         className="w-full"
                         size="lg"
                       >
