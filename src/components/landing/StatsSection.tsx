@@ -11,7 +11,7 @@ const stats = [
   },
   {
     value: "€850",
-    context: "es el coste medio de una consulta legal tradicional",
+    context: "es el coste medio de una consulta con abogado especializado",
   },
   {
     value: "<2 min",

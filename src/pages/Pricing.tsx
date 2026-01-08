@@ -24,21 +24,28 @@ const Pricing = () => {
         "name": "Plan Gratis",
         "price": "0",
         "priceCurrency": "EUR",
-        "description": "1 análisis de contrato gratuito"
+        "description": "1 análisis básico gratuito"
       },
       {
         "@type": "Offer",
-        "name": "Pack Básico",
-        "price": "9.99",
+        "name": "Análisis Único",
+        "price": "39.99",
         "priceCurrency": "EUR",
-        "description": "3 análisis de contratos"
+        "description": "1 análisis completo con informe detallado"
       },
       {
         "@type": "Offer",
-        "name": "Pack Ahorro",
-        "price": "19.99",
+        "name": "Pack Comparador",
+        "price": "79.99",
         "priceCurrency": "EUR",
-        "description": "10 análisis de contratos"
+        "description": "3 análisis completos para comparar contratos"
+      },
+      {
+        "@type": "Offer",
+        "name": "Suscripción Anual",
+        "price": "12.99",
+        "priceCurrency": "EUR",
+        "description": "Análisis ilimitados durante 1 año"
       }
     ]
   };

@@ -16,17 +16,17 @@ import {
 const clausulasAbusivas = [
   {
     titulo: "Exigir más de 2 meses de garantía adicional",
-    descripcion: "La LAU limita la fianza legal a 1 mes + máximo 2 meses de garantía adicional. Más de 3 meses en total es ilegal.",
+    descripcion: "La LAU limita la fianza legal a 1 mes + máximo 2 meses de garantía adicional. Más de 3 meses en total se considera contrario a la normativa vigente.",
     legal: false,
   },
   {
     titulo: "Cobrar gastos de inmobiliaria al inquilino",
-    descripcion: "Desde 2019, los honorarios de gestión inmobiliaria corresponden siempre al arrendador, nunca al inquilino.",
+    descripcion: "Desde 2019, los honorarios de gestión inmobiliaria corresponden al arrendador según la normativa vigente.",
     legal: false,
   },
   {
     titulo: "Obligar a pagar el IBI",
-    descripcion: "El IBI es un impuesto sobre la propiedad. En vivienda habitual, corresponde exclusivamente al propietario.",
+    descripcion: "El IBI es un impuesto sobre la propiedad. En vivienda habitual, corresponde al propietario según la LAU.",
     legal: false,
   },
   {
@@ -36,7 +36,7 @@ const clausulasAbusivas = [
   },
   {
     titulo: "Penalizaciones superiores a 1 mes/año",
-    descripcion: "La LAU permite máximo 1 mensualidad por año que falte, prorrateada. Cualquier penalización mayor es nula.",
+    descripcion: "La LAU permite máximo 1 mensualidad por año que falte, prorrateada. Cualquier penalización mayor se considera abusiva según la LAU.",
     legal: false,
   },
   {
@@ -46,12 +46,12 @@ const clausulasAbusivas = [
   },
   {
     titulo: "Renunciar a los derechos de la LAU",
-    descripcion: "Cualquier cláusula que te haga renunciar a derechos que la LAU te otorga como inquilino es nula de pleno derecho.",
+    descripcion: "Cualquier cláusula que te haga renunciar a derechos que la LAU te otorga como inquilino podría ser nula de pleno derecho.",
     legal: false,
   },
   {
     titulo: "Cobrar derramas extraordinarias al inquilino",
-    descripcion: "Las reparaciones estructurales y mejoras del edificio corresponden al propietario, no son trasladables al inquilino.",
+    descripcion: "Las reparaciones estructurales y mejoras del edificio corresponden al propietario según la normativa vigente.",
     legal: false,
   },
 ];
