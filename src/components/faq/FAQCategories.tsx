@@ -33,7 +33,7 @@ const categories = [
       },
       {
         question: "¿Puedo negarme a una subida de alquiler?",
-        answer: "Depende. Durante el contrato, solo pueden subir el alquiler si está expresamente pactado y conforme al índice legal (IRAV desde 2025). Si te proponen una subida fuera de estos límites, puedes negarte. Al renovar el contrato tras las prórrogas, el propietario puede proponer nuevas condiciones que puedes aceptar o rechazar."
+        answer: "Depende. Durante el contrato, solo pueden subir el alquiler si está expresamente pactado y conforme al índice legal (IRAV desde 2026). Si te proponen una subida fuera de estos límites, puedes negarte. Al renovar el contrato tras las prórrogas, el propietario puede proponer nuevas condiciones que puedes aceptar o rechazar."
       },
       {
         question: "¿Cuánto tiempo tengo derecho a vivir en el piso alquilado?",
@@ -125,11 +125,11 @@ const categories = [
     id: "subida-alquiler",
     title: "Subida del Alquiler",
     icon: TrendingUp,
-    description: "Límites legales a las subidas de renta en 2025",
+    description: "Límites legales a las subidas de renta en 2026",
     faqs: [
       {
-        question: "¿Cuánto puede subir mi alquiler en 2025?",
-        answer: "Desde enero de 2025, las subidas de alquiler están limitadas al índice IRAV (Índice de Referencia de Arrendamientos de Vivienda), que sustituye al IPC. El IRAV actualmente ronda el 2-3% anual. Tu casero no puede subir más de este porcentaje en la actualización anual."
+        question: "¿Cuánto puede subir mi alquiler en 2026?",
+        answer: "Desde enero de 2026, las subidas de alquiler están limitadas al índice IRAV (Índice de Referencia de Arrendamientos de Vivienda), que sustituye al IPC. El IRAV actualmente ronda el 2-3% anual. Tu casero no puede subir más de este porcentaje en la actualización anual."
       },
       {
         question: "¿Qué es el IRAV y cómo afecta a mi alquiler?",

@@ -67,7 +67,7 @@ const Footer = () => {
         
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © 2025 ACROXIA. Todos los derechos reservados.
+            © 2026 ACROXIA. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
