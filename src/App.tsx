@@ -34,9 +34,14 @@ import NotFound from "./pages/NotFound";
 import AvisoLegal from "./pages/legal/AvisoLegal";
 import Privacidad from "./pages/legal/Privacidad";
 import Terminos from "./pages/legal/Terminos";
+import Cookies from "./pages/legal/Cookies";
+import TransparenciaIA from "./pages/legal/TransparenciaIA";
+import Desistimiento from "./pages/legal/Desistimiento";
+import Accesibilidad from "./pages/legal/Accesibilidad";
 import ClausulasAbusivas from "./pages/seo/ClausulasAbusivas";
 import DevolucionFianza from "./pages/seo/DevolucionFianza";
 import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
+import CookieBanner from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
 
@@ -75,11 +80,16 @@ const App = () => (
               <Route path="/aviso-legal" element={<AvisoLegal />} />
               <Route path="/privacidad" element={<Privacidad />} />
               <Route path="/terminos" element={<Terminos />} />
+              <Route path="/cookies" element={<Cookies />} />
+              <Route path="/transparencia-ia" element={<TransparenciaIA />} />
+              <Route path="/desistimiento" element={<Desistimiento />} />
+              <Route path="/accesibilidad" element={<Accesibilidad />} />
               <Route path="/clausulas-abusivas-alquiler" element={<ClausulasAbusivas />} />
               <Route path="/devolucion-fianza-alquiler" element={<DevolucionFianza />} />
               <Route path="/subida-alquiler-2026" element={<SubidaAlquiler2026 />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <CookieBanner />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

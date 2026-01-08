@@ -293,6 +293,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cookies_consent: Json | null
           created_at: string
           credits: number
           email: string
@@ -301,9 +302,12 @@ export type Database = {
           id: string
           last_name: string | null
           phone: string | null
+          privacy_accepted_at: string | null
+          terms_accepted_at: string | null
           updated_at: string
         }
         Insert: {
+          cookies_consent?: Json | null
           created_at?: string
           credits?: number
           email: string
@@ -312,9 +316,12 @@ export type Database = {
           id: string
           last_name?: string | null
           phone?: string | null
+          privacy_accepted_at?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
+          cookies_consent?: Json | null
           created_at?: string
           credits?: number
           email?: string
@@ -323,6 +330,8 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone?: string | null
+          privacy_accepted_at?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: []
