@@ -110,7 +110,7 @@ const Privacidad = () => {
           </p>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li><strong className="text-foreground">Datos de cuenta:</strong> Mientras mantengas tu cuenta activa y durante los 3 años siguientes a la baja.</li>
-            <li><strong className="text-foreground">Documentos analizados:</strong> 90 días desde el análisis, salvo que solicites su eliminación anticipada.</li>
+            <li><strong className="text-foreground">Documentos analizados:</strong> 30 días desde el análisis, salvo que solicites su eliminación anticipada.</li>
             <li><strong className="text-foreground">Resultados de análisis:</strong> Mientras mantengas tu cuenta activa.</li>
             <li><strong className="text-foreground">Datos de facturación:</strong> 5 años conforme a la legislación fiscal.</li>
           </ul>
@@ -183,7 +183,7 @@ const Privacidad = () => {
         {/* Destinatarios */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
-            6. Destinatarios de los Datos
+            7. Destinatarios de los Datos
           </h2>
           <p className="mb-4 leading-relaxed">
             Tus datos personales podrán ser comunicados a:
@@ -200,7 +200,7 @@ const Privacidad = () => {
         {/* Transferencias internacionales */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
-            7. Transferencias Internacionales
+            8. Transferencias Internacionales
           </h2>
           <p className="leading-relaxed">
             Algunos de nuestros proveedores de servicios pueden estar ubicados fuera del Espacio Económico Europeo. En estos casos, nos aseguramos de que existan garantías adecuadas, como cláusulas contractuales tipo aprobadas por la Comisión Europea o que el país de destino cuente con una decisión de adecuación.
@@ -210,7 +210,7 @@ const Privacidad = () => {
         {/* Derechos */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
-            8. Tus Derechos
+            9. Tus Derechos
           </h2>
           <p className="mb-4 leading-relaxed">
             Conforme al RGPD, tienes derecho a:
@@ -235,7 +235,7 @@ const Privacidad = () => {
         {/* Seguridad */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
-            9. Medidas de Seguridad
+            10. Medidas de Seguridad
           </h2>
           <p className="leading-relaxed">
             Implementamos medidas técnicas y organizativas apropiadas para proteger tus datos personales contra el acceso no autorizado, alteración, divulgación o destrucción. Estas medidas incluyen cifrado de datos en tránsito y en reposo, controles de acceso estrictos, y auditorías de seguridad periódicas.
@@ -245,7 +245,7 @@ const Privacidad = () => {
         {/* Menores */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
-            10. Menores de Edad
+            11. Menores de Edad
           </h2>
           <p className="leading-relaxed">
             Nuestros servicios no están dirigidos a menores de 18 años. No recopilamos conscientemente información personal de menores. Si descubrimos que hemos recopilado datos de un menor sin el consentimiento parental verificable, eliminaremos dicha información de inmediato.
@@ -255,7 +255,7 @@ const Privacidad = () => {
         {/* Modificaciones */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
-            11. Modificaciones de esta Política
+            12. Modificaciones de esta Política
           </h2>
           <p className="leading-relaxed">
             Nos reservamos el derecho de modificar esta Política de Privacidad en cualquier momento. Las modificaciones entrarán en vigor desde su publicación en el Sitio Web. Te notificaremos sobre cambios significativos a través del email asociado a tu cuenta.
@@ -265,7 +265,7 @@ const Privacidad = () => {
         {/* Contacto */}
         <section>
           <h2 className="font-serif text-2xl font-semibold text-foreground mb-4">
-            12. Contacto
+            13. Contacto
           </h2>
           <p className="leading-relaxed">
             Si tienes cualquier pregunta sobre esta Política de Privacidad o sobre el tratamiento de tus datos personales, puedes contactarnos en:

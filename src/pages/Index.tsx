@@ -72,7 +72,7 @@ const Index = () => {
         "@type": "HowToStep",
         "position": 3,
         "name": "Recibe tu informe",
-        "text": "Obtén un informe detallado con cláusulas ilegales detectadas y recomendaciones legales claras."
+        "text": "Obtén un informe detallado con cláusulas potencialmente problemáticas identificadas y orientaciones claras."
       }
     ]
   };

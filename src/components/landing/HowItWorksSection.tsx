@@ -16,7 +16,7 @@ const steps = [
   {
     number: "03",
     title: "Recibe tu informe",
-    description: "Obtén un informe detallado con recomendaciones legales claras y accionables.",
+    description: "Obtén un informe detallado con orientaciones claras sobre cada cláusula.",
     image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop",
   },
 ];

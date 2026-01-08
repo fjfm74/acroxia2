@@ -70,11 +70,11 @@ const categories = [
       },
       {
         question: "¿Es legal que me cobren más de 2 meses de fianza?",
-        answer: "La fianza legal obligatoria es de 1 mes para vivienda habitual. Adicionalmente, pueden pedirte hasta 2 meses extra como garantía adicional (aval, depósito). Si te exigen más de 3 meses en total, es ilegal. En contratos anteriores a 2019, el límite era diferente."
+        answer: "La fianza legal obligatoria es de 1 mes para vivienda habitual. Adicionalmente, pueden pedirte hasta 2 meses extra como garantía adicional (aval, depósito). Si te exigen más de 3 meses en total, se considera contrario a la LAU. En contratos anteriores a 2019, el límite era diferente."
       },
       {
         question: "¿Me pueden obligar a pagar el IBI o la comunidad?",
-        answer: "El IBI es un impuesto del propietario y no es legalmente trasladable al inquilino en vivienda habitual según la LAU. Los gastos de comunidad pueden pactarse, pero debe quedar claro en el contrato. Si no hay pacto expreso, corresponden al propietario."
+        answer: "El IBI es un impuesto del propietario y no es legalmente trasladable al inquilino en vivienda habitual según la LAU. Los gastos de comunidad pueden pactarse, pero debe quedar claro en el contrato. Si no hay pacto expreso, corresponden al propietario. Una cláusula que te obligue a pagar el IBI podría ser nula según la LAU."
       },
       {
         question: "¿Es válida una cláusula que prohíbe tener mascotas?",
@@ -182,7 +182,7 @@ const categories = [
       },
       {
         question: "¿Cuál es la penalización legal por irme antes de tiempo?",
-        answer: "La LAU permite una penalización máxima de 1 mensualidad por cada año que falte por cumplir, prorrateada por meses. Ejemplo: si te faltan 8 meses, la penalización máxima sería 8/12 = 0,67 mensualidades. Cualquier penalización mayor es abusiva y reclamable."
+        answer: "La LAU permite una penalización máxima de 1 mensualidad por cada año que falte por cumplir, prorrateada por meses. Ejemplo: si te faltan 8 meses, la penalización máxima sería 8/12 = 0,67 mensualidades. Cualquier penalización mayor se considera abusiva según la LAU y podría ser reclamable."
       },
       {
         question: "¿Son legales las cláusulas de permanencia en alquiler?",
