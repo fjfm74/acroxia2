@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { checkUserIsAdmin } from "@/hooks/useIsAdmin";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -46,7 +47,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
         navigate("/dashboard");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -58,7 +59,9 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           description: "Has iniciado sesión correctamente.",
         });
 
-        navigate("/dashboard");
+        // Check if user is admin and redirect accordingly
+        const isAdmin = await checkUserIsAdmin(data.user.id);
+        navigate(isAdmin ? "/admin" : "/dashboard");
       }
     } catch (error: any) {
       toast({

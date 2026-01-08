@@ -1,6 +1,7 @@
 import { Link, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import AuthForm from "@/components/auth/AuthForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/landing/Header";
@@ -9,9 +10,10 @@ import FadeIn from "@/components/animations/FadeIn";
 
 const Login = () => {
   const { user, loading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
 
-  if (!loading && user) {
-    return <Navigate to="/dashboard" replace />;
+  if (!loading && !adminLoading && user) {
+    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
   }
 
   return (
