@@ -137,7 +137,7 @@ const AnalysisResult = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
 
-        <main className="flex-1 bg-muted py-12">
+        <main className="flex-1 bg-muted pt-28 pb-12">
           <div className="container mx-auto px-6">
             <FadeIn>
               <div className="flex items-center gap-4 mb-8">
