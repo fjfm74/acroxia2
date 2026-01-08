@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Wand2, Save, Eye, RefreshCw, ImageIcon } from "lucide-react";
+import { Sparkles, Wand2, Save, Eye, RefreshCw, ImageIcon, Share2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,6 +187,46 @@ const AdminBlogNew = () => {
       toast({
         title: "Error al guardar",
         description: error.message || "No se pudo guardar el post",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const createSocialContent = async () => {
+    if (!post.title || !post.content || !post.category) {
+      toast({
+        title: "Campos requeridos",
+        description: "Guarda el post primero antes de crear contenido social",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.from("blog_posts").insert({
+        title: post.title,
+        slug: post.slug || generateSlug(post.title),
+        excerpt: post.excerpt,
+        content: post.content,
+        category: post.category,
+        image: post.image || null,
+        read_time: post.read_time,
+        meta_description: post.meta_description,
+        keywords: post.keywords,
+        status: "draft",
+        author_id: user?.id,
+      }).select("id").single();
+
+      if (error) throw error;
+
+      navigate(`/admin/social/nuevo?blog_id=${data.id}`);
+    } catch (error: any) {
+      toast({
+        title: "Error al guardar",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -424,7 +464,16 @@ const AdminBlogNew = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-4 border-t">
+                <div className="flex flex-wrap justify-end gap-4 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={createSocialContent}
+                    disabled={saving || !post.title || !post.content}
+                    className="rounded-full"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Crear contenido social
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => savePost(false)}

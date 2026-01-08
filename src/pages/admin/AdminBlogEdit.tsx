@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from "react-router-dom";
-import { Sparkles, Wand2, Save, Eye, RefreshCw, ImageIcon, Loader2 } from "lucide-react";
+import { Sparkles, Wand2, Save, Eye, RefreshCw, ImageIcon, Loader2, Share2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -250,6 +250,11 @@ const AdminBlogEdit = () => {
     }
   };
 
+  const createSocialContent = () => {
+    if (!id) return;
+    navigate(`/admin/social/nuevo?blog_id=${id}`);
+  };
+
   if (loading) {
     return (
       <AdminLayout title="Editar Post" description="Cargando...">
@@ -490,7 +495,15 @@ const AdminBlogEdit = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-4 border-t">
+                <div className="flex flex-wrap justify-end gap-4 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={createSocialContent}
+                    className="rounded-full"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Crear contenido social
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => savePost(false)}
