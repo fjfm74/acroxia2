@@ -55,9 +55,37 @@ const Header = () => {
           <Link to="/precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Precios
           </Link>
-          <Link to="/faq" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
-            FAQ
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
+              Guías
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to="/clausulas-abusivas-alquiler" className="cursor-pointer">
+                  Cláusulas abusivas
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/devolucion-fianza-alquiler" className="cursor-pointer">
+                  Devolución de fianza
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/subida-alquiler-2026" className="cursor-pointer">
+                  Subida alquiler 2026
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/faq" className="cursor-pointer">
+                  Todas las preguntas
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Link to="/blog" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Blog
           </Link>
@@ -100,6 +128,34 @@ const Header = () => {
               >
                 Blog
               </Link>
+              
+              {/* Guías SEO en móvil */}
+              <div className="pt-4 border-t border-charcoal/10">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Guías</p>
+                <div className="flex flex-col gap-3">
+                  <Link 
+                    to="/clausulas-abusivas-alquiler" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Cláusulas abusivas
+                  </Link>
+                  <Link 
+                    to="/devolucion-fianza-alquiler" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Devolución de fianza
+                  </Link>
+                  <Link 
+                    to="/subida-alquiler-2026" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Subida alquiler 2026
+                  </Link>
+                </div>
+              </div>
             </nav>
             
             <div className="mt-8 pt-6 border-t border-charcoal/10 flex flex-col gap-4">
