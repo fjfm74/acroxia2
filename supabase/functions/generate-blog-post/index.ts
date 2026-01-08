@@ -29,6 +29,21 @@ El artículo debe:
 - Tener un tono profesional pero accesible
 - Incluir consejos prácticos
 
+REGLAS DE LENGUAJE LEGAL (OBLIGATORIO):
+- NUNCA uses afirmaciones absolutas como "es ilegal", "es nulo", "está prohibido"
+- USA lenguaje matizado: "según la LAU", "se considera", "podría ser", "generalmente"
+- SIEMPRE cita la fuente legal cuando menciones derechos u obligaciones
+- NO actúes como asesor legal - el contenido es informativo, no constituye asesoramiento
+- Evita imperativos como "debes" o "tienes que" - usa "es recomendable", "se aconseja"
+
+Ejemplos de transformación:
+- MAL: "Es ilegal cobrar más de 3 meses de fianza"
+- BIEN: "Según el artículo 36 de la LAU, se considera contrario a la ley exigir más de 3 mensualidades en total"
+- MAL: "Esa cláusula es nula"
+- BIEN: "Esa cláusula podría considerarse nula según la LAU"
+- MAL: "El casero no puede subir la renta"
+- BIEN: "De acuerdo con la normativa vigente, las actualizaciones de renta estarían limitadas al índice IRAV"
+
 Formato de respuesta OBLIGATORIO (JSON válido):
 {
   "title": "Título del artículo (máximo 60 caracteres)",
