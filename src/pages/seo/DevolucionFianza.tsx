@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Wallet, Clock, CheckCircle2, AlertTriangle, ArrowRight, FileText, Calculator } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -132,6 +133,12 @@ const DevolucionFianza = () => {
 
       <div className="min-h-screen bg-background">
         <Header />
+        <Breadcrumbs 
+          items={[
+            { label: "Guías", href: "/faq" },
+            { label: "Devolución de Fianza" }
+          ]} 
+        />
         
         {/* Hero Section */}
         <section className="pt-32 pb-20 bg-muted">
