@@ -36,9 +36,17 @@ const Analyze = () => {
     }
   }, []);
 
+  const ACCEPTED_TYPES = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
   const validateFile = (file: File): string | null => {
-    if (file.type !== "application/pdf") {
-      return "Solo se permiten archivos PDF";
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      return "Formato no soportado. Usa PDF, DOCX, JPG, PNG o WEBP";
     }
     if (file.size > MAX_FILE_SIZE) {
       return "El archivo no puede superar los 10MB";
@@ -127,7 +135,7 @@ const Analyze = () => {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-contract",
         {
-          body: { contractId: contract.id, filePath },
+          body: { contractId: contract.id, filePath, fileType: file.type },
         }
       );
 
@@ -185,7 +193,7 @@ const Analyze = () => {
                   Analizar contrato
                 </h1>
                 <p className="text-charcoal/70">
-                  Sube tu contrato de alquiler en formato PDF
+                  Sube tu contrato de alquiler
                 </p>
               </div>
             </FadeIn>
@@ -195,7 +203,7 @@ const Analyze = () => {
                 <CardHeader>
                   <CardTitle>Subir contrato</CardTitle>
                   <CardDescription>
-                    Formatos aceptados: PDF (máx. 10MB)
+                    Formatos aceptados: PDF, DOCX, JPG, PNG (máx. 10MB)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -215,7 +223,7 @@ const Analyze = () => {
                       >
                         <input
                           type="file"
-                          accept=".pdf"
+                          accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.webp"
                           onChange={handleFileSelect}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
