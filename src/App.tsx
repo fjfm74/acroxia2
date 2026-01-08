@@ -21,6 +21,7 @@ import AnalysisResult from "./pages/AnalysisResult";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminBlogNew from "./pages/admin/AdminBlogNew";
+import AdminBlogEdit from "./pages/admin/AdminBlogEdit";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminUsers from "./pages/admin/AdminUsers";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/blog" element={<AdminRoute><AdminBlog /></AdminRoute>} />
               <Route path="/admin/blog/nuevo" element={<AdminRoute><AdminBlogNew /></AdminRoute>} />
+              <Route path="/admin/blog/editar/:id" element={<AdminRoute><AdminBlogEdit /></AdminRoute>} />
               <Route path="/admin/documentos" element={<AdminRoute><AdminDocuments /></AdminRoute>} />
               <Route path="/admin/usuarios" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="*" element={<NotFound />} />
