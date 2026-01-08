@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, XCircle, ArrowRight, FileText, Shield, Scale } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -118,6 +119,12 @@ const ClausulasAbusivas = () => {
 
       <div className="min-h-screen bg-background">
         <Header />
+        <Breadcrumbs 
+          items={[
+            { label: "Guías", href: "/faq" },
+            { label: "Cláusulas Abusivas" }
+          ]} 
+        />
         
         {/* Hero Section */}
         <section className="pt-32 pb-20 bg-muted">

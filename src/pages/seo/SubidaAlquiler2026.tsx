@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { TrendingUp, Calendar, Calculator, AlertTriangle, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -118,6 +119,12 @@ const SubidaAlquiler2026 = () => {
 
       <div className="min-h-screen bg-background">
         <Header />
+        <Breadcrumbs 
+          items={[
+            { label: "Guías", href: "/faq" },
+            { label: "Subida Alquiler 2026" }
+          ]} 
+        />
         
         {/* Hero Section */}
         <section className="pt-32 pb-20 bg-muted">
