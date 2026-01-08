@@ -23,7 +23,7 @@ const pasos = [
   {
     numero: "02",
     titulo: "Espera el plazo legal de 30 días",
-    descripcion: "El propietario tiene exactamente 30 días desde la entrega de llaves para devolverte la fianza. Este plazo está fijado por la LAU.",
+    descripcion: "Según la LAU, el propietario dispone de 30 días desde la entrega de llaves para devolverte la fianza. Este plazo está fijado por el artículo 36.4 de la LAU.",
     icono: Clock,
   },
   {
@@ -52,11 +52,11 @@ const motivosIlegales = [
 const faqs = [
   {
     question: "¿Cuánto tiempo tiene el casero para devolverme la fianza?",
-    answer: "El propietario tiene exactamente 30 días naturales desde la entrega de llaves para devolverte la fianza. Este plazo está establecido en el artículo 36.4 de la LAU. Si no lo hace en ese plazo, empiezan a generarse intereses legales a tu favor."
+    answer: "Según el artículo 36.4 de la LAU, el propietario dispone de un plazo de 30 días naturales desde la entrega de llaves para devolverte la fianza. Si no lo hace en ese plazo, empiezan a generarse intereses legales a tu favor."
   },
   {
     question: "¿Puede el casero quedarse mi fianza por el desgaste normal?",
-    answer: "No. El desgaste normal derivado del uso habitual de la vivienda no justifica retener la fianza. La pintura ligeramente deteriorada, pequeñas marcas en paredes o el uso normal de electrodomésticos son desgaste natural, no daños imputables al inquilino."
+    answer: "Según la jurisprudencia, el desgaste normal derivado del uso habitual de la vivienda generalmente no justificaría retener la fianza. La pintura ligeramente deteriorada, pequeñas marcas en paredes o el uso normal de electrodomésticos se consideran desgaste natural, no daños imputables al inquilino."
   },
   {
     question: "¿Qué puedo hacer si no me devuelven la fianza en 30 días?",
@@ -64,7 +64,7 @@ const faqs = [
   },
   {
     question: "¿Cuánto dinero de fianza me pueden pedir legalmente?",
-    answer: "La fianza legal obligatoria es de 1 mensualidad para vivienda habitual. Además, pueden pedir hasta 2 meses como garantía adicional. En total, máximo 3 meses. Cualquier cantidad superior es ilegal."
+    answer: "La fianza legal obligatoria es de 1 mensualidad para vivienda habitual. Además, pueden pedir hasta 2 meses como garantía adicional. En total, máximo 3 meses. Cualquier cantidad superior se consideraría contraria a la LAU."
   },
   {
     question: "¿Puedo usar la fianza para pagar el último mes de alquiler?",
@@ -236,10 +236,10 @@ const DevolucionFianza = () => {
             <div className="max-w-4xl mx-auto">
               <FadeIn>
                 <h2 className="font-serif text-3xl font-semibold text-foreground mb-4 text-center">
-                  Motivos Ilegales para Retener la Fianza
+                  Motivos que Generalmente No Justifican Retener la Fianza
                 </h2>
                 <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-                  El casero NO puede quedarse la fianza por desgaste normal. Estos son ejemplos de retenciones ilegales:
+                  Según la jurisprudencia, el casero generalmente no podría retener la fianza por desgaste normal. Estos son ejemplos de retenciones cuestionables:
                 </p>
               </FadeIn>
               <div className="grid sm:grid-cols-2 gap-4">

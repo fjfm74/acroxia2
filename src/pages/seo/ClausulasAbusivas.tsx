@@ -59,15 +59,15 @@ const clausulasAbusivas = [
 const faqs = [
   {
     question: "¿Qué es una cláusula abusiva en un contrato de alquiler?",
-    answer: "Una cláusula abusiva es aquella que contraviene la Ley de Arrendamientos Urbanos (LAU) o genera un desequilibrio significativo entre los derechos del inquilino y del arrendador. Estas cláusulas son nulas de pleno derecho: no tienen ningún efecto legal aunque las hayas firmado."
+    answer: "Una cláusula abusiva es aquella que contraviene la Ley de Arrendamientos Urbanos (LAU) o genera un desequilibrio significativo entre los derechos del inquilino y del arrendador. Según la LAU, estas cláusulas se consideran nulas de pleno derecho y carecerían de efecto legal aunque se hayan firmado."
   },
   {
     question: "¿Puedo negarme a cumplir una cláusula abusiva si ya firmé el contrato?",
-    answer: "Sí. Las cláusulas abusivas son nulas automáticamente, independientemente de que las hayas firmado. El resto del contrato sigue siendo válido. Si el casero intenta aplicarlas, puedes negarte y, si insiste, reclamar ante la OMIC o judicialmente."
+    answer: "Sí. Las cláusulas consideradas abusivas según la LAU serían nulas automáticamente, independientemente de que las hayas firmado. El resto del contrato sigue siendo válido. Si el casero intenta aplicarlas, puedes negarte y, si insiste, reclamar ante la OMIC o judicialmente."
   },
   {
     question: "¿Cómo puedo saber si mi contrato tiene cláusulas ilegales?",
-    answer: "Puedes revisar tu contrato manualmente comparándolo con la LAU, o usar herramientas de análisis con IA como ACROXIA que detectan automáticamente cláusulas abusivas en menos de 2 minutos y te explican por qué son ilegales."
+    answer: "Puedes revisar tu contrato manualmente comparándolo con la LAU, o usar herramientas de análisis con IA como ACROXIA que identifican cláusulas potencialmente abusivas en menos de 2 minutos y te explican por qué podrían ser contrarias a la LAU."
   },
   {
     question: "¿Qué hacer si descubro cláusulas abusivas después de firmar?",
@@ -84,7 +84,7 @@ const ClausulasAbusivas = () => {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "Cláusulas Abusivas en Contratos de Alquiler - Guía 2026",
-    "description": "Identifica cláusulas ilegales en tu contrato de alquiler. Guía completa sobre qué cláusulas son nulas según la LAU y cómo reclamar.",
+    "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler. Guía completa sobre qué cláusulas podrían ser nulas según la LAU y cómo reclamar.",
     "url": "https://acroxia.com/clausulas-abusivas-alquiler",
     "mainEntity": {
       "@type": "FAQPage",
@@ -105,7 +105,7 @@ const ClausulasAbusivas = () => {
         <title>Cláusulas Abusivas en Contratos de Alquiler 2026 | Guía Completa</title>
         <meta 
           name="description" 
-          content="Descubre qué cláusulas son ilegales en tu contrato de alquiler. Lista de cláusulas abusivas según la LAU, cómo identificarlas y cómo reclamar. Actualizado 2026." 
+          content="Descubre qué cláusulas podrían ser ilegales en tu contrato de alquiler. Lista de cláusulas abusivas según la LAU, cómo identificarlas y cómo reclamar. Actualizado 2026." 
         />
         <meta 
           name="keywords" 
@@ -142,9 +142,9 @@ const ClausulasAbusivas = () => {
                 </h1>
               </FadeIn>
               <FadeIn delay={0.2}>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                  Guía completa para identificar cláusulas ilegales en tu contrato según la LAU. 
-                  Aprende cuáles son nulas de pleno derecho y cómo reclamar.
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+                  Guía completa para identificar cláusulas potencialmente ilegales en tu contrato según la LAU. 
+                  Aprende cuáles podrían considerarse nulas de pleno derecho y cómo reclamar.
                 </p>
               </FadeIn>
               <FadeIn delay={0.3}>
@@ -212,13 +212,13 @@ const ClausulasAbusivas = () => {
             <div className="max-w-3xl mx-auto text-center">
               <FadeIn>
                 <h2 className="font-serif text-3xl md:text-4xl font-semibold mb-6">
-                  ¿Tu contrato tiene cláusulas ilegales?
+                  ¿Tu contrato tiene cláusulas potencialmente ilegales?
                 </h2>
               </FadeIn>
               <FadeIn delay={0.1}>
                 <p className="text-background/70 text-lg mb-8">
-                  Nuestra IA analiza tu contrato en menos de 2 minutos y te indica exactamente 
-                  qué cláusulas son abusivas y cómo reclamar.
+                  Nuestra IA analiza tu contrato en menos de 2 minutos y te indica 
+                  qué cláusulas podrían ser abusivas y cómo reclamar.
                 </p>
               </FadeIn>
               <FadeIn delay={0.2}>

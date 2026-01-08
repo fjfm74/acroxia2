@@ -23,7 +23,7 @@ const comparativaIndices = [
 const queHacer = [
   {
     situacion: "El casero quiere subir más del IRAV",
-    accion: "Puedes negarte. La subida está limitada por ley al IRAV. Comunica por escrito que solo aceptas la subida legal.",
+    accion: "Puedes negarte. Según la normativa vigente, la subida estaría limitada al IRAV. Comunica por escrito que solo aceptas la subida conforme a la ley.",
     legal: false,
   },
   {
@@ -33,12 +33,12 @@ const queHacer = [
   },
   {
     situacion: "Aplican IPC en lugar de IRAV",
-    accion: "Desde 2024, el IPC no aplica para vivienda habitual. Solo el IRAV es válido para actualizar la renta.",
+    accion: "Desde 2024, el IPC no aplica para vivienda habitual. Según la normativa actual, el IRAV sería el índice aplicable para actualizar la renta.",
     legal: false,
   },
   {
     situacion: "El contrato dice \"subida según IPC\"",
-    accion: "No importa lo que diga el contrato: la ley prevalece. La subida máxima es el IRAV.",
+    accion: "En principio, la ley prevalece sobre el contrato. Según la normativa, la subida estaría limitada al IRAV.",
     legal: true,
   },
 ];
@@ -46,7 +46,7 @@ const queHacer = [
 const faqs = [
   {
     question: "¿Cuánto puede subir mi alquiler en 2026?",
-    answer: "En 2026, la subida máxima permitida es el IRAV (Índice de Referencia de Arrendamientos de Vivienda), que actualmente ronda el 2,2%. Tu casero no puede aplicar una subida superior a este porcentaje en la actualización anual de la renta."
+    answer: "En 2026, la subida máxima permitida es el IRAV (Índice de Referencia de Arrendamientos de Vivienda), que actualmente ronda el 2,2%. Según la normativa, tu casero no podría aplicar una subida superior a este porcentaje en la actualización anual de la renta."
   },
   {
     question: "¿Qué es el IRAV y cómo funciona?",
@@ -62,7 +62,7 @@ const faqs = [
   },
   {
     question: "Mi contrato dice \"subida según IPC\", ¿qué aplica?",
-    answer: "La ley prevalece sobre el contrato. Aunque tu contrato mencione el IPC, desde 2024 la subida máxima para vivienda habitual es el IRAV. No pueden aplicarte el IPC aunque lo ponga en el contrato."
+    answer: "En principio, la ley prevalece sobre el contrato. Aunque tu contrato mencione el IPC, desde 2024 la subida máxima para vivienda habitual es el IRAV. Según la normativa vigente, no podrían aplicarte el IPC aunque lo ponga en el contrato."
   },
   {
     question: "¿Qué diferencia hay entre IRAV e IPC?",
@@ -70,7 +70,7 @@ const faqs = [
   },
   {
     question: "¿Pueden subirme el alquiler fuera de la actualización anual?",
-    answer: "No. Durante la vigencia del contrato, solo pueden actualizar la renta en la fecha de aniversario y conforme al IRAV. Cualquier otra subida fuera de estos términos es ilegal."
+    answer: "No. Durante la vigencia del contrato, solo pueden actualizar la renta en la fecha de aniversario y conforme al IRAV. Cualquier otra subida fuera de estos términos podría considerarse contraria a la normativa."
   },
   {
     question: "¿Qué hago si la subida es abusiva?",
@@ -259,7 +259,7 @@ const SubidaAlquiler2026 = () => {
               <FadeIn delay={0.1}>
                 <p className="text-background/70 text-lg mb-8">
                   Analiza tu contrato con nuestra IA y descubre si las cláusulas de actualización 
-                  de renta cumplen con la ley o son ilegales.
+                  de renta cumplen con la normativa o podrían ser contrarias a ella.
                 </p>
               </FadeIn>
               <FadeIn delay={0.2}>
