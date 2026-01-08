@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Sparkles, Loader2, ArrowLeft, Save, Copy, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Save, Plus } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import SlideEditor, { Slide } from "@/components/admin/social/SlideEditor";
 import CaptionEditor from "@/components/admin/social/CaptionEditor";
 import HashtagEditor from "@/components/admin/social/HashtagEditor";
 import SocialPreviewMockup from "@/components/admin/social/SocialPreviewMockup";
+import PublishActions from "@/components/admin/social/PublishActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -171,12 +172,6 @@ const AdminSocialEdit = () => {
     setSlides(updated);
   };
 
-  // Copy caption
-  const copyCaption = () => {
-    const fullCaption = caption + (hashtags.length > 0 ? "\n\n" + hashtags.map(h => `#${h}`).join(" ") : "");
-    navigator.clipboard.writeText(fullCaption);
-    toast({ title: "Caption copiado" });
-  };
 
   if (isLoading) {
     return (
@@ -228,16 +223,19 @@ const AdminSocialEdit = () => {
 
           {/* Caption editor */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">Caption</h3>
-              <Button variant="ghost" size="sm" onClick={copyCaption}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copiar
-              </Button>
-            </div>
+            <h3 className="font-medium">Caption</h3>
             <CaptionEditor value={caption} onChange={setCaption} platform={platform} />
             <HashtagEditor hashtags={hashtags} onChange={setHashtags} platform={platform} />
           </div>
+
+          {/* Publish actions */}
+          <PublishActions
+            platform={platform}
+            title={title}
+            caption={caption}
+            hashtags={hashtags}
+            slides={slides}
+          />
 
           {/* Slides editor */}
           {slides.length > 0 && (contentType === "carousel" || contentType === "story" || contentType === "thread") && (
