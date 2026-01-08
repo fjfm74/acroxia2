@@ -31,7 +31,7 @@ const Blog = () => {
         <title>Blog de Alquiler y Derechos del Inquilino | ACROXIA</title>
         <meta 
           name="description" 
-          content="Guías prácticas sobre alquiler en España: cláusulas abusivas, fianzas, derechos del inquilino, subidas de renta y más. Información legal actualizada 2025." 
+          content="Guías prácticas sobre alquiler en España: cláusulas abusivas, fianzas, derechos del inquilino, subidas de renta y más. Información legal actualizada 2026." 
         />
         <meta 
           name="keywords" 

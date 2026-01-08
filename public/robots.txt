@@ -12,3 +12,13 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Bloquear rutas privadas
+Disallow: /dashboard
+Disallow: /perfil
+Disallow: /analizar
+Disallow: /resultado/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://acroxia.com/sitemap.xml
