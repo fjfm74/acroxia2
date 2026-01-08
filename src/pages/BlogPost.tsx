@@ -6,6 +6,7 @@ import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import BlogSidebar from "@/components/blog/BlogSidebar";
 import BlogCard from "@/components/blog/BlogCard";
+import TableOfContents from "@/components/blog/TableOfContents";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
@@ -207,6 +208,11 @@ const BlogPost = () => {
               <div className="grid lg:grid-cols-3 gap-12">
                 {/* Main Content */}
                 <article className="lg:col-span-2">
+                  {/* Table of Contents */}
+                  <FadeIn delay={0.35}>
+                    <TableOfContents content={post.content || ""} className="mb-10" />
+                  </FadeIn>
+
                   <FadeIn delay={0.4}>
                     <div className="prose prose-lg max-w-none 
                       prose-headings:font-serif prose-headings:text-foreground prose-headings:font-semibold
@@ -222,6 +228,28 @@ const BlogPost = () => {
                     ">
                       <ReactMarkdown
                         components={{
+                          h2: ({ children }) => {
+                            const text = String(children);
+                            const id = text
+                              .toLowerCase()
+                              .normalize("NFD")
+                              .replace(/[\u0300-\u036f]/g, "")
+                              .replace(/[^a-z0-9\s-]/g, "")
+                              .replace(/\s+/g, "-")
+                              .replace(/-+/g, "-");
+                            return <h2 id={id}>{children}</h2>;
+                          },
+                          h3: ({ children }) => {
+                            const text = String(children);
+                            const id = text
+                              .toLowerCase()
+                              .normalize("NFD")
+                              .replace(/[\u0300-\u036f]/g, "")
+                              .replace(/[^a-z0-9\s-]/g, "")
+                              .replace(/\s+/g, "-")
+                              .replace(/-+/g, "-");
+                            return <h3 id={id}>{children}</h3>;
+                          },
                           ul: ({ children }) => (
                             <ul className="space-y-3 my-6">
                               {children}
