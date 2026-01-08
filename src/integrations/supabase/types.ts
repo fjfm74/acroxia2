@@ -58,6 +58,60 @@ export type Database = {
           },
         ]
       }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          category: string
+          content: string
+          created_at: string
+          excerpt: string
+          id: string
+          image: string | null
+          keywords: string[] | null
+          meta_description: string | null
+          published_at: string | null
+          read_time: string
+          slug: string
+          status: Database["public"]["Enums"]["blog_post_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          category: string
+          content: string
+          created_at?: string
+          excerpt: string
+          id?: string
+          image?: string | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          published_at?: string | null
+          read_time?: string
+          slug: string
+          status?: Database["public"]["Enums"]["blog_post_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          excerpt?: string
+          id?: string
+          image?: string | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          published_at?: string | null
+          read_time?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["blog_post_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           created_at: string
@@ -143,6 +197,7 @@ export type Database = {
           file_path: string | null
           id: string
           is_active: boolean
+          jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"] | null
           source: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
@@ -155,6 +210,9 @@ export type Database = {
           file_path?: string | null
           id?: string
           is_active?: boolean
+          jurisdiction?:
+            | Database["public"]["Enums"]["legal_jurisdiction"]
+            | null
           source?: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
@@ -167,6 +225,9 @@ export type Database = {
           file_path?: string | null
           id?: string
           is_active?: boolean
+          jurisdiction?:
+            | Database["public"]["Enums"]["legal_jurisdiction"]
+            | null
           source?: string | null
           title?: string
           type?: Database["public"]["Enums"]["legal_doc_type"]
@@ -289,8 +350,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      blog_post_status: "draft" | "published"
       contract_status: "pending" | "processing" | "completed" | "failed"
       legal_doc_type: "ley" | "boe" | "jurisprudencia" | "guia" | "decreto"
+      legal_jurisdiction:
+        | "jurisprudencia"
+        | "estatal"
+        | "autonomica"
+        | "provincial"
+        | "local"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -419,8 +487,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      blog_post_status: ["draft", "published"],
       contract_status: ["pending", "processing", "completed", "failed"],
       legal_doc_type: ["ley", "boe", "jurisprudencia", "guia", "decreto"],
+      legal_jurisdiction: [
+        "jurisprudencia",
+        "estatal",
+        "autonomica",
+        "provincial",
+        "local",
+      ],
     },
   },
 } as const
