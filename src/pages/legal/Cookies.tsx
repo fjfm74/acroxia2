@@ -116,6 +116,11 @@ const Cookies = () => {
             La primera vez que visites nuestro sitio, te mostraremos un banner donde podrás aceptar 
             todas las cookies, rechazar las no esenciales, o configurar tus preferencias detalladamente.
           </p>
+          <p className="text-muted-foreground mb-4">
+            <strong>Para modificar tus preferencias en cualquier momento:</strong> Haz clic en el icono 
+            de cookie (🍪) situado en la esquina inferior izquierda de la pantalla, o utiliza el enlace 
+            "Configurar cookies" en el pie de página. Podrás cambiar tu selección las veces que necesites.
+          </p>
 
           <h3 className="font-medium text-lg mb-3">4.2 Mediante tu navegador</h3>
           <p className="text-muted-foreground mb-4">

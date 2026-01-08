@@ -56,6 +56,14 @@ const Footer = () => {
               <li><Link to="/privacidad" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Política de Privacidad</Link></li>
               <li><Link to="/terminos" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Términos y Condiciones</Link></li>
               <li><Link to="/cookies" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Política de Cookies</Link></li>
+              <li>
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent("openCookieSettings"))}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm text-left"
+                >
+                  Configurar cookies
+                </button>
+              </li>
               <li><Link to="/transparencia-ia" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Transparencia IA</Link></li>
               <li><Link to="/desistimiento" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Desistimiento</Link></li>
               <li><Link to="/accesibilidad" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Accesibilidad</Link></li>

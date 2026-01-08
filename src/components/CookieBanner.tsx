@@ -13,6 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Cookie, Settings } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CookiePreferences {
   essential: boolean;
@@ -34,6 +35,7 @@ const CookieBanner = () => {
   const { user } = useAuth();
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [hasConsented, setHasConsented] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>(defaultPreferences);
 
   useEffect(() => {
@@ -43,6 +45,7 @@ const CookieBanner = () => {
         const parsed = JSON.parse(stored);
         setPreferences(parsed);
         setShowBanner(false);
+        setHasConsented(true);
       } catch {
         setShowBanner(true);
       }
@@ -51,6 +54,13 @@ const CookieBanner = () => {
       const timer = setTimeout(() => setShowBanner(true), 500);
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  // Listen for custom event from Footer
+  useEffect(() => {
+    const handleOpenSettings = () => setShowSettings(true);
+    window.addEventListener("openCookieSettings", handleOpenSettings);
+    return () => window.removeEventListener("openCookieSettings", handleOpenSettings);
   }, []);
 
   const logCookieConsent = async (prefs: CookiePreferences) => {
@@ -95,6 +105,7 @@ const CookieBanner = () => {
     setPreferences(withTimestamp);
     setShowBanner(false);
     setShowSettings(false);
+    setHasConsented(true);
     
     // Log consent to database if user is logged in
     logCookieConsent(withTimestamp);
@@ -122,10 +133,28 @@ const CookieBanner = () => {
     savePreferences(preferences);
   };
 
-  if (!showBanner && !showSettings) return null;
-
   return (
     <>
+      {/* Floating Cookie Icon - visible after consent */}
+      {hasConsented && !showBanner && !showSettings && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="fixed bottom-4 left-4 z-50 w-11 h-11 rounded-full bg-background border border-border shadow-lg flex items-center justify-center hover:bg-muted transition-colors animate-in fade-in duration-300"
+                aria-label="Configurar cookies"
+              >
+                <Cookie className="h-5 w-5 text-foreground" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Configurar cookies</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+
       {/* Banner */}
       {showBanner && !showSettings && (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 animate-in slide-in-from-bottom duration-300">
