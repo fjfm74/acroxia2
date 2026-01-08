@@ -43,6 +43,7 @@ import DevolucionFianza from "./pages/seo/DevolucionFianza";
 import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
 import Contacto from "./pages/Contacto";
 import CookieBanner from "./components/CookieBanner";
+import ChatContainer from "./components/chat/ChatContainer";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieBanner />
+            <ChatContainer />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
