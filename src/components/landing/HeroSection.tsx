@@ -25,7 +25,7 @@ const HeroSection = () => {
           <div className="max-w-xl">
             <FadeIn>
               <p className="text-sm font-medium text-muted-foreground mb-6 tracking-wide uppercase">
-                Análisis legal con inteligencia artificial
+                Análisis de contratos con inteligencia artificial
               </p>
             </FadeIn>
             
@@ -37,7 +37,7 @@ const HeroSection = () => {
             
             <FadeIn delay={0.2}>
               <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
-                Sube tu contrato de alquiler y descubre en menos de 2 minutos si contiene cláusulas abusivas o ilegales según la LAU.
+                Sube tu contrato de alquiler y descubre en menos de 2 minutos si contiene cláusulas que podrían ser abusivas o contrarias a la LAU.
               </p>
             </FadeIn>
             
@@ -102,7 +102,7 @@ const HeroSection = () => {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50">
                     <XCircle className="w-5 h-5 text-red-600" />
                     <div>
-                      <p className="text-sm font-medium text-foreground">1 cláusula ilegal</p>
+                      <p className="text-sm font-medium text-foreground">1 cláusula potencialmente ilegal</p>
                     </div>
                   </div>
                 </div>
