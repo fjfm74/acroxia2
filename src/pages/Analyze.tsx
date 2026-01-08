@@ -129,6 +129,19 @@ const Analyze = () => {
 
       if (contractError) throw contractError;
 
+      // Log third-party data consent
+      await supabase.from("consent_logs").insert({
+        user_id: user.id,
+        consent_type: "third_party_data",
+        accepted: true,
+        user_agent: navigator.userAgent,
+        document_version: "2026-01-08",
+        metadata: {
+          contract_id: contract.id,
+          file_name: file.name,
+        },
+      });
+
       setUploading(false);
       setAnalyzing(true);
       setProgress(50);

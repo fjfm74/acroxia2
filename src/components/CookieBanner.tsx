@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -29,6 +31,7 @@ const defaultPreferences: CookiePreferences = {
 const COOKIE_KEY = "cookie-consent";
 
 const CookieBanner = () => {
+  const { user } = useAuth();
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>(defaultPreferences);
@@ -50,12 +53,51 @@ const CookieBanner = () => {
     }
   }, []);
 
+  const logCookieConsent = async (prefs: CookiePreferences) => {
+    if (!user) return;
+    
+    try {
+      // Log analytics consent
+      if (prefs.analytics) {
+        await supabase.from("consent_logs").insert({
+          user_id: user.id,
+          consent_type: "cookies_analytics",
+          accepted: true,
+          user_agent: navigator.userAgent,
+          document_version: "2026-01-08",
+          metadata: {
+            functional: prefs.functional,
+            analytics: prefs.analytics,
+          },
+        });
+      }
+      
+      // Update profile with cookie preferences
+      await supabase
+        .from("profiles")
+        .update({
+          cookies_consent: {
+            essential: true,
+            functional: prefs.functional,
+            analytics: prefs.analytics,
+            acceptedAt: new Date().toISOString(),
+          },
+        })
+        .eq("id", user.id);
+    } catch (error) {
+      console.error("Error logging cookie consent:", error);
+    }
+  };
+
   const savePreferences = (prefs: CookiePreferences) => {
     const withTimestamp = { ...prefs, acceptedAt: new Date().toISOString() };
     localStorage.setItem(COOKIE_KEY, JSON.stringify(withTimestamp));
     setPreferences(withTimestamp);
     setShowBanner(false);
     setShowSettings(false);
+    
+    // Log consent to database if user is logged in
+    logCookieConsent(withTimestamp);
   };
 
   const acceptAll = () => {
