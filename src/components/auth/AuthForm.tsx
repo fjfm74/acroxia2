@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { checkUserIsAdmin } from "@/hooks/useIsAdmin";
@@ -17,6 +18,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -27,7 +29,17 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
     try {
       if (mode === "register") {
-        const { error } = await supabase.auth.signUp({
+        if (!acceptedTerms) {
+          toast({
+            title: "Términos requeridos",
+            description: "Debes aceptar los Términos y la Política de Privacidad para continuar.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -39,6 +51,18 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         });
 
         if (error) throw error;
+
+        // Save terms acceptance timestamp
+        if (data.user) {
+          const now = new Date().toISOString();
+          await supabase
+            .from("profiles")
+            .update({
+              terms_accepted_at: now,
+              privacy_accepted_at: now,
+            })
+            .eq("id", data.user.id);
+        }
 
         toast({
           title: "¡Cuenta creada!",
@@ -158,7 +182,28 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      {mode === "register" && (
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="terms"
+            checked={acceptedTerms}
+            onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+            className="mt-1"
+          />
+          <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+            He leído y acepto los{" "}
+            <Link to="/terminos" className="text-primary hover:underline" target="_blank">
+              Términos y Condiciones
+            </Link>{" "}
+            y la{" "}
+            <Link to="/privacidad" className="text-primary hover:underline" target="_blank">
+              Política de Privacidad
+            </Link>
+          </Label>
+        </div>
+      )}
+
+      <Button type="submit" className="w-full" disabled={loading || (mode === "register" && !acceptedTerms)}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
       </Button>
