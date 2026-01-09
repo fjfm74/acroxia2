@@ -29,23 +29,30 @@ const Pricing = () => {
       {
         "@type": "Offer",
         "name": "Análisis Único",
-        "price": "39.99",
+        "price": "39",
         "priceCurrency": "EUR",
         "description": "1 análisis completo con informe detallado"
       },
       {
         "@type": "Offer",
         "name": "Pack Comparador",
-        "price": "79.99",
+        "price": "79",
         "priceCurrency": "EUR",
         "description": "3 análisis completos para comparar contratos"
+      },
+      {
+        "@type": "Offer",
+        "name": "Suscripción Mensual",
+        "price": "12",
+        "priceCurrency": "EUR",
+        "description": "Alertas de renovación y cambios legislativos"
       },
       {
         "@type": "Offer",
         "name": "Suscripción Anual",
         "price": "99",
         "priceCurrency": "EUR",
-        "description": "Alertas de renovación y cambios legislativos"
+        "description": "Alertas de renovación y cambios legislativos (ahorro 45€)"
       }
     ]
   };

@@ -110,7 +110,10 @@ const Footer = () => {
         </div>
         
         {/* ODR Platform - Consumer Rights */}
-        <div className="border-t border-border mt-6 pt-6 text-center">
+        <div className="border-t border-border mt-6 pt-6 text-center space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Todos los precios incluyen IVA
+          </p>
           <p className="text-xs text-muted-foreground">
             Resolución de litigios en línea de la UE:{" "}
             <a 

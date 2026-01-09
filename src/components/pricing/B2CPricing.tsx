@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
+import SubscriptionCard from "./SubscriptionCard";
 
 const plans = [
   {
@@ -17,7 +18,7 @@ const plans = [
   },
   {
     name: "Análisis Único",
-    price: "39,99",
+    price: "39",
     period: "",
     description: "Análisis completo para un contrato específico",
     features: [
@@ -31,7 +32,7 @@ const plans = [
   },
   {
     name: "Pack Comparador",
-    price: "79,99",
+    price: "79",
     period: "",
     description: "Ideal para comparar varios pisos antes de decidir",
     features: [
@@ -44,20 +45,6 @@ const plans = [
     cta: "Comparar contratos",
     highlighted: true,
     badge: "Más popular",
-  },
-  {
-    name: "Suscripción Anual",
-    price: "99",
-    period: "/año",
-    description: "Para usuarios que ya han analizado un contrato con nosotros",
-    features: [
-      "Alertas de renovación de contrato",
-      "Notificaciones de cambios legislativos",
-      "Análisis incluido en cada renovación",
-      "Historial de análisis",
-    ],
-    cta: "Suscribirse",
-    highlighted: false,
   },
 ];
 
@@ -130,6 +117,11 @@ const B2CPricing = () => {
               </div>
             </FadeIn>
           ))}
+          
+          {/* Subscription Card with toggle */}
+          <FadeIn delay={0.3}>
+            <SubscriptionCard />
+          </FadeIn>
         </div>
       </div>
     </section>
