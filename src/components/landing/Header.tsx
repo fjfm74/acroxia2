@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -26,7 +27,8 @@ import {
   Wallet,
   TrendingUp,
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -35,6 +37,7 @@ const Header = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,6 +55,12 @@ const Header = () => {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  const menuVariants = {
+    hidden: { opacity: 0, y: 8, scale: 0.98 },
+    visible: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: 8, scale: 0.98 }
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled ? "bg-cream/95 backdrop-blur-sm border-b border-charcoal/5 py-0" : "py-0"
@@ -68,116 +77,139 @@ const Header = () => {
           <Link to="/precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Precios
           </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
+          {/* Mega menú Para Profesionales */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setActiveMenu("profesionales")}
+            onMouseLeave={() => setActiveMenu(null)}
+          >
+            <button className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
               Para Profesionales
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-80 bg-cream p-2">
-              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                <Link 
-                  to="/profesionales/inmobiliarias" 
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "profesionales" ? "rotate-180" : ""}`} />
+            </button>
+            
+            {/* Puente invisible */}
+            <div className="absolute top-full left-0 right-0 h-3" />
+            
+            <AnimatePresence>
+              {activeMenu === "profesionales" && (
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  variants={menuVariants}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-5 h-5 text-charcoal/70" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Inmobiliarias y APIs</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Integra análisis en tu plataforma</p>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                <Link 
-                  to="/profesionales/gestorias" 
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
-                    <Briefcase className="w-5 h-5 text-charcoal/70" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Gestorías y Administradores</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Optimiza la revisión de contratos</p>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                <Link 
-                  to="/precios#b2b" 
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                  Ver planes empresariales
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
+                  <Link 
+                    to="/profesionales/inmobiliarias" 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5 text-charcoal/70" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Inmobiliarias y APIs</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Integra análisis en tu plataforma</p>
+                    </div>
+                  </Link>
+                  <Link 
+                    to="/profesionales/gestorias" 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
+                      <Briefcase className="w-5 h-5 text-charcoal/70" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Gestorías y Administradores</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Optimiza la revisión de contratos</p>
+                    </div>
+                  </Link>
+                  <div className="border-t border-charcoal/10 my-2" />
+                  <Link 
+                    to="/precios#b2b" 
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    Ver planes empresariales
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Mega menú Guías */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setActiveMenu("guias")}
+            onMouseLeave={() => setActiveMenu(null)}
+          >
+            <button className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
               Guías
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-80 bg-cream p-2">
-              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                <Link 
-                  to="/clausulas-abusivas-alquiler" 
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "guias" ? "rotate-180" : ""}`} />
+            </button>
+            
+            {/* Puente invisible */}
+            <div className="absolute top-full left-0 right-0 h-3" />
+            
+            <AnimatePresence>
+              {activeMenu === "guias" && (
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  variants={menuVariants}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                    <AlertTriangle className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Cláusulas abusivas</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Identifica cláusulas ilegales</p>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                <Link 
-                  to="/devolucion-fianza-alquiler" 
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                    <Wallet className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Devolución de fianza</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Recupera tu depósito</p>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                <Link 
-                  to="/subida-alquiler-2026" 
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <TrendingUp className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Límites y normativa actual</p>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                <Link 
-                  to="/faq" 
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                  Todas las preguntas
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <Link 
+                    to="/clausulas-abusivas-alquiler" 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Cláusulas abusivas</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Identifica cláusulas ilegales</p>
+                    </div>
+                  </Link>
+                  <Link 
+                    to="/devolucion-fianza-alquiler" 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <Wallet className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Devolución de fianza</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Recupera tu depósito</p>
+                    </div>
+                  </Link>
+                  <Link 
+                    to="/subida-alquiler-2026" 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Límites y normativa actual</p>
+                    </div>
+                  </Link>
+                  <div className="border-t border-charcoal/10 my-2" />
+                  <Link 
+                    to="/faq" 
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    Todas las preguntas
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <Link to="/blog" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Blog
           </Link>
