@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer className="bg-muted">
       <div className="container mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-2">
             <span className="font-serif text-2xl font-semibold text-foreground block mb-4">
@@ -31,8 +31,17 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><a href="/#como-funciona" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cómo funciona</a></li>
               <li><Link to="/precios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Precios</Link></li>
-              <li><a href="/precios#b2b" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Para empresas</a></li>
               <li><Link to="/contacto" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Contacto</Link></li>
+            </ul>
+          </div>
+
+          {/* Para Profesionales */}
+          <div>
+            <h4 className="font-medium text-foreground mb-4">Para Profesionales</h4>
+            <ul className="space-y-3">
+              <li><Link to="/profesionales/inmobiliarias" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Inmobiliarias y APIs</Link></li>
+              <li><Link to="/profesionales/gestorias" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Gestorías y Administradores</Link></li>
+              <li><a href="/precios#b2b" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Planes empresariales</a></li>
             </ul>
           </div>
 
