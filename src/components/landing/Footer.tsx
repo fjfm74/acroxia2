@@ -12,8 +12,8 @@ const Footer = () => {
               ACROXIA
             </span>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
-              Tu escudo legal contra contratos de alquiler abusivos. 
-              Análisis con IA en menos de 2 minutos.
+              Herramienta de análisis de contratos de alquiler con IA. 
+              Identifica cláusulas potencialmente problemáticas en menos de 2 minutos.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
