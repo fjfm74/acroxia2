@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -18,6 +19,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const Analyze = () => {
   const { user, profile, refreshProfile } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -88,7 +90,8 @@ const Analyze = () => {
   const handleAnalyze = async () => {
     if (!file || !user) return;
 
-    if (!profile || profile.credits < 1) {
+    // Los admins tienen análisis ilimitados
+    if (!isAdmin && (!profile || profile.credits < 1)) {
       toast({
         title: "Sin créditos",
         description: "No tienes créditos disponibles. Adquiere un plan para continuar.",
@@ -277,7 +280,7 @@ const Analyze = () => {
                         )}
                       </div>
 
-                      {profile && profile.credits < 1 && (
+                      {!isAdmin && profile && profile.credits < 1 && (
                         <div className="flex items-center gap-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                           <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
                           <div>
@@ -337,12 +340,12 @@ const Analyze = () => {
 
                       <Button
                         onClick={handleAnalyze}
-                        disabled={!file || !profile || profile.credits < 1 || !acceptedThirdPartyData}
+                        disabled={!file || !profile || (!isAdmin && profile.credits < 1) || !acceptedThirdPartyData}
                         className="w-full"
                         size="lg"
                       >
                         <FileText className="mr-2 h-5 w-5" />
-                        Analizar contrato (1 crédito)
+                        {isAdmin ? "Analizar contrato (sin coste)" : "Analizar contrato (1 crédito)"}
                       </Button>
                     </>
                   ) : (
