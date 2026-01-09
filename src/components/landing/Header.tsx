@@ -14,7 +14,20 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { User, LogOut, FileText, LayoutDashboard, Menu } from "lucide-react";
+import { 
+  User, 
+  LogOut, 
+  FileText, 
+  LayoutDashboard, 
+  Menu,
+  Building2,
+  Briefcase,
+  AlertTriangle,
+  Wallet,
+  TrendingUp,
+  HelpCircle,
+  ArrowRight
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const Header = () => {
@@ -49,9 +62,9 @@ const Header = () => {
         </Link>
         
         <nav className="hidden lg:flex items-center gap-10">
-          <a href="/#como-funciona" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
-            Cómo funciona
-          </a>
+          <Link to="/" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
+            Inicio
+          </Link>
           <Link to="/precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Precios
           </Link>
@@ -62,20 +75,42 @@ const Header = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-56 bg-cream">
-              <DropdownMenuItem asChild>
-                <Link to="/profesionales/inmobiliarias" className="cursor-pointer">
-                  Inmobiliarias y APIs
+            <DropdownMenuContent align="center" className="w-80 bg-cream p-2">
+              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                <Link 
+                  to="/profesionales/inmobiliarias" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 text-charcoal/70" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Inmobiliarias y APIs</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Integra análisis en tu plataforma</p>
+                  </div>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/profesionales/gestorias" className="cursor-pointer">
-                  Gestorías y Administradores
+              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                <Link 
+                  to="/profesionales/gestorias" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-5 h-5 text-charcoal/70" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Gestorías y Administradores</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Optimiza la revisión de contratos</p>
+                  </div>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/precios#b2b" className="cursor-pointer">
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                <Link 
+                  to="/precios#b2b" 
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <ArrowRight className="w-4 h-4" />
                   Ver planes empresariales
                 </Link>
               </DropdownMenuItem>
@@ -88,25 +123,56 @@ const Header = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-56 bg-cream">
-              <DropdownMenuItem asChild>
-                <Link to="/clausulas-abusivas-alquiler" className="cursor-pointer">
-                  Cláusulas abusivas
+            <DropdownMenuContent align="center" className="w-80 bg-cream p-2">
+              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                <Link 
+                  to="/clausulas-abusivas-alquiler" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Cláusulas abusivas</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Identifica cláusulas ilegales</p>
+                  </div>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/devolucion-fianza-alquiler" className="cursor-pointer">
-                  Devolución de fianza
+              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                <Link 
+                  to="/devolucion-fianza-alquiler" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Wallet className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Devolución de fianza</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Recupera tu depósito</p>
+                  </div>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/subida-alquiler-2026" className="cursor-pointer">
-                  Subida alquiler 2026
+              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                <Link 
+                  to="/subida-alquiler-2026" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Límites y normativa actual</p>
+                  </div>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/faq" className="cursor-pointer">
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                <Link 
+                  to="/faq" 
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="w-4 h-4" />
                   Todas las preguntas
                 </Link>
               </DropdownMenuItem>
@@ -129,13 +195,13 @@ const Header = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[300px] bg-cream border-l border-border px-6">
             <nav className="flex flex-col gap-6 mt-8">
-              <a 
-                href="/#como-funciona" 
+              <Link 
+                to="/" 
                 onClick={closeMobileMenu}
                 className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
               >
-                Cómo funciona
-              </a>
+                Inicio
+              </Link>
               <Link 
                 to="/precios" 
                 onClick={closeMobileMenu}
@@ -219,7 +285,7 @@ const Header = () => {
               {user ? (
                 <>
                   <div className="px-1 py-2">
-                    <p className="text-sm font-medium text-foreground">{profile?.full_name || "Usuario"}</p>
+                    <p className="text-sm font-medium text-foreground">{profile?.first_name || "Usuario"}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                       <FileText className="h-3 w-3" />
                       {profile?.credits || 0} créditos
@@ -266,12 +332,12 @@ const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="text-foreground/70 hover:text-foreground hover:bg-transparent text-sm font-medium">
                     <User className="mr-2 h-4 w-4" />
-                    {profile?.full_name || "Mi cuenta"}
+                    {profile?.first_name || "Mi cuenta"}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{profile?.full_name || "Usuario"}</p>
+                    <p className="text-sm font-medium">{profile?.first_name || "Usuario"}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                       <FileText className="h-3 w-3" />
                       {profile?.credits || 0} créditos
