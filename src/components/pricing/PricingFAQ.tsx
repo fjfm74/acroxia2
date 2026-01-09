@@ -10,7 +10,7 @@ const faqs = [
   {
     question: "¿Qué incluye el análisis gratuito?",
     answer:
-      "El análisis gratuito identifica los tipos de cláusulas presentes en tu contrato (fianza, duración, gastos, etc.) y te proporciona un resumen general. Para obtener un informe detallado con recomendaciones específicas, necesitarás un análisis completo.",
+      "El análisis gratuito identifica las cláusulas potencialmente problemáticas en tu contrato. Para obtener un informe detallado con recomendaciones específicas, necesitarás un análisis completo.",
   },
   {
     question: "¿Puedo cambiar de plan en cualquier momento?",

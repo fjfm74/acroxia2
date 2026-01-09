@@ -13,7 +13,7 @@ const Pricing = () => {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": "ACROXIA - Análisis de Contratos de Alquiler",
-    "description": "Servicio de análisis de contratos de alquiler con IA para detectar cláusulas abusivas",
+    "description": "Servicio de análisis de contratos de alquiler con IA para identificar cláusulas potencialmente problemáticas",
     "brand": {
       "@type": "Brand",
       "name": "ACROXIA"
@@ -43,9 +43,9 @@ const Pricing = () => {
       {
         "@type": "Offer",
         "name": "Suscripción Anual",
-        "price": "12.99",
+        "price": "99",
         "priceCurrency": "EUR",
-        "description": "Análisis ilimitados durante 1 año"
+        "description": "Alertas de renovación y cambios legislativos"
       }
     ]
   };
@@ -60,7 +60,7 @@ const Pricing = () => {
         />
         <meta 
           name="keywords" 
-          content="precio analisis contrato alquiler, detectar clausulas abusivas precio, revisar contrato alquiler coste" 
+          content="precio analisis contrato alquiler, identificar cláusulas problemáticas precio, revisar contrato alquiler coste" 
         />
         <link rel="canonical" href="https://acroxia.com/precios" />
         
