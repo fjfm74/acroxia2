@@ -48,7 +48,7 @@ const Header = () => {
           ACROXIA
         </Link>
         
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden lg:flex items-center gap-10">
           <a href="/#como-funciona" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Cómo funciona
           </a>
@@ -122,7 +122,7 @@ const Header = () => {
         
         {/* Menú móvil */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild className="md:hidden">
+          <SheetTrigger asChild className="lg:hidden">
             <Button variant="ghost" size="icon" className="text-foreground">
               <Menu className="h-6 w-6" />
             </Button>
@@ -259,7 +259,7 @@ const Header = () => {
         </Sheet>
 
         {/* Botones desktop */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-4">
           {user ? (
             <>
               <DropdownMenu>
