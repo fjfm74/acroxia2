@@ -43,6 +43,7 @@ import DevolucionFianza from "./pages/seo/DevolucionFianza";
 import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
 import Contacto from "./pages/Contacto";
 import Inmobiliarias from "./pages/profesionales/Inmobiliarias";
+import Gestorias from "./pages/profesionales/Gestorias";
 import CookieBanner from "./components/CookieBanner";
 import ChatContainer from "./components/chat/ChatContainer";
 
@@ -92,6 +93,7 @@ const App = () => (
               <Route path="/devolucion-fianza-alquiler" element={<DevolucionFianza />} />
               <Route path="/subida-alquiler-2026" element={<SubidaAlquiler2026 />} />
               <Route path="/profesionales/inmobiliarias" element={<Inmobiliarias />} />
+              <Route path="/profesionales/gestorias" element={<Gestorias />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieBanner />
