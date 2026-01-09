@@ -161,11 +161,12 @@ const Inmobiliarias = () => {
 
       <Header />
 
-      <main className="pt-28">
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <main>
         {/* Hero Section */}
-        <section className="bg-background py-20 lg:py-28">
+        <section className="bg-background pb-20 lg:pb-28">
           <div className="container mx-auto px-6">
-            <Breadcrumbs items={breadcrumbItems} className="mb-8" />
             
             <div className="max-w-4xl mx-auto text-center">
               <FadeIn>

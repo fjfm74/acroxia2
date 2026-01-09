@@ -136,11 +136,12 @@ const Gestorias = () => {
 
       <Header />
       
-      <main className="pt-28">
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <main>
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-background">
+        <section className="pb-20 md:pb-28 bg-background">
           <div className="container mx-auto px-6">
-            <Breadcrumbs items={breadcrumbItems} className="mb-8" />
             
             <div className="max-w-4xl mx-auto text-center">
               <FadeIn>
