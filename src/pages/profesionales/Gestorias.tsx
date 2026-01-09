@@ -66,13 +66,12 @@ const plans = [
     name: "Plan Profesional",
     price: "99",
     period: "/mes",
-    description: "Ideal para gestorías pequeñas y medianas",
+    description: "Ideal para gestorías con volumen moderado",
     features: [
-      "10 análisis mensuales",
-      "Dashboard de gestión",
-      "Historial de análisis",
-      "Soporte por email",
-      "Exportación de informes PDF"
+      "10 análisis al mes",
+      "Dashboard personalizado",
+      "Informes con tu marca",
+      "Soporte sobre la plataforma",
     ],
     highlighted: false
   },
@@ -80,14 +79,12 @@ const plans = [
     name: "Plan Profesional Plus",
     price: "149",
     period: "/mes",
-    description: "Para gestorías con alto volumen de clientes",
+    description: "Para equipos con alto volumen de contratos",
     features: [
       "Análisis ilimitados",
-      "Dashboard multi-usuario",
-      "Informes personalizados con tu marca",
-      "Soporte prioritario",
-      "API de integración",
-      "Gestor de cuenta dedicado"
+      "Dashboard personalizado",
+      "Informes con tu marca",
+      "Soporte sobre la plataforma",
     ],
     highlighted: true
   }
@@ -111,9 +108,9 @@ const schemaService = {
 };
 
 const Gestorias = () => {
-  const breadcrumbItems = [
+const breadcrumbItems = [
     { label: "Para Profesionales" },
-    { label: "Gestorías y Administradores de Fincas" }
+    { label: "Gestorías" }
   ];
 
   return (
@@ -140,7 +137,7 @@ const Gestorias = () => {
 
       <main>
         {/* Hero Section */}
-        <section className="pb-20 md:pb-28 bg-background">
+        <section className="pt-10 pb-20 md:pb-28 bg-background">
           <div className="container mx-auto px-6">
             
             <div className="max-w-4xl mx-auto text-center">
@@ -170,9 +167,6 @@ const Gestorias = () => {
                       Contratar Plan Profesional
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
-                  </Button>
-                  <Button size="lg" variant="outline" className="rounded-full px-8" asChild>
-                    <Link to="/contacto">Solicitar demo</Link>
                   </Button>
                 </div>
               </FadeIn>
@@ -373,26 +367,16 @@ const Gestorias = () => {
                   Únete a las gestorías y administradores de fincas que ya utilizan ACROXIA 
                   como herramienta de apoyo en la gestión de contratos de alquiler.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button 
-                    size="lg" 
-                    className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
-                    asChild
-                  >
-                    <Link to="/contacto">
-                      Contratar ahora
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="rounded-full px-8 border-background/30 text-background hover:bg-background/10"
-                    asChild
-                  >
-                    <Link to="/profesionales/inmobiliarias">Ver plan inmobiliarias</Link>
-                  </Button>
-                </div>
+                <Button 
+                  size="lg" 
+                  className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
+                  asChild
+                >
+                  <Link to="/contacto">
+                    Contratar ahora
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               </div>
             </FadeIn>
           </div>

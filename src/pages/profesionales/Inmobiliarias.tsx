@@ -132,8 +132,7 @@ const schemaService = {
 
 const Inmobiliarias = () => {
   const breadcrumbItems = [
-    { label: "Inicio", href: "/" },
-    { label: "Para Profesionales", href: "/profesionales/inmobiliarias" },
+    { label: "Para Profesionales" },
     { label: "Inmobiliarias y APIs" },
   ];
 
@@ -165,7 +164,7 @@ const Inmobiliarias = () => {
 
       <main>
         {/* Hero Section */}
-        <section className="bg-background pb-20 lg:pb-28">
+        <section className="bg-background pt-10 pb-20 lg:pb-28">
           <div className="container mx-auto px-6">
             
             <div className="max-w-4xl mx-auto text-center">
@@ -191,9 +190,6 @@ const Inmobiliarias = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild size="lg" className="rounded-full px-8">
                     <Link to="/registro">Contratar Plan Profesional</Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="rounded-full px-8">
-                    <Link to="/contacto">Solicitar demo</Link>
                   </Button>
                 </div>
               </FadeIn>
@@ -410,26 +406,16 @@ const Inmobiliarias = () => {
                 <p className="text-background/70 text-lg mb-10">
                   Únete a las inmobiliarias que ya utilizan ACROXIA para agilizar la revisión de contratos
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
-                  >
-                    <Link to="/registro">
-                      Contratar ahora
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
-                  <Button 
-                    asChild 
-                    variant="outline" 
-                    size="lg" 
-                    className="rounded-full px-8 border-background/30 text-background hover:bg-background/10"
-                  >
-                    <Link to="/contacto">Contactar</Link>
-                  </Button>
-                </div>
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
+                >
+                  <Link to="/registro">
+                    Contratar ahora
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
               </div>
             </FadeIn>
           </div>
