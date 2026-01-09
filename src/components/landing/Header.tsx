@@ -57,12 +57,38 @@ const Header = () => {
           </Link>
           <DropdownMenu>
             <DropdownMenuTrigger className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
+              Para Profesionales
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-56 bg-cream">
+              <DropdownMenuItem asChild>
+                <Link to="/profesionales/inmobiliarias" className="cursor-pointer">
+                  Inmobiliarias y APIs
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/profesionales/gestorias" className="cursor-pointer">
+                  Gestorías y Administradores
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/precios#b2b" className="cursor-pointer">
+                  Ver planes empresariales
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
               Guías
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-56">
+            <DropdownMenuContent align="center" className="w-56 bg-cream">
               <DropdownMenuItem asChild>
                 <Link to="/clausulas-abusivas-alquiler" className="cursor-pointer">
                   Cláusulas abusivas
@@ -139,6 +165,27 @@ const Header = () => {
                 Contacto
               </Link>
               
+              {/* Para Profesionales en móvil */}
+              <div className="pt-4 border-t border-charcoal/10">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Para Profesionales</p>
+                <div className="flex flex-col gap-3">
+                  <Link 
+                    to="/profesionales/inmobiliarias" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Inmobiliarias y APIs
+                  </Link>
+                  <Link 
+                    to="/profesionales/gestorias" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Gestorías y Administradores
+                  </Link>
+                </div>
+              </div>
+
               {/* Guías SEO en móvil */}
               <div className="pt-4 border-t border-charcoal/10">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Guías</p>
