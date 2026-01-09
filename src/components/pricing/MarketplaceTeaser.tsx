@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import FadeIn from "@/components/animations/FadeIn";
 
 const MarketplaceTeaser = () => {
@@ -21,18 +22,21 @@ const MarketplaceTeaser = () => {
               con abogados especializados en derecho inmobiliario.
             </p>
             
-            <div className="inline-flex items-center gap-2 text-charcoal/60 text-sm">
-              <span>Consultas desde €49</span>
+            <div className="inline-flex items-center gap-2 text-charcoal/60 text-sm flex-wrap justify-center">
+              <span>Precios especiales</span>
               <span className="w-1 h-1 bg-charcoal/30 rounded-full" />
-              <span>Abogados verificados</span>
+              <span>Abogados verificados por ACROXIA</span>
               <span className="w-1 h-1 bg-charcoal/30 rounded-full" />
               <span>Respuesta en 24h</span>
             </div>
 
-            <button className="mt-8 inline-flex items-center gap-2 text-charcoal font-medium hover:gap-3 transition-all">
-              Únete a la lista de espera
+            <Link 
+              to="/contacto" 
+              className="mt-8 inline-flex items-center gap-2 text-charcoal font-medium hover:gap-3 transition-all"
+            >
+              Eres abogado, únete a la lista de espera
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
         </FadeIn>
       </div>

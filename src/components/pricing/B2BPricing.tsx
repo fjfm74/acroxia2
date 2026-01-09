@@ -1,42 +1,37 @@
 import { Button } from "@/components/ui/button";
-import { Check, Building2, Scale } from "lucide-react";
+import { Check, Building2 } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 
 const b2bPlans = [
   {
     icon: Building2,
     name: "Plan Profesional",
-    audience: "Inmobiliarias",
-    price: "299",
+    audience: "Inmobiliarias, APIs, Gestorías y Administradores de Fincas",
+    price: "99",
     period: "/mes",
-    description: "Solución completa para agencias inmobiliarias que gestionan múltiples propiedades",
+    description: "Herramienta de apoyo para equipos que gestionan contratos de alquiler",
     features: [
-      "Análisis ilimitados",
-      "Dashboard de gestión",
-      "Informes personalizados",
-      "API disponible",
-      "White-label disponible",
-      "Soporte dedicado 24/7",
-      "Formación para el equipo",
+      "10 análisis al mes",
+      "Dashboard personalizado",
+      "Informes con tu marca",
+      "Soporte sobre la plataforma",
     ],
-    cta: "Contactar ventas",
+    cta: "Contratar",
   },
   {
-    icon: Scale,
-    name: "Plan Gestoría",
-    audience: "Gestorías y Abogados",
+    icon: Building2,
+    name: "Plan Profesional Plus",
+    audience: "Inmobiliarias, APIs, Gestorías y Administradores de Fincas",
     price: "149",
     period: "/mes",
-    description: "Herramienta profesional para asesores legales y gestores administrativos",
+    description: "Análisis ilimitados para equipos con alto volumen de contratos",
     features: [
-      "50 análisis/mes",
-      "Informes con marca propia",
-      "Integración con software legal",
-      "API disponible",
-      "Soporte prioritario",
-      "Actualizaciones legales automáticas",
+      "Análisis ilimitados",
+      "Dashboard personalizado",
+      "Informes con tu marca",
+      "Soporte sobre la plataforma",
     ],
-    cta: "Contactar ventas",
+    cta: "Contratar",
   },
 ];
 

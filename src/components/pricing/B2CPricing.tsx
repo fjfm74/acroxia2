@@ -10,8 +10,7 @@ const plans = [
     description: "Tu primer análisis para descubrir ACROXIA",
     features: [
       "1 análisis básico",
-      "Identificación de tipos de cláusulas",
-      "Resumen general del contrato",
+      "Identificación de cláusulas potencialmente problemáticas",
     ],
     cta: "Empezar gratis",
     highlighted: false,
@@ -24,9 +23,8 @@ const plans = [
     features: [
       "1 análisis completo",
       "Informe detallado en PDF",
-      "Cláusulas ilegales destacadas",
+      "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
-      "Soporte por email",
     ],
     cta: "Analizar contrato",
     highlighted: false,
@@ -40,9 +38,8 @@ const plans = [
       "3 análisis completos",
       "Comparativa entre contratos",
       "Informe detallado en PDF",
-      "Cláusulas ilegales destacadas",
+      "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
-      "Soporte prioritario",
     ],
     cta: "Comparar contratos",
     highlighted: true,
@@ -50,15 +47,14 @@ const plans = [
   },
   {
     name: "Suscripción Anual",
-    price: "12,99",
+    price: "99",
     period: "/año",
-    description: "Para quienes firman contratos frecuentemente",
+    description: "Para usuarios que ya han analizado un contrato con nosotros",
     features: [
-      "Análisis ilimitados",
-      "Acceso a todas las funciones",
+      "Alertas de renovación de contrato",
+      "Notificaciones de cambios legislativos",
+      "Análisis incluido en cada renovación",
       "Historial de análisis",
-      "Alertas de renovación",
-      "Soporte prioritario",
     ],
     cta: "Suscribirse",
     highlighted: false,
@@ -75,7 +71,7 @@ const B2CPricing = () => {
               Para inquilinos
             </p>
             <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal">
-              Protege tu próximo alquiler
+              Analiza tu próximo alquiler
             </h2>
           </div>
         </FadeIn>
