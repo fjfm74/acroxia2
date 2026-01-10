@@ -19,7 +19,11 @@ function extractKeyTerms(text: string): string {
   const lowerText = text.toLowerCase();
   
   if (/fianza|deposito|garantia|aval/.test(lowerText)) terms.push("fianza garantia deposito");
-  if (/mensualidad|renta|euros|€|precio/.test(lowerText)) terms.push("renta precio mensualidad");
+  if (/mensualidad|renta|euros|€|precio/.test(lowerText)) {
+    terms.push("renta precio mensualidad");
+    // Si hay indicios de precio/renta, añadir términos de zona tensionada
+    terms.push("zona mercado residencial tensionado límite precio índice referencia");
+  }
   if (/año|años|meses|duracion|prorroga|renovacion/.test(lowerText)) terms.push("duracion prorroga plazo");
   if (/obra|reforma|reparacion|mantenimiento|conservacion/.test(lowerText)) terms.push("obras reparaciones conservacion");
   if (/penalizacion|indemnizacion|resolucion|desistimiento/.test(lowerText)) terms.push("penalizacion resolucion desistimiento");
@@ -30,6 +34,80 @@ function extractKeyTerms(text: string): string {
   if (/seguro|responsabilidad/.test(lowerText)) terms.push("seguro responsabilidad");
   
   return terms.length > 0 ? terms.join(" ") : "arrendamiento vivienda clausula";
+}
+
+// Extraer el municipio del contrato
+function extractMunicipality(text: string): string | null {
+  // Patrones comunes en contratos para detectar ubicación
+  const patterns = [
+    // "situada en Cervera", "domicilio en Barcelona", etc.
+    /(?:situada?\s+en|domicilio\s+en|ubicad[ao]\s+en|localidad\s+de|municipio\s+de|población\s+de|ciudad\s+de)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|d['']|la|el|les|l['']|dels?)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    // "C.P. 25200 Cervera"
+    /C\.?P\.?\s*\d{5}\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    // "en Cervera (Lleida)" o "en Cervera, Lleida"
+    /\ben\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)\s*[,(]\s*(?:provincia\s+(?:de\s+)?)?[A-ZÀ-Ú]/gi,
+    // "finca sita en Cervera"
+    /finca\s+sita\s+en\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+  ];
+  
+  for (const pattern of patterns) {
+    const matches = text.matchAll(pattern);
+    for (const match of matches) {
+      if (match[1] && match[1].length > 2) {
+        // Normalizar: primera letra mayúscula, resto minúscula
+        const municipality = match[1].trim()
+          .split(/\s+/)
+          .map(word => {
+            // Mantener preposiciones en minúscula
+            if (/^(de|del|la|el|les|l['']|d['']|dels?)$/i.test(word)) {
+              return word.toLowerCase();
+            }
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          })
+          .join(' ');
+        
+        // Filtrar palabras comunes que no son municipios
+        const excluded = ['calle', 'avenida', 'plaza', 'paseo', 'carrer', 'avinguda', 'plaça', 
+                         'número', 'piso', 'puerta', 'escalera', 'portal', 'bloque'];
+        if (!excluded.some(ex => municipality.toLowerCase().startsWith(ex))) {
+          return municipality;
+        }
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Extraer la provincia del contrato
+function extractProvince(text: string): string | null {
+  const provinces = [
+    "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", 
+    "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", 
+    "Córdoba", "Cuenca", "Girona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", 
+    "Huesca", "Illes Balears", "Jaén", "La Coruña", "La Rioja", "Las Palmas", "León", 
+    "Lleida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Ourense", "Palencia", 
+    "Pontevedra", "Salamanca", "Santa Cruz de Tenerife", "Segovia", "Sevilla", "Soria", 
+    "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza"
+  ];
+  
+  const lowerText = text.toLowerCase();
+  
+  for (const province of provinces) {
+    // Buscar patrones como "provincia de Lleida", "(Lleida)", ", Lleida"
+    const patterns = [
+      new RegExp(`provincia\\s+de\\s+${province}`, 'i'),
+      new RegExp(`\\(${province}\\)`, 'i'),
+      new RegExp(`,\\s*${province}\\s*[,\\)]`, 'i'),
+      new RegExp(`\\b${province}\\b`, 'i'),
+    ];
+    
+    if (patterns.some(p => p.test(text))) {
+      return province;
+    }
+  }
+  
+  return null;
 }
 
 // Detectar territorio para aplicar normativa autonómica
@@ -180,9 +258,35 @@ function buildSystemPrompt(
   legalContext: string, 
   hasLegalContext: boolean, 
   availableSources: string[], 
-  territorialFilter: string | null
+  territorialFilter: string | null,
+  detectedMunicipality: string | null,
+  detectedProvince: string | null,
+  hasZonaTensionadaInfo: boolean
 ): string {
-  const legalContextSection = hasLegalContext 
+  // Sección especial para zonas tensionadas si se detectó municipio
+  const zonaTensionadaSection = detectedMunicipality ? `
+VERIFICACIÓN DE ZONA TENSIONADA (CRÍTICO)
+==========================================
+Municipio detectado en el contrato: ${detectedMunicipality}
+${detectedProvince ? `Provincia: ${detectedProvince}` : ''}
+${territorialFilter ? `Comunidad Autónoma: ${territorialFilter}` : ''}
+
+${hasZonaTensionadaInfo ? `⚠️ HAY INFORMACIÓN DE ZONAS TENSIONADAS EN EL CONTEXTO LEGAL.
+INSTRUCCIONES OBLIGATORIAS:
+1. BUSCA en el contexto si "${detectedMunicipality}" aparece en alguna lista de municipios tensionados
+2. Si el municipio está en zona tensionada y la renta parece elevada (comparar con zonas similares):
+   - Clasifica la cláusula de renta como "suspicious" o "illegal" según corresponda
+   - Indica que debe verificarse el índice de precios de referencia de la Generalitat/CA
+   - Cita la normativa de zona tensionada del contexto
+3. Añade una cláusula específica sobre "ZONA DE MERCADO TENSIONADO" si aplica
+` : `
+No se encontró información específica de zonas tensionadas en la base de datos.
+Si la renta parece muy elevada para la zona, indica que podría requerir verificación
+con el índice de precios de referencia de la Comunidad Autónoma.
+`}
+` : '';
+
+  const legalContextSection = hasLegalContext
     ? `DOCUMENTOS LEGALES INDEXADOS EN LA BASE DE DATOS ACROXIA
 ===========================================================
 Fuentes disponibles: ${availableSources.join(", ")}
@@ -210,6 +314,8 @@ INSTRUCCIONES PARA ESTE CASO:
   return `IDENTIDAD Y ROL
 ===============
 Eres el sistema de análisis legal de ACROXIA, la plataforma española líder en protección de inquilinos. Tu misión es analizar contratos de alquiler de vivienda habitual identificando cláusulas ilegales, abusivas o sospechosas con el máximo rigor jurídico.
+
+${zonaTensionadaSection}
 
 ${legalContextSection}
 
@@ -522,49 +628,113 @@ serve(async (req) => {
     // Extract key terms and detect territory for enhanced RAG search
     const keyTerms = extractKeyTerms(contractText);
     const territorialFilter = detectTerritory(contractText);
+    const detectedMunicipality = extractMunicipality(contractText);
+    const detectedProvince = extractProvince(contractText);
     const searchQuery = `${keyTerms} arrendamiento vivienda habitual clausula ilegal abusiva LAU`;
 
     console.log(`RAG search query: ${searchQuery}`);
     console.log(`Detected territory: ${territorialFilter || "none"}`);
+    console.log(`Detected municipality: ${detectedMunicipality || "none"}`);
+    console.log(`Detected province: ${detectedProvince || "none"}`);
 
     // Sanitize sensitive data (DNI, IBAN, phone) before sending to AI
     const sanitizedContractText = sanitizeSensitiveData(contractText);
     console.log(`Contract text sanitized. Original: ${contractText.length} chars, Sanitized: ${sanitizedContractText.length} chars`);
 
     // Search legal knowledge base with enhanced query and territorial filter
-    const { data: legalChunks } = await supabase.rpc("search_legal_chunks", {
+    const { data: generalChunks } = await supabase.rpc("search_legal_chunks", {
       search_query: searchQuery,
-      match_count: 25,
+      match_count: 20,
       territorial_filter: territorialFilter,
+    });
+
+    // Búsqueda específica por ubicación (municipio/provincia)
+    let locationChunks: any[] = [];
+    if (detectedMunicipality || detectedProvince) {
+      const { data: locChunks } = await supabase.rpc("search_legal_chunks_by_location", {
+        search_query: "zona mercado residencial tensionado límite renta precio índice referencia municipal",
+        municipality_name: detectedMunicipality,
+        province_name: detectedProvince,
+        match_count: 15,
+      });
+      locationChunks = locChunks || [];
+      console.log(`Location-specific search found ${locationChunks.length} chunks for ${detectedMunicipality || detectedProvince}`);
+    }
+
+    // Combine and deduplicate chunks
+    const allChunksMap = new Map<string, any>();
+    
+    // Add general chunks
+    (generalChunks || []).forEach((chunk: any) => {
+      allChunksMap.set(chunk.id, chunk);
+    });
+    
+    // Add location-specific chunks (may override with higher priority)
+    locationChunks.forEach((chunk: any) => {
+      // Mark location chunks as high priority
+      chunk.is_location_match = true;
+      allChunksMap.set(chunk.id, chunk);
+    });
+
+    const combinedChunks = Array.from(allChunksMap.values());
+    
+    // Sort: location matches first, then by rank
+    combinedChunks.sort((a, b) => {
+      if (a.is_location_match && !b.is_location_match) return -1;
+      if (!a.is_location_match && b.is_location_match) return 1;
+      return (b.rank || 0) - (a.rank || 0);
     });
 
     // Build legal context with verification metadata
     let legalContext = "";
     let hasLegalContext = false;
     const availableSources: string[] = [];
+    let hasZonaTensionadaInfo = false;
 
-    if (legalChunks && legalChunks.length > 0) {
+    if (combinedChunks.length > 0) {
       hasLegalContext = true;
       const uniqueSources = new Set<string>();
       
-      legalContext = legalChunks.map((chunk: any) => {
+      legalContext = combinedChunks.slice(0, 30).map((chunk: any) => {
         uniqueSources.add(chunk.document_title);
-        return `[FUENTE: ${chunk.document_title}]
+        
+        // Check if this chunk contains zona tensionada info
+        if (chunk.content?.toLowerCase().includes('tensionado') || 
+            chunk.content?.toLowerCase().includes('tensionada') ||
+            (chunk.affected_municipalities && chunk.affected_municipalities.length > 0)) {
+          hasZonaTensionadaInfo = true;
+        }
+        
+        const municipalitiesInfo = chunk.affected_municipalities?.length > 0 
+          ? `\nMunicipios afectados: ${chunk.affected_municipalities.slice(0, 20).join(', ')}${chunk.affected_municipalities.length > 20 ? '...' : ''}`
+          : '';
+        const locationMatch = chunk.is_location_match ? ' [COINCIDENCIA DE UBICACIÓN]' : '';
+        
+        return `[FUENTE: ${chunk.document_title}]${locationMatch}
 ${chunk.article_reference ? `Artículo: ${chunk.article_reference}` : ""}
 ${chunk.section_title ? `Sección: ${chunk.section_title}` : ""}
+${chunk.territorial_scope ? `Ámbito: ${chunk.territorial_scope}` : ""}${municipalitiesInfo}
 Contenido: ${chunk.content}
 ---`;
       }).join("\n\n");
       
       availableSources.push(...Array.from(uniqueSources));
-      console.log(`Found ${legalChunks.length} legal chunks from ${availableSources.length} sources`);
+      console.log(`Found ${combinedChunks.length} legal chunks from ${availableSources.length} sources (${locationChunks.length} location-specific)`);
     } else {
       legalContext = "AVISO: No se encontraron documentos legales indexados relevantes para este contrato. El análisis se basará en conocimiento general de la LAU y normativa aplicable, pero las referencias NO están verificadas contra la base de datos de ACROXIA.";
       console.log("No legal chunks found - using general knowledge");
     }
 
     // Build optimized system prompt
-    const systemPrompt = buildSystemPrompt(legalContext, hasLegalContext, availableSources, territorialFilter);
+    const systemPrompt = buildSystemPrompt(
+      legalContext, 
+      hasLegalContext, 
+      availableSources, 
+      territorialFilter,
+      detectedMunicipality,
+      detectedProvince,
+      hasZonaTensionadaInfo
+    );
 
     // Call Lovable AI for contract analysis with enhanced prompt
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

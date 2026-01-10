@@ -357,6 +357,41 @@ const AdminDocuments = () => {
     }
   };
 
+  const [reprocessingAll, setReprocessingAll] = useState(false);
+
+  const reprocessAllDocuments = async () => {
+    setReprocessingAll(true);
+    let success = 0;
+    let failed = 0;
+
+    for (const doc of documents) {
+      try {
+        const { data: docData } = await supabase
+          .from("legal_documents")
+          .select("file_path")
+          .eq("id", doc.id)
+          .single();
+
+        if (docData?.file_path) {
+          await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
+          await supabase.functions.invoke("process-legal-document", {
+            body: { documentId: doc.id, filePath: docData.file_path },
+          });
+          success++;
+        }
+      } catch {
+        failed++;
+      }
+    }
+
+    toast({
+      title: "Reprocesamiento completado",
+      description: `${success} documentos procesados, ${failed} errores`,
+    });
+    setReprocessingAll(false);
+    fetchDocuments();
+  };
+
   const getJurisdictionLabel = (value: string | null) => {
     return jurisdictions.find((j) => j.value === value)?.label || value || "N/A";
   };
@@ -389,6 +424,16 @@ const AdminDocuments = () => {
               </SelectContent>
             </Select>
           </div>
+
+          <Button
+            variant="outline"
+            onClick={reprocessAllDocuments}
+            disabled={reprocessingAll || documents.length === 0}
+            className="rounded-full"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${reprocessingAll ? "animate-spin" : ""}`} />
+            {reprocessingAll ? "Reprocesando..." : "Reprocesar todos"}
+          </Button>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>

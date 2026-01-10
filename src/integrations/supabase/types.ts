@@ -236,6 +236,8 @@ export type Database = {
       }
       legal_chunks: {
         Row: {
+          affected_municipalities: string[] | null
+          affected_provinces: string[] | null
           article_reference: string | null
           chunk_index: number
           content: string
@@ -245,8 +247,11 @@ export type Database = {
           metadata: Json | null
           search_vector: unknown
           section_title: string | null
+          territorial_scope: string | null
         }
         Insert: {
+          affected_municipalities?: string[] | null
+          affected_provinces?: string[] | null
           article_reference?: string | null
           chunk_index: number
           content: string
@@ -256,8 +261,11 @@ export type Database = {
           metadata?: Json | null
           search_vector?: unknown
           section_title?: string | null
+          territorial_scope?: string | null
         }
         Update: {
+          affected_municipalities?: string[] | null
+          affected_provinces?: string[] | null
           article_reference?: string | null
           chunk_index?: number
           content?: string
@@ -267,6 +275,7 @@ export type Database = {
           metadata?: Json | null
           search_vector?: unknown
           section_title?: string | null
+          territorial_scope?: string | null
         }
         Relationships: [
           {
@@ -581,6 +590,29 @@ export type Database = {
               territorial_entity: string
             }[]
           }
+      search_legal_chunks_by_location: {
+        Args: {
+          match_count?: number
+          municipality_name?: string
+          province_name?: string
+          search_query: string
+        }
+        Returns: {
+          affected_municipalities: string[]
+          affected_provinces: string[]
+          article_reference: string
+          content: string
+          document_id: string
+          document_title: string
+          document_type: Database["public"]["Enums"]["legal_doc_type"]
+          id: string
+          jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"]
+          rank: number
+          section_title: string
+          territorial_entity: string
+          territorial_scope: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
