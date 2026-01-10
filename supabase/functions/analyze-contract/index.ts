@@ -274,15 +274,21 @@ ${territorialFilter ? `Comunidad Autónoma: ${territorialFilter}` : ''}
 ${hasZonaTensionadaInfo ? `⚠️ HAY INFORMACIÓN DE ZONAS TENSIONADAS EN EL CONTEXTO LEGAL.
 INSTRUCCIONES OBLIGATORIAS:
 1. BUSCA en el contexto si "${detectedMunicipality}" aparece en alguna lista de municipios tensionados
-2. Si el municipio está en zona tensionada y la renta parece elevada (comparar con zonas similares):
-   - Clasifica la cláusula de renta como "suspicious" o "illegal" según corresponda
-   - Indica que debe verificarse el índice de precios de referencia de la Generalitat/CA
-   - Cita la normativa de zona tensionada del contexto
-3. Añade una cláusula específica sobre "ZONA DE MERCADO TENSIONADO" si aplica
+2. Si el municipio ESTÁ en zona tensionada:
+   - OBLIGATORIO: Añade una cláusula con category: "RENTA Y ACTUALIZACIONES"
+   - Clasifícala como type: "suspicious" (NO "illegal", porque no podemos calcular el precio máximo automáticamente)
+   - En "explanation": Indica que el inmueble se encuentra en una zona de mercado residencial tensionado 
+     y que la renta puede estar sujeta a límites legales que dependen de factores específicos 
+     (características del inmueble, año de construcción, superficie útil, etc.)
+   - En "recommendation": Incluir SIEMPRE este texto exacto:
+     "Verifique la renta máxima aplicable a este inmueble en el Sistema Estatal de Referencia de Precios: https://serpavi.mivau.gob.es/"
+   - En "negotiation_tip": Explicar que pueden solicitar al propietario justificación del precio conforme al índice de referencia
+3. IMPORTANTE: NO podemos determinar automáticamente si la renta es abusiva porque el cálculo 
+   requiere parámetros que no están en el contrato (año construcción, superficie útil, calidades, etc.)
 ` : `
 No se encontró información específica de zonas tensionadas en la base de datos.
-Si la renta parece muy elevada para la zona, indica que podría requerir verificación
-con el índice de precios de referencia de la Comunidad Autónoma.
+Si la renta parece muy elevada para la zona, indica en "recommendation" que puede verificarse 
+la aplicabilidad de límites de renta en: https://serpavi.mivau.gob.es/
 `}
 ` : '';
 
