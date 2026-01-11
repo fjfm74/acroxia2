@@ -286,7 +286,9 @@ export type Database = {
           last_email_sent_at: string | null
           session_id: string | null
           source: string | null
+          unsubscribe_reason: string | null
           unsubscribed: boolean | null
+          unsubscribed_at: string | null
           utm_campaign: string | null
           utm_medium: string | null
           utm_source: string | null
@@ -303,7 +305,9 @@ export type Database = {
           last_email_sent_at?: string | null
           session_id?: string | null
           source?: string | null
+          unsubscribe_reason?: string | null
           unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
@@ -320,7 +324,9 @@ export type Database = {
           last_email_sent_at?: string | null
           session_id?: string | null
           source?: string | null
+          unsubscribe_reason?: string | null
           unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null

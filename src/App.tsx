@@ -49,6 +49,7 @@ import Gestorias from "./pages/profesionales/Gestorias";
 import CookieBanner from "./components/CookieBanner";
 import ChatContainer from "./components/chat/ChatContainer";
 import AprobarPost from "./pages/AprobarPost";
+import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,7 @@ const App = () => (
               <Route path="/profesionales/inmobiliarias" element={<Inmobiliarias />} />
               <Route path="/profesionales/gestorias" element={<Gestorias />} />
               <Route path="/aprobar-post/:token" element={<AprobarPost />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieBanner />

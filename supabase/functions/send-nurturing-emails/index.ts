@@ -16,6 +16,11 @@ interface Lead {
   created_at: string;
 }
 
+// Generate secure token for unsubscribe validation
+function generateUnsubscribeToken(email: string, secret: string): string {
+  const data = email + ':' + secret.slice(0, 8);
+  return btoa(data).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -80,7 +85,8 @@ serve(async (req: Request) => {
     // Send Day 2 tips emails
     for (const lead of (day2Leads || []) as Lead[]) {
       try {
-        const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}`;
+        const token = generateUnsubscribeToken(lead.email, supabaseServiceKey);
+        const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
         
         const emailTemplate = getEmailTemplate("nurturing_tips", {
           email: lead.email,
@@ -131,7 +137,8 @@ serve(async (req: Request) => {
     // Send Day 5 offer emails
     for (const lead of (day5Leads || []) as Lead[]) {
       try {
-        const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}`;
+        const token = generateUnsubscribeToken(lead.email, supabaseServiceKey);
+        const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
         
         const emailTemplate = getEmailTemplate("nurturing_offer", {
           email: lead.email,
