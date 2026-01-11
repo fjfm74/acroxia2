@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,63 @@ const Analyze = () => {
   const [progress, setProgress] = useState(0);
   const [analysisStep, setAnalysisStep] = useState("");
   const [acceptedThirdPartyData, setAcceptedThirdPartyData] = useState(false);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Estimated analysis duration in seconds (based on logs: 30-90s, avg ~60s)
+  const ESTIMATED_DURATION = 60;
+
+  // Gradual progress animation during AI analysis
+  useEffect(() => {
+    if (!analyzing) {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const startProgress = 50;
+    const targetProgress = 88;
+    const duration = ESTIMATED_DURATION * 1000 * 0.85; // 85% of estimated time
+    const intervalMs = 500;
+    const totalSteps = duration / intervalMs;
+    const increment = (targetProgress - startProgress) / totalSteps;
+
+    let currentStep = 0;
+
+    progressIntervalRef.current = setInterval(() => {
+      currentStep++;
+      const newProgress = Math.min(
+        Math.round(startProgress + increment * currentStep),
+        targetProgress
+      );
+      setProgress(newProgress);
+
+      // Dynamic messages based on progress
+      if (newProgress >= 50 && newProgress < 62) {
+        setAnalysisStep("Extrayendo texto del documento...");
+      } else if (newProgress >= 62 && newProgress < 74) {
+        setAnalysisStep("Consultando normativa legal actualizada...");
+      } else if (newProgress >= 74 && newProgress < 85) {
+        setAnalysisStep("Analizando cláusulas con IA...");
+      } else if (newProgress >= 85) {
+        setAnalysisStep("Generando informe detallado...");
+      }
+
+      if (currentStep >= totalSteps) {
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+        }
+      }
+    }, intervalMs);
+
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+  }, [analyzing]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -148,7 +205,7 @@ const Analyze = () => {
       setUploading(false);
       setAnalyzing(true);
       setProgress(50);
-      setAnalysisStep("Analizando contrato con IA...");
+      setAnalysisStep("Extrayendo texto del documento...");
 
       // Call analysis edge function
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
@@ -160,7 +217,13 @@ const Analyze = () => {
 
       if (analysisError) throw analysisError;
 
-      setProgress(90);
+      // Stop gradual progress and jump to completion
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+
+      setProgress(95);
       setAnalysisStep("Guardando resultados...");
 
       // Refresh profile to update credits
