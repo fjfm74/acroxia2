@@ -66,10 +66,18 @@ const AdminBlogNew = () => {
   const generateWithAI = async (mode: "auto" | "custom") => {
     setGenerating(true);
     try {
+      // Fetch existing posts to avoid duplicates and balance categories
+      const { data: existingPosts } = await supabase
+        .from("blog_posts")
+        .select("title, category")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
       const response = await supabase.functions.invoke("generate-blog-post", {
         body: {
           mode,
           prompt: mode === "custom" ? customPrompt : undefined,
+          existingPosts: existingPosts || [],
         },
       });
 
