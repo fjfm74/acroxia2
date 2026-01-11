@@ -32,11 +32,13 @@ import {
   Settings
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIsProfessional } from "@/hooks/useIsProfessional";
 import { Badge } from "@/components/ui/badge";
 
 const Header = () => {
   const { user, profile, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { isProfessional } = useIsProfessional();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -241,12 +243,12 @@ const Header = () => {
                 </div>
                 <div className="flex flex-col gap-3 mt-3">
                   <Link 
-                    to="/dashboard" 
+                    to={isProfessional ? "/pro" : "/dashboard"} 
                     onClick={closeMobileMenu}
                     className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
                   >
                     <LayoutDashboard className="h-4 w-4" />
-                    Mi panel
+                    {isProfessional ? "Mi panel Pro" : "Mi panel"}
                   </Link>
                   <Link 
                     to="/perfil" 
@@ -406,9 +408,9 @@ const Header = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer">
+                    <Link to={isProfessional ? "/pro" : "/dashboard"} className="cursor-pointer">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Mi panel
+                      {isProfessional ? "Mi panel Pro" : "Mi panel"}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
