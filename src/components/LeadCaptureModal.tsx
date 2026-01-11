@@ -156,7 +156,7 @@ const LeadCaptureModal = ({
                   }}
                   className="underline hover:no-underline"
                 >
-                  Desbloquéalo por 9,90€
+                  Desbloquéalo por 39€
                 </button>
               </p>
             </div>

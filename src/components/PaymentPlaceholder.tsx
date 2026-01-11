@@ -54,7 +54,7 @@ const PaymentPlaceholder = ({
         .insert({
           analysis_id: analysisId,
           email,
-          amount_cents: 990,
+          amount_cents: 3900,
           currency: "eur",
           status: "pending",
         });
@@ -123,7 +123,7 @@ const PaymentPlaceholder = ({
             <span className="text-sm font-medium">Próximamente</span>
           </div>
           <DialogTitle className="font-serif text-2xl">
-            Informe completo por 9,90€
+            Informe completo por 39€
           </DialogTitle>
           <DialogDescription>
             Estamos terminando de configurar los pagos. Déjanos tu email y te avisaremos en cuanto esté disponible.
