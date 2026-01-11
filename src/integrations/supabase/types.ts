@@ -238,43 +238,52 @@ export type Database = {
         Row: {
           affected_municipalities: string[] | null
           affected_provinces: string[] | null
+          applies_when: Json | null
           article_reference: string | null
           chunk_index: number
           content: string
           created_at: string
           document_id: string
           id: string
+          key_entities: string[] | null
           metadata: Json | null
           search_vector: unknown
           section_title: string | null
+          semantic_category: string | null
           territorial_scope: string | null
         }
         Insert: {
           affected_municipalities?: string[] | null
           affected_provinces?: string[] | null
+          applies_when?: Json | null
           article_reference?: string | null
           chunk_index: number
           content: string
           created_at?: string
           document_id: string
           id?: string
+          key_entities?: string[] | null
           metadata?: Json | null
           search_vector?: unknown
           section_title?: string | null
+          semantic_category?: string | null
           territorial_scope?: string | null
         }
         Update: {
           affected_municipalities?: string[] | null
           affected_provinces?: string[] | null
+          applies_when?: Json | null
           article_reference?: string | null
           chunk_index?: number
           content?: string
           created_at?: string
           document_id?: string
           id?: string
+          key_entities?: string[] | null
           metadata?: Json | null
           search_vector?: unknown
           section_title?: string | null
+          semantic_category?: string | null
           territorial_scope?: string | null
         }
         Relationships: [
@@ -289,52 +298,75 @@ export type Database = {
       }
       legal_documents: {
         Row: {
+          ai_summary: string | null
           created_at: string
           description: string | null
           effective_date: string | null
+          expiration_date: string | null
           file_path: string | null
           id: string
           is_active: boolean
           jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"] | null
+          keywords: string[] | null
           source: string | null
+          superseded_by_id: string | null
+          supersedes_ids: string[] | null
           territorial_entity: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
           updated_at: string
         }
         Insert: {
+          ai_summary?: string | null
           created_at?: string
           description?: string | null
           effective_date?: string | null
+          expiration_date?: string | null
           file_path?: string | null
           id?: string
           is_active?: boolean
           jurisdiction?:
             | Database["public"]["Enums"]["legal_jurisdiction"]
             | null
+          keywords?: string[] | null
           source?: string | null
+          superseded_by_id?: string | null
+          supersedes_ids?: string[] | null
           territorial_entity?: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
           updated_at?: string
         }
         Update: {
+          ai_summary?: string | null
           created_at?: string
           description?: string | null
           effective_date?: string | null
+          expiration_date?: string | null
           file_path?: string | null
           id?: string
           is_active?: boolean
           jurisdiction?:
             | Database["public"]["Enums"]["legal_jurisdiction"]
             | null
+          keywords?: string[] | null
           source?: string | null
+          superseded_by_id?: string | null
+          supersedes_ids?: string[] | null
           territorial_entity?: string | null
           title?: string
           type?: Database["public"]["Enums"]["legal_doc_type"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "legal_documents_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -609,6 +641,34 @@ export type Database = {
           jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"]
           rank: number
           section_title: string
+          territorial_entity: string
+          territorial_scope: string
+        }[]
+      }
+      search_legal_chunks_semantic: {
+        Args: {
+          key_entity?: string
+          match_count?: number
+          municipality_name?: string
+          province_name?: string
+          search_query: string
+          semantic_categories?: string[]
+        }
+        Returns: {
+          affected_municipalities: string[]
+          affected_provinces: string[]
+          applies_when: Json
+          article_reference: string
+          content: string
+          document_id: string
+          document_title: string
+          document_type: Database["public"]["Enums"]["legal_doc_type"]
+          id: string
+          jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"]
+          key_entities: string[]
+          rank: number
+          section_title: string
+          semantic_category: string
           territorial_entity: string
           territorial_scope: string
         }[]

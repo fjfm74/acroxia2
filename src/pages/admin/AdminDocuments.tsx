@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Upload, FileText, Trash2, Filter, CheckCircle, Clock, XCircle, RefreshCw } from "lucide-react";
+import { Upload, FileText, Trash2, Filter, CheckCircle, XCircle, RefreshCw, Eye, AlertTriangle, LinkIcon } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,10 +35,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import ChunkViewer from "@/components/admin/ChunkViewer";
 
 interface LegalDocument {
   id: string;
@@ -52,6 +58,11 @@ interface LegalDocument {
   is_active: boolean;
   created_at: string;
   chunks_count?: number;
+  ai_summary?: string | null;
+  keywords?: string[] | null;
+  superseded_by_id?: string | null;
+  supersedes_ids?: string[] | null;
+  expiration_date?: string | null;
 }
 
 const documentTypes = [
@@ -97,6 +108,8 @@ const AdminDocuments = () => {
   const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string>("all");
+  const [viewingDocId, setViewingDocId] = useState<string | null>(null);
+  const [viewingDocTitle, setViewingDocTitle] = useState<string>("");
   const { toast } = useToast();
 
   const [newDoc, setNewDoc] = useState({
@@ -114,7 +127,7 @@ const AdminDocuments = () => {
     try {
       let query = supabase
         .from("legal_documents")
-        .select("*")
+        .select("*, superseded_by_id, supersedes_ids, ai_summary, keywords, expiration_date")
         .order("created_at", { ascending: false });
 
       if (selectedJurisdiction !== "all") {
@@ -637,11 +650,37 @@ const AdminDocuments = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <h3 className="font-medium truncate">{doc.title}</h3>
                         <Badge variant={doc.is_active ? "default" : "secondary"}>
                           {doc.is_active ? "Activo" : "Inactivo"}
                         </Badge>
+                        {doc.superseded_by_id && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Obsoleto
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Este documento ha sido reemplazado por uno más reciente</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {doc.supersedes_ids && doc.supersedes_ids.length > 0 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <LinkIcon className="h-3 w-3 mr-1" />
+                                Reemplaza {doc.supersedes_ids.length}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Este documento reemplaza {doc.supersedes_ids.length} documento(s) anterior(es)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                         <Badge variant="outline">
@@ -649,7 +688,13 @@ const AdminDocuments = () => {
                           {doc.territorial_entity && ` (${doc.territorial_entity})`}
                         </Badge>
                         <span>•</span>
-                        <span>{doc.chunks_count} fragmentos indexados</span>
+                        <span>{doc.chunks_count} fragmentos</span>
+                        {doc.keywords && doc.keywords.length > 0 && (
+                          <>
+                            <span>•</span>
+                            <span>{doc.keywords.length} palabras clave</span>
+                          </>
+                        )}
                         {doc.effective_date && (
                           <>
                             <span>•</span>
@@ -660,7 +705,12 @@ const AdminDocuments = () => {
                           </>
                         )}
                       </div>
-                      {doc.description && (
+                      {doc.ai_summary && (
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2 italic">
+                          {doc.ai_summary}
+                        </p>
+                      )}
+                      {!doc.ai_summary && doc.description && (
                         <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                           {doc.description}
                         </p>
@@ -668,6 +718,17 @@ const AdminDocuments = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setViewingDocId(doc.id);
+                          setViewingDocTitle(doc.title);
+                        }}
+                        title="Ver chunks"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       {doc.chunks_count === 0 && (
                         <Button
                           variant="ghost"
@@ -718,6 +779,12 @@ const AdminDocuments = () => {
             ))}
           </div>
         )}
+
+        <ChunkViewer
+          documentId={viewingDocId}
+          documentTitle={viewingDocTitle}
+          onClose={() => setViewingDocId(null)}
+        />
       </AdminLayout>
     </>
   );

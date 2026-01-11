@@ -33,6 +33,24 @@ const SPANISH_PROVINCES = [
   "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza"
 ];
 
+// Semantic categories for legal content
+const VALID_SEMANTIC_CATEGORIES = [
+  "definicion",           // Define un concepto legal
+  "obligacion",           // Establece una obligación
+  "prohibicion",          // Prohíbe algo
+  "limite_precio",        // Límites de renta/precio
+  "plazo",                // Plazos y duraciones
+  "sancion",              // Sanciones por incumplimiento
+  "excepcion",            // Excepciones a reglas
+  "procedimiento",        // Procedimientos a seguir
+  "lista_entidades",      // Lista de municipios, zonas, etc.
+  "requisito",            // Requisitos para algo
+  "derecho",              // Derechos del inquilino/propietario
+  "actualizacion",        // Reglas de actualización de renta
+  "garantia",             // Fianzas y garantías
+  "otro"                  // Otros
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -69,48 +87,117 @@ serve(async (req) => {
       throw new Error(`Error getting document info: ${docError.message}`);
     }
 
-    // Convert PDF to text using AI (since we can't use pdf-parse in Deno easily)
-    // We'll send the PDF as base64 and ask AI to extract text
+    // Convert PDF to base64
     const arrayBuffer = await fileData.arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
 
-    // Build system prompt with territorial extraction instructions
-    const systemPrompt = `Eres un asistente legal experto en extraer y estructurar contenido de documentos legales españoles.
-Tu tarea es procesar el documento y dividirlo en fragmentos lógicos para una base de conocimiento.
+    // Build intelligent system prompt with semantic understanding
+    const systemPrompt = `Eres un asistente legal experto en análisis de normativa española.
+Tu tarea es procesar documentos legales y extraer información estructurada de forma inteligente.
 
-Para CADA fragmento debes:
-1. Extraer el contenido coherente (artículo, sección o párrafo)
-2. Identificar la referencia al artículo si existe (ej: "Artículo 17.1")
-3. Incluir el título de la sección si existe
+## FASE 1 - ANÁLISIS GLOBAL DEL DOCUMENTO
 
-4. **CRÍTICO - DETECTAR ÁMBITO TERRITORIAL**:
-   - Si el fragmento menciona municipios específicos, LISTARLOS TODOS en "affected_municipalities"
-   - Si menciona provincias específicas, listarlas en "affected_provinces"
-   - Clasificar "territorial_scope":
-     * "municipal" → si afecta a municipios concretos listados
-     * "provincial" → si afecta a provincias concretas
-     * "autonomica" → si es normativa autonómica general
-     * "estatal" → si es legislación estatal (LAU, Código Civil, etc.)
+Antes de extraer fragmentos, analiza el documento completo y extrae:
 
-**MUY IMPORTANTE**: 
-- Cuando un fragmento LISTE MUNICIPIOS (ej: "Barcelona, Cervera, Girona..."), 
-  DEBES incluir TODOS y CADA UNO de los municipios en "affected_municipalities".
-- Si un fragmento dice "zonas tensionadas" y lista 50+ municipios, extrae TODOS.
-- Normaliza los nombres (primera letra mayúscula): "CERVERA" → "Cervera"
+1. **RESUMEN** (ai_summary): 2-3 frases explicando qué regula este documento.
 
-Responde SOLO con un JSON array válido:
-[
-  {
-    "content": "Texto del fragmento...",
-    "article_reference": "Artículo X" o null,
-    "section_title": "Título de la sección" o null,
-    "territorial_scope": "municipal|provincial|autonomica|estatal",
-    "affected_municipalities": ["Barcelona", "Cervera", "Girona"] o [],
-    "affected_provinces": ["Barcelona", "Lleida"] o []
-  }
-]
+2. **PALABRAS CLAVE** (keywords): Lista de términos legales relevantes.
+   Ejemplos: ["fianza", "zona tensionada", "renta máxima", "gran tenedor", "IPC", "duración mínima"]
 
-Máximo 50 fragmentos. Prioriza los artículos más relevantes para contratos de alquiler.
+3. **DOCUMENTOS DEROGADOS/MODIFICADOS** (supersedes):
+   Si el documento menciona que DEROGA, MODIFICA, SUSTITUYE o DEJA SIN EFECTO normativa anterior,
+   extrae los títulos/referencias de esa normativa.
+   Ejemplos:
+   - "Deja sin efecto la Resolución TER/2940/2023" → ["Resolución TER/2940/2023"]
+   - "Modifica la Ley 29/1994" → ["Ley 29/1994"]
+   - Si no menciona ninguna → []
+
+4. **FECHA DE CADUCIDAD** (expiration_date):
+   Si el documento tiene vigencia limitada o menciona "hasta el día X" → "YYYY-MM-DD"
+   Si es vigencia indefinida → null
+
+## FASE 2 - EXTRACCIÓN DE FRAGMENTOS
+
+Para CADA fragmento relevante del documento, extrae:
+
+{
+  "content": "Texto del fragmento (máx 1500 caracteres)",
+  "article_reference": "Artículo X" o null,
+  "section_title": "Título de la sección" o null,
+  
+  // ===== CATEGORÍA SEMÁNTICA =====
+  "semantic_category": "Tipo de información. Valores posibles:
+    - definicion: Define un concepto legal
+    - obligacion: Establece una obligación para alguna parte
+    - prohibicion: Prohíbe algo expresamente
+    - limite_precio: Límites de renta, actualización de precios
+    - plazo: Plazos y duraciones legales
+    - sancion: Sanciones por incumplimiento
+    - excepcion: Excepciones a reglas generales
+    - procedimiento: Procedimientos a seguir
+    - lista_entidades: Lista de municipios, zonas tensionadas, etc.
+    - requisito: Requisitos legales para algo
+    - derecho: Derechos del inquilino o propietario
+    - actualizacion: Reglas de actualización de renta
+    - garantia: Fianzas y garantías adicionales
+    - otro: No encaja en las anteriores",
+  
+  // ===== ENTIDADES CLAVE =====
+  "key_entities": ["Lista de conceptos legales mencionados en este fragmento"],
+  // Ejemplos: ["fianza", "renta", "gran tenedor", "zona tensionada", "IPC", "arrendador", "preaviso"]
+  
+  // ===== CONDICIONES DE APLICACIÓN =====
+  "applies_when": {
+    "tipo_inmueble": "vivienda habitual|local comercial|null",
+    "zona": "tensionada|no tensionada|null",
+    "tipo_arrendador": "gran tenedor|pequeño propietario|null",
+    "duracion_contrato": "especificar si hay requisito de duración",
+    "condicion_especial": "cualquier otra condición específica"
+  },
+  
+  // ===== TERRITORIAL (como antes) =====
+  "territorial_scope": "municipal|provincial|autonomica|estatal",
+  "affected_municipalities": ["Lista de municipios si aplica"],
+  "affected_provinces": ["Lista de provincias si aplica"]
+}
+
+## INSTRUCCIONES CRÍTICAS
+
+1. **LISTAS DE MUNICIPIOS**: Si el documento lista municipios (ej: zonas tensionadas), 
+   extrae TODOS los nombres en "affected_municipalities". Esto es CRÍTICO.
+
+2. **CATEGORÍA SEMÁNTICA**: Elige la categoría que mejor describa el contenido.
+   Un fragmento sobre "la renta no podrá superar X" es "limite_precio".
+   Un fragmento que lista municipios es "lista_entidades".
+
+3. **ENTIDADES CLAVE**: Extrae los conceptos legales mencionados. 
+   Si habla de fianza, IPC y renta, key_entities = ["fianza", "IPC", "renta"].
+
+4. **APPLIES_WHEN**: Si el fragmento dice "en caso de gran tenedor...", 
+   pon tipo_arrendador: "gran tenedor".
+
+5. **DEROGACIONES**: Es MUY IMPORTANTE detectar si este documento deja sin efecto otros.
+   Busca expresiones como: "deroga", "modifica", "sustituye", "deja sin efecto", 
+   "queda anulado", "pierde vigencia".
+
+## FORMATO DE RESPUESTA
+
+Responde SOLO con un JSON válido:
+{
+  "document_analysis": {
+    "ai_summary": "Resumen del documento...",
+    "keywords": ["palabra1", "palabra2"],
+    "supersedes": ["Documento derogado 1", "Documento derogado 2"] o [],
+    "expiration_date": "YYYY-MM-DD" o null
+  },
+  "chunks": [
+    { chunk1 },
+    { chunk2 },
+    ...
+  ]
+}
+
+Máximo 50 fragmentos. Prioriza los más relevantes para análisis de contratos de alquiler.
 Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", Jurisdicción="${docInfo.jurisdiction}", Entidad territorial="${docInfo.territorial_entity || 'No especificada'}"`;
 
     // Use AI to extract and structure the text
@@ -132,7 +219,13 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
             content: [
               {
                 type: "text",
-                text: `Procesa este documento legal: "${docInfo.title}". Extrae los fragmentos más relevantes para análisis de contratos de alquiler. RECUERDA: Si hay listas de municipios, extrae TODOS los nombres.`,
+                text: `Procesa este documento legal: "${docInfo.title}". 
+                
+IMPORTANTE:
+1. Primero analiza el documento completo (resumen, palabras clave, derogaciones).
+2. Luego extrae los fragmentos con su categoría semántica y entidades clave.
+3. Si hay listas de municipios, extrae TODOS los nombres.
+4. Detecta si este documento deroga o modifica otros anteriores.`,
               },
               {
                 type: "image_url",
@@ -148,10 +241,9 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
     });
 
     if (!response.ok) {
-      // If multimodal fails, try text-only approach with a simpler prompt
+      // If multimodal fails, create a placeholder chunk
       console.log("Multimodal processing failed, using fallback...");
 
-      // For now, create a single chunk with the document title as placeholder
       const { error: insertError } = await supabase.from("legal_chunks").insert({
         document_id: documentId,
         content: `Documento: ${docInfo.title}. Este documento ha sido subido y está pendiente de procesamiento manual.`,
@@ -161,6 +253,9 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
         territorial_scope: docInfo.jurisdiction === 'estatal' ? 'estatal' : 'autonomica',
         affected_municipalities: [],
         affected_provinces: [],
+        semantic_category: 'otro',
+        key_entities: [],
+        applies_when: {},
       });
 
       if (insertError) {
@@ -184,24 +279,105 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
       throw new Error("No content returned from AI");
     }
 
-    // Parse chunks from AI response
-    let chunks;
+    // Parse the complete response
+    let parsedResponse;
     try {
       const jsonMatch = aiContent.match(/```(?:json)?\s*([\s\S]*?)```/);
       const jsonString = jsonMatch ? jsonMatch[1].trim() : aiContent.trim();
-      chunks = JSON.parse(jsonString);
+      parsedResponse = JSON.parse(jsonString);
     } catch (parseError) {
       console.error("Error parsing AI response:", parseError);
-      throw new Error("Error parsing chunks from AI response");
+      throw new Error("Error parsing response from AI");
     }
+
+    // Extract document analysis and chunks
+    const documentAnalysis = parsedResponse.document_analysis || {};
+    const chunks = parsedResponse.chunks || parsedResponse; // Fallback if old format
 
     if (!Array.isArray(chunks) || chunks.length === 0) {
       throw new Error("No valid chunks extracted from document");
     }
 
+    // Update document with analysis metadata
+    const updateData: any = {};
+    
+    if (documentAnalysis.ai_summary) {
+      updateData.ai_summary = documentAnalysis.ai_summary;
+    }
+    
+    if (documentAnalysis.keywords && Array.isArray(documentAnalysis.keywords)) {
+      updateData.keywords = documentAnalysis.keywords;
+    }
+    
+    if (documentAnalysis.expiration_date) {
+      updateData.expiration_date = documentAnalysis.expiration_date;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      const { error: updateError } = await supabase
+        .from("legal_documents")
+        .update(updateData)
+        .eq("id", documentId);
+
+      if (updateError) {
+        console.error("Error updating document metadata:", updateError);
+      }
+    }
+
+    // Handle superseded documents
+    const supersededDocs = documentAnalysis.supersedes || [];
+    let supersededCount = 0;
+
+    if (supersededDocs.length > 0) {
+      console.log(`Document mentions superseding: ${supersededDocs.join(', ')}`);
+      
+      // Search for documents that match the superseded titles
+      for (const supersededTitle of supersededDocs) {
+        // Search by partial title match
+        const { data: matchingDocs, error: searchError } = await supabase
+          .from("legal_documents")
+          .select("id, title")
+          .neq("id", documentId)
+          .ilike("title", `%${supersededTitle.substring(0, 30)}%`);
+
+        if (!searchError && matchingDocs && matchingDocs.length > 0) {
+          for (const matchedDoc of matchingDocs) {
+            // Mark the old document as superseded
+            const { error: markError } = await supabase
+              .from("legal_documents")
+              .update({ 
+                superseded_by_id: documentId,
+                is_active: false 
+              })
+              .eq("id", matchedDoc.id);
+
+            if (!markError) {
+              supersededCount++;
+              console.log(`Marked document "${matchedDoc.title}" as superseded by new document`);
+            }
+          }
+        }
+      }
+
+      // Update current document with supersedes_ids
+      if (supersededCount > 0) {
+        const { data: supersededIds } = await supabase
+          .from("legal_documents")
+          .select("id")
+          .eq("superseded_by_id", documentId);
+
+        if (supersededIds && supersededIds.length > 0) {
+          await supabase
+            .from("legal_documents")
+            .update({ supersedes_ids: supersededIds.map(d => d.id) })
+            .eq("id", documentId);
+        }
+      }
+    }
+
     // Process and validate each chunk
     const chunksToInsert = chunks.map((chunk: any, index: number) => {
-      // Normalize municipality names (capitalize first letter)
+      // Normalize municipality names
       const normalizedMunicipalities = (chunk.affected_municipalities || [])
         .map((m: string) => {
           if (typeof m !== 'string') return null;
@@ -220,7 +396,6 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
             .split(' ')
             .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
-          // Validate it's a real Spanish province
           const isValid = SPANISH_PROVINCES.some(
             prov => normalizeText(prov) === normalizeText(normalized)
           );
@@ -236,6 +411,21 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
            normalizedProvinces.length > 0 ? 'provincial' : 
            docInfo.jurisdiction === 'estatal' ? 'estatal' : 'autonomica');
 
+      // Validate semantic category
+      const semanticCategory = VALID_SEMANTIC_CATEGORIES.includes(chunk.semantic_category)
+        ? chunk.semantic_category
+        : 'otro';
+
+      // Normalize key entities
+      const keyEntities = (chunk.key_entities || [])
+        .filter((e: any) => typeof e === 'string' && e.length > 0)
+        .map((e: string) => e.toLowerCase().trim());
+
+      // Validate applies_when
+      const appliesWhen = typeof chunk.applies_when === 'object' && chunk.applies_when !== null
+        ? chunk.applies_when
+        : {};
+
       return {
         document_id: documentId,
         content: chunk.content,
@@ -245,6 +435,9 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
         territorial_scope: scope,
         affected_municipalities: normalizedMunicipalities,
         affected_provinces: normalizedProvinces,
+        semantic_category: semanticCategory,
+        key_entities: keyEntities,
+        applies_when: appliesWhen,
       };
     });
 
@@ -254,7 +447,7 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
       throw new Error(`Error inserting chunks: ${insertError.message}`);
     }
 
-    // Count total municipalities and provinces extracted
+    // Count statistics
     const totalMunicipalities = chunksToInsert.reduce(
       (acc: number, chunk: any) => acc + (chunk.affected_municipalities?.length || 0), 
       0
@@ -264,13 +457,34 @@ Información del documento: Título="${docInfo.title}", Tipo="${docInfo.type}", 
       0
     );
 
+    // Count semantic categories
+    const categoryCounts: Record<string, number> = {};
+    chunksToInsert.forEach((chunk: any) => {
+      const cat = chunk.semantic_category || 'otro';
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    });
+
+    // Count unique key entities
+    const allEntities = new Set<string>();
+    chunksToInsert.forEach((chunk: any) => {
+      (chunk.key_entities || []).forEach((e: string) => allEntities.add(e));
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
         chunks_created: chunks.length,
         municipalities_extracted: totalMunicipalities,
         provinces_extracted: totalProvinces,
-        message: `Documento procesado: ${chunks.length} fragmentos indexados. ${totalMunicipalities} municipios y ${totalProvinces} provincias detectados.`,
+        semantic_categories: categoryCounts,
+        key_entities_count: allEntities.size,
+        superseded_documents: supersededCount,
+        document_summary: documentAnalysis.ai_summary || null,
+        document_keywords: documentAnalysis.keywords || [],
+        message: `Documento procesado inteligentemente: ${chunks.length} fragmentos indexados. ` +
+          `${totalMunicipalities} municipios, ${totalProvinces} provincias, ` +
+          `${allEntities.size} entidades clave. ` +
+          (supersededCount > 0 ? `${supersededCount} documento(s) anterior(es) marcado(s) como obsoleto(s).` : ''),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
