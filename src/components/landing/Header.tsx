@@ -339,7 +339,15 @@ const Header = () => {
                     <FileText className="h-4 w-4" />
                     Analizar contrato
                   </Link>
-                  <button 
+                  <Link 
+                    to="/perfil" 
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
+                  >
+                    <User className="h-4 w-4" />
+                    Mi perfil
+                  </Link>
+                  <button
                     onClick={() => { handleSignOut(); closeMobileMenu(); }}
                     className="flex items-center gap-2 text-red-600 hover:text-red-700 transition-colors text-base font-medium mt-2"
                   >
