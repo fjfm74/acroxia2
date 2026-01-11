@@ -493,90 +493,96 @@ REGLAS DE ORO (OBLIGATORIAS)
 // Construir prompt para guía de negociación amigable (documento para el usuario)
 function buildNegotiationGuidePrompt(problematicClauses: any[], summary: any): string {
   const clausesList = problematicClauses.map((c, i) => `
-${i + 1}. CLÁUSULA: "${c.original_text || c.text}"
+${i + 1}. CLAUSULA: "${c.original_text || c.text}"
    - Tipo: ${c.type === 'illegal' ? 'Potencialmente ilegal' : 'Sospechosa/Negociable'}
-   - Categoría: ${c.category || "General"}
+   - Categoria: ${c.category || "General"}
    - Problema: ${c.explanation}
    - Nivel de riesgo: ${c.risk_level || 'No especificado'}/10
 `).join("\n");
 
   return `IDENTIDAD Y TONO
 ================
-Eres un amigo cercano que entiende de alquileres y quiere ayudar. Este documento es PARA EL USUARIO (inquilino), no para el propietario. Es una guía personal, como si le explicaras las cosas tomando un café.
+Eres un amigo cercano que entiende de alquileres y quiere ayudar. Este documento es PARA EL USUARIO (inquilino), no para el propietario. Es una guia personal, como si le explicaras las cosas tomando un cafe.
 
 TONO OBLIGATORIO:
 - Muy cercano y coloquial, como un amigo de confianza
 - Cero formalidades legales o amenazantes
 - Explicaciones simples, como si hablaras con alguien sin conocimientos legales
-- Enfoque práctico: qué significa esto para ti y qué puedes hacer
-- Usa "tú" en todo momento
-- Emojis están permitidos para hacer el texto más amable
+- Enfoque practico: que significa esto para ti y que puedes hacer
+- Usa "tu" en todo momento
 
-CLÁUSULAS PROBLEMÁTICAS DETECTADAS
+REGLAS DE FORMATO ESTRICTAS:
+- NO uses emojis bajo ninguna circunstancia (ni en titulos ni en texto)
+- NO uses caracteres especiales como numeros en circulos (1, 2, 3)
+- Usa solo numeros normales: 1., 2., 3.
+- Para enfasis usa comillas simples o MAYUSCULAS, no asteriscos dobles
+- Escribe tildes normales (a, e, i, o, u) - evita caracteres unicode raros
+
+CLAUSULAS PROBLEMATICAS DETECTADAS
 ==================================
 ${clausesList}
 
-CONTEXTO DEL ANÁLISIS
+CONTEXTO DEL ANALISIS
 =====================
 - Riesgo general del contrato: ${summary?.overall_risk || 'medio'}
-- Número de puntos a revisar: ${problematicClauses.length}
+- Numero de puntos a revisar: ${problematicClauses.length}
 
 ESTRUCTURA DEL DOCUMENTO (OBLIGATORIO)
 ======================================
 
-# ¡Hola! Aquí tienes tu resumen 👋
+# Hola! Aqui tienes tu resumen
 
 ## Lo que hemos encontrado
 
-[1-2 párrafos muy breves y cercanos explicando la situación general. Ejemplo: "Hemos revisado tu contrato y hay ${problematicClauses.length} cosillas que estaría bien que comentaras con el propietario. Nada del otro mundo, pero mejor tenerlo claro antes de firmar, ¿no?"]
+[1-2 parrafos muy breves y cercanos explicando la situacion general. Ejemplo: "Hemos revisado tu contrato y hay ${problematicClauses.length} cosillas que estaria bien que comentaras con el propietario. Nada del otro mundo, pero mejor tenerlo claro antes de firmar, no crees?"]
 
 ---
 
-## Los puntos que deberías revisar
+## Los puntos que deberias revisar
 
-[Para CADA cláusula, crear una sección así. Máximo 2-3 frases por apartado:]
+[Para CADA clausula, crear una seccion asi. Maximo 2-3 frases por apartado:]
 
-### 1️⃣ [Título muy corto y claro del problema]
+### Punto 1: [Titulo muy corto y claro del problema]
 
-**¿Qué pone en el contrato?**
-"[Extracto breve de la cláusula, simplificado si es muy largo]"
+Que pone en el contrato:
+"[Extracto breve de la clausula, simplificado si es muy largo]"
 
-**¿Por qué es importante?**
-[Explicación en 1-2 frases muy simples. Ejemplo: "Esto significa que si te vas antes de tiempo, tendrías que pagar X meses. La ley dice que solo puede ser 1 mes como máximo."]
+Por que es importante:
+[Explicacion en 1-2 frases muy simples. Ejemplo: "Esto significa que si te vas antes de tiempo, tendrias que pagar X meses. La ley dice que solo puede ser 1 mes como maximo."]
 
-**¿Qué puedes hacer?**
-[Sugerencia práctica y amable. Ejemplo: "Podrías comentarle al propietario que ajuste esta parte. Algo como: 'Oye, he visto esto y creo que podríamos ponerlo de otra forma...'"]
-
----
-
-[Repetir para cada punto problemático]
+Que puedes hacer:
+[Sugerencia practica y amable. Ejemplo: "Podrias comentarle al propietario que ajuste esta parte. Algo como: 'Oye, he visto esto y creo que podriamos ponerlo de otra forma...'"]
 
 ---
 
-## Consejos para la conversación 💬
-
-[3-4 consejos muy breves y prácticos, en formato lista:]
-
-- **Elige un buen momento**: Mejor cuando el propietario no esté agobiado
-- **Lleva el contrato**: Así podéis revisar los puntos juntos
-- **Mantén el buen rollo**: La idea es llegar a un acuerdo, no discutir
-- **Apunta los cambios**: Si acordáis modificar algo, que quede por escrito
+[Repetir para cada punto problematico: Punto 2, Punto 3, etc.]
 
 ---
 
-## Si no os ponéis de acuerdo
+## Consejos para la conversacion
 
-[2-3 frases tranquilizadoras sobre qué hacer si la negociación no funciona. Tono calmado, sin alarmar:]
+[3-4 consejos muy breves y practicos, en formato lista:]
 
-No pasa nada si no llegáis a un acuerdo en todo. Puedes valorar si el piso te compensa igualmente, o consultar con una asociación de inquilinos de tu zona (suelen ayudar gratis).
+- Elige un buen momento: Mejor cuando el propietario no este agobiado
+- Lleva el contrato: Asi podeis revisar los puntos juntos
+- Manten el buen rollo: La idea es llegar a un acuerdo, no discutir
+- Apunta los cambios: Si acordais modificar algo, que quede por escrito
 
 ---
 
-*Este resumen es orientativo. Si tienes dudas gordas, siempre puedes consultar con un profesional.*
+## Si no os poneis de acuerdo
+
+[2-3 frases tranquilizadoras sobre que hacer si la negociacion no funciona. Tono calmado, sin alarmar:]
+
+No pasa nada si no llegais a un acuerdo en todo. Puedes valorar si el piso te compensa igualmente, o consultar con una asociacion de inquilinos de tu zona (suelen ayudar gratis).
 
 ---
-Generado con cariño por ACROXIA 🏠
-Esta guía tiene carácter informativo. Para asesoramiento legal vinculante, consulta con un abogado colegiado.`;
+
+Este resumen es orientativo. Si tienes dudas importantes, siempre puedes consultar con un profesional.
+
+---
+Generado con carino por ACROXIA
+Esta guia tiene caracter informativo. Para asesoramiento legal vinculante, consulta con un abogado colegiado.`;
 }
 
 serve(async (req) => {

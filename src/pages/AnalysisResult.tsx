@@ -134,7 +134,36 @@ const AnalysisResult = () => {
     if (!analysis?.full_report?.generated_letter) return;
     
     const fileName = analysis.contracts?.file_name?.replace(/\.pdf$/i, '') || 'contrato';
-    const guideContent = analysis.full_report.generated_letter;
+    let guideContent = analysis.full_report.generated_letter;
+    
+    // Clean problematic characters
+    const cleanText = (text: string): string => {
+      return text
+        // Remove emojis and special unicode characters
+        .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+        .replace(/[\u{2600}-\u{26FF}]/gu, '')
+        .replace(/[\u{2700}-\u{27BF}]/gu, '')
+        .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
+        .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
+        .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')
+        // Remove circled numbers
+        .replace(/[\u{2460}-\u{24FF}]/gu, '')
+        .replace(/[\u{2776}-\u{277F}]/gu, '')
+        .replace(/1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|🔟/g, '')
+        // Remove other problematic characters
+        .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+        .replace(/[\u{200B}-\u{200D}]/gu, '')
+        .replace(/[\u{FEFF}]/gu, '')
+        // Normalize quotes and dashes
+        .replace(/[""]/g, '"')
+        .replace(/['']/g, "'")
+        .replace(/[—–]/g, '-')
+        // Remove any remaining non-printable characters except newlines
+        .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, '')
+        .trim();
+    };
+    
+    guideContent = cleanText(guideContent);
     
     // Create PDF with jsPDF
     const doc = new jsPDF();
@@ -144,6 +173,14 @@ const AnalysisResult = () => {
     const maxWidth = pageWidth - margin * 2;
     let yPosition = margin;
     
+    // Helper to check page break
+    const checkPageBreak = (neededSpace: number = 15) => {
+      if (yPosition > pageHeight - margin - neededSpace) {
+        doc.addPage();
+        yPosition = margin;
+      }
+    };
+    
     // Helper function to add text with word wrap and page breaks
     const addText = (text: string, fontSize: number, isBold = false, color: [number, number, number] = [31, 29, 27]) => {
       doc.setFontSize(fontSize);
@@ -151,19 +188,27 @@ const AnalysisResult = () => {
       doc.setTextColor(color[0], color[1], color[2]);
       
       const lines = doc.splitTextToSize(text, maxWidth);
+      const lineHeight = fontSize * 0.45;
       
       for (const line of lines) {
-        if (yPosition > pageHeight - margin) {
-          doc.addPage();
-          yPosition = margin;
-        }
+        checkPageBreak();
         doc.text(line, margin, yPosition);
-        yPosition += fontSize * 0.5;
+        yPosition += lineHeight;
       }
-      yPosition += 3;
+      yPosition += 2;
     };
     
-    // Header - diseño amigable
+    // Helper to render text with inline bold (handles **text** patterns)
+    const addTextWithInlineBold = (text: string, fontSize: number) => {
+      // First clean any remaining markdown
+      const cleanedText = text
+        .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold markers but keep text
+        .replace(/\*([^*]+)\*/g, '$1');      // Remove italic markers
+      
+      addText(cleanedText, fontSize, false);
+    };
+    
+    // Header - friendly design
     doc.setFillColor(31, 29, 27);
     doc.rect(0, 0, pageWidth, 40, "F");
     doc.setTextColor(250, 248, 245);
@@ -175,92 +220,106 @@ const AnalysisResult = () => {
     doc.text("Puntos a revisar y consejos para negociar", margin, 28);
     doc.setFontSize(9);
     doc.setTextColor(180, 180, 180);
-    doc.text(`Archivo: ${fileName}`, margin, 36);
-    yPosition = 50;
+    doc.text("Archivo: " + fileName.substring(0, 50), margin, 36);
+    yPosition = 55;
     
     // Process the markdown-like content
     const lines = guideContent.split('\n');
     
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const trimmedLine = line.trim();
       
       if (!trimmedLine) {
-        yPosition += 4;
+        yPosition += 3;
         continue;
       }
       
       // Handle headers
       if (trimmedLine.startsWith('# ')) {
-        yPosition += 6;
-        addText(trimmedLine.replace('# ', ''), 18, true, [31, 29, 27]);
+        yPosition += 8;
+        checkPageBreak(20);
+        const headerText = trimmedLine.replace('# ', '').replace(/[!?]/g, '');
+        addText(headerText, 18, true, [31, 29, 27]);
         yPosition += 4;
       } else if (trimmedLine.startsWith('## ')) {
-        yPosition += 5;
-        addText(trimmedLine.replace('## ', ''), 14, true, [31, 29, 27]);
-        yPosition += 2;
+        yPosition += 6;
+        checkPageBreak(15);
+        const headerText = trimmedLine.replace('## ', '');
+        addText(headerText, 14, true, [31, 29, 27]);
+        yPosition += 3;
       } else if (trimmedLine.startsWith('### ')) {
-        yPosition += 4;
-        addText(trimmedLine.replace('### ', ''), 12, true, [80, 80, 80]);
-        yPosition += 1;
+        yPosition += 5;
+        checkPageBreak(12);
+        const headerText = trimmedLine.replace('### ', '').replace('Punto ', '');
+        // Add a subtle background for section headers
+        doc.setFillColor(245, 243, 240);
+        doc.rect(margin - 2, yPosition - 5, maxWidth + 4, 8, "F");
+        addText(headerText, 11, true, [60, 60, 60]);
+        yPosition += 2;
       } else if (trimmedLine.startsWith('> ')) {
-        // Blockquote styling
-        doc.setFillColor(245, 245, 240);
-        if (yPosition > pageHeight - margin - 10) {
-          doc.addPage();
-          yPosition = margin;
-        }
-        const quoteText = trimmedLine.replace('> ', '');
-        const quoteLines = doc.splitTextToSize(quoteText, maxWidth - 10);
-        const quoteHeight = quoteLines.length * 5 + 6;
-        doc.rect(margin, yPosition - 3, maxWidth, quoteHeight, "F");
+        // Blockquote styling with beige background
+        checkPageBreak(20);
+        const quoteText = cleanText(trimmedLine.replace('> ', '').replace(/"/g, ''));
         doc.setFontSize(10);
+        const quoteLines = doc.splitTextToSize(quoteText, maxWidth - 14);
+        const quoteHeight = quoteLines.length * 5 + 8;
+        
+        doc.setFillColor(252, 250, 245);
+        doc.setDrawColor(220, 210, 190);
+        doc.rect(margin, yPosition - 2, maxWidth, quoteHeight, "FD");
+        
         doc.setFont("helvetica", "italic");
-        doc.setTextColor(80, 80, 80);
+        doc.setTextColor(80, 75, 70);
+        let qY = yPosition + 4;
         for (const qLine of quoteLines) {
-          doc.text(qLine, margin + 5, yPosition + 2);
-          yPosition += 5;
+          doc.text(qLine, margin + 7, qY);
+          qY += 5;
         }
-        yPosition += 4;
+        yPosition += quoteHeight + 4;
       } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
         // Bullet points
-        const bulletText = trimmedLine.replace(/^[-*]\s/, '');
+        checkPageBreak(10);
+        let bulletText = trimmedLine.replace(/^[-*]\s/, '');
+        // Clean bold markers from bullet text
+        bulletText = bulletText.replace(/\*\*([^*]+)\*\*/g, '$1');
+        
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(31, 29, 27);
         
-        if (yPosition > pageHeight - margin) {
-          doc.addPage();
-          yPosition = margin;
-        }
+        // Draw bullet
+        doc.setFillColor(31, 29, 27);
+        doc.circle(margin + 2, yPosition - 1.5, 1, "F");
         
-        doc.text("•", margin, yPosition);
-        const bulletLines = doc.splitTextToSize(bulletText, maxWidth - 10);
-        for (let i = 0; i < bulletLines.length; i++) {
-          if (yPosition > pageHeight - margin) {
-            doc.addPage();
-            yPosition = margin;
-          }
-          doc.text(bulletLines[i], margin + 6, yPosition);
+        const bulletLines = doc.splitTextToSize(bulletText, maxWidth - 12);
+        for (let j = 0; j < bulletLines.length; j++) {
+          checkPageBreak();
+          doc.text(bulletLines[j], margin + 8, yPosition);
           yPosition += 5;
         }
-        yPosition += 1;
-      } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
-        // Bold only line
-        const boldText = trimmedLine.replace(/\*\*/g, '');
-        addText(boldText, 11, true);
+        yPosition += 2;
       } else if (trimmedLine.startsWith('---')) {
-        // Horizontal rule
-        yPosition += 3;
-        doc.setDrawColor(200, 200, 200);
-        doc.line(margin, yPosition, pageWidth - margin, yPosition);
-        yPosition += 6;
+        // Horizontal rule - visual separator
+        yPosition += 4;
+        checkPageBreak();
+        doc.setDrawColor(200, 195, 185);
+        doc.setLineWidth(0.3);
+        doc.line(margin + 20, yPosition, pageWidth - margin - 20, yPosition);
+        yPosition += 8;
       } else if (/^\d+\./.test(trimmedLine)) {
         // Numbered list
-        addText(trimmedLine, 10, false);
+        checkPageBreak();
+        addTextWithInlineBold(trimmedLine, 10);
+      } else if (trimmedLine.includes(':') && trimmedLine.length < 80 && !trimmedLine.includes('"')) {
+        // Likely a label line (e.g., "Que pone en el contrato:")
+        checkPageBreak();
+        const labelText = trimmedLine.replace(/:/g, ':');
+        addText(labelText, 10, true, [50, 50, 50]);
       } else {
-        // Regular paragraph - handle inline bold
-        const cleanText = trimmedLine.replace(/\*\*/g, '');
-        addText(cleanText, 10, false);
+        // Regular paragraph
+        checkPageBreak();
+        addTextWithInlineBold(trimmedLine, 10);
       }
     }
     
@@ -271,11 +330,11 @@ const AnalysisResult = () => {
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(150, 150, 150);
-      doc.text(`Generado con ACROXIA · Página ${i} de ${totalPages}`, margin, pageHeight - 10);
-      doc.text(new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }), pageWidth - margin - 40, pageHeight - 10);
+      doc.text("Generado con ACROXIA - Pagina " + i + " de " + totalPages, margin, pageHeight - 10);
+      doc.text(new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }), pageWidth - margin - 45, pageHeight - 10);
     }
     
-    doc.save(`guia-negociacion-${fileName}.pdf`);
+    doc.save("guia-negociacion-" + fileName + ".pdf");
   };
 
   const getClauseIcon = (type: string) => {
