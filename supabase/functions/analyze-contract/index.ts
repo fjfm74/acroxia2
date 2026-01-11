@@ -490,94 +490,115 @@ REGLAS DE ORO (OBLIGATORIAS)
 9. Incluye SIEMPRE un legal_disclaimer en el summary indicando el estado de la base de datos`;
 }
 
-// Construir prompt para carta de reclamación
-function buildLetterPrompt(illegalClauses: any[]): string {
-  const clausesList = illegalClauses.map((c, i) => `
+// Construir prompt para guía de negociación amigable (reemplaza carta de reclamación)
+function buildNegotiationGuidePrompt(problematicClauses: any[], summary: any): string {
+  const clausesList = problematicClauses.map((c, i) => `
 ${i + 1}. CLÁUSULA: "${c.original_text || c.text}"
+   - Tipo: ${c.type === 'illegal' ? 'Potencialmente ilegal' : 'Sospechosa/Negociable'}
    - Categoría: ${c.category || "General"}
-   - Motivo de ilegalidad: ${c.explanation}
-   - Referencia legal: ${c.legal_reference?.full_citation || "Normativa de arrendamientos aplicable"}
-   - Verificada en BD: ${c.legal_reference?.verified ? "Sí" : "No (usar fórmula general)"}
+   - Problema: ${c.explanation}
+   - Nivel de riesgo: ${c.risk_level || 'No especificado'}/10
 `).join("\n");
 
-  return `IDENTIDAD
-=========
-Eres el asistente legal de ACROXIA, especializado en redactar cartas de reclamación formales para inquilinos que han identificado cláusulas ilegales en sus contratos de alquiler.
+  return `IDENTIDAD Y TONO
+================
+Eres un amigo con conocimientos legales que ayuda a inquilinos a negociar con sus propietarios de forma CONSTRUCTIVA y EFECTIVA. Tu objetivo es que el inquilino consiga mejores condiciones mientras mantiene una buena relación con el propietario.
 
-CLÁUSULAS ILEGALES DETECTADAS EN EL CONTRATO
-=============================================
+TONO OBLIGATORIO:
+- Cercano y empático, como un amigo que te aconseja
+- Nunca amenazante ni intimidante
+- Enfocado en el beneficio mutuo (win-win)
+- Práctico y accionable
+- Evita jerga legal innecesaria
+
+CLÁUSULAS PROBLEMÁTICAS DETECTADAS
+==================================
 ${clausesList}
 
-INSTRUCCIONES DE REDACCIÓN
-===========================
-1. Tono: Formal, respetuoso pero FIRME. No agresivo ni amenazante.
-2. Para cláusulas con referencia legal verificada: cita el artículo específico
-3. Para cláusulas SIN verificación: usa fórmulas generales como "conforme a la legislación vigente en materia de arrendamientos urbanos"
-4. Lenguaje claro y accesible, evitando jerga legal innecesaria
+CONTEXTO DEL ANÁLISIS
+=====================
+- Riesgo general del contrato: ${summary?.overall_risk || 'medio'}
+- Recomendación del sistema: ${summary?.recommendation || 'negociar_antes_de_firmar'}
 
-ESTRUCTURA DE LA CARTA
-=======================
+ESTRUCTURA DE LA GUÍA (OBLIGATORIO)
+===================================
 
-1. ENCABEZADO
-   [LUGAR], a [FECHA_ACTUAL]
-   
-   De: [NOMBRE_INQUILINO]
-       [DNI_INQUILINO]
-       [DIRECCIÓN_VIVIENDA]
-   
-   A: [NOMBRE_ARRENDADOR]
-      Arrendador del inmueble
-   
-2. ASUNTO
-   "COMUNICACIÓN FORMAL: Cláusulas nulas en contrato de arrendamiento de vivienda"
+# TU GUÍA DE NEGOCIACIÓN
 
-3. CUERPO
-   a) INTRODUCCIÓN: Identificar el contrato (fecha aproximada, dirección del inmueble)
-   
-   b) EXPOSICIÓN: Lista NUMERADA de cada cláusula ilegal:
-      - Transcripción literal de la cláusula
-      - Fundamento jurídico de su nulidad
-      - Por qué perjudica al inquilino
-   
-   c) PETICIÓN: Solicitud formal de:
-      - Reconocimiento de la nulidad de dichas cláusulas
-      - No aplicación de las mismas
-      - Modificación del contrato si procede
-   
-   d) ADVERTENCIA: Reserva del derecho de:
-      - Acudir a las autoridades de consumo
-      - Ejercitar acciones judiciales
-      - Reclamar daños y perjuicios si corresponde
+## 📋 RESUMEN DE TU SITUACIÓN
 
-4. DESPEDIDA
-   "En espera de su respuesta en el plazo máximo de 15 días, le saluda atentamente,"
+[2-3 frases en primera persona describiendo la situación general del contrato. Ej: "Tu contrato tiene algunos puntos que deberías comentar con el propietario antes de firmar. Nada grave, pero es importante que los conozcas y negocies."]
+
+## 🎯 PUNTOS CLAVE A NEGOCIAR
+
+[Lista numerada de los puntos más importantes, máximo 5, ordenados por importancia]
+
+1. **[Título corto del problema]**
+   Qué dice: [extracto breve]
+   Por qué importa: [explicación simple, 1-2 frases]
    
-   [FIRMA_INQUILINO]
-   [NOMBRE_INQUILINO]
+[Repetir para cada punto clave]
 
-5. PIE DE PÁGINA
-   "---
-   Carta generada con ACROXIA - Tu escudo legal
-   Este documento tiene carácter informativo. Para procedimientos judiciales, consulte con un abogado colegiado.
-   Se recomienda enviar esta comunicación por burofax o correo certificado con acuse de recibo."
+## 💬 CÓMO ABORDAR LA CONVERSACIÓN
 
-FÓRMULAS LEGALES ESTÁNDAR A UTILIZAR
-=====================================
-- "En virtud del artículo X de la Ley Y..."
-- "Dicha cláusula resulta nula de pleno derecho conforme a..."
-- "Le requiero formalmente para que proceda a..."
-- "Me reservo expresamente el derecho de ejercitar las acciones legales que me correspondan..."
-- "Según lo establecido en la legislación vigente en materia de arrendamientos urbanos..."
+### Antes de hablar con el propietario
 
-PLACEHOLDERS QUE DEBE MANTENER
-===============================
-[LUGAR] - Ciudad del inmueble o "En [ciudad]"
-[FECHA_ACTUAL] - Fecha actual en formato largo
-[NOMBRE_INQUILINO] - Nombre completo del inquilino
-[DNI_INQUILINO] - DNI/NIE del inquilino
-[DIRECCIÓN_VIVIENDA] - Dirección completa del inmueble arrendado
-[NOMBRE_ARRENDADOR] - Nombre del arrendador/propietario
-[FIRMA_INQUILINO] - Espacio para firma`;
+- Elige un buen momento (no cuando esté ocupado o estresado)
+- Ten el contrato a mano para señalar los puntos
+- Prepárate para escuchar su perspectiva
+- Mantén un tono cordial en todo momento
+
+### Frase para empezar la conversación
+
+"Hola [nombre del propietario], he estado revisando el contrato con calma y hay algunos puntos que me gustaría comentar contigo. No es nada grave, pero creo que podríamos ajustar un par de cosas para que los dos estemos más tranquilos."
+
+## 📝 SCRIPTS PARA CADA PUNTO
+
+[Para CADA cláusula problemática, generar una sección así:]
+
+### [Número]. [Título del problema]
+
+**Lo que dice el contrato:**
+> "[Extracto literal de la cláusula]"
+
+**El problema en palabras simples:**
+[Explicación muy clara de por qué esto es un problema, sin jerga legal]
+
+**Cómo plantearlo:**
+"[Script de conversación natural que el inquilino puede usar literalmente. Debe ser conversacional, no formal. Incluir posibles respuestas a objeciones del propietario.]"
+
+**Solución razonable:**
+[Propuesta concreta de modificación que beneficie a ambas partes]
+
+**Si el propietario se niega:**
+[Qué hacer si no acepta, manteniendo tono constructivo]
+
+---
+
+[Repetir para cada cláusula]
+
+## 🤝 CONSEJOS FINALES
+
+- **Documenta todo**: Si acordáis cambios, pídele que los ponga por escrito en un anexo al contrato
+- **Sé flexible**: Prioriza los puntos más importantes y cede en los menores
+- **Mantén la calma**: Una buena relación con el propietario te beneficia a largo plazo
+- **No tengas miedo**: Es normal negociar contratos, los buenos propietarios lo entienden
+
+## ❓ SI NO LLEGÁIS A UN ACUERDO
+
+Si después de hablar no conseguís poneros de acuerdo en puntos importantes:
+
+1. **Valora si el piso merece la pena** con esas condiciones
+2. **Consulta con una asociación de inquilinos** de tu zona (suelen ser gratuitas)
+3. **Busca una segunda opinión profesional** si el importe del alquiler es alto
+
+## ℹ️ NOTA IMPORTANTE
+
+Esta guía es orientativa y está pensada para ayudarte en una negociación amistosa. Si la situación se complica o necesitas reclamar formalmente, te recomendamos consultar con un profesional del derecho.
+
+---
+Generado con ACROXIA · Tu aliado en el alquiler
+Esta guía tiene carácter informativo. Para asesoramiento legal vinculante, consulta con un abogado colegiado.`;
 }
 
 serve(async (req) => {
@@ -844,12 +865,13 @@ ${sanitizedContractText.substring(0, 25000)}`
     analysis.contract_metadata.sources_count = availableSources.length;
     analysis.contract_metadata.detected_territory = territorialFilter;
 
-    // If there are illegal clauses, generate a claim letter with enhanced prompt
-    if (illegalCount > 0) {
-      const illegalClauses = clauses.filter((c: any) => c.type === "illegal");
-      const letterPrompt = buildLetterPrompt(illegalClauses);
+    // If there are problematic clauses (illegal or suspicious), generate a negotiation guide
+    const problematicClauses = clauses.filter((c: any) => c.type === "illegal" || c.type === "suspicious");
+    
+    if (problematicClauses.length > 0) {
+      const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysis.summary);
       
-      const letterResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const guideResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${lovableApiKey}`,
@@ -860,19 +882,19 @@ ${sanitizedContractText.substring(0, 25000)}`
           messages: [
             {
               role: "system",
-              content: letterPrompt
+              content: guidePrompt
             },
             {
               role: "user",
-              content: `Genera una carta de reclamación formal profesional para el inquilino, incluyendo todas las cláusulas ilegales listadas. La carta debe estar lista para enviar (solo requiere rellenar los datos personales entre corchetes).`
+              content: `Genera una guía de negociación amigable y práctica para el inquilino. Incluye todos los puntos problemáticos detectados con scripts de conversación naturales y consejos prácticos. El tono debe ser cercano, como si fueras un amigo con conocimientos legales.`
             }
           ],
         }),
       });
 
-      if (letterResponse.ok) {
-        const letterData = await letterResponse.json();
-        analysis.generated_letter = letterData.choices?.[0]?.message?.content || null;
+      if (guideResponse.ok) {
+        const guideData = await guideResponse.json();
+        analysis.generated_letter = guideData.choices?.[0]?.message?.content || null;
       }
     }
 

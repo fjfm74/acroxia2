@@ -27,8 +27,10 @@ import {
   MapPin,
   Building2,
   User,
-  Bot
+  Bot,
+  MessageSquareHeart
 } from "lucide-react";
+import jsPDF from "jspdf";
 
 interface LegalReference {
   article?: string | null;
@@ -128,21 +130,149 @@ const AnalysisResult = () => {
     fetchAnalysis();
   }, [id]);
 
-  const handleDownloadLetter = () => {
+  const handleDownloadGuide = () => {
     if (!analysis?.full_report?.generated_letter) return;
     
     const fileName = analysis.contracts?.file_name?.replace(/\.pdf$/i, '') || 'contrato';
-    const letterContent = analysis.full_report.generated_letter;
+    const guideContent = analysis.full_report.generated_letter;
     
-    const blob = new Blob([letterContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `carta-reclamacion-${fileName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Create PDF with jsPDF
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - margin * 2;
+    let yPosition = margin;
+    
+    // Helper function to add text with word wrap and page breaks
+    const addText = (text: string, fontSize: number, isBold = false, color: [number, number, number] = [31, 29, 27]) => {
+      doc.setFontSize(fontSize);
+      doc.setFont("helvetica", isBold ? "bold" : "normal");
+      doc.setTextColor(color[0], color[1], color[2]);
+      
+      const lines = doc.splitTextToSize(text, maxWidth);
+      
+      for (const line of lines) {
+        if (yPosition > pageHeight - margin) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.text(line, margin, yPosition);
+        yPosition += fontSize * 0.5;
+      }
+      yPosition += 3;
+    };
+    
+    // Header
+    doc.setFillColor(31, 29, 27);
+    doc.rect(0, 0, pageWidth, 35, "F");
+    doc.setTextColor(250, 248, 245);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("GUÍA DE NEGOCIACIÓN", margin, 20);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Contrato: ${fileName}`, margin, 28);
+    yPosition = 45;
+    
+    // Process the markdown-like content
+    const lines = guideContent.split('\n');
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      if (!trimmedLine) {
+        yPosition += 4;
+        continue;
+      }
+      
+      // Handle headers
+      if (trimmedLine.startsWith('# ')) {
+        yPosition += 6;
+        addText(trimmedLine.replace('# ', ''), 18, true, [31, 29, 27]);
+        yPosition += 4;
+      } else if (trimmedLine.startsWith('## ')) {
+        yPosition += 5;
+        addText(trimmedLine.replace('## ', ''), 14, true, [31, 29, 27]);
+        yPosition += 2;
+      } else if (trimmedLine.startsWith('### ')) {
+        yPosition += 4;
+        addText(trimmedLine.replace('### ', ''), 12, true, [80, 80, 80]);
+        yPosition += 1;
+      } else if (trimmedLine.startsWith('> ')) {
+        // Blockquote styling
+        doc.setFillColor(245, 245, 240);
+        if (yPosition > pageHeight - margin - 10) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        const quoteText = trimmedLine.replace('> ', '');
+        const quoteLines = doc.splitTextToSize(quoteText, maxWidth - 10);
+        const quoteHeight = quoteLines.length * 5 + 6;
+        doc.rect(margin, yPosition - 3, maxWidth, quoteHeight, "F");
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(80, 80, 80);
+        for (const qLine of quoteLines) {
+          doc.text(qLine, margin + 5, yPosition + 2);
+          yPosition += 5;
+        }
+        yPosition += 4;
+      } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+        // Bullet points
+        const bulletText = trimmedLine.replace(/^[-*]\s/, '');
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(31, 29, 27);
+        
+        if (yPosition > pageHeight - margin) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        
+        doc.text("•", margin, yPosition);
+        const bulletLines = doc.splitTextToSize(bulletText, maxWidth - 10);
+        for (let i = 0; i < bulletLines.length; i++) {
+          if (yPosition > pageHeight - margin) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.text(bulletLines[i], margin + 6, yPosition);
+          yPosition += 5;
+        }
+        yPosition += 1;
+      } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        // Bold only line
+        const boldText = trimmedLine.replace(/\*\*/g, '');
+        addText(boldText, 11, true);
+      } else if (trimmedLine.startsWith('---')) {
+        // Horizontal rule
+        yPosition += 3;
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += 6;
+      } else if (/^\d+\./.test(trimmedLine)) {
+        // Numbered list
+        addText(trimmedLine, 10, false);
+      } else {
+        // Regular paragraph - handle inline bold
+        const cleanText = trimmedLine.replace(/\*\*/g, '');
+        addText(cleanText, 10, false);
+      }
+    }
+    
+    // Footer on all pages
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Generado con ACROXIA · Página ${i} de ${totalPages}`, margin, pageHeight - 10);
+      doc.text(new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }), pageWidth - margin - 40, pageHeight - 10);
+    }
+    
+    doc.save(`guia-negociacion-${fileName}.pdf`);
   };
 
   const getClauseIcon = (type: string) => {
@@ -287,9 +417,9 @@ const AnalysisResult = () => {
                   </p>
                 </div>
                 {analysis.full_report?.generated_letter && (
-                  <Button onClick={handleDownloadLetter}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Descargar carta de reclamación
+                  <Button onClick={handleDownloadGuide} className="bg-foreground text-background hover:bg-foreground/90">
+                    <MessageSquareHeart className="mr-2 h-4 w-4" />
+                    Descargar guía de negociación
                   </Button>
                 )}
               </div>
