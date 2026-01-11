@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.approve-post]
 verify_jwt = false
+
+[functions.analyze-contract-public]
+verify_jwt = false
+
+[functions.send-lead-email]
+verify_jwt = false

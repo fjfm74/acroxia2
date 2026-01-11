@@ -20,7 +20,9 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Analyze from "./pages/Analyze";
+import AnalyzePublic from "./pages/AnalyzePublic";
 import AnalysisResult from "./pages/AnalysisResult";
+import FreeResultPreview from "./pages/FreeResultPreview";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminBlogNew from "./pages/admin/AdminBlogNew";
@@ -74,6 +76,8 @@ const App = () => (
               <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/analizar" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
               <Route path="/resultado/:id" element={<ProtectedRoute><AnalysisResult /></ProtectedRoute>} />
+              <Route path="/analizar-gratis" element={<AnalyzePublic />} />
+              <Route path="/resultado-previo/:id" element={<FreeResultPreview />} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/blog" element={<AdminRoute><AdminBlog /></AdminRoute>} />
               <Route path="/admin/blog/nuevo" element={<AdminRoute><AdminBlogNew /></AdminRoute>} />

@@ -187,7 +187,7 @@ serve(async (req: Request): Promise<Response> => {
       .eq("email", email);
 
     return new Response(
-      JSON.stringify({ success: true, emailId: emailResponse.id }),
+      JSON.stringify({ success: true, emailId: emailData.id }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
