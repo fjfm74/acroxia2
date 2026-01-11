@@ -60,16 +60,39 @@ const OnboardingWizard = ({ onComplete }: OnboardingWizardProps) => {
     setLoading(true);
 
     try {
-      // Create organization
-      const { error: orgError } = await supabase.from("organizations").insert({
-        name: formData.companyName.trim(),
-        business_type: formData.businessType,
-        owner_id: user.id,
-        phone: formData.phone.trim() || null,
-        email: formData.email.trim() || null,
-      });
+      // Check if user already has an organization
+      const { data: existingOrg } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-      if (orgError) throw orgError;
+      if (existingOrg && existingOrg.length > 0) {
+        // Update existing organization instead of creating duplicate
+        const { error: updateError } = await supabase
+          .from("organizations")
+          .update({
+            name: formData.companyName.trim(),
+            business_type: formData.businessType,
+            phone: formData.phone.trim() || null,
+            email: formData.email.trim() || null,
+          })
+          .eq("id", existingOrg[0].id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new organization
+        const { error: orgError } = await supabase.from("organizations").insert({
+          name: formData.companyName.trim(),
+          business_type: formData.businessType,
+          owner_id: user.id,
+          phone: formData.phone.trim() || null,
+          email: formData.email.trim() || null,
+        });
+
+        if (orgError) throw orgError;
+      }
 
       // Add professional role
       const { error: roleError } = await supabase.from("user_roles").insert({

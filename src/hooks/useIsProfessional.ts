@@ -30,26 +30,27 @@ export const useIsProfessional = () => {
       }
 
       try {
-        // Check if user has professional or admin role
+        // Check if user has professional or admin role (may return multiple rows)
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id)
-          .in("role", ["professional", "admin"])
-          .maybeSingle();
+          .in("role", ["professional", "admin"]);
 
-        // Check if user has an organization
+        // Check if user has an organization (get the most recent one if multiple exist)
         const { data: orgData } = await supabase
           .from("organizations")
           .select("*")
           .eq("owner_id", user.id)
-          .maybeSingle();
+          .order("created_at", { ascending: false })
+          .limit(1);
 
-        const hasProfessionalRole = !!roleData;
-        const hasOrganization = !!orgData;
+        const hasProfessionalRole = roleData && roleData.length > 0;
+        const hasOrganization = orgData && orgData.length > 0;
+        const activeOrganization = hasOrganization ? orgData[0] : null;
 
         setIsProfessional(hasProfessionalRole || hasOrganization);
-        setOrganization(orgData as Organization | null);
+        setOrganization(activeOrganization as Organization | null);
       } catch (error) {
         console.error("Error checking professional status:", error);
         setIsProfessional(false);
