@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.chat-assistant]
 verify_jwt = false
+
+[functions.schedule-daily-post]
+verify_jwt = false
+
+[functions.approve-post]
+verify_jwt = false
