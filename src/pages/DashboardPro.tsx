@@ -193,10 +193,17 @@ const DashboardPro = () => {
     );
   }
 
+  const handleOnboardingComplete = () => {
+    // Force full page reload to refresh all auth hooks and state
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
+
   if (needsOnboarding) {
     return (
       <ProLayout>
-        <OnboardingWizard onComplete={fetchData} />
+        <OnboardingWizard onComplete={handleOnboardingComplete} />
       </ProLayout>
     );
   }
