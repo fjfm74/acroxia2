@@ -123,28 +123,57 @@ ${config.prohibicionFumar ? `
 b) PROHIBICIÓN DE FUMAR: Queda prohibido fumar en el interior de la vivienda. El incumplimiento de esta norma podrá dar lugar a la retención de parte de la fianza para sufragar los gastos de limpieza y eliminación de olores.
 ` : ''}
 ` : ''}
-${getNextClauseNumber(config, config.prohibicionMascotas || config.prohibicionFumar ? 3 : 2)}.- RESOLUCIÓN DEL CONTRATO
+${config.clausulaObrasReformas ? `
+${getNextClauseNumber(config, getClauseOffset(config, 'obras'))}.- OBRAS Y REFORMAS
+a) El/La arrendatario/a no podrá realizar obras que modifiquen la configuración de la vivienda o de sus accesorios, ni obras que causen una disminución de la estabilidad o seguridad del inmueble, sin el consentimiento previo y por escrito del/de la arrendador/a.
+
+b) Las obras menores de decoración (pintura, instalación de estanterías, etc.) podrán realizarse siempre que no afecten a la estructura del inmueble y que la vivienda se restituya a su estado original al finalizar el contrato, salvo pacto en contrario.
+
+c) Cualquier mejora realizada por el/la arrendatario/a, incluso con autorización del/de la arrendador/a, quedará en beneficio de la finca sin derecho a indemnización, salvo pacto expreso en contrario.
+` : ''}
+${config.clausulaSubarriendo ? `
+${getNextClauseNumber(config, getClauseOffset(config, 'subarriendo'))}.- CESIÓN Y SUBARRIENDO
+a) Queda expresamente prohibida la cesión del contrato y el subarriendo, total o parcial, de la vivienda sin el consentimiento previo y por escrito del/de la arrendador/a.
+
+b) El incumplimiento de esta prohibición será causa de resolución del contrato conforme al artículo 27.2.c) de la LAU, pudiendo el/la arrendador/a resolver el contrato y exigir la indemnización correspondiente.
+
+c) La autorización para subarrendar o ceder, de concederse, deberá constar por escrito y especificar las condiciones de dicho subarriendo o cesión.
+` : ''}
+${config.clausulaAccesoVisitas ? `
+${getNextClauseNumber(config, getClauseOffset(config, 'visitas'))}.- ACCESO PARA VISITAS
+a) Durante los últimos TRES MESES de vigencia del contrato, el/la arrendatario/a permitirá el acceso al inmueble para su exhibición a posibles nuevos inquilinos o compradores, previo aviso con al menos 24 horas de antelación.
+
+b) Las visitas se realizarán en horario razonable (de 10:00 a 20:00 horas en días laborables y de 10:00 a 14:00 horas los sábados), con una duración máxima de 30 minutos por visita.
+
+c) El/La arrendador/a o su representante estarán presentes durante las visitas. El/La arrendatario/a podrá designar a una persona de su confianza si no pudiera estar presente.
+` : ''}
+${config.clausulaPenalizacionImpago ? `
+${getNextClauseNumber(config, getClauseOffset(config, 'impago'))}.- PENALIZACIÓN POR IMPAGO
+a) El retraso en el pago de la renta o de cualquier cantidad a cargo del/de la arrendatario/a devengará, desde el día siguiente a su vencimiento, un interés de demora equivalente al interés legal del dinero vigente, incrementado en dos puntos.
+
+b) Los gastos de reclamación extrajudicial de las cantidades adeudadas (requerimientos notariales, burofaxes, etc.) serán de cuenta del/de la arrendatario/a moroso/a.
+
+c) El impago de la renta o de cualquiera de las cantidades cuyo pago corresponda al/a la arrendatario/a será causa de resolución del contrato conforme al artículo 27.2.a) de la LAU.
+` : ''}
+${getNextClauseNumber(config, getClauseOffset(config, 'resolucion'))}.- RESOLUCIÓN DEL CONTRATO
 El contrato podrá resolverse:
 a) Por mutuo acuerdo de las partes.
 b) Por las causas de resolución previstas en el artículo 27 de la LAU.
 c) Por incumplimiento de cualquiera de las obligaciones establecidas en el presente contrato.
 
-${getNextClauseNumber(config, config.prohibicionMascotas || config.prohibicionFumar ? 4 : 3)}.- CESIÓN Y SUBARRIENDO
-Queda expresamente prohibida la cesión del contrato y el subarriendo, total o parcial, de la vivienda sin el consentimiento previo y escrito del/de la arrendador/a.
-
 ${config.incluyeCertificadoEnergetico ? `
-${getNextClauseNumber(config, config.prohibicionMascotas || config.prohibicionFumar ? 5 : 4)}.- CERTIFICADO DE EFICIENCIA ENERGÉTICA
+${getNextClauseNumber(config, getClauseOffset(config, 'certificado'))}.- CERTIFICADO DE EFICIENCIA ENERGÉTICA
 El/La arrendador/a declara que la vivienda dispone de Certificado de Eficiencia Energética, del que se entrega copia al/a la arrendatario/a, con calificación: _______.
 ` : ''}
-${getNextClauseNumber(config, (config.prohibicionMascotas || config.prohibicionFumar ? 5 : 4) + (config.incluyeCertificadoEnergetico ? 1 : 0))}.- NOTIFICACIONES
+${getNextClauseNumber(config, getClauseOffset(config, 'notificaciones'))}.- NOTIFICACIONES
 Todas las notificaciones entre las partes se realizarán por escrito y se dirigirán:
 - Al/A la arrendador/a: A la dirección indicada en el encabezamiento o a _________________________________
 - Al/A la arrendatario/a: A la vivienda objeto de este contrato.
 
-${getNextClauseNumber(config, (config.prohibicionMascotas || config.prohibicionFumar ? 6 : 5) + (config.incluyeCertificadoEnergetico ? 1 : 0))}.- LEGISLACIÓN APLICABLE
+${getNextClauseNumber(config, getClauseOffset(config, 'legislacion'))}.- LEGISLACIÓN APLICABLE
 El presente contrato se rige por lo dispuesto en la Ley 29/1994, de 24 de noviembre, de Arrendamientos Urbanos, y demás normativa que resulte de aplicación.
 
-${getNextClauseNumber(config, (config.prohibicionMascotas || config.prohibicionFumar ? 7 : 6) + (config.incluyeCertificadoEnergetico ? 1 : 0))}.- JURISDICCIÓN
+${getNextClauseNumber(config, getClauseOffset(config, 'jurisdiccion'))}.- JURISDICCIÓN
 Para cuantas cuestiones litigiosas pudieran derivarse del presente contrato, las partes se someten a los Juzgados y Tribunales del lugar donde radica la vivienda.
 
 Y en prueba de conformidad, firman el presente contrato por duplicado ejemplar, en el lugar y fecha indicados en el encabezamiento.
@@ -196,6 +225,30 @@ Generado el: ${format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: es })}
   return content;
 }
 
+// Función auxiliar para calcular el offset de cláusulas dinámicamente
+function getClauseOffset(config: ContractConfig, clauseType: string): number {
+  let offset = 2; // Base offset después de obligaciones
+  
+  if (config.prohibicionMascotas || config.prohibicionFumar) offset++;
+  
+  const clauseOrder = ['obras', 'subarriendo', 'visitas', 'impago', 'resolucion', 'certificado', 'notificaciones', 'legislacion', 'jurisdiccion'];
+  const clauseIndex = clauseOrder.indexOf(clauseType);
+  
+  for (let i = 0; i < clauseIndex; i++) {
+    const clause = clauseOrder[i];
+    if (clause === 'obras' && config.clausulaObrasReformas) offset++;
+    else if (clause === 'subarriendo' && config.clausulaSubarriendo) offset++;
+    else if (clause === 'visitas' && config.clausulaAccesoVisitas) offset++;
+    else if (clause === 'impago' && config.clausulaPenalizacionImpago) offset++;
+    else if (clause === 'resolucion') offset++;
+    else if (clause === 'certificado' && config.incluyeCertificadoEnergetico) offset++;
+    else if (clause === 'notificaciones') offset++;
+    else if (clause === 'legislacion') offset++;
+  }
+  
+  return offset;
+}
+
 function getNextClauseNumber(config: ContractConfig, offset: number = 0): string {
   let base = 5; // Empezamos en la quinta cláusula (después de las básicas)
   
@@ -203,7 +256,8 @@ function getNextClauseNumber(config: ContractConfig, offset: number = 0): string
   if (config.gastosComunidad === 'arrendatario' || config.ibi === 'arrendatario') base++;
   
   const ordinals = ['QUINTA', 'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA', 
-                    'UNDÉCIMA', 'DUODÉCIMA', 'DECIMOTERCERA', 'DECIMOCUARTA', 'DECIMOQUINTA'];
+                    'UNDÉCIMA', 'DUODÉCIMA', 'DECIMOTERCERA', 'DECIMOCUARTA', 'DECIMOQUINTA',
+                    'DECIMOSEXTA', 'DECIMOSÉPTIMA', 'DECIMOCTAVA', 'DECIMONOVENA', 'VIGÉSIMA'];
   
   return ordinals[base - 5 + offset] || `${base + offset}ª`;
 }

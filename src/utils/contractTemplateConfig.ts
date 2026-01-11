@@ -32,6 +32,10 @@ export interface ContractConfig {
   prohibicionFumar: boolean;
   incluyeInventario: boolean;
   incluyeCertificadoEnergetico: boolean;
+  clausulaObrasReformas: boolean;
+  clausulaSubarriendo: boolean;
+  clausulaAccesoVisitas: boolean;
+  clausulaPenalizacionImpago: boolean;
 }
 
 export const COMUNIDADES_AUTONOMAS = [
@@ -99,4 +103,8 @@ export const defaultContractConfig: ContractConfig = {
   prohibicionFumar: false,
   incluyeInventario: false,
   incluyeCertificadoEnergetico: true,
+  clausulaObrasReformas: true,
+  clausulaSubarriendo: true,
+  clausulaAccesoVisitas: true,
+  clausulaPenalizacionImpago: false,
 };
