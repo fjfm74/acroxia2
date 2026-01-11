@@ -204,6 +204,50 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string
+          phone: string | null
+          property_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          organization_id: string
+          phone?: string | null
+          property_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          phone?: string | null
+          property_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consent_logs: {
         Row: {
           accepted: boolean
@@ -242,36 +286,63 @@ export type Database = {
       }
       contracts: {
         Row: {
+          client_id: string | null
           created_at: string
           file_name: string
           file_path: string
           file_size: number | null
           id: string
+          internal_notes: string | null
+          organization_id: string | null
+          property_address: string | null
           status: Database["public"]["Enums"]["contract_status"]
           updated_at: string
           user_id: string
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           file_name: string
           file_path: string
           file_size?: number | null
           id?: string
+          internal_notes?: string | null
+          organization_id?: string | null
+          property_address?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
           user_id: string
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           file_name?: string
           file_path?: string
           file_size?: number | null
           id?: string
+          internal_notes?: string | null
+          organization_id?: string | null
+          property_address?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contracts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -474,6 +545,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organizations: {
+        Row: {
+          address: string | null
+          business_type: string
+          created_at: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          owner_id: string
+          phone: string | null
+          primary_color: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          primary_color?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          primary_color?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -779,6 +895,7 @@ export type Database = {
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       decrement_credit: { Args: { user_id: string }; Returns: undefined }
+      get_user_organization: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -871,9 +988,13 @@ export type Database = {
           territorial_scope: string
         }[]
       }
+      user_belongs_to_org: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "professional"
       blog_post_status: "draft" | "published"
       contract_status: "pending" | "processing" | "completed" | "failed"
       legal_doc_type:
@@ -1032,7 +1153,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "professional"],
       blog_post_status: ["draft", "published"],
       contract_status: ["pending", "processing", "completed", "failed"],
       legal_doc_type: [
