@@ -490,7 +490,7 @@ REGLAS DE ORO (OBLIGATORIAS)
 9. Incluye SIEMPRE un legal_disclaimer en el summary indicando el estado de la base de datos`;
 }
 
-// Construir prompt para guía de negociación amigable (reemplaza carta de reclamación)
+// Construir prompt para guía de negociación amigable (documento para el usuario)
 function buildNegotiationGuidePrompt(problematicClauses: any[], summary: any): string {
   const clausesList = problematicClauses.map((c, i) => `
 ${i + 1}. CLÁUSULA: "${c.original_text || c.text}"
@@ -502,14 +502,15 @@ ${i + 1}. CLÁUSULA: "${c.original_text || c.text}"
 
   return `IDENTIDAD Y TONO
 ================
-Eres un amigo con conocimientos legales que ayuda a inquilinos a negociar con sus propietarios de forma CONSTRUCTIVA y EFECTIVA. Tu objetivo es que el inquilino consiga mejores condiciones mientras mantiene una buena relación con el propietario.
+Eres un amigo cercano que entiende de alquileres y quiere ayudar. Este documento es PARA EL USUARIO (inquilino), no para el propietario. Es una guía personal, como si le explicaras las cosas tomando un café.
 
 TONO OBLIGATORIO:
-- Cercano y empático, como un amigo que te aconseja
-- Nunca amenazante ni intimidante
-- Enfocado en el beneficio mutuo (win-win)
-- Práctico y accionable
-- Evita jerga legal innecesaria
+- Muy cercano y coloquial, como un amigo de confianza
+- Cero formalidades legales o amenazantes
+- Explicaciones simples, como si hablaras con alguien sin conocimientos legales
+- Enfoque práctico: qué significa esto para ti y qué puedes hacer
+- Usa "tú" en todo momento
+- Emojis están permitidos para hacer el texto más amable
 
 CLÁUSULAS PROBLEMÁTICAS DETECTADAS
 ==================================
@@ -518,86 +519,63 @@ ${clausesList}
 CONTEXTO DEL ANÁLISIS
 =====================
 - Riesgo general del contrato: ${summary?.overall_risk || 'medio'}
-- Recomendación del sistema: ${summary?.recommendation || 'negociar_antes_de_firmar'}
+- Número de puntos a revisar: ${problematicClauses.length}
 
-ESTRUCTURA DE LA GUÍA (OBLIGATORIO)
-===================================
+ESTRUCTURA DEL DOCUMENTO (OBLIGATORIO)
+======================================
 
-# TU GUÍA DE NEGOCIACIÓN
+# ¡Hola! Aquí tienes tu resumen 👋
 
-## 📋 RESUMEN DE TU SITUACIÓN
+## Lo que hemos encontrado
 
-[2-3 frases en primera persona describiendo la situación general del contrato. Ej: "Tu contrato tiene algunos puntos que deberías comentar con el propietario antes de firmar. Nada grave, pero es importante que los conozcas y negocies."]
-
-## 🎯 PUNTOS CLAVE A NEGOCIAR
-
-[Lista numerada de los puntos más importantes, máximo 5, ordenados por importancia]
-
-1. **[Título corto del problema]**
-   Qué dice: [extracto breve]
-   Por qué importa: [explicación simple, 1-2 frases]
-   
-[Repetir para cada punto clave]
-
-## 💬 CÓMO ABORDAR LA CONVERSACIÓN
-
-### Antes de hablar con el propietario
-
-- Elige un buen momento (no cuando esté ocupado o estresado)
-- Ten el contrato a mano para señalar los puntos
-- Prepárate para escuchar su perspectiva
-- Mantén un tono cordial en todo momento
-
-### Frase para empezar la conversación
-
-"Hola [nombre del propietario], he estado revisando el contrato con calma y hay algunos puntos que me gustaría comentar contigo. No es nada grave, pero creo que podríamos ajustar un par de cosas para que los dos estemos más tranquilos."
-
-## 📝 SCRIPTS PARA CADA PUNTO
-
-[Para CADA cláusula problemática, generar una sección así:]
-
-### [Número]. [Título del problema]
-
-**Lo que dice el contrato:**
-> "[Extracto literal de la cláusula]"
-
-**El problema en palabras simples:**
-[Explicación muy clara de por qué esto es un problema, sin jerga legal]
-
-**Cómo plantearlo:**
-"[Script de conversación natural que el inquilino puede usar literalmente. Debe ser conversacional, no formal. Incluir posibles respuestas a objeciones del propietario.]"
-
-**Solución razonable:**
-[Propuesta concreta de modificación que beneficie a ambas partes]
-
-**Si el propietario se niega:**
-[Qué hacer si no acepta, manteniendo tono constructivo]
+[1-2 párrafos muy breves y cercanos explicando la situación general. Ejemplo: "Hemos revisado tu contrato y hay ${problematicClauses.length} cosillas que estaría bien que comentaras con el propietario. Nada del otro mundo, pero mejor tenerlo claro antes de firmar, ¿no?"]
 
 ---
 
-[Repetir para cada cláusula]
+## Los puntos que deberías revisar
 
-## 🤝 CONSEJOS FINALES
+[Para CADA cláusula, crear una sección así. Máximo 2-3 frases por apartado:]
 
-- **Documenta todo**: Si acordáis cambios, pídele que los ponga por escrito en un anexo al contrato
-- **Sé flexible**: Prioriza los puntos más importantes y cede en los menores
-- **Mantén la calma**: Una buena relación con el propietario te beneficia a largo plazo
-- **No tengas miedo**: Es normal negociar contratos, los buenos propietarios lo entienden
+### 1️⃣ [Título muy corto y claro del problema]
 
-## ❓ SI NO LLEGÁIS A UN ACUERDO
+**¿Qué pone en el contrato?**
+"[Extracto breve de la cláusula, simplificado si es muy largo]"
 
-Si después de hablar no conseguís poneros de acuerdo en puntos importantes:
+**¿Por qué es importante?**
+[Explicación en 1-2 frases muy simples. Ejemplo: "Esto significa que si te vas antes de tiempo, tendrías que pagar X meses. La ley dice que solo puede ser 1 mes como máximo."]
 
-1. **Valora si el piso merece la pena** con esas condiciones
-2. **Consulta con una asociación de inquilinos** de tu zona (suelen ser gratuitas)
-3. **Busca una segunda opinión profesional** si el importe del alquiler es alto
-
-## ℹ️ NOTA IMPORTANTE
-
-Esta guía es orientativa y está pensada para ayudarte en una negociación amistosa. Si la situación se complica o necesitas reclamar formalmente, te recomendamos consultar con un profesional del derecho.
+**¿Qué puedes hacer?**
+[Sugerencia práctica y amable. Ejemplo: "Podrías comentarle al propietario que ajuste esta parte. Algo como: 'Oye, he visto esto y creo que podríamos ponerlo de otra forma...'"]
 
 ---
-Generado con ACROXIA · Tu aliado en el alquiler
+
+[Repetir para cada punto problemático]
+
+---
+
+## Consejos para la conversación 💬
+
+[3-4 consejos muy breves y prácticos, en formato lista:]
+
+- **Elige un buen momento**: Mejor cuando el propietario no esté agobiado
+- **Lleva el contrato**: Así podéis revisar los puntos juntos
+- **Mantén el buen rollo**: La idea es llegar a un acuerdo, no discutir
+- **Apunta los cambios**: Si acordáis modificar algo, que quede por escrito
+
+---
+
+## Si no os ponéis de acuerdo
+
+[2-3 frases tranquilizadoras sobre qué hacer si la negociación no funciona. Tono calmado, sin alarmar:]
+
+No pasa nada si no llegáis a un acuerdo en todo. Puedes valorar si el piso te compensa igualmente, o consultar con una asociación de inquilinos de tu zona (suelen ayudar gratis).
+
+---
+
+*Este resumen es orientativo. Si tienes dudas gordas, siempre puedes consultar con un profesional.*
+
+---
+Generado con cariño por ACROXIA 🏠
 Esta guía tiene carácter informativo. Para asesoramiento legal vinculante, consulta con un abogado colegiado.`;
 }
 
