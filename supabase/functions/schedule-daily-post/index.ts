@@ -284,6 +284,26 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
+    // Check if scheduling is enabled
+    const { data: config } = await supabase
+      .from("site_config")
+      .select("value")
+      .eq("key", "daily_post_scheduling")
+      .maybeSingle();
+
+    const isEnabled = config?.value?.enabled === true;
+    
+    if (!isEnabled) {
+      console.log("Daily post scheduling is disabled. Skipping.");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "La programación diaria está desactivada" 
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
     // Get site URL from request or default
     const url = new URL(req.url);
     const siteUrl = req.headers.get("origin") || "https://acroxia.com";

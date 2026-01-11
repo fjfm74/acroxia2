@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, CalendarClock, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -50,6 +52,8 @@ interface BlogPost {
 const AdminBlog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [schedulingEnabled, setSchedulingEnabled] = useState(false);
+  const [schedulingLoading, setSchedulingLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchPosts = async () => {
@@ -73,8 +77,61 @@ const AdminBlog = () => {
     }
   };
 
+  const fetchSchedulingStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("site_config")
+        .select("value")
+        .eq("key", "daily_post_scheduling")
+        .maybeSingle();
+
+      if (error) throw error;
+      const configValue = data?.value as { enabled?: boolean } | null;
+      setSchedulingEnabled(configValue?.enabled === true);
+    } catch (error) {
+      console.error("Error fetching scheduling status:", error);
+    } finally {
+      setSchedulingLoading(false);
+    }
+  };
+
+  const toggleScheduling = async () => {
+    setSchedulingLoading(true);
+    const newValue = !schedulingEnabled;
+    
+    try {
+      const { error } = await supabase
+        .from("site_config")
+        .upsert({ 
+          key: "daily_post_scheduling", 
+          value: { enabled: newValue },
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" });
+
+      if (error) throw error;
+
+      setSchedulingEnabled(newValue);
+      toast({
+        title: newValue ? "Programación activada" : "Programación desactivada",
+        description: newValue 
+          ? "Se generará un post diario a las 9:00 AM" 
+          : "No se generarán posts automáticamente",
+      });
+    } catch (error) {
+      console.error("Error toggling scheduling:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo cambiar el estado de la programación",
+        variant: "destructive",
+      });
+    } finally {
+      setSchedulingLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
+    fetchSchedulingStatus();
   }, []);
 
   const toggleStatus = async (post: BlogPost) => {
@@ -145,7 +202,32 @@ const AdminBlog = () => {
         title="Gestión de Blog" 
         description="Crea y administra los posts del blog"
       >
-        <div className="flex justify-end mb-6">
+        {/* Header Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          {/* Scheduling Toggle */}
+          <Card className="border-border">
+            <CardContent className="p-4 flex items-center gap-4">
+              <CalendarClock className="h-5 w-5 text-muted-foreground" />
+              <div className="flex-1">
+                <Label htmlFor="scheduling-toggle" className="font-medium cursor-pointer">
+                  Programación diaria
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Genera un post cada día a las 9:00 AM
+                </p>
+              </div>
+              {schedulingLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Switch
+                  id="scheduling-toggle"
+                  checked={schedulingEnabled}
+                  onCheckedChange={toggleScheduling}
+                />
+              )}
+            </CardContent>
+          </Card>
+
           <Button asChild className="rounded-full">
             <Link to="/admin/blog/nuevo">
               <Plus className="h-4 w-4 mr-2" />
