@@ -451,7 +451,7 @@ export const nurturingTipsEmail = (data: EmailData) => ({
 
 // Email: Nurturing Día 5 - Oferta especial
 export const nurturingOfferEmail = (data: EmailData) => ({
-  subject: "🔥 Oferta exclusiva: 50% en tu informe (expira en 48h)",
+  subject: "🔥 Oferta exclusiva: Ahorra 10€ en tu informe (expira en 48h)",
   html: baseTemplate(`
     <div class="content">
       <h2 class="title">Tu análisis sigue esperándote</h2>
@@ -462,10 +462,10 @@ export const nurturingOfferEmail = (data: EmailData) => ({
       
       <div class="stats-box" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%); color: #FAF8F5; padding: 32px;">
         <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8;">Informe Completo</p>
-        <p style="margin: 0 0 4px 0; font-size: 18px; text-decoration: line-through; opacity: 0.6;">9,90€</p>
-        <p style="margin: 0 0 16px 0; font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 600;">4,95€</p>
+        <p style="margin: 0 0 4px 0; font-size: 18px; text-decoration: line-through; opacity: 0.6;">39€</p>
+        <p style="margin: 0 0 16px 0; font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 600;">29€</p>
         <div style="background: #F59E0B; color: #1F1D1B; display: inline-block; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;">
-          ⏰ Válido 48 horas
+          ⏰ Ahorra 10€ - Válido 48 horas
         </div>
       </div>
       
@@ -494,7 +494,7 @@ export const nurturingOfferEmail = (data: EmailData) => ({
       </div>
       
       <div class="button-container">
-        <a href="https://acroxia.com/resultado-previo/${data.analysisId}" class="button" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%);">Desbloquear con 50% dto</a>
+        <a href="https://acroxia.com/resultado-previo/${data.analysisId}" class="button" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%);">Desbloquear por solo 29€</a>
       </div>
       
       <p class="note" style="font-size: 13px;">

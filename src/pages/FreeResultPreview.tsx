@@ -346,7 +346,7 @@ const FreeResultPreview = () => {
                           Accede al análisis detallado de todas las cláusulas con recomendaciones personalizadas.
                         </p>
                         <div className="text-3xl font-bold text-foreground mb-1">
-                          9,90€
+                          39€
                         </div>
                         <p className="text-xs text-muted-foreground mb-4">
                           Pago único · Sin suscripción
