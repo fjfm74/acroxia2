@@ -87,7 +87,7 @@ const Dashboard = () => {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
                 <div>
                   <h1 className="font-serif text-3xl font-semibold text-charcoal">
-                    Hola, {profile?.full_name || "Usuario"}
+                    Hola, {profile?.first_name || "Usuario"}
                   </h1>
                   <p className="text-charcoal/70 mt-1">
                     Gestiona tus análisis de contratos

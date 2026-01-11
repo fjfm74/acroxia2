@@ -225,8 +225,48 @@ const Header = () => {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] bg-cream border-l border-border px-6">
-            <nav className="flex flex-col gap-6 mt-8">
+          <SheetContent side="right" className="w-[300px] bg-cream border-l border-border px-6 flex flex-col h-full">
+            {/* Bloque de usuario fijo arriba */}
+            {user && (
+              <div className="pt-6 pb-4 border-b border-charcoal/10 shrink-0">
+                <div className="px-1 py-2">
+                  <p className="text-sm font-medium text-foreground">{profile?.first_name || "Usuario"}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <FileText className="h-3 w-3" />
+                    {profile?.credits || 0} créditos
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 mt-3">
+                  <Link 
+                    to="/dashboard" 
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Mi panel
+                  </Link>
+                  <Link 
+                    to="/perfil" 
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
+                  >
+                    <User className="h-4 w-4" />
+                    Mi perfil
+                  </Link>
+                  <Link 
+                    to="/analizar" 
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Analizar contrato
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Navegación con scroll */}
+            <nav className="flex flex-col gap-6 mt-6 flex-1 overflow-y-auto">
               <Link 
                 to="/" 
                 onClick={closeMobileMenu}
@@ -313,50 +353,18 @@ const Header = () => {
               </div>
             </nav>
             
-            <div className="mt-8 pt-6 border-t border-charcoal/10 flex flex-col gap-4">
+            {/* Pie del menú */}
+            <div className="pt-4 pb-6 border-t border-charcoal/10 shrink-0">
               {user ? (
-                <>
-                  <div className="px-1 py-2">
-                    <p className="text-sm font-medium text-foreground">{profile?.first_name || "Usuario"}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      <FileText className="h-3 w-3" />
-                      {profile?.credits || 0} créditos
-                    </p>
-                  </div>
-                  <Link 
-                    to="/dashboard" 
-                    onClick={closeMobileMenu}
-                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Mi panel
-                  </Link>
-                  <Link 
-                    to="/analizar" 
-                    onClick={closeMobileMenu}
-                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Analizar contrato
-                  </Link>
-                  <Link 
-                    to="/perfil" 
-                    onClick={closeMobileMenu}
-                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
-                  >
-                    <User className="h-4 w-4" />
-                    Mi perfil
-                  </Link>
-                  <button
-                    onClick={() => { handleSignOut(); closeMobileMenu(); }}
-                    className="flex items-center gap-2 text-red-600 hover:text-red-700 transition-colors text-base font-medium mt-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Cerrar sesión
-                  </button>
-                </>
+                <button
+                  onClick={() => { handleSignOut(); closeMobileMenu(); }}
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700 transition-colors text-base font-medium"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Cerrar sesión
+                </button>
               ) : (
-                <Badge variant="secondary" className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-2 text-center">
+                <Badge variant="secondary" className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-2 text-center w-full">
                   Próximamente
                 </Badge>
               )}
