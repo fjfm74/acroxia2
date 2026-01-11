@@ -163,17 +163,20 @@ const AnalysisResult = () => {
       yPosition += 3;
     };
     
-    // Header
+    // Header - diseño amigable
     doc.setFillColor(31, 29, 27);
-    doc.rect(0, 0, pageWidth, 35, "F");
+    doc.rect(0, 0, pageWidth, 40, "F");
     doc.setTextColor(250, 248, 245);
-    doc.setFontSize(22);
+    doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("GUÍA DE NEGOCIACIÓN", margin, 20);
-    doc.setFontSize(10);
+    doc.text("Tu resumen del contrato", margin, 18);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`Contrato: ${fileName}`, margin, 28);
-    yPosition = 45;
+    doc.text("Puntos a revisar y consejos para negociar", margin, 28);
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`Archivo: ${fileName}`, margin, 36);
+    yPosition = 50;
     
     // Process the markdown-like content
     const lines = guideContent.split('\n');
