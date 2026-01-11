@@ -93,12 +93,12 @@ const Dashboard = () => {
                     Gestiona tus análisis de contratos
                   </p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Badge variant="outline" className="text-base py-2 px-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                  <Badge variant="outline" className="text-base py-2 px-4 justify-center">
                     <FileText className="mr-2 h-4 w-4" />
                     {profile?.credits || 0} créditos
                   </Badge>
-                  <Button asChild>
+                  <Button asChild className="w-full sm:w-auto">
                     <Link to="/analizar">
                       <Plus className="mr-2 h-4 w-4" />
                       Nuevo análisis
@@ -185,16 +185,16 @@ const Dashboard = () => {
                       {contracts.map((contract) => (
                         <div
                           key={contract.id}
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="p-2 bg-primary/10 rounded-lg">
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
                               <FileText className="h-5 w-5 text-primary" />
                             </div>
-                            <div>
-                              <p className="font-medium">{contract.file_name}</p>
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{contract.file_name}</p>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock className="h-3 w-3" />
+                                <Clock className="h-3 w-3 shrink-0" />
                                 {new Date(contract.created_at).toLocaleDateString("es-ES", {
                                   day: "numeric",
                                   month: "short",
@@ -203,23 +203,27 @@ const Dashboard = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            {contract.analysis_results[0] && (
-                              <div className="hidden md:flex items-center gap-3 text-sm">
-                                <span className="text-green-600">
-                                  {contract.analysis_results[0].valid_clauses} válidas
-                                </span>
-                                <span className="text-amber-600">
-                                  {contract.analysis_results[0].suspicious_clauses} sospechosas
-                                </span>
-                                <span className="text-red-600">
-                                  {contract.analysis_results[0].illegal_clauses} ilegales
-                                </span>
-                              </div>
-                            )}
+                          
+                          {/* Stats de cláusulas - visible en móvil también */}
+                          {contract.analysis_results[0] && (
+                            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm pl-14 sm:pl-0">
+                              <span className="text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                {contract.analysis_results[0].valid_clauses} válidas
+                              </span>
+                              <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+                                {contract.analysis_results[0].suspicious_clauses} sospechosas
+                              </span>
+                              <span className="text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                                {contract.analysis_results[0].illegal_clauses} ilegales
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Acciones */}
+                          <div className="flex items-center gap-3 pl-14 sm:pl-0 sm:shrink-0">
                             {getStatusBadge(contract.status)}
                             {contract.status === "completed" && (
-                              <Button variant="outline" size="sm" asChild>
+                              <Button variant="outline" size="sm" asChild className="whitespace-nowrap">
                                 <Link to={`/resultado/${contract.id}`}>Ver informe</Link>
                               </Button>
                             )}

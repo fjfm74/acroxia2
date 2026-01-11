@@ -232,9 +232,9 @@ const Profile = () => {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">{profile?.email}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm text-muted-foreground truncate">{profile?.email}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -325,8 +325,8 @@ const Profile = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
-                    <Button asChild variant="outline" className="rounded-full">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button asChild variant="outline" className="rounded-full w-full sm:w-auto">
                       <Link to="/precios">
                         <ExternalLink className="mr-2 h-4 w-4" />
                         Cambiar plan
@@ -335,11 +335,11 @@ const Profile = () => {
                     {subscription?.status === "active" && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" className="rounded-full text-muted-foreground">
+                          <Button variant="ghost" className="rounded-full text-muted-foreground w-full sm:w-auto">
                             Cancelar suscripción
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="mx-4 sm:mx-auto">
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Cancelar suscripción?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -347,11 +347,11 @@ const Profile = () => {
                               Después no se renovará automáticamente.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Volver</AlertDialogCancel>
+                          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                            <AlertDialogCancel className="w-full sm:w-auto">Volver</AlertDialogCancel>
                             <AlertDialogAction 
                               onClick={() => toast.info("Función disponible próximamente")}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto"
                             >
                               Cancelar suscripción
                             </AlertDialogAction>
@@ -459,7 +459,7 @@ const Profile = () => {
                           Eliminar mi cuenta
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="mx-4 sm:mx-auto">
                         <AlertDialogHeader>
                           <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
                           <AlertDialogDescription className="space-y-4">
@@ -480,14 +480,14 @@ const Profile = () => {
                             </div>
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel onClick={() => setDeleteConfirmText("")} className="w-full sm:w-auto">
                             Cancelar
                           </AlertDialogCancel>
                           <AlertDialogAction
                             onClick={handleDeleteAccount}
                             disabled={deleteConfirmText !== "ELIMINAR" || isDeleting}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto"
                           >
                             {isDeleting ? "Eliminando..." : "Eliminar cuenta"}
                           </AlertDialogAction>
