@@ -434,6 +434,53 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_posts: {
+        Row: {
+          approval_token: string
+          approved_at: string | null
+          blog_post_id: string
+          created_at: string
+          email_sent_at: string | null
+          id: string
+          rejected_at: string | null
+          scheduled_publish_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approval_token?: string
+          approved_at?: string | null
+          blog_post_id: string
+          created_at?: string
+          email_sent_at?: string | null
+          id?: string
+          rejected_at?: string | null
+          scheduled_publish_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approval_token?: string
+          approved_at?: string | null
+          blog_post_id?: string
+          created_at?: string
+          email_sent_at?: string | null
+          id?: string
+          rejected_at?: string | null
+          scheduled_publish_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_posts_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_config: {
         Row: {
           id: string

@@ -46,6 +46,7 @@ import Inmobiliarias from "./pages/profesionales/Inmobiliarias";
 import Gestorias from "./pages/profesionales/Gestorias";
 import CookieBanner from "./components/CookieBanner";
 import ChatContainer from "./components/chat/ChatContainer";
+import AprobarPost from "./pages/AprobarPost";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,7 @@ const App = () => (
               <Route path="/subida-alquiler-2026" element={<SubidaAlquiler2026 />} />
               <Route path="/profesionales/inmobiliarias" element={<Inmobiliarias />} />
               <Route path="/profesionales/gestorias" element={<Gestorias />} />
+              <Route path="/aprobar-post/:token" element={<AprobarPost />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieBanner />
