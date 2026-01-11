@@ -182,6 +182,9 @@ export interface EmailData {
   creditsRemaining?: number;
   subject?: string;
   message?: string;
+  // Nurturing email data
+  contractStatus?: string;
+  unsubscribeUrl?: string;
 }
 
 // Email: Confirmación de cuenta
@@ -381,6 +384,132 @@ export const contactFormEmail = (data: EmailData) => ({
   `)
 });
 
+// Email: Nurturing Día 2 - Tips prácticos
+export const nurturingTipsEmail = (data: EmailData) => ({
+  subject: "3 cláusulas que siempre debes revisar antes de firmar",
+  html: baseTemplate(`
+    <div class="content">
+      <h2 class="title">¿Sabías que el 67% de contratos tienen cláusulas ilegales?</h2>
+      <p class="text">Hola,</p>
+      <p class="text">
+        Hace unos días analizaste un contrato con nosotros. Queremos compartirte 3 cláusulas que <strong>siempre debes revisar</strong> antes de firmar cualquier alquiler:
+      </p>
+      
+      <div class="stats-box" style="text-align: left;">
+        <p style="margin: 0 0 16px 0; font-weight: 600; color: #1F1D1B;">1. Penalización por desistimiento</p>
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #4A4745;">
+          ✅ <strong>Límite legal:</strong> 1 mes por año que te quede de contrato
+        </p>
+        <p style="margin: 0; font-size: 14px; color: #DC2626;">
+          ❌ <strong>Lo que suelen poner:</strong> 2-3 meses fijos independientemente del tiempo
+        </p>
+      </div>
+      
+      <div class="stats-box" style="text-align: left;">
+        <p style="margin: 0 0 16px 0; font-weight: 600; color: #1F1D1B;">2. Actualización de la renta</p>
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #4A4745;">
+          ✅ <strong>En 2026:</strong> El límite es el IRAV (máximo 2-3%)
+        </p>
+        <p style="margin: 0; font-size: 14px; color: #DC2626;">
+          ❌ <strong>Lo que suelen poner:</strong> "IPC + 2%" o "subida anual del 5%"
+        </p>
+      </div>
+      
+      <div class="stats-box" style="text-align: left;">
+        <p style="margin: 0 0 16px 0; font-weight: 600; color: #1F1D1B;">3. Obras y reparaciones</p>
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #4A4745;">
+          ✅ <strong>Obligación del propietario:</strong> Reparaciones estructurales y de habitabilidad
+        </p>
+        <p style="margin: 0; font-size: 14px; color: #DC2626;">
+          ❌ <strong>Lo que suelen poner:</strong> "Todas las reparaciones a cargo del inquilino"
+        </p>
+      </div>
+      
+      <div class="warning-box">
+        <p style="margin: 0; font-size: 14px;">
+          <strong>¿Tu contrato tiene alguna de estas cláusulas?</strong><br>
+          Consulta tu análisis completo para descubrirlo.
+        </p>
+      </div>
+      
+      <div class="button-container">
+        <a href="https://acroxia.com/resultado-previo/${data.analysisId}" class="button">Ver mi análisis</a>
+      </div>
+      
+      <p class="note">
+        El análisis que hiciste sigue disponible. Puedes desbloquearlo cuando quieras.
+      </p>
+      
+      <div class="divider"></div>
+      <p class="footer-text" style="font-size: 12px; color: #7A7775;">
+        Si no deseas recibir más emails de ACROXIA, 
+        <a href="${data.unsubscribeUrl || '#'}" style="color: #7A7775;">haz clic aquí</a>.
+      </p>
+    </div>
+  `)
+});
+
+// Email: Nurturing Día 5 - Oferta especial
+export const nurturingOfferEmail = (data: EmailData) => ({
+  subject: "🔥 Oferta exclusiva: 50% en tu informe (expira en 48h)",
+  html: baseTemplate(`
+    <div class="content">
+      <h2 class="title">Tu análisis sigue esperándote</h2>
+      <p class="text">Hola,</p>
+      <p class="text">
+        Sabemos que tomar decisiones sobre dónde vivir no es fácil. Por eso queremos ayudarte con una <strong>oferta especial</strong>:
+      </p>
+      
+      <div class="stats-box" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%); color: #FAF8F5; padding: 32px;">
+        <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8;">Informe Completo</p>
+        <p style="margin: 0 0 4px 0; font-size: 18px; text-decoration: line-through; opacity: 0.6;">9,90€</p>
+        <p style="margin: 0 0 16px 0; font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 600;">4,95€</p>
+        <div style="background: #F59E0B; color: #1F1D1B; display: inline-block; padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;">
+          ⏰ Válido 48 horas
+        </div>
+      </div>
+      
+      <div class="success-box">
+        <p style="margin: 0; font-size: 14px;">
+          <strong>Caso real:</strong> María descubrió 2 cláusulas ilegales en su contrato y reclamó <strong>1.200€ de fianza</strong> que su casero pretendía quedarse.
+        </p>
+      </div>
+      
+      <p class="text" style="font-weight: 600; margin-bottom: 16px;">¿Qué incluye tu informe?</p>
+      <div class="benefit-item">
+        <span class="check-icon"></span>
+        <span>Análisis detallado de cada cláusula</span>
+      </div>
+      <div class="benefit-item">
+        <span class="check-icon"></span>
+        <span>Referencias legales específicas (LAU 2024)</span>
+      </div>
+      <div class="benefit-item">
+        <span class="check-icon"></span>
+        <span>Carta de reclamación automática</span>
+      </div>
+      <div class="benefit-item">
+        <span class="check-icon"></span>
+        <span>Recomendación personalizada de experto</span>
+      </div>
+      
+      <div class="button-container">
+        <a href="https://acroxia.com/resultado-previo/${data.analysisId}" class="button" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%);">Desbloquear con 50% dto</a>
+      </div>
+      
+      <p class="note" style="font-size: 13px;">
+        No dejes que te cobren de más. El conocimiento es tu mejor defensa.
+      </p>
+      
+      <div class="divider"></div>
+      <p class="footer-text" style="font-size: 12px; color: #7A7775;">
+        Si no deseas recibir más emails de ACROXIA, 
+        <a href="${data.unsubscribeUrl || '#'}" style="color: #7A7775;">haz clic aquí</a>.
+      </p>
+    </div>
+  `)
+});
+
 export const getEmailTemplate = (type: string, data: EmailData) => {
   switch (type) {
     case 'confirmation':
@@ -397,6 +526,10 @@ export const getEmailTemplate = (type: string, data: EmailData) => {
       return lowCreditsEmail(data);
     case 'contact':
       return contactFormEmail(data);
+    case 'nurturing_tips':
+      return nurturingTipsEmail(data);
+    case 'nurturing_offer':
+      return nurturingOfferEmail(data);
     default:
       throw new Error(`Unknown email type: ${type}`);
   }
