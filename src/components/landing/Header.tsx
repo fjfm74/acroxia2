@@ -28,12 +28,15 @@ import {
   TrendingUp,
   HelpCircle,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  Settings
 } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Badge } from "@/components/ui/badge";
 
 const Header = () => {
   const { user, profile, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -253,6 +256,16 @@ const Header = () => {
                     <User className="h-4 w-4" />
                     Mi perfil
                   </Link>
+                  {isAdmin && (
+                    <Link 
+                      to="/admin" 
+                      onClick={closeMobileMenu}
+                      className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Panel Admin
+                    </Link>
+                  )}
                   <Link 
                     to="/analizar" 
                     onClick={closeMobileMenu}
@@ -404,6 +417,14 @@ const Header = () => {
                       Mi perfil
                     </Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Panel Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
