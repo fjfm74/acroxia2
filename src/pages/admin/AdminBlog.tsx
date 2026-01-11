@@ -15,6 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -147,73 +154,74 @@ const AdminBlog = () => {
           </Button>
         </div>
 
-        <Card className="border-border">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="p-8 text-center text-muted-foreground">
-                Cargando posts...
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-muted-foreground mb-4">No hay posts todavía</p>
-                <Button asChild variant="outline">
-                  <Link to="/admin/blog/nuevo">Crear el primer post</Link>
-                </Button>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Título</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {posts.map((post) => (
-                    <TableRow key={post.id}>
-                      <TableCell className="font-medium max-w-[300px] truncate">
-                        {post.title}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{post.category}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={post.status === "published" ? "default" : "outline"}
-                        >
-                          {post.status === "published" ? "Publicado" : "Borrador"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(post.created_at), "d MMM yyyy", { locale: es })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => toggleStatus(post)}
-                            title={post.status === "published" ? "Despublicar" : "Publicar"}
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground">
+            Cargando posts...
+          </div>
+        ) : posts.length === 0 ? (
+          <Card className="border-border">
+            <CardContent className="p-8 text-center">
+              <p className="text-muted-foreground mb-4">No hay posts todavía</p>
+              <Button asChild variant="outline">
+                <Link to="/admin/blog/nuevo">Crear el primer post</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Mobile View - Cards */}
+            <div className="lg:hidden space-y-3">
+              {posts.map((post) => (
+                <Card key={post.id} className="border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm line-clamp-2 mb-2">{post.title}</h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">{post.category}</Badge>
+                          <Badge 
+                            variant={post.status === "published" ? "default" : "outline"}
+                            className="text-xs"
                           >
+                            {post.status === "published" ? "Publicado" : "Borrador"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {format(new Date(post.created_at), "d MMM yyyy", { locale: es })}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="flex-shrink-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => toggleStatus(post)}>
                             {post.status === "published" ? (
-                              <EyeOff className="h-4 w-4" />
+                              <>
+                                <EyeOff className="h-4 w-4 mr-2" />
+                                Despublicar
+                              </>
                             ) : (
-                              <Eye className="h-4 w-4" />
+                              <>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Publicar
+                              </>
                             )}
-                          </Button>
-                          <Button variant="ghost" size="icon" asChild>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
                             <Link to={`/admin/blog/editar/${post.id}`}>
-                              <Pencil className="h-4 w-4" />
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Editar
                             </Link>
-                          </Button>
+                          </DropdownMenuItem>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Eliminar
+                              </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
@@ -230,15 +238,96 @@ const AdminBlog = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        </div>
-                      </TableCell>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Desktop View - Table */}
+            <Card className="hidden lg:block border-border">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {posts.map((post) => (
+                      <TableRow key={post.id}>
+                        <TableCell className="font-medium max-w-[300px] truncate">
+                          {post.title}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{post.category}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={post.status === "published" ? "default" : "outline"}
+                          >
+                            {post.status === "published" ? "Publicado" : "Borrador"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(post.created_at), "d MMM yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => toggleStatus(post)}
+                              title={post.status === "published" ? "Despublicar" : "Publicar"}
+                            >
+                              {post.status === "published" ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button variant="ghost" size="icon" asChild>
+                              <Link to={`/admin/blog/editar/${post.id}`}>
+                                <Pencil className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar post?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. El post "{post.title}" será eliminado permanentemente.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deletePost(post)}>
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </AdminLayout>
     </>
   );

@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Instagram, Facebook, Linkedin, Twitter, Trash2, Edit, Clock, CheckCircle } from "lucide-react";
+import { Plus, Instagram, Facebook, Linkedin, Twitter, Trash2, Edit, Clock, CheckCircle, MoreVertical } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,88 +108,134 @@ const AdminSocial = () => {
           Cargando...
         </div>
       ) : posts && posts.length > 0 ? (
-        <div className="grid gap-4">
+        <div className="space-y-3">
           {posts.map((post) => (
             <div
               key={post.id}
-              className="bg-background rounded-xl border border-border p-4 flex items-center gap-4"
+              className="bg-background rounded-xl border border-border p-3 sm:p-4"
             >
-              {/* Platform icon */}
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                {platformIcons[post.platform as Platform]}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-medium truncate">{post.title}</h3>
-                  <Badge variant={statusLabels[post.status as Status].variant}>
-                    {statusLabels[post.status as Status].label}
-                  </Badge>
+              <div className="flex items-start sm:items-center gap-3">
+                {/* Platform icon */}
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  {platformIcons[post.platform as Platform]}
                 </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="capitalize">{post.platform}</span>
-                  <span>•</span>
-                  <span className="capitalize">{post.content_type.replace("_", " ")}</span>
-                  {post.blog_posts && (
-                    <>
-                      <span>•</span>
-                      <span>Desde: {post.blog_posts.title}</span>
-                    </>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="font-medium text-sm sm:text-base line-clamp-1">{post.title}</h3>
+                    <Badge variant={statusLabels[post.status as Status].variant} className="text-xs">
+                      {statusLabels[post.status as Status].label}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="capitalize">{post.platform}</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="hidden sm:inline capitalize">{post.content_type.replace("_", " ")}</span>
+                    {post.blog_posts && (
+                      <>
+                        <span className="hidden lg:inline">•</span>
+                        <span className="hidden lg:inline">Desde: {post.blog_posts.title}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stats - hidden on mobile */}
+                <div className="hidden lg:flex items-center gap-4 text-sm text-muted-foreground">
+                  {post.scheduled_for && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{new Date(post.scheduled_for).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {post.status === "published" && (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {/* Stats */}
-              <div className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
-                {post.scheduled_for && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{new Date(post.scheduled_for).toLocaleDateString()}</span>
-                  </div>
-                )}
-                {post.status === "published" && (
-                  <div className="flex items-center gap-1 text-green-600">
-                    <CheckCircle className="h-4 w-4" />
-                  </div>
-                )}
-              </div>
+                {/* Mobile Actions - Dropdown */}
+                <div className="lg:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="flex-shrink-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link to={`/admin/social/editar/${post.id}`}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </Link>
+                      </DropdownMenuItem>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar contenido?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Se eliminarán todas las imágenes asociadas.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(post.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {deletingId === post.id ? "Eliminando..." : "Eliminar"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <Link to={`/admin/social/editar/${post.id}`}>
-                  <Button variant="ghost" size="icon">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
+                {/* Desktop Actions - Buttons */}
+                <div className="hidden lg:flex items-center gap-2">
+                  <Link to={`/admin/social/editar/${post.id}`}>
+                    <Button variant="ghost" size="icon">
+                      <Edit className="h-4 w-4" />
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar contenido?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta acción no se puede deshacer. Se eliminarán todas las imágenes asociadas.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDelete(post.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  </Link>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive"
                       >
-                        {deletingId === post.id ? "Eliminando..." : "Eliminar"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar contenido?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Se eliminarán todas las imágenes asociadas.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(post.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {deletingId === post.id ? "Eliminando..." : "Eliminar"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
             </div>
           ))}
