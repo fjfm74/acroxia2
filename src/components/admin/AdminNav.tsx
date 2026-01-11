@@ -6,7 +6,8 @@ import {
   Users, 
   ArrowLeft,
   Briefcase,
-  Share2
+  Share2,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -92,15 +93,25 @@ const AdminNav = ({ onNavigate }: AdminNavProps) => {
       {/* Separator */}
       <div className="my-6 border-t border-border" />
 
-      {/* Pro Dashboard Link */}
-      <Link
-        to="/pro"
-        onClick={handleClick}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
-      >
-        <Briefcase className="h-4 w-4" />
-        Panel Pro
-      </Link>
+      {/* Quick Access Links */}
+      <div className="space-y-1">
+        <Link
+          to="/pro"
+          onClick={handleClick}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
+        >
+          <Briefcase className="h-4 w-4" />
+          Panel Pro
+        </Link>
+        <Link
+          to="/dashboard"
+          onClick={handleClick}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
+        >
+          <User className="h-4 w-4" />
+          Dashboard Usuario
+        </Link>
+      </div>
     </div>
   );
 };
