@@ -58,6 +58,45 @@ export type Database = {
           },
         ]
       }
+      anonymous_analyses: {
+        Row: {
+          analysis_result: Json | null
+          contract_status: string | null
+          converted_to_user_id: string | null
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          file_name: string
+          file_path: string | null
+          id: string
+          session_id: string
+        }
+        Insert: {
+          analysis_result?: Json | null
+          contract_status?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          file_name: string
+          file_path?: string | null
+          id?: string
+          session_id: string
+        }
+        Update: {
+          analysis_result?: Json | null
+          contract_status?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          file_name?: string
+          file_path?: string | null
+          id?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       authors: {
         Row: {
           avatar_url: string | null
@@ -233,6 +272,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      leads: {
+        Row: {
+          analysis_id: string | null
+          contract_status: string | null
+          converted_at: string | null
+          converted_to_user_id: string | null
+          created_at: string | null
+          email: string
+          email_count: number | null
+          id: string
+          last_email_sent_at: string | null
+          session_id: string | null
+          source: string | null
+          unsubscribed: boolean | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          analysis_id?: string | null
+          contract_status?: string | null
+          converted_at?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email: string
+          email_count?: number | null
+          id?: string
+          last_email_sent_at?: string | null
+          session_id?: string | null
+          source?: string | null
+          unsubscribed?: boolean | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          analysis_id?: string | null
+          contract_status?: string | null
+          converted_at?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email?: string
+          email_count?: number | null
+          id?: string
+          last_email_sent_at?: string | null
+          session_id?: string | null
+          source?: string | null
+          unsubscribed?: boolean | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       legal_chunks: {
         Row: {
@@ -412,6 +513,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      purchase_intents: {
+        Row: {
+          amount_cents: number | null
+          analysis_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          currency: string | null
+          email: string
+          id: string
+          status: string | null
+          stripe_session_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          analysis_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          email: string
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          analysis_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          email?: string
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_intents_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
