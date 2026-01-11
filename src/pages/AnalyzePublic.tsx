@@ -384,7 +384,12 @@ const AnalyzePublic = () => {
                       ) : (
                         <div className="space-y-6 py-8">
                           <div className="flex justify-center">
-                            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                            <div className="relative">
+                              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                              <div className="relative p-3 rounded-full bg-primary/10">
+                                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                              </div>
+                            </div>
                           </div>
                           <div className="space-y-2 text-center">
                             <p className="font-medium">{analysisStep}</p>
