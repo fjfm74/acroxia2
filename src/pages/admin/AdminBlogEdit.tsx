@@ -276,12 +276,12 @@ const AdminBlogEdit = () => {
         title="Editar Post" 
         description="Modifica el contenido del post"
       >
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           {/* AI Generation Panel */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
             <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-serif">
+              <CardHeader className="pb-3 lg:pb-6">
+                <CardTitle className="flex items-center gap-2 font-serif text-base lg:text-lg">
                   <Sparkles className="h-5 w-5" />
                   Regenerar con IA
                 </CardTitle>
@@ -330,10 +330,10 @@ const AdminBlogEdit = () => {
               </CardContent>
             </Card>
 
-            {/* Preview Panel */}
+            {/* Preview Panel - hidden on mobile */}
             {post.content && (
-              <Card className="border-border">
-                <CardHeader>
+              <Card className="border-border hidden lg:block">
+                <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 font-serif text-lg">
                     <Eye className="h-4 w-4" />
                     Vista previa
@@ -351,7 +351,7 @@ const AdminBlogEdit = () => {
           </div>
 
           {/* Editor Panel */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-1 lg:order-2">
             <Card className="border-border">
               <CardContent className="p-6 space-y-6">
                 <div className="grid gap-4">

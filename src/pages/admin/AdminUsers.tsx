@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { UserPlus, Trash2, Shield } from "lucide-react";
+import { UserPlus, Trash2, Shield, MoreVertical } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -281,79 +287,136 @@ const AdminUsers = () => {
           </Dialog>
         </div>
 
-        <Card className="border-border">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="p-8 text-center text-muted-foreground">
-                Cargando administradores...
-              </div>
-            ) : admins.length === 0 ? (
-              <div className="p-8 text-center">
-                <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  No hay administradores configurados
-                </p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Desde</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {admins.map((admin) => (
-                    <TableRow key={admin.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {admin.full_name || "Sin nombre"}
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground">
+            Cargando administradores...
+          </div>
+        ) : admins.length === 0 ? (
+          <Card className="border-border">
+            <CardContent className="p-8 text-center">
+              <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">
+                No hay administradores configurados
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Mobile View - Cards */}
+            <div className="lg:hidden space-y-3">
+              {admins.map((admin) => (
+                <Card key={admin.id} className="border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm truncate">
+                            {admin.full_name || "Sin nombre"}
+                          </span>
                           {admin.user_id === user?.id && (
                             <span className="text-xs text-muted-foreground">(tú)</span>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>{admin.email}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(admin.created_at), "d MMM yyyy", { locale: es })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={admin.user_id === user?.id || admins.length <= 1}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar administrador?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {admin.email} perderá el acceso al panel de administración.
-                                Esta acción se puede revertir añadiéndolo de nuevo.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => removeAdmin(admin)}>
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
+                        <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Desde {format(new Date(admin.created_at), "d MMM yyyy", { locale: es })}
+                        </p>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={admin.user_id === user?.id || admins.length <= 1}
+                            className="flex-shrink-0"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar administrador?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {admin.email} perderá el acceso al panel de administración.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => removeAdmin(admin)}>
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Desktop View - Table */}
+            <Card className="hidden lg:block border-border">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Usuario</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Desde</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {admins.map((admin) => (
+                      <TableRow key={admin.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {admin.full_name || "Sin nombre"}
+                            {admin.user_id === user?.id && (
+                              <span className="text-xs text-muted-foreground">(tú)</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{admin.email}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(admin.created_at), "d MMM yyyy", { locale: es })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={admin.user_id === user?.id || admins.length <= 1}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar administrador?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {admin.email} perderá el acceso al panel de administración.
+                                  Esta acción se puede revertir añadiéndolo de nuevo.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeAdmin(admin)}>
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         <Card className="border-border mt-8">
           <CardHeader>

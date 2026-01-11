@@ -241,9 +241,9 @@ const AdminSocialNew = () => {
         Volver a Social Media
       </Button>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Left column: Configuration */}
-        <div className="xl:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6 lg:space-y-8">
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Título interno</Label>
@@ -407,8 +407,8 @@ const AdminSocialNew = () => {
           )}
         </div>
 
-        {/* Right column: Preview */}
-        <div className="xl:col-span-1">
+        {/* Right column: Preview - hidden on mobile */}
+        <div className="lg:col-span-1 hidden lg:block">
           <div className="sticky top-28 space-y-4">
             <h3 className="font-medium text-center">Vista previa</h3>
             {slides.length > 0 || caption ? (

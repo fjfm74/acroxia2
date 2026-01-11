@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Upload, FileText, Trash2, Filter, CheckCircle, XCircle, RefreshCw, Eye, AlertTriangle, LinkIcon } from "lucide-react";
+import { Upload, FileText, Trash2, Filter, CheckCircle, XCircle, RefreshCw, Eye, AlertTriangle, LinkIcon, MoreVertical } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +40,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -420,11 +426,12 @@ const AdminDocuments = () => {
         title="Documentos Legales"
         description="Gestiona la base de conocimiento legal para el sistema RAG"
       >
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+        <div className="flex flex-col gap-4 mb-6">
+          {/* Filter row */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filtrar por jurisdicción" />
               </SelectTrigger>
               <SelectContent>
@@ -438,24 +445,26 @@ const AdminDocuments = () => {
             </Select>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={reprocessAllDocuments}
-            disabled={reprocessingAll || documents.length === 0}
-            className="rounded-full"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${reprocessingAll ? "animate-spin" : ""}`} />
-            {reprocessingAll ? "Reprocesando..." : "Reprocesar todos"}
-          </Button>
+          {/* Actions row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={reprocessAllDocuments}
+              disabled={reprocessingAll || documents.length === 0}
+              className="rounded-full w-full sm:w-auto"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${reprocessingAll ? "animate-spin" : ""}`} />
+              {reprocessingAll ? "Reprocesando..." : "Reprocesar todos"}
+            </Button>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="rounded-full">
-                <Upload className="h-4 w-4 mr-2" />
-                Subir Documento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-full w-full sm:w-auto sm:ml-auto">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Subir Documento
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle className="font-serif">Subir Documento Legal</DialogTitle>
                 <DialogDescription>
@@ -625,6 +634,7 @@ const AdminDocuments = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {loading ? (
@@ -644,21 +654,21 @@ const AdminDocuments = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="space-y-3">
             {documents.map((doc) => (
               <Card key={doc.id} className="border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <h3 className="font-medium truncate">{doc.title}</h3>
-                        <Badge variant={doc.is_active ? "default" : "secondary"}>
+                        <h3 className="font-medium text-sm sm:text-base line-clamp-2 sm:line-clamp-1">{doc.title}</h3>
+                        <Badge variant={doc.is_active ? "default" : "secondary"} className="text-xs">
                           {doc.is_active ? "Activo" : "Inactivo"}
                         </Badge>
                         {doc.superseded_by_id && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
                                 Obsoleto
                               </Badge>
@@ -671,7 +681,7 @@ const AdminDocuments = () => {
                         {doc.supersedes_ids && doc.supersedes_ids.length > 0 && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
                                 <LinkIcon className="h-3 w-3 mr-1" />
                                 Reemplaza {doc.supersedes_ids.length}
                               </Badge>
@@ -682,42 +692,90 @@ const AdminDocuments = () => {
                           </Tooltip>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                        <Badge variant="outline">
+                      <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <Badge variant="outline" className="text-xs">
                           {getJurisdictionLabel(doc.jurisdiction)}
                           {doc.territorial_entity && ` (${doc.territorial_entity})`}
                         </Badge>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{doc.chunks_count} fragmentos</span>
                         {doc.keywords && doc.keywords.length > 0 && (
                           <>
-                            <span>•</span>
-                            <span>{doc.keywords.length} palabras clave</span>
-                          </>
-                        )}
-                        {doc.effective_date && (
-                          <>
-                            <span>•</span>
-                            <span>
-                              Vigente desde{" "}
-                              {format(new Date(doc.effective_date), "d MMM yyyy", { locale: es })}
-                            </span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="hidden sm:inline">{doc.keywords.length} palabras clave</span>
                           </>
                         )}
                       </div>
                       {doc.ai_summary && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2 italic">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2 italic">
                           {doc.ai_summary}
-                        </p>
-                      )}
-                      {!doc.ai_summary && doc.description && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                          {doc.description}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {/* Mobile Actions - Dropdown */}
+                    <div className="lg:hidden">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="flex-shrink-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            setViewingDocId(doc.id);
+                            setViewingDocTitle(doc.title);
+                          }}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver chunks
+                          </DropdownMenuItem>
+                          {doc.chunks_count === 0 && (
+                            <DropdownMenuItem onClick={() => reprocessDocument(doc)}>
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Reprocesar
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => toggleDocumentStatus(doc)}>
+                            {doc.is_active ? (
+                              <>
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Desactivar
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Activar
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta acción eliminará "{doc.title}" y todos sus fragmentos indexados.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteDocument(doc)}>
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    {/* Desktop Actions - Buttons */}
+                    <div className="hidden lg:flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
