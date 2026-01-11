@@ -37,7 +37,7 @@ import {
   MESES_FIANZA,
   MESES_GARANTIAS
 } from "@/utils/contractTemplateConfig";
-import { generateContractText } from "@/utils/generateContractTemplate";
+import { generateContractDocx } from "@/utils/generateContractTemplate";
 
 const STEPS = [
   { id: 1, title: "Tipo de inmueble", icon: FileText },
@@ -97,10 +97,9 @@ const ContractTemplateWizard = () => {
 
     setIsGenerating(true);
     try {
-      // Usar la versión de texto por ahora (más fiable)
-      generateContractText(config);
-      toast.success("Plantilla generada correctamente", {
-        description: "El archivo se ha descargado a tu dispositivo"
+      await generateContractDocx(config);
+      toast.success("Documento Word generado correctamente", {
+        description: "El archivo .docx se ha descargado a tu dispositivo"
       });
     } catch (error) {
       console.error("Error generando plantilla:", error);
