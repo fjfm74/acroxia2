@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import FadeIn from "@/components/animations/FadeIn";
 
 const HeroSection = () => {
@@ -43,14 +44,15 @@ const HeroSection = () => {
             
             <FadeIn delay={0.3}>
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <Button className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-medium">
-                  Analiza tu contrato gratis
+                <Button asChild className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-medium">
+                  <Link to="/analizar-gratis">Analiza tu contrato gratis</Link>
                 </Button>
                 <Button 
+                  asChild
                   variant="ghost" 
                   className="text-foreground hover:bg-transparent underline underline-offset-4 text-base font-medium"
                 >
-                  Ver cómo funciona
+                  <a href="#como-funciona">Ver cómo funciona</a>
                 </Button>
               </div>
             </FadeIn>
