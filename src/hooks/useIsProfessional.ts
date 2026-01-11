@@ -30,12 +30,12 @@ export const useIsProfessional = () => {
       }
 
       try {
-        // Check if user has professional role
+        // Check if user has professional or admin role
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id)
-          .eq("role", "professional")
+          .in("role", ["professional", "admin"])
           .maybeSingle();
 
         // Check if user has an organization
