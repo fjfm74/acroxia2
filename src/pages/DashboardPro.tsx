@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsProfessional } from "@/hooks/useIsProfessional";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import ProLayout from "@/components/pro/ProLayout";
 import ProStatsCard from "@/components/pro/ProStatsCard";
@@ -11,7 +12,7 @@ import RecentAnalyses from "@/components/pro/RecentAnalyses";
 import QuickActions from "@/components/pro/QuickActions";
 import OnboardingWizard from "@/components/pro/OnboardingWizard";
 import FadeIn from "@/components/animations/FadeIn";
-import { FileSearch, Users, AlertTriangle, CreditCard, Building2 } from "lucide-react";
+import { FileSearch, Users, AlertTriangle, CreditCard, Building2, Infinity } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -46,6 +47,7 @@ interface Stats {
 const DashboardPro = () => {
   const { profile } = useAuth();
   const { organization, loading: proLoading } = useIsProfessional();
+  const { isAdmin } = useIsAdmin();
   const [clients, setClients] = useState<Client[]>([]);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -267,9 +269,9 @@ const DashboardPro = () => {
         <FadeIn delay={0.4}>
           <ProStatsCard
             title="Créditos disponibles"
-            value={stats.credits}
-            icon={CreditCard}
-            subtitle="análisis restantes"
+            value={isAdmin ? "∞" : stats.credits}
+            icon={isAdmin ? Infinity : CreditCard}
+            subtitle={isAdmin ? "sin límite (admin)" : "análisis restantes"}
           />
         </FadeIn>
       </div>
