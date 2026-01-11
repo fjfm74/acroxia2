@@ -60,6 +60,12 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Get current date for temporal context
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const currentMonth = months[currentDate.getMonth()];
+
     const leastUsedCategories = getLeastUsedCategories(existingPosts);
     
     // Build context about existing posts
@@ -79,7 +85,24 @@ ${leastUsedCategories.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 Genera el post preferiblemente en una de estas categorías.`;
 
-    let systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España. 
+    let systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España.
+
+FECHA ACTUAL: ${currentMonth} de ${currentYear}
+
+CONTEXTO TEMPORAL OBLIGATORIO:
+- Estamos en ${currentYear}. NUNCA escribas como si 2024 o 2025 fueran el presente o el futuro.
+- El año 2024 ya pasó. El límite del 3% del IPC de 2024 ya NO está vigente.
+- El año 2025 ya pasó. El IRAV entró en vigor el 1 de enero de 2025 y ya lleva más de un año funcionando.
+- Cuando menciones fechas futuras, usa ${currentYear} o posteriores.
+- Ejemplos correctos:
+  - "Si tu contrato se actualiza en ${currentYear}..."
+  - "Durante ${currentYear}, la normativa vigente establece..."
+  - "Desde la entrada en vigor del IRAV en 2025, que ya lleva más de un año aplicándose..."
+  - "El IRAV, que sustituyó al límite del 3% en enero de 2025..."
+- Ejemplos INCORRECTOS (NO usar):
+  - "Si tu contrato se actualiza en 2025..." (2025 ya pasó)
+  - "A partir del 1 de enero de 2025..." (ya estamos después de esa fecha)
+  - "Durante 2024..." como si fuera presente
 Tu tarea es escribir artículos de blog profesionales, informativos y útiles para inquilinos.
 
 El artículo debe:
@@ -133,18 +156,21 @@ Formato de respuesta OBLIGATORIO (JSON válido):
     if (mode === "auto") {
       userPrompt = `Escribe un artículo ORIGINAL sobre un tema actual y relevante del sector inmobiliario español de alquiler. 
 
+RECUERDA: Estamos en ${currentMonth} de ${currentYear}. El IRAV ya está en vigor desde enero de 2025 (hace más de un año).
+
 REQUISITOS CLAVE:
 1. El tema debe ser DIFERENTE a cualquier post ya publicado
 2. Usa un formato de título CREATIVO (no "Guía sobre...")
 3. Prioriza las categorías con menos contenido: ${leastUsedCategories.join(', ')}
+4. Todas las referencias temporales deben reflejar que estamos en ${currentYear}
 
 Temas sugeridos (elige uno que NO esté ya cubierto):
-- Cambios recientes en la legislación de alquiler 2026
+- El IRAV en ${currentYear}: balance tras más de un año de aplicación
+- Novedades legislativas de alquiler en ${currentYear}
 - Derechos poco conocidos de los inquilinos
 - Cómo reclamar ante problemas específicos con el casero
 - Cláusulas abusivas comunes que pasan desapercibidas
-- El nuevo índice de referencia de alquileres IRAV
-- Consejos para negociar renovación del contrato
+- Consejos para negociar renovación del contrato en ${currentYear}
 - Problemas de convivencia y comunidad
 - Obras y reformas: derechos y obligaciones
 - Suministros y gastos de comunidad
@@ -156,9 +182,12 @@ Elige el tema que consideres más útil, actual y DIFERENTE a lo ya publicado.`;
 
 ${prompt}
 
+RECUERDA: Estamos en ${currentMonth} de ${currentYear}. El IRAV ya está en vigor desde enero de 2025.
+
 IMPORTANTE:
 - Usa un título CREATIVO (no "Guía sobre...")
 - El enfoque debe ser original y diferente a posts existentes
+- Todas las referencias temporales deben ser correctas (2024 y 2025 ya pasaron)
 - Asegúrate de que el artículo sea completo, informativo y útil para inquilinos en España.`;
     }
 
