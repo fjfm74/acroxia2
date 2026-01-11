@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsProfessional } from "@/hooks/useIsProfessional";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -12,7 +13,8 @@ import RecentAnalyses from "@/components/pro/RecentAnalyses";
 import QuickActions from "@/components/pro/QuickActions";
 import OnboardingWizard from "@/components/pro/OnboardingWizard";
 import FadeIn from "@/components/animations/FadeIn";
-import { FileSearch, Users, AlertTriangle, CreditCard, Building2, Infinity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileSearch, Users, AlertTriangle, CreditCard, Building2, Infinity, User, Settings } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -214,23 +216,43 @@ const DashboardPro = () => {
     <ProLayout>
       {/* Header with company name */}
       <FadeIn>
-        <div className="flex items-center gap-4 mb-8">
-          {organization?.logo_url ? (
-            <img
-              src={organization.logo_url}
-              alt={organization.name}
-              className="h-14 w-14 rounded-xl object-contain bg-background shadow-md"
-            />
-          ) : (
-            <div className="h-14 w-14 rounded-xl bg-background shadow-md flex items-center justify-center">
-              <Building2 className="h-7 w-7 text-foreground" />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+          <div className="flex items-center gap-4 flex-1">
+            {organization?.logo_url ? (
+              <img
+                src={organization.logo_url}
+                alt={organization.name}
+                className="h-14 w-14 rounded-xl object-contain bg-background shadow-md"
+              />
+            ) : (
+              <div className="h-14 w-14 rounded-xl bg-background shadow-md flex items-center justify-center">
+                <Building2 className="h-7 w-7 text-foreground" />
+              </div>
+            )}
+            <div>
+              <h1 className="font-serif text-2xl md:text-3xl font-semibold text-foreground">
+                {organization?.name}
+              </h1>
+              <p className="text-muted-foreground text-sm">Panel profesional</p>
             </div>
-          )}
-          <div>
-            <h1 className="font-serif text-2xl md:text-3xl font-semibold text-foreground">
-              {organization?.name}
-            </h1>
-            <p className="text-muted-foreground text-sm">Panel profesional</p>
+          </div>
+          
+          {/* Quick Access Links */}
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/dashboard">
+                <User className="mr-2 h-4 w-4" />
+                Mi panel
+              </Link>
+            </Button>
+            {isAdmin && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Panel Admin
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </FadeIn>

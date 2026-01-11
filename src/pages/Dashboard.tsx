@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIsProfessional } from "@/hooks/useIsProfessional";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -9,7 +11,7 @@ import FadeIn from "@/components/animations/FadeIn";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Clock, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { FileText, Plus, Clock, CheckCircle2, AlertTriangle, Loader2, Settings, Briefcase } from "lucide-react";
 
 interface Contract {
   id: string;
@@ -26,6 +28,8 @@ interface Contract {
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const { isProfessional } = useIsProfessional();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,6 +110,28 @@ const Dashboard = () => {
                   </Button>
                 </div>
               </div>
+              
+              {/* Quick Access to other dashboards */}
+              {(isAdmin || isProfessional) && (
+                <div className="flex flex-wrap gap-2">
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/admin">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Panel Admin
+                      </Link>
+                    </Button>
+                  )}
+                  {(isAdmin || isProfessional) && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/pro">
+                        <Briefcase className="mr-2 h-4 w-4" />
+                        Panel Pro
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              )}
             </FadeIn>
 
             <div className="grid gap-6 md:grid-cols-3 mb-8">
