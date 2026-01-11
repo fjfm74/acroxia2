@@ -13,6 +13,12 @@ const QuickActions = () => {
       primary: true,
     },
     {
+      icon: FileText,
+      label: "Crear contrato",
+      description: "Genera una plantilla actualizada",
+      href: "/pro/crear-contrato",
+    },
+    {
       icon: Users,
       label: "Gestionar clientes",
       description: "Añade o edita tus clientes",

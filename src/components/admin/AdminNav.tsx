@@ -5,7 +5,7 @@ import {
   FolderOpen, 
   Users, 
   ArrowLeft,
-  Home,
+  Briefcase,
   Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -92,14 +92,14 @@ const AdminNav = ({ onNavigate }: AdminNavProps) => {
       {/* Separator */}
       <div className="my-6 border-t border-border" />
 
-      {/* User Dashboard Link */}
+      {/* Pro Dashboard Link */}
       <Link
-        to="/dashboard"
+        to="/pro"
         onClick={handleClick}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
       >
-        <Home className="h-4 w-4" />
-        Dashboard Usuario
+        <Briefcase className="h-4 w-4" />
+        Panel Pro
       </Link>
     </div>
   );
