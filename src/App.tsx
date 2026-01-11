@@ -8,6 +8,10 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ScrollToTop from "./components/ScrollToTop";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
+import ProfessionalRoute from "./components/auth/ProfessionalRoute";
+import DashboardPro from "./pages/DashboardPro";
+import ClientsPage from "./pages/pro/ClientsPage";
+import SettingsPage from "./pages/pro/SettingsPage";
 import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
 import Profile from "./pages/Profile";
@@ -79,6 +83,9 @@ const App = () => (
               <Route path="/resultado/:id" element={<ProtectedRoute><AnalysisResult /></ProtectedRoute>} />
               <Route path="/analizar-gratis" element={<AnalyzePublic />} />
               <Route path="/resultado-previo/:id" element={<FreeResultPreview />} />
+              <Route path="/pro" element={<ProfessionalRoute><DashboardPro /></ProfessionalRoute>} />
+              <Route path="/pro/clientes" element={<ProfessionalRoute><ClientsPage /></ProfessionalRoute>} />
+              <Route path="/pro/configuracion" element={<ProfessionalRoute><SettingsPage /></ProfessionalRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/blog" element={<AdminRoute><AdminBlog /></AdminRoute>} />
               <Route path="/admin/blog/nuevo" element={<AdminRoute><AdminBlogNew /></AdminRoute>} />
