@@ -545,6 +545,70 @@ const ContractTemplateWizard = () => {
 
                 <div className="flex items-start space-x-3 p-4 border rounded-xl">
                   <Switch
+                    id="obrasReformas"
+                    checked={config.clausulaObrasReformas}
+                    onCheckedChange={(checked) => updateConfig({ clausulaObrasReformas: checked })}
+                  />
+                  <div>
+                    <Label htmlFor="obrasReformas" className="font-medium cursor-pointer">
+                      Obras y reformas
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Regula las condiciones para realizar modificaciones en el inmueble
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-4 border rounded-xl">
+                  <Switch
+                    id="subarriendo"
+                    checked={config.clausulaSubarriendo}
+                    onCheckedChange={(checked) => updateConfig({ clausulaSubarriendo: checked })}
+                  />
+                  <div>
+                    <Label htmlFor="subarriendo" className="font-medium cursor-pointer">
+                      Cesión y subarriendo
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Prohíbe expresamente el subarriendo sin autorización
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-4 border rounded-xl">
+                  <Switch
+                    id="accesoVisitas"
+                    checked={config.clausulaAccesoVisitas}
+                    onCheckedChange={(checked) => updateConfig({ clausulaAccesoVisitas: checked })}
+                  />
+                  <div>
+                    <Label htmlFor="accesoVisitas" className="font-medium cursor-pointer">
+                      Acceso para visitas
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Regula el derecho del propietario a mostrar el inmueble a futuros inquilinos
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-4 border rounded-xl">
+                  <Switch
+                    id="penalizacionImpago"
+                    checked={config.clausulaPenalizacionImpago}
+                    onCheckedChange={(checked) => updateConfig({ clausulaPenalizacionImpago: checked })}
+                  />
+                  <div>
+                    <Label htmlFor="penalizacionImpago" className="font-medium cursor-pointer">
+                      Penalización por impago
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Intereses de demora conforme al interés legal del dinero
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 p-4 border rounded-xl">
+                  <Switch
                     id="inventario"
                     checked={config.incluyeInventario}
                     onCheckedChange={(checked) => updateConfig({ incluyeInventario: checked })}
