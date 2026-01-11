@@ -12,6 +12,7 @@ import ProfessionalRoute from "./components/auth/ProfessionalRoute";
 import DashboardPro from "./pages/DashboardPro";
 import ClientsPage from "./pages/pro/ClientsPage";
 import SettingsPage from "./pages/pro/SettingsPage";
+import CreateContractPage from "./pages/pro/CreateContractPage";
 import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
 import Profile from "./pages/Profile";
@@ -86,6 +87,7 @@ const App = () => (
               <Route path="/pro" element={<ProfessionalRoute><DashboardPro /></ProfessionalRoute>} />
               <Route path="/pro/clientes" element={<ProfessionalRoute><ClientsPage /></ProfessionalRoute>} />
               <Route path="/pro/configuracion" element={<ProfessionalRoute><SettingsPage /></ProfessionalRoute>} />
+              <Route path="/pro/crear-contrato" element={<ProfessionalRoute><CreateContractPage /></ProfessionalRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/blog" element={<AdminRoute><AdminBlog /></AdminRoute>} />
               <Route path="/admin/blog/nuevo" element={<AdminRoute><AdminBlogNew /></AdminRoute>} />
