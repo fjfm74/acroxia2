@@ -44,6 +44,7 @@ import {
 } from "@/utils/contractTemplateConfig";
 import { generateContractDocx } from "@/utils/generateContractTemplate";
 import { supabase } from "@/integrations/supabase/client";
+import { trackConversion } from "@/lib/analytics";
 
 const STEPS = [
   { id: 1, title: "Tipo de inmueble", icon: FileText },
@@ -174,6 +175,17 @@ const ContractTemplateWizard = () => {
     setIsGenerating(true);
     try {
       await generateContractDocx(config);
+      
+      // Track contract generation conversion
+      trackConversion('contract_generated', {
+        property_type: config.propertyType,
+        comunidad: config.comunidadAutonoma,
+        provincia: config.provincia,
+        is_zona_tensionada: config.isZonaTensionada,
+        rent_amount: config.rentaMensual,
+        duration_years: config.duracionAnios,
+      });
+      
       toast.success("Documento Word generado correctamente", {
         description: "El archivo .docx se ha descargado a tu dispositivo"
       });
