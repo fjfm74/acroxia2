@@ -715,6 +715,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sitemap_cache: {
+        Row: {
+          content: string
+          generated_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          generated_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          generated_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       social_posts: {
         Row: {
           author_id: string | null
