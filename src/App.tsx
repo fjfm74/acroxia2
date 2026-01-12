@@ -10,7 +10,6 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import ProfessionalRoute from "./components/auth/ProfessionalRoute";
 import DashboardPro from "./pages/DashboardPro";
-import ClientsPage from "./pages/pro/ClientsPage";
 import SettingsPage from "./pages/pro/SettingsPage";
 import CreateContractPage from "./pages/pro/CreateContractPage";
 import Index from "./pages/Index";
@@ -85,7 +84,6 @@ const App = () => (
               <Route path="/analizar-gratis" element={<AnalyzePublic />} />
               <Route path="/resultado-previo/:id" element={<FreeResultPreview />} />
               <Route path="/pro" element={<ProfessionalRoute><DashboardPro /></ProfessionalRoute>} />
-              <Route path="/pro/clientes" element={<ProfessionalRoute><ClientsPage /></ProfessionalRoute>} />
               <Route path="/pro/configuracion" element={<ProfessionalRoute><SettingsPage /></ProfessionalRoute>} />
               <Route path="/pro/crear-contrato" element={<ProfessionalRoute><CreateContractPage /></ProfessionalRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

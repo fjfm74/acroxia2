@@ -204,50 +204,6 @@ export type Database = {
           },
         ]
       }
-      clients: {
-        Row: {
-          created_at: string
-          email: string | null
-          id: string
-          name: string
-          notes: string | null
-          organization_id: string
-          phone: string | null
-          property_count: number | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          name: string
-          notes?: string | null
-          organization_id: string
-          phone?: string | null
-          property_count?: number | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          name?: string
-          notes?: string | null
-          organization_id?: string
-          phone?: string | null
-          property_count?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clients_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       consent_logs: {
         Row: {
           accepted: boolean
@@ -286,7 +242,6 @@ export type Database = {
       }
       contracts: {
         Row: {
-          client_id: string | null
           created_at: string
           file_name: string
           file_path: string
@@ -300,7 +255,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          client_id?: string | null
           created_at?: string
           file_name: string
           file_path: string
@@ -314,7 +268,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          client_id?: string | null
           created_at?: string
           file_name?: string
           file_path?: string
@@ -328,13 +281,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "contracts_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "contracts_organization_id_fkey"
             columns: ["organization_id"]

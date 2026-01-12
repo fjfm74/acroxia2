@@ -7,29 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import ProLayout from "@/components/pro/ProLayout";
 import ProStatsCard from "@/components/pro/ProStatsCard";
 import ActivityChart from "@/components/pro/ActivityChart";
-import ClientList from "@/components/pro/ClientList";
-import ClientForm from "@/components/pro/ClientForm";
 import RecentAnalyses from "@/components/pro/RecentAnalyses";
 import QuickActions from "@/components/pro/QuickActions";
 import OnboardingWizard from "@/components/pro/OnboardingWizard";
 import FadeIn from "@/components/animations/FadeIn";
 import { Button } from "@/components/ui/button";
-import { FileSearch, Users, AlertTriangle, CreditCard, Building2, Infinity, User, Settings } from "lucide-react";
+import { FileSearch, AlertTriangle, CreditCard, Building2, Infinity, User, Settings } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { es } from "date-fns/locale";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  contractCount: number;
-}
 
 interface Analysis {
   id: string;
   fileName: string;
-  clientName: string | null;
   propertyAddress: string | null;
   createdAt: string;
   status: "completed" | "processing" | "failed" | "pending";
@@ -41,7 +30,6 @@ interface Analysis {
 interface Stats {
   analysesThisMonth: number;
   analysesPrevMonth: number;
-  activeClients: number;
   problemsDetected: number;
   credits: number;
 }
@@ -50,18 +38,15 @@ const DashboardPro = () => {
   const { profile } = useAuth();
   const { organization, loading: proLoading } = useIsProfessional();
   const { isAdmin } = useIsAdmin();
-  const [clients, setClients] = useState<Client[]>([]);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [stats, setStats] = useState<Stats>({
     analysesThisMonth: 0,
     analysesPrevMonth: 0,
-    activeClients: 0,
     problemsDetected: 0,
     credits: 0,
   });
   const [chartData, setChartData] = useState<Array<{ date: string; analyses: number }>>([]);
   const [loading, setLoading] = useState(true);
-  const [clientFormOpen, setClientFormOpen] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   const fetchData = async () => {
@@ -74,13 +59,6 @@ const DashboardPro = () => {
     setNeedsOnboarding(false);
 
     try {
-      // Fetch clients with contract count
-      const { data: clientsData } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("organization_id", organization.id)
-        .order("created_at", { ascending: false });
-
       // Fetch contracts for this organization
       const { data: contractsData } = await supabase
         .from("contracts")
@@ -90,28 +68,15 @@ const DashboardPro = () => {
           created_at,
           status,
           property_address,
-          client_id,
-          clients(name),
           analysis_results(total_clauses, illegal_clauses, suspicious_clauses)
         `)
         .eq("organization_id", organization.id)
         .order("created_at", { ascending: false });
 
-      // Process clients with contract count
-      const clientsWithCounts = (clientsData || []).map((client) => ({
-        id: client.id,
-        name: client.name,
-        email: client.email,
-        phone: client.phone,
-        contractCount: contractsData?.filter((c) => c.client_id === client.id).length || 0,
-      }));
-      setClients(clientsWithCounts);
-
       // Process analyses
       const processedAnalyses: Analysis[] = (contractsData || []).map((contract: any) => ({
         id: contract.id,
         fileName: contract.file_name,
-        clientName: contract.clients?.name || null,
         propertyAddress: contract.property_address,
         createdAt: contract.created_at,
         status: contract.status,
@@ -144,7 +109,6 @@ const DashboardPro = () => {
       setStats({
         analysesThisMonth,
         analysesPrevMonth,
-        activeClients: clientsWithCounts.filter((c) => c.contractCount > 0).length,
         problemsDetected,
         credits: profile?.credits || 0,
       });
@@ -178,10 +142,6 @@ const DashboardPro = () => {
       fetchData();
     }
   }, [organization, proLoading, profile]);
-
-  const handleClientAdded = () => {
-    fetchData();
-  };
 
   if (proLoading || loading) {
     return (
@@ -265,7 +225,7 @@ const DashboardPro = () => {
       </FadeIn>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <FadeIn delay={0.1}>
           <ProStatsCard
             title="Análisis este mes"
@@ -281,21 +241,13 @@ const DashboardPro = () => {
         </FadeIn>
         <FadeIn delay={0.2}>
           <ProStatsCard
-            title="Clientes activos"
-            value={stats.activeClients}
-            icon={Users}
-            subtitle={`de ${clients.length} totales`}
-          />
-        </FadeIn>
-        <FadeIn delay={0.3}>
-          <ProStatsCard
             title="Problemas detectados"
             value={stats.problemsDetected}
             icon={AlertTriangle}
             subtitle="cláusulas ilegales o sospechosas"
           />
         </FadeIn>
-        <FadeIn delay={0.4}>
+        <FadeIn delay={0.3}>
           <ProStatsCard
             title="Créditos disponibles"
             value={isAdmin ? "∞" : stats.credits}
@@ -309,38 +261,21 @@ const DashboardPro = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - 2/3 */}
         <div className="lg:col-span-2 space-y-6">
-          <FadeIn delay={0.5}>
+          <FadeIn delay={0.4}>
             <ActivityChart data={chartData} title="Actividad (últimos 14 días)" />
           </FadeIn>
-          <FadeIn delay={0.6}>
+          <FadeIn delay={0.5}>
             <RecentAnalyses analyses={analyses} compact />
           </FadeIn>
         </div>
 
         {/* Right Column - 1/3 */}
         <div className="space-y-6">
-          <FadeIn delay={0.7}>
+          <FadeIn delay={0.6}>
             <QuickActions />
-          </FadeIn>
-          <FadeIn delay={0.8}>
-            <ClientList
-              clients={clients}
-              onAddClient={() => setClientFormOpen(true)}
-              compact
-            />
           </FadeIn>
         </div>
       </div>
-
-      {/* Client Form Modal */}
-      {organization && (
-        <ClientForm
-          open={clientFormOpen}
-          onOpenChange={setClientFormOpen}
-          organizationId={organization.id}
-          onSuccess={handleClientAdded}
-        />
-      )}
     </ProLayout>
   );
 };
