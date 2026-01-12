@@ -52,25 +52,6 @@ function createClauseTitle(number: string, title: string): Paragraph {
   });
 }
 
-// Helper para crear alertas/notas legales
-function createLegalNote(text: string): Paragraph {
-  return new Paragraph({
-    spacing: { before: 200, after: 200 },
-    border: {
-      top: { style: BorderStyle.SINGLE, size: 1, color: '996600' },
-      bottom: { style: BorderStyle.SINGLE, size: 1, color: '996600' },
-      left: { style: BorderStyle.SINGLE, size: 1, color: '996600' },
-      right: { style: BorderStyle.SINGLE, size: 1, color: '996600' },
-    },
-    shading: { fill: 'FFF8E1' },
-    children: [
-      new TextRun({
-        text: `⚠️ ${text}`,
-        ...STYLES.warning,
-      }),
-    ],
-  });
-}
 
 // Función para obtener el número de cláusula ordinal
 function getOrdinal(num: number): string {
@@ -198,8 +179,8 @@ export async function generateContractDocx(config: ContractConfig): Promise<void
 
   if (config.propertyType === 'vivienda_habitual' && config.duracionAnios < 5) {
     children.push(
-      createLegalNote(
-        'NOTA IMPORTANTE: Conforme al artículo 9 de la LAU, si la duración pactada fuera inferior a cinco años (o siete si el arrendador es persona jurídica), llegado el día del vencimiento, el contrato se prorrogará obligatoriamente por plazos anuales hasta alcanzar dicha duración mínima, salvo que el/la arrendatario/a manifieste su voluntad de no renovarlo con al menos treinta días de antelación.'
+      createParagraph(
+        'Conforme al artículo 9 de la LAU, si la duración pactada fuera inferior a cinco años (o siete si el arrendador es persona jurídica), llegado el día del vencimiento, el contrato se prorrogará obligatoriamente por plazos anuales hasta alcanzar dicha duración mínima, salvo que el/la arrendatario/a manifieste su voluntad de no renovarlo con al menos treinta días de antelación.'
       )
     );
   }
@@ -235,8 +216,8 @@ export async function generateContractDocx(config: ContractConfig): Promise<void
 
   if (config.isZonaTensionada) {
     children.push(
-      createLegalNote(
-        'ZONA TENSIONADA: El inmueble se encuentra en un área declarada como zona de mercado residencial tensionado. La renta inicial no podrá exceder de la última renta de contrato vigente en los últimos cinco años, salvo excepciones legales. Consultar: https://serpavi.mivau.gob.es/'
+      createParagraph(
+        'El inmueble se encuentra en un área declarada como zona de mercado residencial tensionado conforme a la legislación vigente. La renta inicial no podrá exceder de la última renta de contrato vigente en los últimos cinco años, una vez aplicada la cláusula de actualización anual del contrato anterior, salvo las excepciones legalmente previstas.'
       )
     );
   }
@@ -255,13 +236,6 @@ export async function generateContractDocx(config: ContractConfig): Promise<void
     )
   );
 
-  if (config.propertyType === 'vivienda_habitual' && config.mesesFianza > 2) {
-    children.push(
-      createLegalNote(
-        'ADVERTENCIA: Para arrendamientos de vivienda habitual, la fianza legal máxima es de dos mensualidades de renta (Art. 36.1 LAU).'
-      )
-    );
-  }
 
   children.push(
     createParagraph(
@@ -351,11 +325,6 @@ export async function generateContractDocx(config: ContractConfig): Promise<void
       children.push(
         createParagraph(
           'a) ANIMALES: Queda expresamente prohibida la tenencia de animales en la vivienda sin autorización previa y escrita del/de la arrendador/a.'
-        )
-      );
-      children.push(
-        createLegalNote(
-          'NOTA LEGAL: Esta cláusula tiene eficacia limitada. Conforme a la jurisprudencia mayoritaria, la prohibición absoluta de animales de compañía puede considerarse abusiva.'
         )
       );
     }
@@ -593,33 +562,6 @@ export async function generateContractDocx(config: ContractConfig): Promise<void
     );
   }
 
-  // ==================== AVISO LEGAL ====================
-  children.push(
-    new Paragraph({
-      spacing: { before: 800 },
-      shading: { fill: 'F5F5F5' },
-      border: {
-        top: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-        bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-        left: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-        right: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-      },
-      children: [
-        new TextRun({
-          text: 'AVISO LEGAL: Este documento es una plantilla orientativa generada por ACROXIA basada en la Ley de Arrendamientos Urbanos (LAU) vigente en 2026. No constituye asesoramiento jurídico y se recomienda su revisión por un profesional del derecho antes de su firma. ACROXIA no se responsabiliza del uso que se haga de este documento.',
-          ...STYLES.small,
-          italics: true,
-        }),
-      ],
-    })
-  );
-
-  children.push(
-    createParagraph(`Generado el: ${format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: es })}`, {
-      alignment: AlignmentType.RIGHT,
-      style: STYLES.small,
-    })
-  );
 
   // ==================== CREAR DOCUMENTO ====================
   const doc = new Document({
