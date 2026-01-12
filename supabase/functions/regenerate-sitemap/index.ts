@@ -3,26 +3,30 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Content-Type": "application/xml",
 };
 
 const SITE_URL = "https://acroxia.com";
 
-// Rutas estáticas con prioridades (fallback si no hay caché)
+// Rutas estáticas con prioridades
 const staticRoutes = [
   { loc: "/", priority: "1.0", changefreq: "weekly" },
   { loc: "/precios", priority: "0.8", changefreq: "monthly" },
   { loc: "/faq", priority: "0.7", changefreq: "monthly" },
   { loc: "/blog", priority: "0.9", changefreq: "daily" },
   { loc: "/contacto", priority: "0.7", changefreq: "monthly" },
+  // Páginas SEO
   { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly" },
   { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly" },
   { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly" },
+  // Páginas profesionales
   { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly" },
   { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly" },
+  // Análisis gratuito
   { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly" },
+  // Autenticación
   { loc: "/login", priority: "0.3", changefreq: "yearly" },
   { loc: "/registro", priority: "0.3", changefreq: "yearly" },
+  // Páginas legales
   { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
   { loc: "/privacidad", priority: "0.2", changefreq: "yearly" },
   { loc: "/terminos", priority: "0.2", changefreq: "yearly" },
@@ -43,33 +47,17 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Intentar leer del caché primero
-    const { data: cache, error: cacheError } = await supabase
-      .from("sitemap_cache")
-      .select("content, generated_at")
-      .limit(1)
-      .single();
+    console.log("Regenerating sitemap...");
 
-    if (!cacheError && cache?.content && cache.content.length > 0) {
-      console.log("Serving sitemap from cache, generated at:", cache.generated_at);
-      return new Response(cache.content, {
-        headers: corsHeaders,
-        status: 200,
-      });
-    }
-
-    console.log("Cache miss or empty, generating sitemap dynamically...");
-
-    // Fallback: generar dinámicamente si no hay caché
     // Obtener posts del blog publicados
-    const { data: posts, error } = await supabase
+    const { data: posts, error: postsError } = await supabase
       .from("blog_posts")
       .select("slug, updated_at, published_at")
       .eq("status", "published")
       .order("published_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching blog posts:", error);
+    if (postsError) {
+      console.error("Error fetching blog posts:", postsError);
     }
 
     const today = new Date().toISOString().split("T")[0];
@@ -115,15 +103,49 @@ Deno.serve(async (req) => {
 ${urlsXml}
 </urlset>`;
 
-    return new Response(sitemap, {
-      headers: corsHeaders,
-      status: 200,
-    });
+    // Guardar en sitemap_cache
+    const { error: updateError } = await supabase
+      .from("sitemap_cache")
+      .update({ 
+        content: sitemap,
+        generated_at: new Date().toISOString()
+      })
+      .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all rows
+
+    if (updateError) {
+      console.error("Error updating sitemap cache:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Failed to update sitemap cache" }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    console.log(`Sitemap regenerated successfully with ${posts?.length || 0} blog posts`);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: "Sitemap regenerated",
+        blogPostsCount: posts?.length || 0,
+        staticRoutesCount: staticRoutes.length,
+        generatedAt: new Date().toISOString()
+      }),
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200 
+      }
+    );
   } catch (error) {
-    console.error("Error generating sitemap:", error);
-    return new Response("Error generating sitemap", {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "text/plain" },
-    });
+    console.error("Error regenerating sitemap:", error);
+    return new Response(
+      JSON.stringify({ error: "Error regenerating sitemap" }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
+    );
   }
 });
