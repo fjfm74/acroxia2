@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { User, Bot } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -40,7 +41,45 @@ const ChatMessage = ({ role, content, isTyping }: ChatMessageProps) => {
             <span className="w-1.5 h-1.5 bg-charcoal/60 rounded-full animate-bounce" />
           </div>
         ) : (
-          <p className="whitespace-pre-wrap">{content}</p>
+          <ReactMarkdown
+            components={{
+              p: ({ children }) => (
+                <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>
+              ),
+              ul: ({ children }) => (
+                <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>
+              ),
+              li: ({ children }) => (
+                <li className="leading-relaxed">{children}</li>
+              ),
+              strong: ({ children }) => (
+                <strong className="font-semibold">{children}</strong>
+              ),
+              em: ({ children }) => (
+                <em className="italic">{children}</em>
+              ),
+              a: ({ href, children }) => (
+                <a
+                  href={href}
+                  className="underline hover:no-underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {children}
+                </a>
+              ),
+              code: ({ children }) => (
+                <code className="bg-charcoal/10 px-1 rounded text-xs">
+                  {children}
+                </code>
+              ),
+            }}
+          >
+            {content}
+          </ReactMarkdown>
         )}
       </div>
     </div>
