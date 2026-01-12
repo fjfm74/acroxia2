@@ -14,6 +14,14 @@ interface Message {
   content: string;
 }
 
+interface AssistantConfig {
+  welcome_message?: string;
+  bubble_message?: string;
+  quick_replies_initial?: string[];
+  contact_trigger_phrases?: string[];
+  contact_success_message?: string;
+}
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`;
 
 const ChatAssistant = () => {
@@ -23,8 +31,13 @@ const ChatAssistant = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
-  const [welcomeMessage, setWelcomeMessage] = useState("");
-  const [bubbleMessage, setBubbleMessage] = useState("¿Dudas sobre nuestros planes?");
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
+  const [config, setConfig] = useState<AssistantConfig>({
+    bubble_message: "¿Tienes alguna duda sobre ACROXIA?",
+    quick_replies_initial: ["🏠 Soy inquilino", "🏢 Soy profesional"],
+    contact_trigger_phrases: ["ponerte en contacto", "contactar con nuestro equipo"],
+    contact_success_message: "¡Perfecto! Hemos recibido tu mensaje. Nuestro equipo te contactará pronto.",
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const bubbleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -39,9 +52,7 @@ const ChatAssistant = () => {
         .single();
 
       if (data?.value) {
-        const config = data.value as { welcome_message?: string; bubble_message?: string };
-        if (config.welcome_message) setWelcomeMessage(config.welcome_message);
-        if (config.bubble_message) setBubbleMessage(config.bubble_message);
+        setConfig(data.value as AssistantConfig);
       }
     };
 
@@ -70,7 +81,7 @@ const ChatAssistant = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, showQuickReplies]);
 
   // Focus input when chat opens
   useEffect(() => {
@@ -81,10 +92,11 @@ const ChatAssistant = () => {
 
   // Initialize with welcome message
   useEffect(() => {
-    if (isOpen && messages.length === 0 && welcomeMessage) {
-      setMessages([{ role: "assistant", content: welcomeMessage }]);
+    if (isOpen && messages.length === 0 && config.welcome_message) {
+      setMessages([{ role: "assistant", content: config.welcome_message }]);
+      setShowQuickReplies(true);
     }
-  }, [isOpen, welcomeMessage, messages.length]);
+  }, [isOpen, config.welcome_message, messages.length]);
 
   const handleOpenChat = () => {
     setIsOpen(true);
@@ -164,25 +176,29 @@ const ChatAssistant = () => {
       }
 
       // Check if the response suggests contact
-      if (
-        assistantSoFar.includes("ponerte en contacto") ||
-        assistantSoFar.includes("contactar con nuestro equipo")
-      ) {
+      const triggerPhrases = config.contact_trigger_phrases || [];
+      const shouldShowContact = triggerPhrases.some((phrase) =>
+        assistantSoFar.toLowerCase().includes(phrase.toLowerCase())
+      );
+
+      if (shouldShowContact) {
         setTimeout(() => setShowContactForm(true), 500);
       }
     },
-    []
+    [config.contact_trigger_phrases]
   );
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (messageContent?: string) => {
+    const content = messageContent || input.trim();
+    if (!content || isLoading) return;
 
-    const userMessage: Message = { role: "user", content: input.trim() };
+    const userMessage: Message = { role: "user", content };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
     setShowContactForm(false);
+    setShowQuickReplies(false);
 
     try {
       await streamChat(newMessages);
@@ -203,6 +219,10 @@ const ChatAssistant = () => {
     }
   };
 
+  const handleQuickReply = (reply: string) => {
+    handleSend(reply);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -216,17 +236,19 @@ const ChatAssistant = () => {
       ...prev,
       {
         role: "assistant",
-        content: "¡Perfecto! Hemos recibido tu mensaje. Nuestro equipo te contactará pronto. ¿Hay algo más en lo que pueda ayudarte?",
+        content: config.contact_success_message || "¡Perfecto! Hemos recibido tu mensaje. Nuestro equipo te contactará pronto.",
       },
     ]);
   };
+
+  const quickReplies = config.quick_replies_initial || [];
 
   return (
     <div className="fixed bottom-20 right-4 z-50">
       {/* Chat bubble */}
       <ChatBubble
         isVisible={showBubble && !isOpen}
-        message={bubbleMessage}
+        message={config.bubble_message || "¿Tienes alguna duda sobre ACROXIA?"}
         onClose={handleCloseBubble}
         onClick={handleOpenChat}
       />
@@ -291,6 +313,25 @@ const ChatAssistant = () => {
                 )}
               </div>
 
+              {/* Quick Replies */}
+              {showQuickReplies && quickReplies.length > 0 && messages.length === 1 && !isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-wrap gap-2 mt-3"
+                >
+                  {quickReplies.map((reply, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickReply(reply)}
+                      className="px-4 py-2 text-sm rounded-full border border-charcoal/20 bg-background hover:bg-muted transition-colors text-charcoal"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+
               {/* Contact form */}
               {showContactForm && (
                 <div className="mt-3">
@@ -316,7 +357,7 @@ const ChatAssistant = () => {
                   disabled={isLoading}
                 />
                 <Button
-                  onClick={handleSend}
+                  onClick={() => handleSend()}
                   disabled={!input.trim() || isLoading}
                   className="h-10 w-10 rounded-full bg-charcoal text-cream hover:bg-charcoal/90 p-0"
                 >
@@ -328,7 +369,7 @@ const ChatAssistant = () => {
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground text-center mt-2">
-                Solo respondo sobre planes, precios y funcionamiento de ACROXIA
+                Información orientativa · No constituye asesoría legal
               </p>
             </div>
           </motion.div>
