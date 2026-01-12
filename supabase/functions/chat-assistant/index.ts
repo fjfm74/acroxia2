@@ -52,16 +52,19 @@ async function recordRequest(supabase: any, ip: string): Promise<void> {
   });
 }
 
-async function getSiteConfig(supabase: any): Promise<{
+interface SiteConfig {
   b2cPlans: any[];
   b2bPlans: any[];
   companyInfo: any;
   assistantConfig: any;
-}> {
+  productFlow: any;
+}
+
+async function getSiteConfig(supabase: any): Promise<SiteConfig> {
   const { data, error } = await supabase
     .from("site_config")
     .select("key, value")
-    .in("key", ["b2c_plans", "b2b_plans", "company_info", "assistant_config"]);
+    .in("key", ["b2c_plans", "b2b_plans", "company_info", "assistant_config", "product_flow"]);
 
   if (error) {
     console.error("Error fetching site config:", error);
@@ -70,6 +73,7 @@ async function getSiteConfig(supabase: any): Promise<{
       b2bPlans: [],
       companyInfo: {},
       assistantConfig: {},
+      productFlow: {},
     };
   }
 
@@ -83,6 +87,7 @@ async function getSiteConfig(supabase: any): Promise<{
     b2bPlans: config.b2b_plans || [],
     companyInfo: config.company_info || {},
     assistantConfig: config.assistant_config || {},
+    productFlow: config.product_flow || {},
   };
 }
 
@@ -100,35 +105,68 @@ function detectUserProfile(messages: Message[]): "inquilino" | "profesional" | "
   return "unknown";
 }
 
-function buildSystemPrompt(b2cPlans: any[], b2bPlans: any[], companyInfo: any, userProfile: string): string {
-  const b2bInfo = b2bPlans
-    .map((p) => `- ${p.name}: ${p.price} - ${p.description}`)
+function buildSystemPrompt(config: SiteConfig, userProfile: string): string {
+  const { b2cPlans, b2bPlans, companyInfo, productFlow } = config;
+
+  // Generate B2C info dynamically
+  const b2cInfo = b2cPlans
+    .map((p: any) => `- ${p.name}: ${p.price}${p.description ? ` - ${p.description}` : ""}`)
     .join("\n");
 
+  // Generate B2B info dynamically
+  const b2bInfo = b2bPlans
+    .map((p: any) => `- ${p.name}: ${p.price}${p.description ? ` - ${p.description}` : ""}`)
+    .join("\n");
+
+  // Get accepted formats from productFlow or companyInfo
+  const formats = productFlow.accepted_formats?.join(", ") || 
+                  companyInfo.accepted_formats?.join(", ") || 
+                  "PDF, JPG, PNG";
+  const formatNote = productFlow.format_note || "Puedes subir fotos o escaneos del contrato";
+
+  // Get free analysis description from productFlow
+  const freeAnalysisDesc = productFlow.free_analysis?.description || 
+    "Preview gratuito: puntuación de riesgo y cláusulas detectadas";
+  const freeAnalysisIncludes = productFlow.free_analysis?.includes?.join(", ") || 
+    "Puntuación de riesgo, número de cláusulas";
+
+  // Get full report info - price from first B2C plan
+  const fullReportPrice = b2cPlans[0]?.price || "39€";
+  const fullReportDesc = productFlow.full_report?.description || 
+    "Informe completo con detalle de cada cláusula y recomendaciones";
+
+  // Get email capture warning
+  const emailCaptureNote = productFlow.email_capture?.note || 
+    "El email solo captura el contacto, NO envía el informe gratis";
+
+  // Get pack and subscription prices dynamically
+  const packPrice = b2cPlans.find((p: any) => p.name?.toLowerCase().includes("pack"))?.price || "79€";
+  const subscriptionPrice = b2cPlans.find((p: any) => p.name?.toLowerCase().includes("suscripción"))?.price || "99€/año";
+
+  // Build profile-specific context using ONLY dynamic data
   let profileContext = "";
   if (userProfile === "inquilino") {
     profileContext = `
 CONTEXTO: El usuario es un INQUILINO particular.
-- El análisis inicial es GRATUITO: sube su contrato y ve un preview con puntuación de riesgo y número de cláusulas detectadas
-- Para ver el informe COMPLETO con detalle de cada cláusula y recomendaciones: 39€ (pago único)
-- Pack Comparador (3 contratos): 79€
-- Suscripción anual (análisis ilimitados): 99€/año
-- Formatos aceptados: PDF, JPG o PNG (fotos o escaneos del contrato)
-- IMPORTANTE: NO digas que enviamos el informe gratis por email. El email solo captura el contacto.
+- Análisis inicial: ${freeAnalysisDesc}
+- Incluye: ${freeAnalysisIncludes}
+- Informe completo: ${fullReportPrice} - ${fullReportDesc}
+- Formatos aceptados: ${formats} (${formatNote})
+- IMPORTANTE: ${emailCaptureNote}
 - Tono: cercano y tranquilizador`;
   } else if (userProfile === "profesional") {
     profileContext = `
 CONTEXTO: El usuario es un PROFESIONAL (inmobiliaria, gestoría, etc.).
-- Plan Profesional: 99€/mes (10 análisis incluidos)
-- Plan Profesional Plus: 149€/mes (análisis ilimitados)
+Planes disponibles:
+${b2bInfo}
 - Incluyen: dashboard de gestión, personalización de marca, soporte prioritario
-- Formatos aceptados: PDF, JPG o PNG
+- Formatos aceptados: ${formats}
 - Tono: profesional pero cercano`;
   } else {
     profileContext = `
 CONTEXTO: Aún no sabemos si es inquilino o profesional.
-- Si pregunta por precios particulares: análisis gratuito (preview), informe completo 39€
-- Si pregunta por precios empresariales: desde 99€/mes`;
+- Si pregunta por precios particulares: preview gratis, informe completo ${fullReportPrice}
+- Si pregunta por precios empresariales: planes desde ${b2bPlans[0]?.price || "99€/mes"}`;
   }
 
   return `Eres el asistente virtual de ACROXIA. Ayudas a resolver dudas sobre el servicio de análisis de contratos de alquiler.
@@ -136,19 +174,16 @@ CONTEXTO: Aún no sabemos si es inquilino o profesional.
 ${profileContext}
 
 ═══════════════════════════════════════
-INFORMACIÓN CLAVE (MEMORIZA ESTO):
+INFORMACIÓN CLAVE (DATOS ACTUALIZADOS):
 ═══════════════════════════════════════
 
 FLUJO PARA PARTICULARES:
-1. Sube tu contrato (PDF, JPG o PNG) → GRATIS
-2. Ves un preview: puntuación de riesgo + número de cláusulas detectadas
-3. Para el informe completo con detalle → 39€
+1. Sube tu contrato (${formats}) → GRATIS
+2. ${freeAnalysisDesc}
+3. Para el informe completo → ${fullReportPrice}
 
-PRECIOS PARTICULARES (SIN DECIMALES):
-- Preview gratuito: puntuación + resumen
-- Informe completo: 39€
-- Pack 3 contratos: 79€
-- Suscripción anual: 99€/año
+PRECIOS PARTICULARES:
+${b2cInfo}
 
 PLANES EMPRESAS:
 ${b2bInfo}
@@ -156,6 +191,7 @@ ${b2bInfo}
 CONTACTO:
 - Email: ${companyInfo.email || "contacto@acroxia.com"}
 - Teléfono: ${companyInfo.phone || ""}
+- Web: ${companyInfo.website || "acroxia.com"}
 
 ACROXIA es una herramienta informativa. NO sustituye asesoría legal profesional.
 
@@ -174,9 +210,9 @@ COMPORTAMIENTO:
 ═══════════════════════════════════════
 
 - Saludos → responde breve: "¡Hola! ¿En qué te ayudo?"
-- Precios particulares → "El preview es gratis. El informe completo son **39€**."
-- Precios empresas → "Desde **99€/mes** con 10 análisis incluidos."
-- Formatos → "Aceptamos PDF, JPG y PNG. Puedes hacer fotos al contrato con el móvil."
+- Precios particulares → "El preview es gratis. El informe completo son **${fullReportPrice}**."
+- Precios empresas → "Desde **${b2bPlans[0]?.price || "99€/mes"}** con 10 análisis incluidos."
+- Formatos → "Aceptamos ${formats}. ${formatNote}."
 - Preguntas legales → "Eso requiere un análisis detallado. ¿Quieres que te ponga en contacto con el equipo?"
 
 ═══════════════════════════════════════
@@ -185,8 +221,8 @@ REGLAS ESTRICTAS:
 
 1. NUNCA des consejos legales
 2. NUNCA digas que el informe completo es gratis
-3. NUNCA digas que enviamos el informe por email gratis
-4. NUNCA uses precios con decimales (39€, NO 39,99€)
+3. NUNCA digas que enviamos el informe por email gratis - ${emailCaptureNote}
+4. NUNCA uses precios con decimales
 5. Siempre en español
 6. Si no sabes algo → ofrece contacto con el equipo`;
 }
@@ -245,14 +281,14 @@ serve(async (req) => {
       );
     }
 
-    // Get dynamic site config
-    const { b2cPlans, b2bPlans, companyInfo } = await getSiteConfig(supabase);
+    // Get ALL dynamic site config including product_flow
+    const siteConfig = await getSiteConfig(supabase);
 
     // Detect user profile from conversation
     const userProfile = detectUserProfile(messages);
 
-    // Build system prompt with current data and user profile
-    const systemPrompt = buildSystemPrompt(b2cPlans, b2bPlans, companyInfo, userProfile);
+    // Build system prompt with ALL dynamic data
+    const systemPrompt = buildSystemPrompt(siteConfig, userProfile);
 
     // Keep only last 8 messages for context
     const recentMessages = messages.slice(-8);
