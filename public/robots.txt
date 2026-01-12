@@ -1,3 +1,4 @@
+# Permitir bots principales
 User-agent: Googlebot
 Allow: /
 
@@ -19,6 +20,7 @@ Disallow: /perfil
 Disallow: /analizar
 Disallow: /resultado/
 Disallow: /admin/
+Disallow: /pro/
 
 # Sitemap
 Sitemap: https://acroxia.com/sitemap.xml
