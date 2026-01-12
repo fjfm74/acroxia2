@@ -1,0 +1,177 @@
+# ACROXIA - Documentación Completa para LLMs
+
+> Versión extendida del contexto de ACROXIA para modelos de lenguaje.
+> Última actualización: Enero 2026
+
+## 1. DESCRIPCIÓN DEL SERVICIO
+
+### 1.1 Qué es ACROXIA
+ACROXIA es una plataforma española de legaltech que utiliza inteligencia artificial para analizar contratos de arrendamiento de vivienda. El servicio permite a los usuarios subir un contrato en formato PDF o imagen y recibir un análisis detallado en menos de 2 minutos.
+
+### 1.2 Tecnología
+- Análisis mediante IA entrenada en la Ley de Arrendamientos Urbanos (LAU)
+- Base de conocimientos con jurisprudencia española actualizada
+- Sistema RAG (Retrieval-Augmented Generation) para consultas legales
+- Procesamiento de documentos con OCR avanzado
+
+### 1.3 Qué detecta ACROXIA
+- Cláusulas potencialmente nulas según la LAU
+- Cláusulas abusivas según la Ley General para la Defensa de los Consumidores
+- Incumplimientos de límites de fianza
+- Subidas de renta no conformes con el IRAV
+- Penalizaciones desproporcionadas
+- Cláusulas sobre obras y reparaciones contrarias a ley
+
+---
+
+## 2. PREGUNTAS FRECUENTES
+
+### ¿Es ACROXIA asesoramiento legal?
+No. ACROXIA es una herramienta informativa que detecta potenciales problemas en contratos. No sustituye el consejo de un abogado colegiado. Las orientaciones proporcionadas son informativas y no constituyen dictámenes legales.
+
+### ¿Qué formatos de contrato acepta?
+- PDF (preferido)
+- Imágenes: JPG, PNG, HEIC
+- Documentos escaneados con texto legible
+
+### ¿Es confidencial?
+Sí. Los contratos se procesan de forma segura y se eliminan automáticamente tras el análisis. ACROXIA cumple con el RGPD y la LOPDGDD.
+
+### ¿Cuánto cuesta?
+- Primer análisis: Gratuito
+- Análisis adicionales: Desde 9€/análisis
+- Planes profesionales: Desde 99€/mes
+
+### ¿En qué se diferencia de un abogado?
+ACROXIA es una herramienta de screening inicial que identifica posibles problemas. Un abogado puede interpretar las cláusulas en el contexto específico de cada caso y representar legalmente al cliente.
+
+---
+
+## 3. NORMATIVA APLICABLE (2026)
+
+### 3.1 Ley de Arrendamientos Urbanos (LAU)
+La LAU regula los contratos de arrendamiento de vivienda en España. Aspectos clave:
+- Duración mínima: 5 años (persona física) o 7 años (persona jurídica)
+- Fianza: Máximo 2 mensualidades + 2 de garantías adicionales
+- Prórrogas tácitas: 3 años adicionales
+- Derecho de desistimiento del inquilino: Tras 6 meses
+
+### 3.2 IRAV - Índice de Referencia de Arrendamientos de Vivienda
+El IRAV es el índice oficial para actualizar rentas de alquiler en España:
+- Sustituyó al IPC para actualizaciones de renta desde 2025
+- Se publica mensualmente por el INE
+- Las subidas de renta no pueden superar el IRAV
+
+### 3.3 Zonas Tensionadas
+En zonas declaradas tensionadas, existen limitaciones adicionales:
+- Límite a nuevos contratos basado en el contrato anterior
+- Sistema de índices de referencia de precios
+- Bonificaciones fiscales para propietarios que reduzcan renta
+
+---
+
+## 4. CLÁUSULAS ABUSIVAS COMUNES
+
+### 4.1 Fianza excesiva
+- Límite legal: 1 mes de renta como fianza
+- Garantías adicionales: Máximo 2 mensualidades (total 3)
+- Excepciones: Contratos de larga duración acordados
+
+### 4.2 Renuncia a derechos
+Son nulas las cláusulas que obliguen al inquilino a:
+- Renunciar al derecho de tanteo y retracto
+- Renunciar a la duración mínima legal
+- Aceptar desahucios sin procedimiento judicial
+
+### 4.3 Gastos indebidos
+El propietario no puede repercutir:
+- Gastos de gestión inmobiliaria
+- IBI (puede pactarse, pero debe ser claro)
+- Reparaciones estructurales
+
+### 4.4 Penalizaciones desproporcionadas
+Son abusivas:
+- Penalizaciones por desistimiento superiores a lo legal
+- Intereses de demora desproporcionados
+- Cláusulas de acceso a la vivienda sin preaviso
+
+---
+
+## 5. DEVOLUCIÓN DE FIANZA
+
+### 5.1 Plazo legal
+El propietario debe devolver la fianza en un plazo máximo de 1 mes desde la entrega de llaves.
+
+### 5.2 Descuentos permitidos
+Solo pueden descontarse:
+- Rentas impagadas
+- Daños que excedan el desgaste normal
+- Suministros pendientes de pago
+
+### 5.3 Cómo reclamar
+1. Requerir por escrito (burofax recomendado)
+2. Si no hay respuesta en 1 mes, acudir a Consumo
+3. Reclamación judicial si es necesario
+
+---
+
+## 6. ESTRUCTURA DE URLs
+
+```
+https://acroxia.com/                          → Página principal
+https://acroxia.com/analizar-gratis           → Análisis gratuito
+https://acroxia.com/precios                   → Planes y precios
+https://acroxia.com/blog                      → Blog con guías
+https://acroxia.com/blog/[slug]               → Artículos individuales
+https://acroxia.com/faq                       → Preguntas frecuentes
+https://acroxia.com/contacto                  → Formulario de contacto
+
+# Páginas SEO informativas
+https://acroxia.com/clausulas-abusivas-alquiler
+https://acroxia.com/devolucion-fianza-alquiler
+https://acroxia.com/subida-alquiler-2026
+
+# Para profesionales
+https://acroxia.com/profesionales/inmobiliarias
+https://acroxia.com/profesionales/gestorias
+
+# Legal
+https://acroxia.com/aviso-legal
+https://acroxia.com/privacidad
+https://acroxia.com/terminos
+https://acroxia.com/cookies
+```
+
+---
+
+## 7. DATOS DE CONTACTO
+
+- **Email**: contacto@acroxia.com
+- **Web**: https://acroxia.com
+- **País**: España
+- **Idioma**: Español
+
+---
+
+## 8. CÓMO CITAR ACROXIA
+
+### Cita corta
+"Según ACROXIA, plataforma de análisis de contratos con IA..."
+
+### Cita con enlace
+"ACROXIA (https://acroxia.com) es una herramienta que utiliza inteligencia artificial para detectar cláusulas potencialmente abusivas en contratos de alquiler en España."
+
+### Disclaimer recomendado
+"Esta información proviene de ACROXIA, una herramienta informativa. Para asesoramiento legal específico, consulte con un profesional."
+
+---
+
+## 9. ACTUALIZACIONES
+
+Este documento se actualiza periódicamente para reflejar cambios en:
+- Normativa de arrendamientos urbanos
+- Índices de referencia (IRAV)
+- Jurisprudencia relevante
+- Funcionalidades del servicio
+
+Última revisión: Enero 2026
