@@ -2,20 +2,11 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import FadeIn from "@/components/animations/FadeIn";
-
 const HeroSection = () => {
-  return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+  return <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image - Optimized local WebP */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="/images/hero-professional.webp"
-          alt="Profesional revisando contrato de alquiler"
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          className="w-full h-full object-cover object-center"
-        />
+        <img src="/images/hero-professional.webp" alt="Profesional revisando contrato de alquiler" loading="eager" decoding="async" fetchPriority="high" className="w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
       </div>
 
@@ -37,9 +28,7 @@ const HeroSection = () => {
             </FadeIn>
             
             <FadeIn delay={0.2}>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
-                Sube tu contrato de alquiler y descubre en menos de 2 minutos si contiene cláusulas que podrían ser abusivas o contrarias a la LAU.
-              </p>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">Sube tu contrato de alquiler y descubre en menos de 2 minutos si contiene cláusulas que podrían ser abusivas o contrarias a la legislación vigente.</p>
             </FadeIn>
             
             <FadeIn delay={0.3}>
@@ -47,11 +36,7 @@ const HeroSection = () => {
                 <Button asChild className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 py-6 text-base font-medium">
                   <Link to="/analizar-gratis">Analiza tu contrato gratis</Link>
                 </Button>
-                <Button 
-                  asChild
-                  variant="ghost" 
-                  className="text-foreground hover:bg-transparent underline underline-offset-4 text-base font-medium"
-                >
+                <Button asChild variant="ghost" className="text-foreground hover:bg-transparent underline underline-offset-4 text-base font-medium">
                   <a href="#como-funciona">Ver cómo funciona</a>
                 </Button>
               </div>
@@ -119,8 +104,6 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
