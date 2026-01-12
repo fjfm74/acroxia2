@@ -22,5 +22,6 @@ Disallow: /resultado/
 Disallow: /admin/
 Disallow: /pro/
 
-# Sitemap
+# Sitemaps
 Sitemap: https://acroxia.com/sitemap.xml
+Sitemap: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/sitemap
