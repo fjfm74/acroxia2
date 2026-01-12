@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertTriangle, Mail, CheckCircle, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { trackConversion } from "@/lib/analytics";
 
 interface LeadCaptureModalProps {
   open: boolean;
@@ -105,6 +106,13 @@ const LeadCaptureModal = ({
         console.error("Error sending email:", emailError);
         // Don't throw - lead was saved, email might have failed
       }
+
+      // Track lead captured
+      trackConversion('lead_captured', {
+        analysis_id: analysisId,
+        contract_status: contractStatus,
+        source: 'analysis_preview',
+      });
 
       setSuccess(true);
       toast({

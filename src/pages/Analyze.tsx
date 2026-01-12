@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, X, Loader2, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react";
+import { trackConversion } from "@/lib/analytics";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -162,6 +163,15 @@ const Analyze = () => {
     setProgress(10);
     setAnalysisStep("Subiendo contrato...");
 
+    // Track analysis started
+    trackConversion('analysis_started', {
+      file_type: file.type,
+      file_size_mb: Math.round(file.size / 1024 / 1024 * 100) / 100,
+      user_id: user.id,
+    });
+
+    const startTime = Date.now();
+
     try {
       // Upload file
       const filePath = `${user.id}/${Date.now()}_${file.name}`;
@@ -231,6 +241,14 @@ const Analyze = () => {
 
       setProgress(100);
       setAnalysisStep("¡Análisis completado!");
+
+      // Track analysis completed
+      trackConversion('analysis_completed', {
+        contract_id: contract.id,
+        file_name: file.name,
+        duration_seconds: Math.round((Date.now() - startTime) / 1000),
+        user_id: user.id,
+      });
 
       toast({
         title: "¡Análisis completado!",
