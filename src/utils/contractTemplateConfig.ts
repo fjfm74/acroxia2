@@ -7,6 +7,7 @@ export interface ContractConfig {
   
   // Paso 2: Ubicación
   comunidadAutonoma: string;
+  provincia: string;
   municipio: string;
   isZonaTensionada: boolean;
   
@@ -60,6 +61,28 @@ export const COMUNIDADES_AUTONOMAS = [
   'País Vasco',
 ];
 
+export const PROVINCIAS_POR_CCAA: Record<string, string[]> = {
+  'Andalucía': ['Almería', 'Cádiz', 'Córdoba', 'Granada', 'Huelva', 'Jaén', 'Málaga', 'Sevilla'],
+  'Aragón': ['Huesca', 'Teruel', 'Zaragoza'],
+  'Asturias': ['Asturias'],
+  'Baleares': ['Baleares'],
+  'Canarias': ['Las Palmas', 'Santa Cruz de Tenerife'],
+  'Cantabria': ['Cantabria'],
+  'Castilla-La Mancha': ['Albacete', 'Ciudad Real', 'Cuenca', 'Guadalajara', 'Toledo'],
+  'Castilla y León': ['Ávila', 'Burgos', 'León', 'Palencia', 'Salamanca', 'Segovia', 'Soria', 'Valladolid', 'Zamora'],
+  'Cataluña': ['Barcelona', 'Girona', 'Lleida', 'Tarragona'],
+  'Ceuta': ['Ceuta'],
+  'Comunidad Valenciana': ['Alicante', 'Castellón', 'Valencia'],
+  'Extremadura': ['Badajoz', 'Cáceres'],
+  'Galicia': ['A Coruña', 'Lugo', 'Ourense', 'Pontevedra'],
+  'La Rioja': ['La Rioja'],
+  'Madrid': ['Madrid'],
+  'Melilla': ['Melilla'],
+  'Murcia': ['Murcia'],
+  'Navarra': ['Navarra'],
+  'País Vasco': ['Álava', 'Guipúzcoa', 'Vizcaya'],
+};
+
 export const DURACIONES_CONTRATO = [
   { value: 1, label: '1 año' },
   { value: 2, label: '2 años' },
@@ -87,6 +110,7 @@ export const MESES_GARANTIAS = [
 export const defaultContractConfig: ContractConfig = {
   propertyType: 'vivienda_habitual',
   comunidadAutonoma: '',
+  provincia: '',
   municipio: '',
   isZonaTensionada: false,
   rentaMensual: 0,

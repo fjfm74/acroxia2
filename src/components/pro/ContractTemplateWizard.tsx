@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -22,7 +23,10 @@ import {
   Download,
   AlertTriangle,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  Loader2,
+  MapPinCheck,
+  MapPinOff
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -32,12 +36,14 @@ import {
   ContractConfig, 
   defaultContractConfig, 
   COMUNIDADES_AUTONOMAS,
+  PROVINCIAS_POR_CCAA,
   DURACIONES_CONTRATO,
   DIAS_PAGO,
   MESES_FIANZA,
   MESES_GARANTIAS
 } from "@/utils/contractTemplateConfig";
 import { generateContractDocx } from "@/utils/generateContractTemplate";
+import { supabase } from "@/integrations/supabase/client";
 
 const STEPS = [
   { id: 1, title: "Tipo de inmueble", icon: FileText },
@@ -53,6 +59,76 @@ const ContractTemplateWizard = () => {
   const [config, setConfig] = useState<ContractConfig>(defaultContractConfig);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCheckingZona, setIsCheckingZona] = useState(false);
+  const [zonaTensionadaChecked, setZonaTensionadaChecked] = useState(false);
+  const [availableProvincias, setAvailableProvincias] = useState<string[]>([]);
+
+  // Actualizar provincias cuando cambia la comunidad autónoma
+  useEffect(() => {
+    if (config.comunidadAutonoma) {
+      const provincias = PROVINCIAS_POR_CCAA[config.comunidadAutonoma] || [];
+      setAvailableProvincias(provincias);
+      // Si solo hay una provincia, seleccionarla automáticamente
+      if (provincias.length === 1) {
+        updateConfig({ provincia: provincias[0] });
+      } else if (!provincias.includes(config.provincia)) {
+        updateConfig({ provincia: '' });
+      }
+    } else {
+      setAvailableProvincias([]);
+    }
+  }, [config.comunidadAutonoma]);
+
+  // Verificar zona tensionada cuando cambia el municipio
+  useEffect(() => {
+    const checkZonaTensionada = async () => {
+      if (!config.municipio || config.municipio.length < 3) {
+        setZonaTensionadaChecked(false);
+        return;
+      }
+
+      setIsCheckingZona(true);
+      try {
+        // Buscar en la base de datos de chunks legales si el municipio está en zonas tensionadas
+        const { data, error } = await supabase
+          .from('legal_chunks')
+          .select('id, affected_municipalities')
+          .eq('semantic_category', 'lista_entidades')
+          .not('affected_municipalities', 'is', null);
+
+        if (error) {
+          console.error('Error checking zona tensionada:', error);
+          setZonaTensionadaChecked(true);
+          return;
+        }
+
+        // Normalizar el municipio para comparar
+        const normalizedMunicipio = config.municipio.toLowerCase().trim();
+        
+        // Buscar si el municipio está en algún array de affected_municipalities
+        const isZonaTensionada = data?.some(chunk => {
+          if (!chunk.affected_municipalities) return false;
+          return chunk.affected_municipalities.some((m: string) => 
+            m.toLowerCase().trim() === normalizedMunicipio ||
+            m.toLowerCase().trim().includes(normalizedMunicipio) ||
+            normalizedMunicipio.includes(m.toLowerCase().trim())
+          );
+        }) || false;
+
+        updateConfig({ isZonaTensionada });
+        setZonaTensionadaChecked(true);
+      } catch (err) {
+        console.error('Error checking zona tensionada:', err);
+        setZonaTensionadaChecked(true);
+      } finally {
+        setIsCheckingZona(false);
+      }
+    };
+
+    // Debounce para no hacer demasiadas consultas
+    const timeoutId = setTimeout(checkZonaTensionada, 500);
+    return () => clearTimeout(timeoutId);
+  }, [config.municipio]);
 
   const updateConfig = (updates: Partial<ContractConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
@@ -63,7 +139,7 @@ const ContractTemplateWizard = () => {
       case 1:
         return !!config.propertyType;
       case 2:
-        return !!config.comunidadAutonoma && !!config.municipio;
+        return !!config.comunidadAutonoma && !!config.provincia && !!config.municipio && zonaTensionadaChecked;
       case 3:
         return config.rentaMensual > 0 && config.mesesFianza > 0;
       case 4:
@@ -172,10 +248,10 @@ const ContractTemplateWizard = () => {
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label className="text-sm">Comunidad Autónoma</Label>
+                <Label className="text-sm">Comunidad Autónoma *</Label>
                 <Select
                   value={config.comunidadAutonoma}
-                  onValueChange={(value) => updateConfig({ comunidadAutonoma: value })}
+                  onValueChange={(value) => updateConfig({ comunidadAutonoma: value, provincia: '', municipio: '' })}
                 >
                   <SelectTrigger className="mt-2">
                     <SelectValue placeholder="Selecciona..." />
@@ -188,39 +264,99 @@ const ContractTemplateWizard = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="municipio" className="text-sm">Municipio</Label>
-                <Input
-                  id="municipio"
-                  placeholder="Nombre del municipio"
-                  value={config.municipio}
-                  onChange={(e) => updateConfig({ municipio: e.target.value })}
-                  className="mt-2"
-                />
+                <Label className="text-sm">Provincia *</Label>
+                <Select
+                  value={config.provincia}
+                  onValueChange={(value) => updateConfig({ provincia: value, municipio: '' })}
+                  disabled={!config.comunidadAutonoma}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder={config.comunidadAutonoma ? "Selecciona..." : "Primero selecciona CC.AA."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProvincias.map((prov) => (
+                      <SelectItem key={prov} value={prov}>{prov}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/30">
-              <div className="space-y-1">
-                <Label htmlFor="zonaTensionada" className="font-medium">
-                  ¿Es zona de mercado tensionado?
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Limita la renta según normativa vigente
-                </p>
-              </div>
-              <Switch
-                id="zonaTensionada"
-                checked={config.isZonaTensionada}
-                onCheckedChange={(checked) => updateConfig({ isZonaTensionada: checked })}
+            <div>
+              <Label htmlFor="municipio" className="text-sm">Municipio *</Label>
+              <Input
+                id="municipio"
+                placeholder="Escribe el nombre del municipio"
+                value={config.municipio}
+                onChange={(e) => {
+                  updateConfig({ municipio: e.target.value });
+                  setZonaTensionadaChecked(false);
+                }}
+                className="mt-2"
+                disabled={!config.provincia}
               />
             </div>
 
-            {config.isZonaTensionada && (
+            {/* Estado de verificación de zona tensionada */}
+            <div className="p-4 border rounded-xl bg-muted/30">
+              <div className="flex items-center gap-3">
+                {isCheckingZona ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Verificando zona tensionada...</span>
+                  </>
+                ) : zonaTensionadaChecked ? (
+                  config.isZonaTensionada ? (
+                    <>
+                      <MapPinCheck className="h-5 w-5 text-amber-600" />
+                      <div className="flex-1">
+                        <p className="font-medium text-amber-800">Zona de mercado tensionado</p>
+                        <p className="text-sm text-muted-foreground">
+                          La renta estará limitada según normativa vigente
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-800">
+                        Tensionada
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <MapPinOff className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="font-medium">Zona no tensionada</p>
+                        <p className="text-sm text-muted-foreground">
+                          No hay limitaciones especiales de renta
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="bg-muted">
+                        Normal
+                      </Badge>
+                    </>
+                  )
+                ) : config.municipio ? (
+                  <>
+                    <Info className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      Escribe el municipio completo para verificar la zona
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Info className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      Introduce el municipio para verificar si es zona tensionada
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {config.isZonaTensionada && zonaTensionadaChecked && (
               <Alert className="border-amber-500/50 bg-amber-50">
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-amber-800">
-                  En zonas tensionadas, la renta inicial está limitada. La plantilla incluirá las 
-                  advertencias legales correspondientes y el enlace al sistema de precios de referencia.
+                  La renta inicial no podrá exceder de la última renta del contrato anterior. 
+                  Consulta el <a href="https://serpavi.mivau.gob.es/" target="_blank" rel="noopener noreferrer" className="underline font-medium">Sistema de Precios de Referencia</a> para más información.
                 </AlertDescription>
               </Alert>
             )}
@@ -475,7 +611,7 @@ const ContractTemplateWizard = () => {
 
             <div>
               <Label className="text-base font-medium mb-3 block">
-                Suministros (agua, luz, gas...)
+                Suministros (agua, luz, gas)
               </Label>
               <RadioGroup
                 value={config.suministros}
@@ -489,14 +625,14 @@ const ContractTemplateWizard = () => {
                   config.suministros === 'incluidos' ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                 )}>
                   <RadioGroupItem value="incluidos" id="suministros_incluidos" />
-                  <Label htmlFor="suministros_incluidos" className="cursor-pointer">Incluidos en renta</Label>
+                  <Label htmlFor="suministros_incluidos" className="cursor-pointer">Incluidos</Label>
                 </div>
                 <div className={cn(
                   "flex items-center space-x-2 p-3 border rounded-xl cursor-pointer transition-colors",
                   config.suministros === 'arrendatario' ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                 )}>
                   <RadioGroupItem value="arrendatario" id="suministros_arrendatario" />
-                  <Label htmlFor="suministros_arrendatario" className="cursor-pointer">A cargo del inquilino</Label>
+                  <Label htmlFor="suministros_arrendatario" className="cursor-pointer">Arrendatario</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -506,177 +642,110 @@ const ContractTemplateWizard = () => {
       case 6:
         return (
           <div className="space-y-6">
-            <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex items-center justify-between p-4 border rounded-xl">
+                <Label htmlFor="mascotas" className="cursor-pointer">Prohibición de mascotas</Label>
+                <Switch
+                  id="mascotas"
+                  checked={config.prohibicionMascotas}
+                  onCheckedChange={(checked) => updateConfig({ prohibicionMascotas: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 border rounded-xl">
+                <Label htmlFor="fumar" className="cursor-pointer">Prohibición de fumar</Label>
+                <Switch
+                  id="fumar"
+                  checked={config.prohibicionFumar}
+                  onCheckedChange={(checked) => updateConfig({ prohibicionFumar: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 border rounded-xl">
+                <Label htmlFor="inventario" className="cursor-pointer">Incluir inventario</Label>
+                <Switch
+                  id="inventario"
+                  checked={config.incluyeInventario}
+                  onCheckedChange={(checked) => updateConfig({ incluyeInventario: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 border rounded-xl">
+                <Label htmlFor="certificado" className="cursor-pointer">Certificado energético</Label>
+                <Switch
+                  id="certificado"
+                  checked={config.incluyeCertificadoEnergetico}
+                  onCheckedChange={(checked) => updateConfig({ incluyeCertificadoEnergetico: checked })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
               <Label className="text-base font-medium">Cláusulas adicionales</Label>
-              
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
-                    id="mascotas"
-                    checked={config.prohibicionMascotas}
-                    onCheckedChange={(checked) => updateConfig({ prohibicionMascotas: checked })}
-                  />
-                  <div>
-                    <Label htmlFor="mascotas" className="font-medium cursor-pointer">
-                      Prohibición de mascotas
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Incluye nota sobre limitaciones legales de esta cláusula
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
-                    id="fumar"
-                    checked={config.prohibicionFumar}
-                    onCheckedChange={(checked) => updateConfig({ prohibicionFumar: checked })}
-                  />
-                  <div>
-                    <Label htmlFor="fumar" className="font-medium cursor-pointer">
-                      Prohibición de fumar
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Permite retención de fianza para limpieza si se incumple
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
-                    id="obrasReformas"
+              <div className="space-y-2">
+                <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <Checkbox
+                    id="obras"
                     checked={config.clausulaObrasReformas}
-                    onCheckedChange={(checked) => updateConfig({ clausulaObrasReformas: checked })}
+                    onCheckedChange={(checked) => updateConfig({ clausulaObrasReformas: !!checked })}
                   />
-                  <div>
-                    <Label htmlFor="obrasReformas" className="font-medium cursor-pointer">
-                      Obras y reformas
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Regula las condiciones para realizar modificaciones en el inmueble
-                    </p>
-                  </div>
+                  <Label htmlFor="obras" className="cursor-pointer flex-1">
+                    Cláusula de obras y reformas
+                  </Label>
                 </div>
-
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
+                <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <Checkbox
                     id="subarriendo"
                     checked={config.clausulaSubarriendo}
-                    onCheckedChange={(checked) => updateConfig({ clausulaSubarriendo: checked })}
+                    onCheckedChange={(checked) => updateConfig({ clausulaSubarriendo: !!checked })}
                   />
-                  <div>
-                    <Label htmlFor="subarriendo" className="font-medium cursor-pointer">
-                      Cesión y subarriendo
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Prohíbe expresamente el subarriendo sin autorización
-                    </p>
-                  </div>
+                  <Label htmlFor="subarriendo" className="cursor-pointer flex-1">
+                    Prohibición de subarriendo
+                  </Label>
                 </div>
-
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
-                    id="accesoVisitas"
+                <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <Checkbox
+                    id="visitas"
                     checked={config.clausulaAccesoVisitas}
-                    onCheckedChange={(checked) => updateConfig({ clausulaAccesoVisitas: checked })}
+                    onCheckedChange={(checked) => updateConfig({ clausulaAccesoVisitas: !!checked })}
                   />
-                  <div>
-                    <Label htmlFor="accesoVisitas" className="font-medium cursor-pointer">
-                      Acceso para visitas
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Regula el derecho del propietario a mostrar el inmueble a futuros inquilinos
-                    </p>
-                  </div>
+                  <Label htmlFor="visitas" className="cursor-pointer flex-1">
+                    Acceso para visitas (últimos meses)
+                  </Label>
                 </div>
-
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
-                    id="penalizacionImpago"
+                <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <Checkbox
+                    id="impago"
                     checked={config.clausulaPenalizacionImpago}
-                    onCheckedChange={(checked) => updateConfig({ clausulaPenalizacionImpago: checked })}
+                    onCheckedChange={(checked) => updateConfig({ clausulaPenalizacionImpago: !!checked })}
                   />
-                  <div>
-                    <Label htmlFor="penalizacionImpago" className="font-medium cursor-pointer">
-                      Penalización por impago
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Intereses de demora conforme al interés legal del dinero
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
-                    id="inventario"
-                    checked={config.incluyeInventario}
-                    onCheckedChange={(checked) => updateConfig({ incluyeInventario: checked })}
-                  />
-                  <div>
-                    <Label htmlFor="inventario" className="font-medium cursor-pointer">
-                      Incluir anexo de inventario
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Tabla para listar mobiliario y enseres
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3 p-4 border rounded-xl">
-                  <Switch
-                    id="certificado"
-                    checked={config.incluyeCertificadoEnergetico}
-                    onCheckedChange={(checked) => updateConfig({ incluyeCertificadoEnergetico: checked })}
-                  />
-                  <div>
-                    <Label htmlFor="certificado" className="font-medium cursor-pointer">
-                      Certificado de eficiencia energética
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Obligatorio para vivienda habitual
-                    </p>
-                  </div>
+                  <Label htmlFor="impago" className="cursor-pointer flex-1">
+                    Penalización por impago
+                  </Label>
                 </div>
               </div>
             </div>
 
-            <div className="border-t pt-6">
-              <div className="bg-muted/50 p-4 rounded-xl space-y-4">
-                <h4 className="font-medium flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  Resumen de la plantilla
-                </h4>
-                <div className="text-sm space-y-2 text-muted-foreground">
-                  <p>• Tipo: {config.propertyType === 'vivienda_habitual' ? 'Vivienda habitual' : 'Uso distinto'}</p>
-                  <p>• Ubicación: {config.municipio}, {config.comunidadAutonoma}</p>
-                  <p>• Renta: {config.rentaMensual.toLocaleString('es-ES')} €/mes</p>
-                  <p>• Duración: {config.duracionAnios} {config.duracionAnios === 1 ? 'año' : 'años'}</p>
-                  <p>• Fianza: {config.mesesFianza} {config.mesesFianza === 1 ? 'mes' : 'meses'}</p>
-                  {config.isZonaTensionada && <p>• ⚠️ Zona tensionada</p>}
-                </div>
+            <div className="p-4 border-2 border-dashed rounded-xl bg-muted/20 space-y-3">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="disclaimer"
+                  checked={disclaimerAccepted}
+                  onCheckedChange={(checked) => setDisclaimerAccepted(!!checked)}
+                />
+                <Label htmlFor="disclaimer" className="text-sm cursor-pointer leading-relaxed">
+                  Entiendo que este documento es una plantilla orientativa basada en la LAU vigente y 
+                  que debo revisar y personalizar todos los campos antes de su firma. La plantilla 
+                  no incluye datos personales y deberán cumplimentarse manualmente.
+                </Label>
               </div>
             </div>
 
-            <Alert className="border-amber-500/50 bg-amber-50">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">
-                <strong>Aviso legal:</strong> Esta plantilla es orientativa y está basada en la LAU vigente 
-                en 2026. No constituye asesoramiento jurídico profesional. Se recomienda su revisión por 
-                un abogado antes de la firma.
-              </AlertDescription>
-            </Alert>
-
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="disclaimer"
-                checked={disclaimerAccepted}
-                onCheckedChange={(checked) => setDisclaimerAccepted(checked === true)}
-              />
-              <Label htmlFor="disclaimer" className="text-sm leading-relaxed cursor-pointer">
-                He leído y acepto que esta plantilla es orientativa y no sustituye el asesoramiento 
-                legal profesional. Entiendo que debo revisar y adaptar el documento antes de su uso.
-              </Label>
-            </div>
+            {disclaimerAccepted && (
+              <Alert className="border-green-500/50 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Todo listo. Pulsa "Generar contrato" para descargar el documento Word (.docx)
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         );
 
@@ -686,94 +755,103 @@ const ContractTemplateWizard = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Stepper */}
-      <div className="mb-8 overflow-x-auto">
-        <div className="flex justify-between min-w-[600px]">
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle className="font-serif text-2xl">Generador de contrato de alquiler</CardTitle>
+        <CardDescription>
+          Crea una plantilla de contrato actualizada a la LAU 2026. Paso {currentStep} de 6.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Stepper */}
+        <div className="flex items-center justify-between mb-8">
           {STEPS.map((step, index) => {
-            const StepIcon = step.icon;
+            const Icon = step.icon;
             const isActive = currentStep === step.id;
             const isCompleted = currentStep > step.id;
             
             return (
-              <div key={step.id} className="flex flex-col items-center relative">
+              <div key={step.id} className="flex items-center">
                 <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                  isActive ? "bg-foreground text-background" : 
-                  isCompleted ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
+                  "flex flex-col items-center",
+                  isActive && "scale-110"
                 )}>
-                  {isCompleted ? (
-                    <CheckCircle2 className="h-5 w-5" />
-                  ) : (
-                    <StepIcon className="h-5 w-5" />
-                  )}
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                    isCompleted ? "bg-green-100 text-green-600" :
+                    isActive ? "bg-primary text-primary-foreground" :
+                    "bg-muted text-muted-foreground"
+                  )}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <Icon className="w-5 h-5" />
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-xs mt-2 hidden sm:block max-w-[80px] text-center",
+                    isActive ? "font-medium" : "text-muted-foreground"
+                  )}>
+                    {step.title}
+                  </span>
                 </div>
-                <span className={cn(
-                  "text-xs mt-2 text-center max-w-[80px]",
-                  isActive ? "font-medium text-foreground" : "text-muted-foreground"
-                )}>
-                  {step.title}
-                </span>
                 {index < STEPS.length - 1 && (
                   <div className={cn(
-                    "absolute top-5 left-[60px] w-[calc(100%-20px)] h-0.5",
-                    isCompleted ? "bg-green-500" : "bg-muted"
+                    "w-8 sm:w-12 h-0.5 mx-2",
+                    currentStep > step.id ? "bg-green-500" : "bg-muted"
                   )} />
                 )}
               </div>
             );
           })}
         </div>
-      </div>
 
-      {/* Content */}
-      <Card className="rounded-2xl shadow-lg border-0 bg-background">
-        <CardHeader>
-          <CardTitle className="text-xl font-medium">
-            {STEPS[currentStep - 1].title}
-          </CardTitle>
-          <CardDescription>
-            Paso {currentStep} de {STEPS.length}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Content */}
+        <div className="min-h-[320px]">
           {renderStepContent()}
+        </div>
 
-          {/* Navigation */}
-          <div className="flex justify-between mt-8 pt-6 border-t">
+        {/* Navigation */}
+        <div className="flex justify-between pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            disabled={currentStep === 1}
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Anterior
+          </Button>
+
+          {currentStep < 6 ? (
             <Button
-              variant="ghost"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              className="gap-2"
+              onClick={handleNext}
+              disabled={!canProceed()}
             >
-              <ChevronLeft className="h-4 w-4" />
-              Anterior
+              Siguiente
+              <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
-
-            {currentStep < 6 ? (
-              <Button
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className="gap-2 bg-foreground text-background hover:bg-foreground/90 rounded-full px-6"
-              >
-                Siguiente
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleGenerate}
-                disabled={!disclaimerAccepted || isGenerating}
-                className="gap-2 bg-foreground text-background hover:bg-foreground/90 rounded-full px-6"
-              >
-                <Download className="h-4 w-4" />
-                {isGenerating ? "Generando..." : "Descargar plantilla"}
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          ) : (
+            <Button
+              onClick={handleGenerate}
+              disabled={!disclaimerAccepted || isGenerating}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Generar contrato
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
