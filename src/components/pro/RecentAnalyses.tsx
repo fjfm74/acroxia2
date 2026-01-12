@@ -9,7 +9,6 @@ import { es } from "date-fns/locale";
 interface Analysis {
   id: string;
   fileName: string;
-  clientName: string | null;
   propertyAddress: string | null;
   createdAt: string;
   status: "completed" | "processing" | "failed" | "pending";
@@ -86,7 +85,7 @@ const RecentAnalyses = ({ analyses, compact = false }: RecentAnalysesProps) => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-foreground truncate">
-                        {analysis.clientName || analysis.fileName}
+                        {analysis.fileName}
                       </p>
                       {getStatusBadge(
                         analysis.status,

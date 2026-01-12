@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileSearch, Users, Settings, FileText } from "lucide-react";
+import { FileSearch, Settings, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const QuickActions = () => {
@@ -17,12 +17,6 @@ const QuickActions = () => {
       label: "Crear contrato",
       description: "Genera una plantilla actualizada",
       href: "/pro/crear-contrato",
-    },
-    {
-      icon: Users,
-      label: "Gestionar clientes",
-      description: "Añade o edita tus clientes",
-      href: "/pro/clientes",
     },
     {
       icon: Settings,
