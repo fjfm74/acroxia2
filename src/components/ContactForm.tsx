@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
+import { trackConversion } from "@/lib/analytics";
 
 const contactSchema = z.object({
   name: z.string()
@@ -83,6 +84,11 @@ const ContactForm = () => {
         }
         throw error;
       }
+
+      // Track contact form submission
+      trackConversion('contact_submitted', {
+        subject: data.subject,
+      });
 
       setSubmitStatus('success');
       form.reset();

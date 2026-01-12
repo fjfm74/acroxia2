@@ -16,6 +16,7 @@ import {
   FileText, MessageSquare, Scale, Bell 
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { trackConversion } from "@/lib/analytics";
 
 interface PaymentPlaceholderProps {
   open: boolean;
@@ -67,6 +68,14 @@ const PaymentPlaceholder = ({
         .update({ email })
         .eq("id", analysisId)
         .is("email", null);
+
+      // Track purchase intent
+      trackConversion('purchase_intent', {
+        analysis_id: analysisId,
+        amount_cents: 3900,
+        currency: 'EUR',
+        email,
+      });
 
       setSuccess(true);
       toast({

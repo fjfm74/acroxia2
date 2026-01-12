@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { checkUserIsAdmin } from "@/hooks/useIsAdmin";
+import { trackConversion, identifyUser } from "@/lib/analytics";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -80,6 +81,15 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           });
         }
 
+        // Track sign_up conversion
+        trackConversion('sign_up', {
+          method: 'email',
+          user_id: data.user?.id,
+        });
+        if (data.user) {
+          identifyUser(data.user.id);
+        }
+
         toast({
           title: "¡Cuenta creada!",
           description: "Tu cuenta ha sido creada exitosamente. Ya puedes acceder.",
@@ -93,6 +103,13 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         });
 
         if (error) throw error;
+
+        // Track login conversion
+        trackConversion('login', {
+          method: 'email',
+          user_id: data.user.id,
+        });
+        identifyUser(data.user.id);
 
         toast({
           title: "¡Bienvenido!",
