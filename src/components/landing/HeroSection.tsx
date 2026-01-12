@@ -6,11 +6,11 @@ import FadeIn from "@/components/animations/FadeIn";
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - Optimized local WebP */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2076&auto=format&fit=crop"
-          alt="Professional reviewing documents"
+          src="/images/hero-professional.webp"
+          alt="Profesional revisando contrato de alquiler"
           loading="eager"
           decoding="async"
           fetchPriority="high"
