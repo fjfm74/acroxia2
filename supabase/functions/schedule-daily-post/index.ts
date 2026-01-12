@@ -114,7 +114,7 @@ REQUISITOS:
 3. Prioriza categorías: ${leastUsedCategories.join(', ')}
 4. Referencias temporales correctas (estamos en ${currentYear})`;
 
-  const response = await fetch("https://api.lovable.dev/v1/chat/completions", {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${LOVABLE_API_KEY}`,
@@ -155,37 +155,71 @@ REQUISITOS:
 }
 
 async function generateImage(title: string, excerpt: string, category: string): Promise<string> {
-  const response = await fetch("https://api.lovable.dev/v1/images/generations", {
+  const imagePrompt = `Create a professional, clean editorial photograph for a Spanish real estate blog article.
+
+Topic: "${title}"
+Summary: "${excerpt}"
+Category: ${category}
+
+Style requirements:
+- Minimalist, premium, elegant aesthetic
+- Warm cream and neutral tones matching a luxury editorial design
+- Professional real estate or legal context
+- Photorealistic, not illustrated
+- NO text, NO watermarks, NO logos
+- Soft natural lighting
+- Clean composition with negative space
+- 16:9 aspect ratio suitable for blog header`;
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "flux.schnell",
-      prompt: `Professional blog header image for Spanish real estate article. Theme: ${category}. Minimalist, clean design with subtle legal/housing elements. Colors: cream, charcoal, warm neutrals. Abstract geometric shapes. NO text, NO words. 16:9 aspect ratio.`,
-      n: 1,
-      size: "1024x576",
-      response_format: "b64_json",
+      model: "google/gemini-2.5-flash-image-preview",
+      messages: [{ role: "user", content: imagePrompt }],
+      modalities: ["image", "text"],
     }),
   });
 
   if (!response.ok) {
-    console.error("Image generation failed, using placeholder");
+    console.error("Image generation failed:", response.status);
     return "/og-image.jpg";
   }
 
   const data = await response.json();
-  const base64Image = data.data[0].b64_json;
-  
-  // Upload to Supabase Storage
+  const images = data.choices?.[0]?.message?.images;
+
+  if (!images || images.length === 0) {
+    console.error("No image in response");
+    return "/og-image.jpg";
+  }
+
+  // Extract base64 and upload to Supabase Storage
+  const imageData = images[0].image_url?.url;
+  const base64Match = imageData?.match(/^data:image\/(\w+);base64,(.+)$/);
+
+  if (!base64Match) {
+    console.error("Invalid image data format");
+    return "/og-image.jpg";
+  }
+
+  const imageFormat = base64Match[1];
+  const base64Content = base64Match[2];
+  const binaryString = atob(base64Content);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const fileName = `scheduled-${Date.now()}.png`;
-  const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
-  
+  const fileName = `scheduled-${Date.now()}.${imageFormat}`;
+
   const { error: uploadError } = await supabase.storage
     .from("blog-images")
-    .upload(fileName, imageBuffer, { contentType: "image/png" });
+    .upload(fileName, bytes, { contentType: `image/${imageFormat}` });
 
   if (uploadError) {
     console.error("Upload error:", uploadError);
