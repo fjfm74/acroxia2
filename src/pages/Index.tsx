@@ -37,9 +37,9 @@ const Index = () => {
     "description": "Analiza tu contrato de alquiler con IA y detecta cláusulas abusivas en menos de 2 minutos",
     "offers": {
       "@type": "Offer",
-      "price": "0",
+      "price": "39",
       "priceCurrency": "EUR",
-      "description": "Primer análisis gratuito"
+      "description": "Informe completo de análisis (preview gratuito disponible)"
     },
     "aggregateRating": {
       "@type": "AggregateRating",
@@ -83,7 +83,7 @@ const Index = () => {
         <title>ACROXIA - Analiza tu Contrato de Alquiler con IA | Detecta Cláusulas Abusivas</title>
         <meta 
           name="description" 
-          content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos. IA legal para inquilinos en España. Primer análisis gratis." 
+          content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos. IA legal para inquilinos en España. Preview gratuito, informe completo desde 39€." 
         />
         <meta 
           name="keywords" 
@@ -93,7 +93,7 @@ const Index = () => {
         
         {/* Open Graph específico para homepage */}
         <meta property="og:title" content="ACROXIA - Protege tus Derechos como Inquilino" />
-        <meta property="og:description" content="Analiza tu contrato con IA y descubre cláusulas ilegales. Primer análisis gratis." />
+        <meta property="og:description" content="Analiza tu contrato con IA y descubre cláusulas potencialmente ilegales. Preview gratuito." />
         <meta property="og:url" content="https://acroxia.com/" />
         
         {/* Schema markup */}

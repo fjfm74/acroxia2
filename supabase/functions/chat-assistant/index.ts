@@ -19,6 +19,76 @@ interface ChatRequest {
   messages: Message[];
 }
 
+// Interfaces for site_config data
+interface B2CPlan {
+  name: string;
+  price: string;
+  description?: string;
+  features?: string[];
+}
+
+interface B2BPlan {
+  name: string;
+  price: string;
+  audience?: string;
+  features?: string[];
+}
+
+interface CompanyInfo {
+  email: string;
+  phone: string;
+  address?: string;
+  website?: string;
+  schedule?: {
+    weekdays: string;
+    saturday?: string;
+    sunday?: string;
+  };
+}
+
+interface ProductFlow {
+  accepted_formats: string[];
+  format_note?: string;
+  max_file_size_mb?: number;
+  free_analysis: {
+    description: string;
+    includes: string[];
+    valid_hours?: number;
+  };
+  full_report: {
+    description: string;
+    price_key: string;
+  };
+  email_capture: {
+    description: string;
+    sends_report: boolean;
+    sends_summary: boolean;
+  };
+}
+
+interface PlatformInfo {
+  pages: { path: string; name: string; description: string }[];
+  seo_pages: { path: string; name: string; description: string }[];
+  features: string[];
+  what_acroxia_is: string;
+  what_acroxia_is_not: string[];
+}
+
+interface FAQSummary {
+  general: { q: string; a: string }[];
+  pricing: { q: string; a: string }[];
+  technical: { q: string; a: string }[];
+}
+
+interface FullSiteConfig {
+  b2cPlans: B2CPlan[];
+  b2bPlans: B2BPlan[];
+  companyInfo: CompanyInfo;
+  productFlow: ProductFlow;
+  platformInfo: PlatformInfo;
+  faqSummary: FAQSummary;
+}
+
 function getClientIP(req: Request): string {
   return (
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -52,179 +122,196 @@ async function recordRequest(supabase: any, ip: string): Promise<void> {
   });
 }
 
-interface SiteConfig {
-  b2cPlans: any[];
-  b2bPlans: any[];
-  companyInfo: any;
-  assistantConfig: any;
-  productFlow: any;
-}
-
-async function getSiteConfig(supabase: any): Promise<SiteConfig> {
+async function getSiteConfig(supabase: any): Promise<FullSiteConfig> {
   const { data, error } = await supabase
     .from("site_config")
     .select("key, value")
-    .in("key", ["b2c_plans", "b2b_plans", "company_info", "assistant_config", "product_flow"]);
+    .in("key", ["b2c_plans", "b2b_plans", "company_info", "product_flow", "platform_info", "faq_summary"]);
 
   if (error) {
     console.error("Error fetching site config:", error);
-    return {
-      b2cPlans: [],
-      b2bPlans: [],
-      companyInfo: {},
-      assistantConfig: {},
-      productFlow: {},
-    };
   }
 
-  const config: Record<string, any> = {};
-  for (const row of data || []) {
-    config[row.key] = row.value;
-  }
+  const configMap = new Map<string, any>();
+  (data || []).forEach((item: { key: string; value: any }) => {
+    configMap.set(item.key, item.value);
+  });
 
   return {
-    b2cPlans: config.b2c_plans || [],
-    b2bPlans: config.b2b_plans || [],
-    companyInfo: config.company_info || {},
-    assistantConfig: config.assistant_config || {},
-    productFlow: config.product_flow || {},
+    b2cPlans: configMap.get("b2c_plans")?.plans || [],
+    b2bPlans: configMap.get("b2b_plans")?.plans || [],
+    companyInfo: configMap.get("company_info") || { email: "contacto@acroxia.com", phone: "+34 91 XXX XX XX" },
+    productFlow: configMap.get("product_flow") || {
+      accepted_formats: ["PDF", "DOCX", "JPG", "PNG", "WEBP"],
+      free_analysis: { description: "Preview gratuito", includes: [] },
+      full_report: { description: "Informe completo", price_key: "analisis_unico" },
+      email_capture: { sends_report: false, sends_summary: false }
+    },
+    platformInfo: configMap.get("platform_info") || {
+      pages: [],
+      seo_pages: [],
+      features: [],
+      what_acroxia_is: "",
+      what_acroxia_is_not: []
+    },
+    faqSummary: configMap.get("faq_summary") || { general: [], pricing: [], technical: [] }
   };
 }
 
 function detectUserProfile(messages: Message[]): "inquilino" | "profesional" | "unknown" {
-  const allContent = messages.map(m => m.content.toLowerCase()).join(" ");
+  const allText = messages.map(m => m.content.toLowerCase()).join(" ");
   
-  if (allContent.includes("soy inquilino") || allContent.includes("inquilino")) {
-    return "inquilino";
-  }
-  if (allContent.includes("soy profesional") || allContent.includes("profesional") || 
-      allContent.includes("inmobiliaria") || allContent.includes("gestoría") ||
-      allContent.includes("gestoria") || allContent.includes("agencia")) {
-    return "profesional";
-  }
+  const profesionalKeywords = [
+    "inmobiliaria", "gestoría", "gestoria", "administrador", "api", "integración",
+    "volumen", "empresa", "profesional", "múltiples", "clientes", "agencia"
+  ];
+  
+  const inquilinoKeywords = [
+    "mi contrato", "mi piso", "mi casero", "propietario", "fianza",
+    "alquiler", "arrendador", "renovar", "firmé", "inquilino", "soy inquilino"
+  ];
+  
+  const profesionalScore = profesionalKeywords.filter(k => allText.includes(k)).length;
+  const inquilinoScore = inquilinoKeywords.filter(k => allText.includes(k)).length;
+  
+  if (profesionalScore > inquilinoScore && profesionalScore >= 2) return "profesional";
+  if (inquilinoScore >= 1) return "inquilino";
   return "unknown";
 }
 
-function buildSystemPrompt(config: SiteConfig, userProfile: string): string {
-  const { b2cPlans, b2bPlans, companyInfo, productFlow } = config;
+function buildSystemPrompt(config: FullSiteConfig, userProfile: string): string {
+  const { b2cPlans, b2bPlans, companyInfo, productFlow, platformInfo, faqSummary } = config;
 
-  // Generate B2C info dynamically
-  const b2cInfo = b2cPlans
-    .map((p: any) => `- ${p.name}: ${p.price}${p.description ? ` - ${p.description}` : ""}`)
-    .join("\n");
+  // Información de la plataforma
+  const whatIs = platformInfo.what_acroxia_is || "ACROXIA es una herramienta de IA para analizar contratos de alquiler.";
+  const whatIsNot = platformInfo.what_acroxia_is_not?.join("; ") || "";
+  const features = platformInfo.features?.join(", ") || "";
 
-  // Generate B2B info dynamically
-  const b2bInfo = b2bPlans
-    .map((p: any) => `- ${p.name}: ${p.price}${p.description ? ` - ${p.description}` : ""}`)
-    .join("\n");
+  // Páginas de la web
+  const pages = platformInfo.pages?.map(p => `- ${p.name} (${p.path}): ${p.description}`).join("\n") || "";
+  const seoPages = platformInfo.seo_pages?.map(p => `- ${p.name} (${p.path}): ${p.description}`).join("\n") || "";
 
-  // Get accepted formats from productFlow or companyInfo
-  const formats = productFlow.accepted_formats?.join(", ") || 
-                  companyInfo.accepted_formats?.join(", ") || 
-                  "PDF, JPG, PNG";
-  const formatNote = productFlow.format_note || "Puedes subir fotos o escaneos del contrato";
+  // FAQs formateadas
+  const faqGeneral = faqSummary.general?.map(f => `P: ${f.q}\nR: ${f.a}`).join("\n\n") || "";
+  const faqPricing = faqSummary.pricing?.map(f => `P: ${f.q}\nR: ${f.a}`).join("\n\n") || "";
+  const faqTechnical = faqSummary.technical?.map(f => `P: ${f.q}\nR: ${f.a}`).join("\n\n") || "";
 
-  // Get free analysis description from productFlow
-  const freeAnalysisDesc = productFlow.free_analysis?.description || 
-    "Preview gratuito: puntuación de riesgo y cláusulas detectadas";
-  const freeAnalysisIncludes = productFlow.free_analysis?.includes?.join(", ") || 
-    "Puntuación de riesgo, número de cláusulas";
+  // Formatos de archivo
+  const formats = productFlow.accepted_formats?.join(", ") || "PDF, DOCX, JPG, PNG, WEBP";
+  const maxSize = productFlow.max_file_size_mb || 10;
 
-  // Get full report info - price from first B2C plan
-  const fullReportPrice = b2cPlans[0]?.price || "39€";
-  const fullReportDesc = productFlow.full_report?.description || 
-    "Informe completo con detalle de cada cláusula y recomendaciones";
+  // Flujo del producto
+  const freeAnalysisDesc = productFlow.free_analysis?.description || "Preview gratuito";
+  const freeIncludes = productFlow.free_analysis?.includes?.join(", ") || "";
+  const validHours = productFlow.free_analysis?.valid_hours || 24;
+  const fullReportDesc = productFlow.full_report?.description || "Informe completo";
+  
+  // Buscar precio del análisis único en b2cPlans
+  const analisisUnico = b2cPlans.find(p => p.name?.toLowerCase().includes("único") || p.name?.toLowerCase().includes("unico"));
+  const fullReportPrice = analisisUnico?.price || "39€";
 
-  // Get email capture warning
-  const emailCaptureNote = productFlow.email_capture?.note || 
-    "El email solo captura el contacto, NO envía el informe gratis";
+  // Comportamiento del email - CRÍTICO
+  const emailBehavior = productFlow.email_capture?.sends_summary
+    ? "Enviamos un resumen del análisis por email"
+    : "El email es SOLO para recordatorios comerciales. NO enviamos el informe ni resumen por email";
 
-  // Get pack and subscription prices dynamically
-  const packPrice = b2cPlans.find((p: any) => p.name?.toLowerCase().includes("pack"))?.price || "79€";
-  const subscriptionPrice = b2cPlans.find((p: any) => p.name?.toLowerCase().includes("suscripción"))?.price || "99€/año";
+  // Precios B2C
+  const b2cInfo = b2cPlans.map(p => `- ${p.name}: ${p.price}${p.description ? ` (${p.description})` : ""}`).join("\n") || "";
+  
+  // Precios B2B
+  const b2bInfo = b2bPlans.map(p => `- ${p.name}: ${p.price}${p.audience ? ` - Para ${p.audience}` : ""}`).join("\n") || "";
 
-  // Build profile-specific context using ONLY dynamic data
-  let profileContext = "";
-  if (userProfile === "inquilino") {
-    profileContext = `
-CONTEXTO: El usuario es un INQUILINO particular.
-- Análisis inicial: ${freeAnalysisDesc}
-- Incluye: ${freeAnalysisIncludes}
-- Informe completo: ${fullReportPrice} - ${fullReportDesc}
-- Formatos aceptados: ${formats} (${formatNote})
-- IMPORTANTE: ${emailCaptureNote}
-- Tono: cercano y tranquilizador`;
-  } else if (userProfile === "profesional") {
-    profileContext = `
-CONTEXTO: El usuario es un PROFESIONAL (inmobiliaria, gestoría, etc.).
-Planes disponibles:
-${b2bInfo}
-- Incluyen: dashboard de gestión, personalización de marca, soporte prioritario
-- Formatos aceptados: ${formats}
-- Tono: profesional pero cercano`;
-  } else {
-    profileContext = `
-CONTEXTO: Aún no sabemos si es inquilino o profesional.
-- Si pregunta por precios particulares: preview gratis, informe completo ${fullReportPrice}
-- Si pregunta por precios empresariales: planes desde ${b2bPlans[0]?.price || "99€/mes"}`;
-  }
+  // Horario y contacto
+  const schedule = companyInfo.schedule?.weekdays || "Lunes a Viernes, 9:00 - 18:00";
 
-  return `Eres el asistente virtual de ACROXIA. Ayudas a resolver dudas sobre el servicio de análisis de contratos de alquiler.
+  // Perfil detectado
+  const profileNote = userProfile === "profesional"
+    ? "NOTA: Este usuario parece ser un PROFESIONAL (inmobiliaria, gestoría, etc). Enfócate en los planes B2B."
+    : userProfile === "inquilino"
+    ? "NOTA: Este usuario parece ser un INQUILINO particular. Enfócate en los planes B2C y el análisis individual."
+    : "";
 
-${profileContext}
+  return `Eres el asistente virtual de ACROXIA. Tu trabajo es resolver dudas sobre la PLATAFORMA y sus servicios. NO das consejos legales.
 
-═══════════════════════════════════════
-INFORMACIÓN CLAVE (DATOS ACTUALIZADOS):
-═══════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════
+¿QUÉ ES ACROXIA?
+═══════════════════════════════════════════════════════════════════════════════
+${whatIs}
 
-FLUJO PARA PARTICULARES:
-1. Sube tu contrato (${formats}) → GRATIS
-2. ${freeAnalysisDesc}
-3. Para el informe completo → ${fullReportPrice}
+Lo que ACROXIA NO es: ${whatIsNot}
 
-PRECIOS PARTICULARES:
+Funcionalidades principales: ${features}
+
+═══════════════════════════════════════════════════════════════════════════════
+FLUJO DEL PRODUCTO (MUY IMPORTANTE - MEMORIZA ESTO)
+═══════════════════════════════════════════════════════════════════════════════
+1. El usuario sube su contrato → GRATIS, sin registro
+   - Formatos aceptados: ${formats}
+   - Tamaño máximo: ${maxSize}MB
+
+2. Recibe un PREVIEW GRATUITO:
+   - ${freeAnalysisDesc}
+   - Incluye: ${freeIncludes}
+   - Válido durante ${validHours} horas
+
+3. Para ver el INFORME COMPLETO → Pago único de ${fullReportPrice}
+   - ${fullReportDesc}
+
+SOBRE EL EMAIL: ${emailBehavior}
+
+═══════════════════════════════════════════════════════════════════════════════
+PRECIOS ACTUALES (DATOS OFICIALES)
+═══════════════════════════════════════════════════════════════════════════════
+📱 PARA PARTICULARES:
 ${b2cInfo}
 
-PLANES EMPRESAS:
+🏢 PARA EMPRESAS Y PROFESIONALES:
 ${b2bInfo}
 
-CONTACTO:
-- Email: ${companyInfo.email || "contacto@acroxia.com"}
-- Teléfono: ${companyInfo.phone || ""}
-- Web: ${companyInfo.website || "acroxia.com"}
+═══════════════════════════════════════════════════════════════════════════════
+PÁGINAS DE LA WEB
+═══════════════════════════════════════════════════════════════════════════════
+Principales:
+${pages}
 
-ACROXIA es una herramienta informativa. NO sustituye asesoría legal profesional.
+Artículos informativos (SEO):
+${seoPages}
 
-═══════════════════════════════════════
-FORMATO DE RESPUESTAS (CRÍTICO):
-═══════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════
+PREGUNTAS FRECUENTES (USA ESTAS RESPUESTAS)
+═══════════════════════════════════════════════════════════════════════════════
+GENERALES:
+${faqGeneral}
 
-1. Respuestas CORTAS: 2-4 frases máximo
-2. Para negrita escribe el texto entre doble asterisco: **precio**
-3. NO uses más de 1-2 negritas por respuesta
-4. NO uses encabezados, código, tablas ni bloques
-5. Solo usa listas si hay 3+ elementos
+SOBRE PRECIOS:
+${faqPricing}
 
-═══════════════════════════════════════
-COMPORTAMIENTO:
-═══════════════════════════════════════
+TÉCNICAS:
+${faqTechnical}
 
-- Saludos → responde breve: "¡Hola! ¿En qué te ayudo?"
-- Precios particulares → "El preview es gratis. El informe completo son **${fullReportPrice}**."
-- Precios empresas → "Desde **${b2bPlans[0]?.price || "99€/mes"}** con 10 análisis incluidos."
-- Formatos → "Aceptamos ${formats}. ${formatNote}."
-- Preguntas legales → "Eso requiere un análisis detallado. ¿Quieres que te ponga en contacto con el equipo?"
+═══════════════════════════════════════════════════════════════════════════════
+CONTACTO
+═══════════════════════════════════════════════════════════════════════════════
+- Email: ${companyInfo.email}
+- Teléfono: ${companyInfo.phone}
+- Horario: ${schedule}
 
-═══════════════════════════════════════
-REGLAS ESTRICTAS:
-═══════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════
+REGLAS DE RESPUESTA (OBLIGATORIAS)
+═══════════════════════════════════════════════════════════════════════════════
+1. Respuestas CORTAS: 2-4 frases máximo. Sé directo.
+2. Usa **negrita** SOLO para precios o datos clave (máximo 2 por respuesta).
+3. NO uses encabezados (#), código, tablas ni bloques de código.
+4. Si preguntan algo LEGAL específico → "Eso requiere analizar tu contrato. Puedes subirlo gratis en /analizar-gratis"
+5. Si no tienes la información → "No tengo esa información. ¿Quieres contactar con el equipo? Escríbenos a ${companyInfo.email}"
+6. NUNCA digas que enviamos el informe o resumen gratis por email. El email es solo para recordatorios.
+7. Siempre responde en español.
+8. Si mencionan una página, incluye el enlace correcto.
+9. Cuando hables de precios, usa los datos exactos de arriba.
 
-1. NUNCA des consejos legales
-2. NUNCA digas que el informe completo es gratis
-3. NUNCA digas que enviamos el informe por email gratis - ${emailCaptureNote}
-4. NUNCA uses precios con decimales
-5. Siempre en español
-6. Si no sabes algo → ofrece contacto con el equipo`;
+${profileNote}
+
+RECUERDA: Eres un asistente de SOPORTE DE PLATAFORMA, no un asesor legal. Si alguien pregunta "¿es legal esta cláusula?", responde que necesitan subir su contrato para analizarlo.`;
 }
 
 serve(async (req) => {
@@ -271,9 +358,9 @@ serve(async (req) => {
 
     // Validate message length
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage.content.length > 500) {
+    if (lastMessage.content.length > 1000) {
       return new Response(
-        JSON.stringify({ error: "El mensaje es demasiado largo. Máximo 500 caracteres." }),
+        JSON.stringify({ error: "El mensaje es demasiado largo. Máximo 1000 caracteres." }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -281,7 +368,7 @@ serve(async (req) => {
       );
     }
 
-    // Get ALL dynamic site config including product_flow
+    // Get ALL dynamic site config
     const siteConfig = await getSiteConfig(supabase);
 
     // Detect user profile from conversation
@@ -301,12 +388,14 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...recentMessages,
         ],
         stream: true,
+        max_tokens: 500,
+        temperature: 0.7,
       }),
     });
 

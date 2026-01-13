@@ -8,7 +8,7 @@ const PricingHero = () => {
         <div className="max-w-3xl mx-auto text-center">
           <FadeIn>
             <Badge variant="secondary" className="mb-6 bg-cream text-charcoal border-charcoal/20 font-medium">
-              Primer análisis gratis
+              Preview gratuito
             </Badge>
           </FadeIn>
           
