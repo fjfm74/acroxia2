@@ -38,6 +38,9 @@ interface LegalChunk {
   semantic_category: string | null;
   key_entities: string[] | null;
   applies_when: Record<string, string> | null;
+  is_superseded: boolean | null;
+  superseded_at: string | null;
+  superseded_by_chunk_id: string | null;
 }
 
 interface DocumentInfo {
@@ -214,7 +217,7 @@ const ChunkViewer = ({ documentId, documentTitle, onClose }: ChunkViewerProps) =
                 )}
 
                 {/* Statistics */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="bg-muted/50 rounded-lg p-3">
                     <div className="text-sm text-muted-foreground">Municipios detectados</div>
                     <div className="text-2xl font-semibold">{allMunicipalities.size}</div>
@@ -222,6 +225,12 @@ const ChunkViewer = ({ documentId, documentTitle, onClose }: ChunkViewerProps) =
                   <div className="bg-muted/50 rounded-lg p-3">
                     <div className="text-sm text-muted-foreground">Entidades clave</div>
                     <div className="text-2xl font-semibold">{allEntities.size}</div>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <div className="text-sm text-muted-foreground">Chunks obsoletos</div>
+                    <div className="text-2xl font-semibold text-amber-600">
+                      {chunks.filter(c => c.is_superseded).length}
+                    </div>
                   </div>
                 </div>
 
@@ -326,7 +335,10 @@ const ChunkViewer = ({ documentId, documentTitle, onClose }: ChunkViewerProps) =
                   </h4>
                   
                   {filteredChunks.map((chunk) => (
-                    <div key={chunk.id} className="border rounded-lg p-4 space-y-3">
+                    <div 
+                      key={chunk.id} 
+                      className={`border rounded-lg p-4 space-y-3 ${chunk.is_superseded ? 'opacity-60 border-amber-300 bg-amber-50/30' : ''}`}
+                    >
                       {/* Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -341,11 +353,24 @@ const ChunkViewer = ({ documentId, documentTitle, onClose }: ChunkViewerProps) =
                               {SEMANTIC_CATEGORY_LABELS[chunk.semantic_category]?.label || chunk.semantic_category}
                             </Badge>
                           )}
+                          {chunk.is_superseded && (
+                            <Badge variant="destructive" className="text-xs">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              Obsoleto
+                            </Badge>
+                          )}
                         </div>
                         <Badge variant="outline" className="text-xs shrink-0">
                           {TERRITORIAL_SCOPE_LABELS[chunk.territorial_scope || 'estatal']}
                         </Badge>
                       </div>
+
+                      {/* Superseded info */}
+                      {chunk.is_superseded && chunk.superseded_at && (
+                        <div className="text-xs text-amber-600 bg-amber-100 rounded px-2 py-1">
+                          Este artículo fue reemplazado el {new Date(chunk.superseded_at).toLocaleDateString('es-ES')} por una normativa más reciente
+                        </div>
+                      )}
 
                       {/* Section title */}
                       {chunk.section_title && (

@@ -369,11 +369,14 @@ export type Database = {
           created_at: string
           document_id: string
           id: string
+          is_superseded: boolean | null
           key_entities: string[] | null
           metadata: Json | null
           search_vector: unknown
           section_title: string | null
           semantic_category: string | null
+          superseded_at: string | null
+          superseded_by_chunk_id: string | null
           territorial_scope: string | null
         }
         Insert: {
@@ -386,11 +389,14 @@ export type Database = {
           created_at?: string
           document_id: string
           id?: string
+          is_superseded?: boolean | null
           key_entities?: string[] | null
           metadata?: Json | null
           search_vector?: unknown
           section_title?: string | null
           semantic_category?: string | null
+          superseded_at?: string | null
+          superseded_by_chunk_id?: string | null
           territorial_scope?: string | null
         }
         Update: {
@@ -403,11 +409,14 @@ export type Database = {
           created_at?: string
           document_id?: string
           id?: string
+          is_superseded?: boolean | null
           key_entities?: string[] | null
           metadata?: Json | null
           search_vector?: unknown
           section_title?: string | null
           semantic_category?: string | null
+          superseded_at?: string | null
+          superseded_by_chunk_id?: string | null
           territorial_scope?: string | null
         }
         Relationships: [
@@ -416,6 +425,13 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_chunks_superseded_by_chunk_id_fkey"
+            columns: ["superseded_by_chunk_id"]
+            isOneToOne: false
+            referencedRelation: "legal_chunks"
             referencedColumns: ["id"]
           },
         ]

@@ -324,52 +324,76 @@ IMPORTANTE:
       }
     }
 
-    // Handle superseded documents
+    // Handle superseded chunks (obsolescencia a nivel de artículo, NO documento completo)
+    // Esto permite que una ley modifique solo artículos específicos sin desactivar todo el documento anterior
     const supersededDocs = documentAnalysis.supersedes || [];
-    let supersededCount = 0;
+    let supersededChunksCount = 0;
 
-    if (supersededDocs.length > 0) {
+    // Extraer las referencias de artículos del nuevo documento
+    const newArticleRefs = chunks
+      .filter((c: any) => c.article_reference)
+      .map((c: any) => ({
+        ref: c.article_reference as string,
+        content: c.content as string,
+      }));
+
+    if (supersededDocs.length > 0 && newArticleRefs.length > 0) {
       console.log(`Document mentions superseding: ${supersededDocs.join(', ')}`);
+      console.log(`New document has ${newArticleRefs.length} article references`);
       
-      // Search for documents that match the superseded titles
+      // Buscar documentos que coinciden con los títulos derogados
       for (const supersededTitle of supersededDocs) {
-        // Search by partial title match
         const { data: matchingDocs, error: searchError } = await supabase
           .from("legal_documents")
           .select("id, title")
           .neq("id", documentId)
+          .eq("is_active", true)
           .ilike("title", `%${supersededTitle.substring(0, 30)}%`);
 
         if (!searchError && matchingDocs && matchingDocs.length > 0) {
           for (const matchedDoc of matchingDocs) {
-            // Mark the old document as superseded
-            const { error: markError } = await supabase
-              .from("legal_documents")
-              .update({ 
-                superseded_by_id: documentId,
-                is_active: false 
-              })
-              .eq("id", matchedDoc.id);
+            // En vez de marcar el documento completo como obsoleto,
+            // buscar los chunks con article_reference coincidente
+            for (const newArticle of newArticleRefs) {
+              // Buscar chunks del documento antiguo que tengan el mismo artículo
+              const { data: oldChunks, error: chunkSearchError } = await supabase
+                .from("legal_chunks")
+                .select("id")
+                .eq("document_id", matchedDoc.id)
+                .eq("article_reference", newArticle.ref)
+                .or("is_superseded.is.null,is_superseded.eq.false");
 
-            if (!markError) {
-              supersededCount++;
-              console.log(`Marked document "${matchedDoc.title}" as superseded by new document`);
+              if (!chunkSearchError && oldChunks && oldChunks.length > 0) {
+                // Marcar los chunks antiguos como obsoletos
+                const { error: markChunkError } = await supabase
+                  .from("legal_chunks")
+                  .update({
+                    is_superseded: true,
+                    superseded_at: new Date().toISOString(),
+                  })
+                  .in("id", oldChunks.map(c => c.id));
+
+                if (!markChunkError) {
+                  supersededChunksCount += oldChunks.length;
+                  console.log(`Marked ${oldChunks.length} chunks of article "${newArticle.ref}" from "${matchedDoc.title}" as superseded`);
+                }
+              }
             }
           }
         }
       }
 
-      // Update current document with supersedes_ids
-      if (supersededCount > 0) {
-        const { data: supersededIds } = await supabase
+      // Guardar referencia a qué documentos afecta (sin desactivarlos)
+      if (supersededDocs.length > 0) {
+        const { data: affectedDocs } = await supabase
           .from("legal_documents")
           .select("id")
-          .eq("superseded_by_id", documentId);
+          .or(supersededDocs.map((t: string) => `title.ilike.%${t.substring(0, 30)}%`).join(','));
 
-        if (supersededIds && supersededIds.length > 0) {
+        if (affectedDocs && affectedDocs.length > 0) {
           await supabase
             .from("legal_documents")
-            .update({ supersedes_ids: supersededIds.map(d => d.id) })
+            .update({ supersedes_ids: affectedDocs.map(d => d.id) })
             .eq("id", documentId);
         }
       }
@@ -478,13 +502,13 @@ IMPORTANTE:
         provinces_extracted: totalProvinces,
         semantic_categories: categoryCounts,
         key_entities_count: allEntities.size,
-        superseded_documents: supersededCount,
+        superseded_chunks: supersededChunksCount,
         document_summary: documentAnalysis.ai_summary || null,
         document_keywords: documentAnalysis.keywords || [],
         message: `Documento procesado inteligentemente: ${chunks.length} fragmentos indexados. ` +
           `${totalMunicipalities} municipios, ${totalProvinces} provincias, ` +
           `${allEntities.size} entidades clave. ` +
-          (supersededCount > 0 ? `${supersededCount} documento(s) anterior(es) marcado(s) como obsoleto(s).` : ''),
+          (supersededChunksCount > 0 ? `${supersededChunksCount} artículo(s) marcado(s) como obsoleto(s).` : ''),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
