@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.regenerate-sitemap]
 verify_jwt = false
+
+[functions.monitor-boe]
+verify_jwt = false

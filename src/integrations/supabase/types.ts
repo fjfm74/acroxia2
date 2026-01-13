@@ -204,6 +204,110 @@ export type Database = {
           },
         ]
       }
+      boe_monitoring_logs: {
+        Row: {
+          check_time: string
+          created_at: string
+          error_message: string | null
+          id: string
+          new_publications: number | null
+          next_retry_at: string | null
+          publications_found: number | null
+          retry_pending: boolean | null
+          source: string
+          success: boolean
+        }
+        Insert: {
+          check_time?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_publications?: number | null
+          next_retry_at?: string | null
+          publications_found?: number | null
+          retry_pending?: boolean | null
+          source?: string
+          success?: boolean
+        }
+        Update: {
+          check_time?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_publications?: number | null
+          next_retry_at?: string | null
+          publications_found?: number | null
+          retry_pending?: boolean | null
+          source?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
+      boe_publications: {
+        Row: {
+          boe_id: string
+          boe_url: string | null
+          created_at: string
+          department: string | null
+          id: string
+          notified_at: string | null
+          pdf_url: string | null
+          processed_document_id: string | null
+          publication_date: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          section: string | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          boe_id: string
+          boe_url?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          notified_at?: string | null
+          pdf_url?: string | null
+          processed_document_id?: string | null
+          publication_date: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          section?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          boe_id?: string
+          boe_url?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          notified_at?: string | null
+          pdf_url?: string | null
+          processed_document_id?: string | null
+          publication_date?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          section?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boe_publications_processed_document_id_fkey"
+            columns: ["processed_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consent_logs: {
         Row: {
           accepted: boolean

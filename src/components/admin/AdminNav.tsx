@@ -7,7 +7,8 @@ import {
   ArrowLeft,
   Briefcase,
   Share2,
-  User
+  User,
+  Newspaper
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,11 @@ const menuItems = [
     title: "Social Media",
     href: "/admin/social",
     icon: Share2,
+  },
+  {
+    title: "Monitor BOE",
+    href: "/admin/boe",
+    icon: Newspaper,
   },
   {
     title: "Documentos Legales",

@@ -38,6 +38,7 @@ import AdminSocialNew from "./pages/admin/AdminSocialNew";
 import AdminSocialEdit from "./pages/admin/AdminSocialEdit";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminBOE from "./pages/admin/AdminBOE";
 import NotFound from "./pages/NotFound";
 import AvisoLegal from "./pages/legal/AvisoLegal";
 import Privacidad from "./pages/legal/Privacidad";
@@ -109,6 +110,7 @@ const App = () => (
               <Route path="/admin/social/editar/:id" element={<AdminRoute><AdminSocialEdit /></AdminRoute>} />
               <Route path="/admin/documentos" element={<AdminRoute><AdminDocuments /></AdminRoute>} />
               <Route path="/admin/usuarios" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+              <Route path="/admin/boe" element={<AdminRoute><AdminBOE /></AdminRoute>} />
               <Route path="/aviso-legal" element={<AvisoLegal />} />
               <Route path="/privacidad" element={<Privacidad />} />
               <Route path="/terminos" element={<Terminos />} />
