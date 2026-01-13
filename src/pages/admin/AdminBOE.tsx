@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,9 @@ import {
   AlertCircle,
   Download,
   Settings,
-  History
+  History,
+  Link as LinkIcon,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -52,6 +55,7 @@ interface BOEPublication {
   notified_at: string | null;
   reviewed_at: string | null;
   created_at: string;
+  processed_document_id: string | null;
 }
 
 interface MonitoringLog {
@@ -81,9 +85,11 @@ const statusConfig = {
 
 export default function AdminBOE() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isRunningManual, setIsRunningManual] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Fetch publications
   const { data: publications, isLoading: loadingPublications } = useQuery({
@@ -181,6 +187,84 @@ export default function AdminBOE() {
     }
   };
 
+  // Process approved publication into legal document
+  const processPublicationMutation = useMutation({
+    mutationFn: async (pub: BOEPublication) => {
+      if (!pub.pdf_url) throw new Error("No hay PDF disponible para esta publicación");
+      
+      setProcessingId(pub.id);
+      
+      // 1. Download PDF from BOE
+      const pdfResponse = await fetch(pub.pdf_url);
+      if (!pdfResponse.ok) throw new Error("Error al descargar el PDF del BOE");
+      const pdfBlob = await pdfResponse.blob();
+      
+      // 2. Upload to Supabase Storage
+      const fileName = `boe-${pub.boe_id.replace(/[^a-zA-Z0-9]/g, "-")}-${Date.now()}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from("legal-docs")
+        .upload(fileName, pdfBlob, {
+          contentType: "application/pdf",
+          upsert: false
+        });
+      
+      if (uploadError) throw new Error(`Error al subir PDF: ${uploadError.message}`);
+      
+      // 3. Create legal document entry
+      const { data: docData, error: docError } = await supabase
+        .from("legal_documents")
+        .insert({
+          title: pub.title,
+          description: pub.summary || `Publicación BOE: ${pub.boe_id}`,
+          type: "boe" as const,
+          jurisdiction: "estatal" as const,
+          source: pub.boe_url || `https://www.boe.es/diario_boe/txt.php?id=${pub.boe_id}`,
+          effective_date: pub.publication_date,
+          file_path: fileName,
+          is_active: true
+        })
+        .select()
+        .single();
+      
+      if (docError) throw new Error(`Error al crear documento: ${docError.message}`);
+      
+      // 4. Process with AI (extract chunks)
+      const { error: processError } = await supabase.functions.invoke(
+        "process-legal-document",
+        { body: { documentId: docData.id, filePath: fileName } }
+      );
+      
+      if (processError) {
+        console.error("Error processing document with AI:", processError);
+        // Document created but not processed - we'll still continue
+        toast.warning("Documento creado pero pendiente de procesar con IA");
+      }
+      
+      // 5. Update BOE publication status
+      const { error: updateError } = await supabase
+        .from("boe_publications")
+        .update({ 
+          status: "processed",
+          processed_document_id: docData.id,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq("id", pub.id);
+      
+      if (updateError) throw new Error(`Error al actualizar publicación: ${updateError.message}`);
+      
+      return docData;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["boe-publications"] });
+      toast.success(`Documento procesado correctamente: ${data.title.substring(0, 50)}...`);
+      setProcessingId(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Error al procesar: " + error.message);
+      setProcessingId(null);
+    }
+  });
+
   // Filter publications by search
   const filteredPublications = publications?.filter(pub => 
     searchQuery === "" || 
@@ -193,7 +277,8 @@ export default function AdminBOE() {
     total: publications?.length || 0,
     pending: publications?.filter(p => p.status === "pending_review").length || 0,
     approved: publications?.filter(p => p.status === "approved").length || 0,
-    rejected: publications?.filter(p => p.status === "rejected").length || 0
+    rejected: publications?.filter(p => p.status === "rejected").length || 0,
+    processed: publications?.filter(p => p.status === "processed").length || 0
   };
 
   return (
@@ -203,7 +288,7 @@ export default function AdminBOE() {
     >
       <div className="space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-semibold">{stats.total}</div>
@@ -213,7 +298,7 @@ export default function AdminBOE() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-semibold text-yellow-600">{stats.pending}</div>
-              <p className="text-sm text-muted-foreground">Pendientes de revisar</p>
+              <p className="text-sm text-muted-foreground">Pendientes</p>
             </CardContent>
           </Card>
           <Card>
@@ -226,6 +311,12 @@ export default function AdminBOE() {
             <CardContent className="pt-6">
               <div className="text-2xl font-semibold text-red-600">{stats.rejected}</div>
               <p className="text-sm text-muted-foreground">Rechazadas</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-semibold text-blue-600">{stats.processed}</div>
+              <p className="text-sm text-muted-foreground">Procesadas</p>
             </CardContent>
           </Card>
         </div>
@@ -378,6 +469,34 @@ export default function AdminBOE() {
                                     <X className="h-4 w-4" />
                                   </Button>
                                 </>
+                              )}
+                              {pub.status === "approved" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() => processPublicationMutation.mutate(pub)}
+                                  disabled={processingId === pub.id || !pub.pdf_url}
+                                  title={!pub.pdf_url ? "No hay PDF disponible" : "Procesar en base de conocimiento"}
+                                >
+                                  {processingId === pub.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <FileText className="h-4 w-4" />
+                                  )}
+                                  <span className="ml-1 text-xs">Procesar</span>
+                                </Button>
+                              )}
+                              {pub.status === "processed" && pub.processed_document_id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() => navigate(`/admin/documentos`)}
+                                  title="Ver documento procesado"
+                                >
+                                  <LinkIcon className="h-4 w-4" />
+                                </Button>
                               )}
                             </div>
                           </TableCell>
