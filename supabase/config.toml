@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.monitor-boe]
 verify_jwt = false
+
+[functions.cleanup-contracts]
+verify_jwt = false
