@@ -384,21 +384,21 @@ const FreeResultPreview = () => {
                   </Card>
                 </FadeIn>
 
-                {/* Free Email Option */}
+                {/* Email Reminder Option */}
                 <FadeIn delay={0.3}>
                   <Card>
                     <CardContent className="pt-6 text-center">
-                      <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                      <h3 className="font-medium mb-2">¿No puedes pagar ahora?</h3>
+                      <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                      <h3 className="font-medium mb-2">¿Quieres que te avisemos?</h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Recibe un resumen gratuito por email con los puntos más importantes.
+                        Te enviaremos un recordatorio antes de que expire tu análisis.
                       </p>
                       <Button 
                         variant="outline" 
                         onClick={() => setShowLeadModal(true)}
                         className="w-full"
                       >
-                        Recibir resumen por email
+                        Recibir recordatorio
                       </Button>
                     </CardContent>
                   </Card>

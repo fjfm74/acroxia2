@@ -116,8 +116,8 @@ const LeadCaptureModal = ({
 
       setSuccess(true);
       toast({
-        title: "¡Resumen enviado!",
-        description: "Revisa tu bandeja de entrada.",
+        title: "¡Listo!",
+        description: "Te avisaremos antes de que expire tu análisis.",
       });
 
     } catch (error: any) {
@@ -141,11 +141,10 @@ const LeadCaptureModal = ({
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
             <DialogTitle className="font-serif text-2xl mb-2">
-              ¡Resumen enviado!
+              ¡Todo listo!
             </DialogTitle>
             <DialogDescription className="mb-6">
-              Hemos enviado un resumen de tu análisis a <strong>{email}</strong>. 
-              Revisa tu bandeja de entrada (y la carpeta de spam).
+              Te enviaremos un recordatorio a <strong>{email}</strong> antes de que expire tu análisis.
             </DialogDescription>
             
             <div className="space-y-3">
@@ -185,10 +184,10 @@ const LeadCaptureModal = ({
             </span>
           </div>
           <DialogTitle className="font-serif text-2xl">
-            Recibe un resumen gratuito
+            ¿Quieres que te avisemos?
           </DialogTitle>
           <DialogDescription>
-            Te enviaremos los puntos más importantes de tu análisis por email.
+            Te enviaremos un recordatorio antes de que expire tu análisis y ofertas exclusivas.
           </DialogDescription>
         </DialogHeader>
 
@@ -248,7 +247,7 @@ const LeadCaptureModal = ({
               className="mt-1"
             />
             <Label htmlFor="privacy" className="text-sm text-muted-foreground cursor-pointer">
-              Acepto recibir el resumen y comunicaciones de ACROXIA. Puedo darme de baja en cualquier momento.{" "}
+              Acepto recibir recordatorios y comunicaciones de ACROXIA. Puedo darme de baja en cualquier momento.{" "}
               <Link to="/privacidad" target="_blank" className="underline hover:no-underline">
                 Política de privacidad
               </Link>
@@ -261,7 +260,7 @@ const LeadCaptureModal = ({
             disabled={loading || !email || !contractStatus || !acceptedPrivacy}
             className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
           >
-            {loading ? "Enviando..." : "Enviar resumen gratis"}
+            {loading ? "Guardando..." : "Activar recordatorio"}
           </Button>
 
           {/* Security Note */}
