@@ -132,7 +132,7 @@ const schemaService = {
 
 const Inmobiliarias = () => {
   const breadcrumbItems = [
-    { label: "Para Profesionales" },
+    { label: "Para Profesionales", href: "/pricing" },
     { label: "Inmobiliarias y APIs" },
   ];
 
