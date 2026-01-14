@@ -109,7 +109,7 @@ const schemaService = {
 
 const Gestorias = () => {
 const breadcrumbItems = [
-    { label: "Para Profesionales" },
+    { label: "Para Profesionales", href: "/pricing" },
     { label: "Gestorías" }
   ];
 
