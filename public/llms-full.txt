@@ -130,6 +130,10 @@ https://acroxia.com/contacto                  → Formulario de contacto
 https://acroxia.com/clausulas-abusivas-alquiler
 https://acroxia.com/devolucion-fianza-alquiler
 https://acroxia.com/subida-alquiler-2026
+https://acroxia.com/contrato-alquiler-propietarios  → Guía LAU 2026 para propietarios
+
+# Para particulares
+https://acroxia.com/propietarios                    → Landing para propietarios
 
 # Para profesionales
 https://acroxia.com/profesionales/inmobiliarias

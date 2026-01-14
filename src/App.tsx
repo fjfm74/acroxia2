@@ -50,6 +50,7 @@ import Accesibilidad from "./pages/legal/Accesibilidad";
 import ClausulasAbusivas from "./pages/seo/ClausulasAbusivas";
 import DevolucionFianza from "./pages/seo/DevolucionFianza";
 import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
+import ContratoAlquilerPropietarios from "./pages/seo/ContratoAlquilerPropietarios";
 import Contacto from "./pages/Contacto";
 import Inmobiliarias from "./pages/profesionales/Inmobiliarias";
 import Gestorias from "./pages/profesionales/Gestorias";
@@ -122,6 +123,7 @@ const App = () => (
               <Route path="/clausulas-abusivas-alquiler" element={<ClausulasAbusivas />} />
               <Route path="/devolucion-fianza-alquiler" element={<DevolucionFianza />} />
               <Route path="/subida-alquiler-2026" element={<SubidaAlquiler2026 />} />
+              <Route path="/contrato-alquiler-propietarios" element={<ContratoAlquilerPropietarios />} />
               <Route path="/profesionales/inmobiliarias" element={<Inmobiliarias />} />
               <Route path="/profesionales/gestorias" element={<Gestorias />} />
               <Route path="/propietarios" element={<Propietarios />} />
