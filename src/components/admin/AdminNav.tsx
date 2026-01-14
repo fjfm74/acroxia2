@@ -101,21 +101,30 @@ const AdminNav = ({ onNavigate }: AdminNavProps) => {
 
       {/* Quick Access Links */}
       <div className="space-y-1">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide px-3 mb-2">Acceso rápido</p>
+        <Link
+          to="/inquilino"
+          onClick={handleClick}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
+        >
+          <User className="h-4 w-4" />
+          Panel Inquilino
+        </Link>
+        <Link
+          to="/propietario"
+          onClick={handleClick}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
+        >
+          <Briefcase className="h-4 w-4" />
+          Panel Propietario
+        </Link>
         <Link
           to="/pro"
           onClick={handleClick}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
         >
-          <Briefcase className="h-4 w-4" />
+          <FolderOpen className="h-4 w-4" />
           Panel Pro
-        </Link>
-        <Link
-          to="/dashboard"
-          onClick={handleClick}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
-        >
-          <User className="h-4 w-4" />
-          Dashboard Usuario
         </Link>
       </div>
     </div>

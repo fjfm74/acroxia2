@@ -11,6 +11,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import ProfessionalRoute from "./components/auth/ProfessionalRoute";
+import LandlordRoute from "./components/auth/LandlordRoute";
 import DashboardPro from "./pages/DashboardPro";
 import SettingsPage from "./pages/pro/SettingsPage";
 import CreateContractPage from "./pages/pro/CreateContractPage";
@@ -25,6 +26,10 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
+import DashboardLandlord from "./pages/DashboardLandlord";
+import MyContractsPage from "./pages/landlord/MyContractsPage";
+import CreateContractLandlordPage from "./pages/landlord/CreateContractPage";
+import AnalyzeLandlordPage from "./pages/landlord/AnalyzeLandlordPage";
 import Analyze from "./pages/Analyze";
 import AnalyzePublic from "./pages/AnalyzePublic";
 import AnalysisResult from "./pages/AnalysisResult";
@@ -95,11 +100,18 @@ const App = () => (
               <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/inquilino" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/analizar" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
               <Route path="/resultado/:id" element={<ProtectedRoute><AnalysisResult /></ProtectedRoute>} />
               <Route path="/analizar-gratis" element={<AnalyzePublic />} />
               <Route path="/resultado-previo/:id" element={<FreeResultPreview />} />
+              {/* Landlord Routes */}
+              <Route path="/propietario" element={<LandlordRoute><DashboardLandlord /></LandlordRoute>} />
+              <Route path="/propietario/analizar" element={<LandlordRoute><AnalyzeLandlordPage /></LandlordRoute>} />
+              <Route path="/propietario/contratos" element={<LandlordRoute><MyContractsPage /></LandlordRoute>} />
+              <Route path="/propietario/crear-contrato" element={<LandlordRoute><CreateContractLandlordPage /></LandlordRoute>} />
+              {/* Professional Routes */}
               <Route path="/pro" element={<ProfessionalRoute><DashboardPro /></ProfessionalRoute>} />
               <Route path="/pro/configuracion" element={<ProfessionalRoute><SettingsPage /></ProfessionalRoute>} />
               <Route path="/pro/crear-contrato" element={<ProfessionalRoute><CreateContractPage /></ProfessionalRoute>} />

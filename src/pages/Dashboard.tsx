@@ -11,7 +11,7 @@ import FadeIn from "@/components/animations/FadeIn";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Clock, CheckCircle2, AlertTriangle, Loader2, Settings, Briefcase } from "lucide-react";
+import { FileText, Plus, Clock, CheckCircle2, AlertTriangle, Loader2, Settings, Briefcase, Key, Home } from "lucide-react";
 
 interface Contract {
   id: string;
@@ -78,8 +78,8 @@ const Dashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Mi Panel | ACROXIA</title>
-        <meta name="description" content="Gestiona tus análisis de contratos de alquiler." />
+        <title>Panel Inquilino | ACROXIA</title>
+        <meta name="description" content="Gestiona tus análisis de contratos de alquiler como inquilino." />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
@@ -89,13 +89,18 @@ const Dashboard = () => {
           <div className="container mx-auto px-6">
             <FadeIn>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-                <div>
-                  <h1 className="font-serif text-3xl font-semibold text-charcoal">
-                    Hola, {profile?.first_name || "Usuario"}
-                  </h1>
-                  <p className="text-charcoal/70 mt-1">
-                    Gestiona tus análisis de contratos
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-xl bg-emerald-100 shadow-md flex items-center justify-center">
+                    <Home className="h-7 w-7 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h1 className="font-serif text-2xl md:text-3xl font-semibold text-charcoal">
+                      Panel Inquilino
+                    </h1>
+                    <p className="text-charcoal/70 text-sm">
+                      Hola, {profile?.first_name || "Usuario"}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                   <Badge variant="outline" className="text-base py-2 px-4 justify-center">
@@ -112,24 +117,36 @@ const Dashboard = () => {
               </div>
               
               {/* Quick Access to other dashboards */}
-              {(isAdmin || isProfessional) && (
-                <div className="flex flex-wrap gap-2">
-                  {isAdmin && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/admin">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Panel Admin
-                      </Link>
-                    </Button>
-                  )}
-                  {(isAdmin || isProfessional) && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/pro">
-                        <Briefcase className="mr-2 h-4 w-4" />
-                        Panel Pro
-                      </Link>
-                    </Button>
-                  )}
+              {isAdmin && (
+                <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/propietario">
+                      <Key className="mr-2 h-4 w-4" />
+                      Panel Propietario
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/pro">
+                      <Briefcase className="mr-2 h-4 w-4" />
+                      Panel Pro
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Panel Admin
+                    </Link>
+                  </Button>
+                </div>
+              )}
+              {!isAdmin && isProfessional && (
+                <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/pro">
+                      <Briefcase className="mr-2 h-4 w-4" />
+                      Panel Pro
+                    </Link>
+                  </Button>
                 </div>
               )}
             </FadeIn>
