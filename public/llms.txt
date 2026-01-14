@@ -20,6 +20,8 @@ ACROXIA es una plataforma española que utiliza inteligencia artificial para ana
 
 - Inquilinos en España que quieren revisar su contrato antes de firmar
 - Inquilinos que sospechan que su contrato tiene cláusulas abusivas
+- Propietarios que quieren contratos conformes a la LAU 2026
+- Propietarios que necesitan verificar zonas tensionadas
 - Profesionales inmobiliarios que quieren ofrecer análisis a sus clientes
 - Gestorías y administradores de fincas
 
@@ -48,6 +50,10 @@ ACROXIA es una plataforma española que utiliza inteligencia artificial para ana
 
 - Inmobiliarias y APIs: https://acroxia.com/profesionales/inmobiliarias
 - Gestorías y Administradores: https://acroxia.com/profesionales/gestorias
+
+## Para propietarios
+
+- Página para propietarios: https://acroxia.com/propietarios
 
 ## Contacto
 

@@ -53,6 +53,7 @@ import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
 import Contacto from "./pages/Contacto";
 import Inmobiliarias from "./pages/profesionales/Inmobiliarias";
 import Gestorias from "./pages/profesionales/Gestorias";
+import Propietarios from "./pages/Propietarios";
 import CookieBanner from "./components/CookieBanner";
 import ChatContainer from "./components/chat/ChatContainer";
 import AprobarPost from "./pages/AprobarPost";
@@ -123,6 +124,7 @@ const App = () => (
               <Route path="/subida-alquiler-2026" element={<SubidaAlquiler2026 />} />
               <Route path="/profesionales/inmobiliarias" element={<Inmobiliarias />} />
               <Route path="/profesionales/gestorias" element={<Gestorias />} />
+              <Route path="/propietarios" element={<Propietarios />} />
               <Route path="/aprobar-post/:token" element={<AprobarPost />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="*" element={<NotFound />} />
