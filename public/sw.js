@@ -1,4 +1,4 @@
-const CACHE_NAME = 'acroxia-v1';
+const CACHE_NAME = 'acroxia-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -6,7 +6,7 @@ const STATIC_ASSETS = [
 
 // Assets to cache on first load
 const FONT_CACHE = 'acroxia-fonts-v1';
-const IMAGE_CACHE = 'acroxia-images-v1';
+const IMAGE_CACHE = 'acroxia-images-v2';
 
 // Install event - cache critical assets
 self.addEventListener('install', (event) => {
@@ -65,6 +65,11 @@ self.addEventListener('fetch', (event) => {
         });
       })
     );
+    return;
+  }
+
+  // Exclude favicon from caching - always fetch fresh
+  if (url.pathname.includes('favicon') || url.pathname.includes('apple-touch-icon')) {
     return;
   }
 
