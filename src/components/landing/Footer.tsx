@@ -45,6 +45,8 @@ const Footer = () => {
             <h4 className="font-medium text-foreground mb-4">Producto</h4>
             <ul className="space-y-3">
               <li><a href="/#como-funciona" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cómo funciona</a></li>
+              <li><Link to="/analizar-gratis" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Para Inquilinos</Link></li>
+              <li><Link to="/propietarios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Para Propietarios</Link></li>
               <li><Link to="/precios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Precios</Link></li>
               <li><Link to="/contacto" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Contacto</Link></li>
             </ul>

@@ -29,7 +29,9 @@ import {
   HelpCircle,
   ArrowRight,
   ChevronDown,
-  Settings
+  Settings,
+  Home,
+  Key
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsProfessional } from "@/hooks/useIsProfessional";
@@ -79,6 +81,60 @@ const Header = () => {
           <Link to="/" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Inicio
           </Link>
+          
+          {/* Mega menú Particulares */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setActiveMenu("particulares")}
+            onMouseLeave={() => setActiveMenu(null)}
+          >
+            <button className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
+              Particulares
+              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "particulares" ? "rotate-180" : ""}`} />
+            </button>
+            
+            {/* Puente invisible */}
+            <div className="absolute top-full left-0 right-0 h-3" />
+            
+            <AnimatePresence>
+              {activeMenu === "particulares" && (
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  variants={menuVariants}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
+                >
+                  <Link 
+                    to="/analizar-gratis" 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <Home className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Inquilinos</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Analiza tu contrato de alquiler</p>
+                    </div>
+                  </Link>
+                  <Link 
+                    to="/propietarios" 
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <Key className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Propietarios</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Contratos conformes a la LAU</p>
+                    </div>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
           <Link to="/precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Precios
           </Link>
@@ -318,6 +374,27 @@ const Header = () => {
                 Contacto
               </Link>
               
+              {/* Particulares en móvil */}
+              <div className="pt-4 border-t border-charcoal/10">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Particulares</p>
+                <div className="flex flex-col gap-3">
+                  <Link 
+                    to="/analizar-gratis" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Inquilinos
+                  </Link>
+                  <Link 
+                    to="/propietarios" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Propietarios
+                  </Link>
+                </div>
+              </div>
+
               {/* Para Profesionales en móvil */}
               <div className="pt-4 border-t border-charcoal/10">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Para Profesionales</p>
