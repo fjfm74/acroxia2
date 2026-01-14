@@ -397,6 +397,81 @@ export type Database = {
           },
         ]
       }
+      landlord_contracts: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string | null
+          deposit_amount: number | null
+          deposit_months: number | null
+          end_date: string | null
+          file_name: string
+          file_path: string | null
+          file_size: number | null
+          id: string
+          monthly_rent: number | null
+          notes: string | null
+          property_address: string | null
+          reminder_days_before: number | null
+          renewal_reminder: boolean | null
+          signing_date: string | null
+          start_date: string | null
+          status: string | null
+          tenant_email: string | null
+          tenant_name: string | null
+          tenant_phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string | null
+          deposit_amount?: number | null
+          deposit_months?: number | null
+          end_date?: string | null
+          file_name: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          monthly_rent?: number | null
+          notes?: string | null
+          property_address?: string | null
+          reminder_days_before?: number | null
+          renewal_reminder?: boolean | null
+          signing_date?: string | null
+          start_date?: string | null
+          status?: string | null
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string | null
+          deposit_amount?: number | null
+          deposit_months?: number | null
+          end_date?: string | null
+          file_name?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          monthly_rent?: number | null
+          notes?: string | null
+          property_address?: string | null
+          reminder_days_before?: number | null
+          renewal_reminder?: boolean | null
+          signing_date?: string | null
+          start_date?: string | null
+          status?: string | null
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           analysis_id: string | null
@@ -1084,7 +1159,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user" | "professional"
+      app_role: "admin" | "user" | "professional" | "tenant" | "landlord"
       blog_post_status: "draft" | "published"
       contract_status: "pending" | "processing" | "completed" | "failed"
       legal_doc_type:
@@ -1243,7 +1318,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user", "professional"],
+      app_role: ["admin", "user", "professional", "tenant", "landlord"],
       blog_post_status: ["draft", "published"],
       contract_status: ["pending", "processing", "completed", "failed"],
       legal_doc_type: [
