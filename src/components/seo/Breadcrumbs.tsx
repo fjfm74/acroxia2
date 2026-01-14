@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 interface BreadcrumbItem {
   label: string;
@@ -11,6 +11,8 @@ interface BreadcrumbsProps {
 }
 
 const Breadcrumbs = ({ items, className = "" }: BreadcrumbsProps) => {
+  const location = useLocation();
+  
   // Schema markup for breadcrumbs
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -26,7 +28,9 @@ const Breadcrumbs = ({ items, className = "" }: BreadcrumbsProps) => {
         "@type": "ListItem",
         "position": index + 2,
         "name": item.label,
-        ...(item.href && { "item": `https://acroxia.com${item.href}` })
+        "item": item.href 
+          ? `https://acroxia.com${item.href}` 
+          : `https://acroxia.com${location.pathname}`
       }))
     ]
   };
