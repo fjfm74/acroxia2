@@ -85,18 +85,30 @@ const SubidaAlquiler2026 = () => {
     "name": "Subida de Alquiler 2026 - IRAV y Límites Legales",
     "description": "Guía completa sobre la subida de alquiler en 2026. IRAV actual, límites legales, cómo calcular la subida y qué hacer si es abusiva.",
     "url": "https://acroxia.com/subida-alquiler-2026",
-    "dateModified": "2026-01-08",
-    "mainEntity": {
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(faq => ({
-        "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": faq.answer
-        }
-      }))
+    "dateModified": "2026-01-15",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
     }
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
   };
 
   return (
@@ -114,6 +126,9 @@ const SubidaAlquiler2026 = () => {
         <link rel="canonical" href="https://acroxia.com/subida-alquiler-2026" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(faqSchema)}
         </script>
       </Helmet>
 

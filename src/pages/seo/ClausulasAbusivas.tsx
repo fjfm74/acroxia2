@@ -86,17 +86,30 @@ const ClausulasAbusivas = () => {
     "name": "Cláusulas Abusivas en Contratos de Alquiler - Guía 2026",
     "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler. Guía completa sobre qué cláusulas podrían ser nulas según la LAU y cómo reclamar.",
     "url": "https://acroxia.com/clausulas-abusivas-alquiler",
-    "mainEntity": {
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(faq => ({
-        "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": faq.answer
-        }
-      }))
+    "dateModified": "2026-01-15",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
     }
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
   };
 
   return (
@@ -114,6 +127,9 @@ const ClausulasAbusivas = () => {
         <link rel="canonical" href="https://acroxia.com/clausulas-abusivas-alquiler" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(faqSchema)}
         </script>
       </Helmet>
 
