@@ -6,15 +6,27 @@ import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import Footer from "@/components/landing/Footer";
 
 const Index = () => {
-  // Schema Organization
+  // Schema Organization - Enriquecido para E-E-A-T
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "ACROXIA",
+    "legalName": "ACROXIA",
     "url": "https://acroxia.com",
-    "logo": "https://acroxia.com/logo.png",
-    "description": "Plataforma de IA para análisis de contratos de alquiler y protección de derechos del inquilino en España",
-    "foundingDate": "2026",
+    "logo": "https://acroxia.com/acroxia-logo.png",
+    "image": "https://acroxia.com/og-image.jpg",
+    "description": "Plataforma de IA para análisis de contratos de alquiler y protección de derechos del inquilino en España. Detecta cláusulas abusivas en menos de 2 minutos.",
+    "slogan": "Protege tus derechos como inquilino con IA",
+    "foundingDate": "2025",
+    "foundingLocation": {
+      "@type": "Place",
+      "name": "España"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "España"
+    },
+    "knowsLanguage": "es",
     "sameAs": [
       "https://twitter.com/acroxia",
       "https://linkedin.com/company/acroxia"
