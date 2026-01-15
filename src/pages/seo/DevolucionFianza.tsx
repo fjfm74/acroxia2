@@ -83,17 +83,30 @@ const DevolucionFianza = () => {
     "name": "Devolución de Fianza de Alquiler - Guía 2026",
     "description": "Guía completa sobre cómo recuperar la fianza de tu alquiler. Plazos legales, motivos de retención ilegales y cómo reclamar paso a paso.",
     "url": "https://acroxia.com/devolucion-fianza-alquiler",
-    "mainEntity": {
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(faq => ({
-        "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": faq.answer
-        }
-      }))
+    "dateModified": "2026-01-15",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
     }
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
   };
 
   const howToSchema = {
@@ -125,6 +138,9 @@ const DevolucionFianza = () => {
         <link rel="canonical" href="https://acroxia.com/devolucion-fianza-alquiler" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(faqSchema)}
         </script>
         <script type="application/ld+json">
           {JSON.stringify(howToSchema)}
