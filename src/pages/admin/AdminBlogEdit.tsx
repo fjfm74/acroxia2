@@ -20,13 +20,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
-const categories = [
+const tenantCategories = [
   "Cláusulas",
   "Fianzas",
   "Derechos",
   "Subidas de renta",
   "Legislación",
   "Consejos",
+];
+
+const landlordCategories = [
+  "Contratos",
+  "Impagos",
+  "Garantías",
+  "Normativa",
+  "Seguros",
+  "Gestión",
 ];
 
 const generateSlug = (title: string) => {
@@ -62,6 +71,7 @@ const AdminBlogEdit = () => {
     read_time: "5 min",
     meta_description: "",
     keywords: [] as string[],
+    audience: "inquilino" as "inquilino" | "propietario",
   });
 
   useEffect(() => {
@@ -105,6 +115,7 @@ const AdminBlogEdit = () => {
         read_time: data.read_time || "5 min",
         meta_description: data.meta_description || "",
         keywords: data.keywords || [],
+        audience: (data as { audience?: string }).audience as "inquilino" | "propietario" || "inquilino",
       });
       setOriginalStatus(data.status);
       setLoading(false);
@@ -136,6 +147,7 @@ const AdminBlogEdit = () => {
         read_time: generated.read_time || "5 min",
         meta_description: generated.meta_description || generated.excerpt,
         keywords: generated.keywords || [],
+        audience: post.audience,
       });
 
       toast({
@@ -220,6 +232,7 @@ const AdminBlogEdit = () => {
           read_time: post.read_time,
           meta_description: post.meta_description,
           keywords: post.keywords,
+          audience: post.audience,
           status: newStatus,
           published_at: publish && originalStatus !== "published" 
             ? new Date().toISOString() 
@@ -369,35 +382,50 @@ const AdminBlogEdit = () => {
                     />
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="slug">Slug (URL)</Label>
-                      <Input
-                        id="slug"
-                        value={post.slug}
-                        onChange={(e) => setPost({ ...post, slug: e.target.value })}
-                        placeholder="url-del-post"
-                      />
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="slug">Slug (URL)</Label>
+                        <Input
+                          id="slug"
+                          value={post.slug}
+                          onChange={(e) => setPost({ ...post, slug: e.target.value })}
+                          placeholder="url-del-post"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="audience">Audiencia</Label>
+                        <Select
+                          value={post.audience}
+                          onValueChange={(value: "inquilino" | "propietario") => setPost({ ...post, audience: value, category: "" })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar audiencia" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inquilino">Inquilino</SelectItem>
+                            <SelectItem value="propietario">Propietario</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Categoría</Label>
+                        <Select
+                          value={post.category}
+                          onValueChange={(value) => setPost({ ...post, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(post.audience === "propietario" ? landlordCategories : tenantCategories).map((cat) => (
+                              <SelectItem key={cat} value={cat}>
+                                {cat}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Categoría</Label>
-                      <Select
-                        value={post.category}
-                        onValueChange={(value) => setPost({ ...post, category: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar categoría" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="excerpt">Extracto</Label>

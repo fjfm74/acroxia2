@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash2, Eye, EyeOff, CalendarClock, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, CalendarClock, Loader2, Users, Home } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -45,26 +46,36 @@ interface BlogPost {
   title: string;
   category: string;
   status: "draft" | "published";
+  audience: "inquilino" | "propietario";
   created_at: string;
   published_at: string | null;
 }
+
+type AudienceFilter = "all" | "inquilino" | "propietario";
 
 const AdminBlog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [schedulingEnabled, setSchedulingEnabled] = useState(false);
   const [schedulingLoading, setSchedulingLoading] = useState(true);
+  const [audienceFilter, setAudienceFilter] = useState<AudienceFilter>("all");
   const { toast } = useToast();
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("blog_posts")
-        .select("id, slug, title, category, status, created_at, published_at")
+        .select("id, slug, title, category, status, audience, created_at, published_at")
         .order("created_at", { ascending: false });
 
+      if (audienceFilter !== "all") {
+        query = query.eq("audience", audienceFilter);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
-      setPosts(data || []);
+      setPosts((data || []) as BlogPost[]);
     } catch (error) {
       console.error("Error fetching posts:", error);
       toast({
@@ -114,7 +125,7 @@ const AdminBlog = () => {
       toast({
         title: newValue ? "Programación activada" : "Programación desactivada",
         description: newValue 
-          ? "Se generará un post diario a las 9:00 AM" 
+          ? "Se generarán posts diarios para inquilinos (9:00) y propietarios (10:00)" 
           : "No se generarán posts automáticamente",
       });
     } catch (error) {
@@ -132,11 +143,11 @@ const AdminBlog = () => {
   useEffect(() => {
     fetchPosts();
     fetchSchedulingStatus();
-  }, []);
+  }, [audienceFilter]);
 
   const toggleStatus = async (post: BlogPost) => {
     const newStatus = post.status === "published" ? "draft" : "published";
-    const updates: any = { status: newStatus };
+    const updates: Record<string, unknown> = { status: newStatus };
     
     if (newStatus === "published" && !post.published_at) {
       updates.published_at = new Date().toISOString();
@@ -191,6 +202,23 @@ const AdminBlog = () => {
     }
   };
 
+  const getAudienceBadge = (audience: string) => {
+    if (audience === "propietario") {
+      return (
+        <Badge variant="outline" className="text-xs gap-1">
+          <Home className="h-3 w-3" />
+          Propietario
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-xs gap-1">
+        <Users className="h-3 w-3" />
+        Inquilino
+      </Badge>
+    );
+  };
+
   return (
     <>
       <Helmet>
@@ -203,37 +231,56 @@ const AdminBlog = () => {
         description="Crea y administra los posts del blog"
       >
         {/* Header Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          {/* Scheduling Toggle */}
-          <Card className="border-border">
-            <CardContent className="p-4 flex items-center gap-4">
-              <CalendarClock className="h-5 w-5 text-muted-foreground" />
-              <div className="flex-1">
-                <Label htmlFor="scheduling-toggle" className="font-medium cursor-pointer">
-                  Programación diaria
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Genera un post cada día a las 9:00 AM
-                </p>
-              </div>
-              {schedulingLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Switch
-                  id="scheduling-toggle"
-                  checked={schedulingEnabled}
-                  onCheckedChange={toggleScheduling}
-                />
-              )}
-            </CardContent>
-          </Card>
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Scheduling Toggle */}
+            <Card className="border-border">
+              <CardContent className="p-4 flex items-center gap-4">
+                <CalendarClock className="h-5 w-5 text-muted-foreground" />
+                <div className="flex-1">
+                  <Label htmlFor="scheduling-toggle" className="font-medium cursor-pointer">
+                    Programación diaria
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Genera posts a las 9:00 (inquilinos) y 10:00 (propietarios)
+                  </p>
+                </div>
+                {schedulingLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Switch
+                    id="scheduling-toggle"
+                    checked={schedulingEnabled}
+                    onCheckedChange={toggleScheduling}
+                  />
+                )}
+              </CardContent>
+            </Card>
 
-          <Button asChild className="rounded-full">
-            <Link to="/admin/blog/nuevo">
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Post
-            </Link>
-          </Button>
+            <Button asChild className="rounded-full">
+              <Link to="/admin/blog/nuevo">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Post
+              </Link>
+            </Button>
+          </div>
+
+          {/* Audience Filter Tabs */}
+          <Tabs value={audienceFilter} onValueChange={(v) => setAudienceFilter(v as AudienceFilter)}>
+            <TabsList className="bg-muted">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">
+                Todos
+              </TabsTrigger>
+              <TabsTrigger value="inquilino" className="text-xs sm:text-sm gap-1">
+                <Users className="h-3 w-3 hidden sm:inline" />
+                Inquilinos
+              </TabsTrigger>
+              <TabsTrigger value="propietario" className="text-xs sm:text-sm gap-1">
+                <Home className="h-3 w-3 hidden sm:inline" />
+                Propietarios
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {loading ? (
@@ -243,7 +290,12 @@ const AdminBlog = () => {
         ) : posts.length === 0 ? (
           <Card className="border-border">
             <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">No hay posts todavía</p>
+              <p className="text-muted-foreground mb-4">
+                {audienceFilter === "all" 
+                  ? "No hay posts todavía"
+                  : `No hay posts para ${audienceFilter === "inquilino" ? "inquilinos" : "propietarios"}`
+                }
+              </p>
               <Button asChild variant="outline">
                 <Link to="/admin/blog/nuevo">Crear el primer post</Link>
               </Button>
@@ -260,6 +312,7 @@ const AdminBlog = () => {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-sm line-clamp-2 mb-2">{post.title}</h3>
                         <div className="flex flex-wrap items-center gap-2">
+                          {getAudienceBadge(post.audience || "inquilino")}
                           <Badge variant="secondary" className="text-xs">{post.category}</Badge>
                           <Badge 
                             variant={post.status === "published" ? "default" : "outline"}
@@ -335,6 +388,7 @@ const AdminBlog = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Título</TableHead>
+                      <TableHead>Audiencia</TableHead>
                       <TableHead>Categoría</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead>Fecha</TableHead>
@@ -344,8 +398,11 @@ const AdminBlog = () => {
                   <TableBody>
                     {posts.map((post) => (
                       <TableRow key={post.id}>
-                        <TableCell className="font-medium max-w-[300px] truncate">
+                        <TableCell className="font-medium max-w-[250px] truncate">
                           {post.title}
+                        </TableCell>
+                        <TableCell>
+                          {getAudienceBadge(post.audience || "inquilino")}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">{post.category}</Badge>

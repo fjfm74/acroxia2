@@ -141,6 +141,7 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          audience: string
           author_id: string | null
           blog_author_id: string | null
           category: string
@@ -159,6 +160,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audience?: string
           author_id?: string | null
           blog_author_id?: string | null
           category: string
@@ -177,6 +179,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audience?: string
           author_id?: string | null
           blog_author_id?: string | null
           category?: string
