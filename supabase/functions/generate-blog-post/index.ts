@@ -17,18 +17,16 @@ const ALL_CATEGORIES = [
 ];
 
 const TITLE_FORMATS = [
-  "X errores que cometen los inquilinos al...",
-  "Qué hacer si el casero...",
-  "Por qué no deberías firmar/aceptar...",
-  "Lo que nadie te cuenta sobre...",
-  "Cómo reclamar...",
-  "X cosas que tu casero no puede hacer legalmente",
-  "El truco legal para...",
-  "X señales de que tu contrato tiene cláusulas abusivas",
-  "La verdad sobre...",
-  "Tus derechos cuando...",
-  "Cómo defenderte ante...",
-  "X mitos sobre el alquiler que debes ignorar",
+  "X errores habituales al...",
+  "Cómo gestionar cuando...",
+  "Qué dice la LAU sobre...",
+  "X aspectos clave de...",
+  "Tus derechos ante...",
+  "Cómo funcionan las...",
+  "Lo que debes saber sobre...",
+  "X preguntas frecuentes sobre...",
+  "Claves para entender...",
+  "Guía práctica:",
 ];
 
 interface ExistingPost {
@@ -131,18 +129,30 @@ VARIEDAD EN TÍTULOS (OBLIGATORIO):
 NO uses siempre "Guía sobre..." o "Guía completa de...". Alterna entre estos formatos:
 ${TITLE_FORMATS.map(f => `- ${f}`).join('\n')}
 
-Ejemplos de buenos títulos:
-- "5 errores que cometen los inquilinos al reclamar la fianza"
-- "Qué hacer si el casero te sube el alquiler en 2026"
-- "Lo que nadie te cuenta sobre las cláusulas de permanencia"
-- "Tus derechos cuando el casero quiere entrar en tu piso"
-- "7 señales de que tu contrato tiene cláusulas abusivas"
+ESTILO DE TÍTULOS (OBLIGATORIO):
+- Usa SOLO mayúscula inicial (sentence case): "Cómo reclamar tu fianza en 2026"
+- NO uses title case: "Cómo Reclamar Tu Fianza en 2026" ❌
+- Evita tono alarmista o clickbait: "El truco secreto..." ❌
+- Prefiere tono informativo y profesional
+- NO abuses de signos de interrogación
+- Longitud ideal: 40-60 caracteres
+
+Ejemplos correctos:
+- "Cómo reclamar tu fianza paso a paso"
+- "Qué dice la LAU sobre las subidas de renta"
+- "5 aspectos clave del contrato de alquiler"
+- "Tus derechos cuando el casero no repara"
+
+Ejemplos incorrectos:
+- "¿Puede el Casero Retener Parte de tu Fianza?" ❌
+- "El Truco Legal Para Recuperar Tu Dinero" ❌
+- "Lo Que Tu Casero No Quiere Que Sepas" ❌
 ${existingPostsContext}
 ${categoryGuidance}
 
 Formato de respuesta OBLIGATORIO (JSON válido):
 {
-  "title": "Título creativo y variado (NO empieces con 'Guía', máximo 60 caracteres)",
+  "title": "Título informativo en sentence case (máximo 60 caracteres)",
   "excerpt": "Resumen corto del artículo en 2-3 frases (máximo 160 caracteres)",
   "content": "Contenido completo en formato Markdown. Usa ## para subtítulos, listas con -, y **negrita** para énfasis. Mínimo 800 palabras.",
   "category": "Una de: ${ALL_CATEGORIES.join(', ')}",
