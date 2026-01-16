@@ -10,6 +10,7 @@ import PropietariosPricing from "@/components/propietarios/PropietariosPricing";
 import PropietariosFAQ from "@/components/propietarios/PropietariosFAQ";
 import PropietariosCTA from "@/components/propietarios/PropietariosCTA";
 import FadeIn from "@/components/animations/FadeIn";
+import BlogSubscriptionForm from "@/components/blog/BlogSubscriptionForm";
 
 const schemaService = {
   "@context": "https://schema.org",
@@ -113,6 +114,23 @@ const Propietarios = () => {
                   el asesoramiento legal profesional. El cálculo del IRAV y la verificación de zonas tensionadas debe realizarse 
                   en las fuentes oficiales (INE, MIVAU o webs autonómicas).
                 </p>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* Newsletter Propietarios */}
+        <section className="bg-background py-16">
+          <div className="container mx-auto px-6">
+            <FadeIn>
+              <div className="max-w-xl mx-auto text-center">
+                <h2 className="font-serif text-2xl font-medium text-foreground mb-3">
+                  Mantente al día como propietario
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Recibe artículos sobre contratos, gestión de alquileres y novedades legales para arrendadores.
+                </p>
+                <BlogSubscriptionForm selectedAudience="propietario" />
               </div>
             </FadeIn>
           </div>
