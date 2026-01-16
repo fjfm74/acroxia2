@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
+import FooterSubscriptionForm from "@/components/blog/FooterSubscriptionForm";
 
 const Footer = () => {
   return (
@@ -113,6 +114,19 @@ const Footer = () => {
                 <span>Barcelona, España</span>
               </li>
             </ul>
+          </div>
+        </div>
+
+        {/* Newsletter Subscription */}
+        <div className="border-t border-border pt-12 pb-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="font-serif text-xl font-medium text-foreground mb-2">
+              Suscríbete a nuestro newsletter
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Recibe artículos y novedades legales según tu perfil
+            </p>
+            <FooterSubscriptionForm />
           </div>
         </div>
         
