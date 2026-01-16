@@ -14,19 +14,16 @@ const staticRoutes = [
   { loc: "/faq", priority: "0.7", changefreq: "monthly" },
   { loc: "/blog", priority: "0.9", changefreq: "daily" },
   { loc: "/contacto", priority: "0.7", changefreq: "monthly" },
-  // Páginas SEO
   { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly" },
   { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly" },
   { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly" },
-  // Páginas profesionales
+  { loc: "/propietarios", priority: "0.9", changefreq: "monthly" },
+  { loc: "/contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
   { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly" },
   { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly" },
-  // Análisis gratuito
   { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly" },
-  // Autenticación
   { loc: "/login", priority: "0.3", changefreq: "yearly" },
   { loc: "/registro", priority: "0.3", changefreq: "yearly" },
-  // Páginas legales
   { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
   { loc: "/privacidad", priority: "0.2", changefreq: "yearly" },
   { loc: "/terminos", priority: "0.2", changefreq: "yearly" },
