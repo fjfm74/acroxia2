@@ -252,7 +252,35 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
       throw new Error('Could not parse JSON from AI response');
     }
 
-    const postData = JSON.parse(jsonMatch[0]);
+    // Sanitize JSON string to remove control characters that break parsing
+    let jsonString = jsonMatch[0];
+    // Replace control characters (except newlines and tabs which we'll handle)
+    jsonString = jsonString.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    // Escape unescaped newlines inside string values
+    jsonString = jsonString.replace(/(?<!\\)\n(?=(?:[^"]*"[^"]*")*[^"]*"[^"]*$)/g, '\\n');
+    
+    let postData;
+    try {
+      postData = JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error('JSON parse error, attempting to extract fields manually...');
+      // Fallback: extract fields using regex
+      const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
+      const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
+      const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
+      const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)"\s*\}/);
+      
+      if (!titleMatch || !contentMatch) {
+        throw new Error('Could not extract required fields from AI response');
+      }
+      
+      postData = {
+        title: titleMatch[1],
+        excerpt: excerptMatch ? excerptMatch[1] : titleMatch[1],
+        category: categoryMatch ? categoryMatch[1] : leastUsedCategory,
+        content: contentMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'),
+      };
+    }
     
     // Validate required fields
     if (!postData.title || !postData.content || !postData.category) {
