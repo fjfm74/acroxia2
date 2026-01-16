@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,7 +39,108 @@ function generateSlug(title: string): string {
     .trim();
 }
 
-async function sendApprovalEmail(post: { id: string; title: string; excerpt: string; category: string }, token: string) {
+async function generateImage(title: string, excerpt: string, category: string): Promise<string | null> {
+  if (!lovableApiKey) {
+    console.log('LOVABLE_API_KEY not configured, skipping image generation');
+    return null;
+  }
+
+  try {
+    console.log('Generating image for landlord post...');
+    
+    const imagePrompt = `Create a professional, clean editorial photograph for a Spanish real estate blog article.
+
+Topic: "${title}"
+Summary: "${excerpt}"
+Category: ${category}
+Audience: Property owners/landlords
+
+Style requirements:
+- Minimalist, premium, elegant aesthetic
+- Warm cream and neutral tones matching a luxury editorial design
+- Professional real estate or legal context
+- Photorealistic, not illustrated
+- NO text, NO watermarks, NO logos
+- Soft natural lighting
+- Clean composition with negative space
+- 16:9 aspect ratio suitable for blog header
+
+Ultra high resolution.`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image-preview",
+        messages: [{ role: "user", content: imagePrompt }],
+        modalities: ["image", "text"],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Image generation error:', response.status, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!imageUrl) {
+      console.error('No image URL in response');
+      return null;
+    }
+
+    // Extract base64 data
+    const base64Match = imageUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!base64Match) {
+      console.error('Invalid image data format');
+      return null;
+    }
+
+    const imageFormat = base64Match[1];
+    const base64Data = base64Match[2];
+    
+    // Decode base64 to binary
+    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    
+    // Upload to Supabase Storage
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const fileName = `blog-landlord-${Date.now()}.${imageFormat}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('blog-images')
+      .upload(fileName, binaryData, {
+        contentType: `image/${imageFormat}`,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      return null;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('blog-images')
+      .getPublicUrl(fileName);
+
+    console.log('Image generated and uploaded:', urlData.publicUrl);
+    return urlData.publicUrl;
+
+  } catch (error) {
+    console.error('Error generating image:', error);
+    return null;
+  }
+}
+
+async function sendApprovalEmail(
+  post: { id: string; title: string; excerpt: string; category: string; image?: string | null }, 
+  token: string
+) {
   if (!resendApiKey) {
     console.log('RESEND_API_KEY not configured, skipping email');
     return;
@@ -46,6 +148,12 @@ async function sendApprovalEmail(post: { id: string; title: string; excerpt: str
 
   const approveUrl = `https://acroxia2.lovable.app/aprobar-post?token=${token}&action=approve`;
   const rejectUrl = `https://acroxia2.lovable.app/aprobar-post?token=${token}&action=reject`;
+
+  const imageHtml = post.image ? `
+    <div style="margin: 20px 0; border-radius: 12px; overflow: hidden;">
+      <img src="${post.image}" alt="Imagen del post" style="width: 100%; max-height: 200px; object-fit: cover;" />
+    </div>
+  ` : '';
 
   const emailHtml = `
     <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px;">
@@ -64,6 +172,7 @@ async function sendApprovalEmail(post: { id: string; title: string; excerpt: str
         <p style="color: #666; font-size: 15px; line-height: 1.6; margin: 0;">
           ${post.excerpt}
         </p>
+        ${imageHtml}
       </div>
       
       <div style="text-align: center; margin-bottom: 24px;">
@@ -214,7 +323,7 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
 
     console.log('Calling Lovable AI Gateway for landlord post...');
     
-    const response = await fetch('https://ai.gateway.lovable.dev/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -294,6 +403,11 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
     }
 
     const slug = generateSlug(postData.title);
+    const validCategory = LANDLORD_CATEGORIES.includes(postData.category) ? postData.category : leastUsedCategory;
+
+    // Generate image for the post
+    console.log('Generating image for post...');
+    const imageUrl = await generateImage(postData.title, postData.excerpt || postData.title, validCategory);
 
     // Insert blog post as draft with audience = 'propietario'
     const { data: newPost, error: insertError } = await supabase
@@ -303,12 +417,13 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
         slug: slug,
         excerpt: postData.excerpt || postData.title,
         content: postData.content,
-        category: LANDLORD_CATEGORIES.includes(postData.category) ? postData.category : leastUsedCategory,
+        category: validCategory,
         status: 'draft',
         read_time: `${Math.ceil(postData.content.split(/\s+/).length / 200)} min`,
-        keywords: ['propietarios', 'arrendadores', 'alquiler', 'LAU', postData.category.toLowerCase()],
+        keywords: ['propietarios', 'arrendadores', 'alquiler', 'LAU', validCategory.toLowerCase()],
         meta_description: postData.excerpt?.substring(0, 160) || postData.title,
         audience: 'propietario',
+        image: imageUrl,
       })
       .select()
       .single();
@@ -318,7 +433,7 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
       throw insertError;
     }
 
-    console.log('Landlord blog post created:', newPost.id);
+    console.log('Landlord blog post created:', newPost.id, 'with image:', imageUrl ? 'yes' : 'no');
 
     // Create scheduled post entry for approval
     const { data: scheduledPost, error: scheduleError } = await supabase
@@ -333,13 +448,14 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
     if (scheduleError) {
       console.error('Error creating scheduled post:', scheduleError);
     } else {
-      // Send approval email
+      // Send approval email with image
       await sendApprovalEmail(
         { 
           id: newPost.id, 
           title: newPost.title, 
           excerpt: newPost.excerpt,
-          category: newPost.category 
+          category: newPost.category,
+          image: imageUrl
         },
         scheduledPost.approval_token
       );
@@ -358,7 +474,8 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
           id: newPost.id, 
           title: newPost.title,
           category: newPost.category,
-          audience: 'propietario'
+          audience: 'propietario',
+          image: imageUrl
         } 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

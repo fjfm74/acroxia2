@@ -133,6 +133,10 @@ const BlogPost = () => {
     }
   };
 
+  // Determinar audiencia para breadcrumbs
+  const audienceLabel = post.audience === "propietario" ? "Propietarios" : "Inquilinos";
+  const audienceUrl = `/blog?audiencia=${post.audience || "inquilino"}`;
+
   return (
     <>
       <Helmet>
@@ -152,8 +156,11 @@ const BlogPost = () => {
           <Breadcrumbs 
             items={[
               { label: "Blog", href: "/blog" },
-              { label: post.category }
+              { label: audienceLabel, href: audienceUrl },
+              { label: post.category },
+              { label: post.title }
             ]} 
+            truncateLength={40}
           />
 
           {/* Article Header */}

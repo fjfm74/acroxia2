@@ -8,9 +8,15 @@ interface BreadcrumbItem {
 interface BreadcrumbsProps {
   items: BreadcrumbItem[];
   className?: string;
+  truncateLength?: number;
 }
 
-const Breadcrumbs = ({ items, className = "" }: BreadcrumbsProps) => {
+const truncateLabel = (label: string, maxLength: number = 50): string => {
+  if (label.length <= maxLength) return label;
+  return `${label.substring(0, maxLength)}...`;
+};
+
+const Breadcrumbs = ({ items, className = "", truncateLength = 50 }: BreadcrumbsProps) => {
   const location = useLocation();
   
   // Schema markup for breadcrumbs
@@ -66,12 +72,14 @@ const Breadcrumbs = ({ items, className = "" }: BreadcrumbsProps) => {
                       to={item.href} 
                       className="hover:text-foreground transition-colors"
                     >
-                      {item.label}
+                      {truncateLabel(item.label, truncateLength)}
                     </Link>
                     <span aria-hidden="true" className="text-muted-foreground/40">/</span>
                   </>
                 ) : (
-                  <span className="text-foreground">{item.label}</span>
+                  <span className="text-foreground" title={item.label}>
+                    {truncateLabel(item.label, truncateLength)}
+                  </span>
                 )}
               </li>
             ))}
