@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.cleanup-contracts]
 verify_jwt = false
+
+[functions.schedule-daily-post-landlord]
+verify_jwt = false
