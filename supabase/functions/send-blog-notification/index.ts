@@ -1,12 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "npm:resend@2.0.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-
-const resend = new Resend(RESEND_API_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -244,12 +241,23 @@ const handler = async (req: Request): Promise<Response> => {
         const emailHtml = generateNewPostEmail(post, unsubscribeUrl);
 
         try {
-          await resend.emails.send({
-            from: "ACROXIA Blog <blog@acroxia.com>",
-            to: [subscriber.email],
-            subject: `Nuevo artículo: ${post.title}`,
-            html: emailHtml,
+          const response = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${RESEND_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "ACROXIA Blog <blog@acroxia.com>",
+              to: [subscriber.email],
+              subject: `Nuevo artículo: ${post.title}`,
+              html: emailHtml,
+            }),
           });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
           sentCount++;
         } catch (error) {
           console.error(`[send-blog-notification] Error sending to ${subscriber.email}:`, error);

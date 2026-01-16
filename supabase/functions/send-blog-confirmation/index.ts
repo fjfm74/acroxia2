@@ -1,12 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "npm:resend@2.0.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-
-const resend = new Resend(RESEND_API_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -202,19 +199,27 @@ const handler = async (req: Request): Promise<Response> => {
     // Generate confirmation URL
     const confirmUrl = `https://acroxia.com/confirmar-blog?token=${subscriber.confirmation_token}`;
 
-    // Send confirmation email
+    // Send confirmation email via Resend API
     const emailHtml = generateConfirmationEmail(confirmUrl, audience);
 
-    const { error: emailError } = await resend.emails.send({
-      from: "ACROXIA Blog <blog@acroxia.com>",
-      to: [email],
-      subject: "Confirma tu suscripción al blog de ACROXIA",
-      html: emailHtml,
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "ACROXIA Blog <blog@acroxia.com>",
+        to: [email],
+        subject: "Confirma tu suscripción al blog de ACROXIA",
+        html: emailHtml,
+      }),
     });
 
-    if (emailError) {
-      console.error("[send-blog-confirmation] Email error:", emailError);
-      throw emailError;
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("[send-blog-confirmation] Email error:", errorData);
+      throw new Error(errorData.message || "Failed to send email");
     }
 
     console.log(`[send-blog-confirmation] Confirmation email sent to ${email}`);
