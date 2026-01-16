@@ -14,16 +14,16 @@ const corsHeaders = {
 const ALL_CATEGORIES = ["Cláusulas", "Fianzas", "Derechos", "Subidas de renta", "Legislación", "Consejos"];
 
 const TITLE_FORMATS = [
-  "X errores que cometen los inquilinos con...",
-  "Qué hacer si tu casero...",
-  "El truco legal para...",
-  "Por qué tu contrato puede tener...",
-  "La verdad sobre...",
-  "X señales de que tu contrato tiene...",
-  "Cómo reclamar cuando...",
-  "Lo que tu casero no quiere que sepas sobre...",
-  "X derechos que no sabías que tenías como inquilino",
-  "Cómo evitar que te cobren de más por...",
+  "X errores habituales al...",
+  "Cómo gestionar cuando...",
+  "Qué dice la LAU sobre...",
+  "X aspectos clave de...",
+  "Tus derechos ante...",
+  "Cómo funcionan las...",
+  "Lo que debes saber sobre...",
+  "X preguntas frecuentes sobre...",
+  "Claves para entender...",
+  "Guía práctica:",
 ];
 
 function generateSlug(title: string): string {
@@ -96,9 +96,26 @@ ${existingContext}
 
 FORMATOS DE TÍTULO SUGERIDOS: ${TITLE_FORMATS.join(' | ')}
 
+ESTILO DE TÍTULOS (OBLIGATORIO):
+- Usa SOLO mayúscula inicial (sentence case): "Cómo reclamar tu fianza en 2026"
+- NO uses title case: "Cómo Reclamar Tu Fianza en 2026" ❌
+- Evita tono alarmista o clickbait: "El truco secreto..." ❌
+- Prefiere tono informativo y profesional
+- NO abuses de signos de interrogación
+- Longitud ideal: 40-60 caracteres
+
+Ejemplos correctos:
+- "Cómo reclamar tu fianza paso a paso"
+- "Qué dice la LAU sobre las subidas de renta"
+- "5 aspectos clave del contrato de alquiler"
+
+Ejemplos incorrectos:
+- "¿Puede el Casero Retener Parte de tu Fianza?" ❌
+- "El Truco Legal Para Recuperar Tu Dinero" ❌
+
 Responde SOLO con un JSON válido:
 {
-  "title": "título creativo del artículo",
+  "title": "título informativo en sentence case",
   "excerpt": "resumen de 2-3 frases del artículo",
   "category": "una de las categorías válidas",
   "content": "contenido completo en Markdown"
