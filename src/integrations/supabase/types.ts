@@ -207,6 +207,45 @@ export type Database = {
           },
         ]
       }
+      blog_subscribers: {
+        Row: {
+          audience: string
+          confirmation_token: string | null
+          confirmed: boolean | null
+          confirmed_at: string | null
+          created_at: string | null
+          email: string
+          id: string
+          unsubscribe_reason: string | null
+          unsubscribed: boolean | null
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          audience: string
+          confirmation_token?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          unsubscribe_reason?: string | null
+          unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          audience?: string
+          confirmation_token?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          unsubscribe_reason?: string | null
+          unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       boe_monitoring_logs: {
         Row: {
           check_time: string

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileSearch, ArrowRight, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import BlogSubscriptionForm from "./BlogSubscriptionForm";
 
 interface BlogSidebarProps {
   selectedAudience?: "inquilino" | "propietario";
@@ -119,6 +120,9 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
           </p>
         )}
       </div>
+
+      {/* Newsletter Subscription */}
+      <BlogSubscriptionForm selectedAudience={selectedAudience} />
 
       {/* Categories */}
       <div className="bg-background border border-border rounded-2xl p-6">
