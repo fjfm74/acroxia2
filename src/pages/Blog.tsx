@@ -7,6 +7,7 @@ import Footer from "@/components/landing/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogCard from "@/components/blog/BlogCard";
 import BlogSidebar from "@/components/blog/BlogSidebar";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -101,9 +102,20 @@ const Blog = () => {
             onResetAudience={handleResetAudience}
           />
           
+          {/* Breadcrumbs solo si hay audiencia seleccionada */}
+          {selectedAudience && (
+            <Breadcrumbs 
+              items={[
+                { label: "Blog", href: "/blog" },
+                { label: selectedAudience === "inquilino" ? "Inquilinos" : "Propietarios" }
+              ]} 
+              className="pt-6 pb-4"
+            />
+          )}
+          
           {/* Solo mostrar contenido si hay audiencia seleccionada */}
           {selectedAudience && (
-            <section className="py-16 bg-background">
+            <section className="py-8 bg-background">
               <div className="container mx-auto px-6">
                 <div className="grid lg:grid-cols-3 gap-12">
                   {/* Main Content */}
