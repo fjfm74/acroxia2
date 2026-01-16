@@ -74,6 +74,23 @@ const handler = async (req: Request): Promise<Response> => {
         })
         .eq("id", scheduledPost.id);
 
+      // Send notifications to blog subscribers in background
+      console.log("[approve-post] Triggering blog notifications for post:", scheduledPost.blog_post_id);
+      EdgeRuntime.waitUntil(
+        fetch(`${SUPABASE_URL}/functions/v1/send-blog-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+          },
+          body: JSON.stringify({ postId: scheduledPost.blog_post_id })
+        }).then(res => res.json()).then(result => {
+          console.log("[approve-post] Notification result:", result);
+        }).catch(err => {
+          console.error("[approve-post] Notification error:", err);
+        })
+      );
+
       return new Response(
         JSON.stringify({ 
           success: true, 

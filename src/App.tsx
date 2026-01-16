@@ -64,6 +64,8 @@ import CookieBanner from "./components/CookieBanner";
 import ChatContainer from "./components/chat/ChatContainer";
 import AprobarPost from "./pages/AprobarPost";
 import Unsubscribe from "./pages/Unsubscribe";
+import ConfirmBlogSubscription from "./pages/ConfirmBlogSubscription";
+import UnsubscribeBlog from "./pages/UnsubscribeBlog";
 
 const queryClient = new QueryClient();
 
@@ -141,6 +143,8 @@ const App = () => (
               <Route path="/propietarios" element={<Propietarios />} />
               <Route path="/aprobar-post/:token" element={<AprobarPost />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
+              <Route path="/confirmar-blog" element={<ConfirmBlogSubscription />} />
+              <Route path="/blog/unsubscribe" element={<UnsubscribeBlog />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieBanner />
