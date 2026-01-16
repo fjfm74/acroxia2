@@ -18,6 +18,8 @@ const staticRoutes = [
   { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly" },
   { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly" },
   { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly" },
+  { loc: "/propietarios", priority: "0.9", changefreq: "monthly" },
+  { loc: "/contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
   { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly" },
   { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly" },
   { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly" },

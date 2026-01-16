@@ -1,152 +1,137 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Páginas principales -->
   <url>
     <loc>https://acroxia.com/</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://acroxia.com/precios</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://acroxia.com/blog</loc>
-    <lastmod>2026-01-12</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://acroxia.com/faq</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://acroxia.com/propietarios</loc>
-    <lastmod>2026-01-14</lastmod>
-    <changefreq>monthly</changefreq>
+    <loc>https://acroxia.com/blog</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-  
-  <!-- Páginas SEO -->
+  <url>
+    <loc>https://acroxia.com/contacto</loc>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>https://acroxia.com/clausulas-abusivas-alquiler</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://acroxia.com/devolucion-fianza-alquiler</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://acroxia.com/subida-alquiler-2026</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://acroxia.com/propietarios</loc>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://acroxia.com/contrato-alquiler-propietarios</loc>
-    <lastmod>2026-01-14</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  
-  <!-- Páginas para profesionales -->
   <url>
     <loc>https://acroxia.com/profesionales/inmobiliarias</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://acroxia.com/profesionales/gestorias</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  
-  <!-- Análisis gratuito -->
   <url>
     <loc>https://acroxia.com/analizar-gratis</loc>
-    <lastmod>2026-01-12</lastmod>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-01-16</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
-  
-  <!-- Autenticación -->
   <url>
     <loc>https://acroxia.com/login</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://acroxia.com/registro</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-  
-  <!-- Páginas legales -->
   <url>
     <loc>https://acroxia.com/aviso-legal</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://acroxia.com/privacidad</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://acroxia.com/terminos</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://acroxia.com/cookies</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://acroxia.com/accesibilidad</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://acroxia.com/desistimiento</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://acroxia.com/transparencia-ia</loc>
-    <lastmod>2026-01-12</lastmod>
+    <lastmod>2026-01-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
-  
-  <!-- Contacto -->
-  <url>
-    <loc>https://acroxia.com/contacto</loc>
-    <lastmod>2026-01-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <!-- Blog posts -->
   <url>
     <loc>https://acroxia.com/blog/tu-contrato-de-alquiler-de-2026-incluye-clausulas-de-prorroga-voluntaria-lo-que-debes-saber-para-no-perder-tu-vivienda</loc>
     <lastmod>2026-01-12</lastmod>
