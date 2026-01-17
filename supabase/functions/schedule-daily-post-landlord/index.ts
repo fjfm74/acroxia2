@@ -138,7 +138,7 @@ Ultra high resolution.`;
 }
 
 async function sendApprovalEmail(
-  post: { id: string; title: string; excerpt: string; category: string; image?: string | null }, 
+  post: { id: string; title: string; excerpt: string; category: string; content?: string; image?: string | null }, 
   token: string
 ) {
   if (!resendApiKey) {
@@ -146,55 +146,68 @@ async function sendApprovalEmail(
     return;
   }
 
-  const approveUrl = `https://acroxia2.lovable.app/aprobar-post?token=${token}&action=approve`;
-  const rejectUrl = `https://acroxia2.lovable.app/aprobar-post?token=${token}&action=reject`;
-
-  const imageHtml = post.image ? `
-    <div style="margin: 20px 0; border-radius: 12px; overflow: hidden;">
-      <img src="${post.image}" alt="Imagen del post" style="width: 100%; max-height: 200px; object-fit: cover;" />
-    </div>
-  ` : '';
+  const siteUrl = 'https://acroxia.com';
+  const approveUrl = `${siteUrl}/aprobar-post/${token}`;
 
   const emailHtml = `
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px;">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; color: #1F1D1B; margin: 0;">ACROXIA</h1>
-        <p style="color: #666; margin-top: 8px; font-size: 14px;">📋 Contenido para Propietarios</p>
-      </div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Inter', Arial, sans-serif; background: #FAF8F5; padding: 40px 20px; margin: 0; }
+    .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
+    .header { background: #1F1D1B; color: #FAF8F5; padding: 32px; text-align: center; }
+    .header h1 { margin: 0; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; }
+    .content { padding: 32px; }
+    .featured-image { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 24px; }
+    .post-title { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: #1F1D1B; margin: 0 0 16px; }
+    .category { display: inline-block; background: #F5F3F0; color: #1F1D1B; padding: 6px 16px; border-radius: 20px; font-size: 14px; margin-bottom: 16px; }
+    .excerpt { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 24px; border-left: 3px solid #1F1D1B; padding-left: 16px; }
+    .preview-content { background: #F9F8F6; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; margin-bottom: 32px; }
+    .preview-content h2, .preview-content h3 { color: #1F1D1B; }
+    .actions { text-align: center; padding: 24px 0; }
+    .btn { display: inline-block; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; margin: 0 8px; }
+    .btn-approve { background: #1F1D1B; color: #FAF8F5; }
+    .btn-edit { background: transparent; color: #1F1D1B; border: 2px solid #1F1D1B; }
+    .footer { background: #F5F3F0; padding: 24px 32px; text-align: center; color: #666; font-size: 14px; }
+    .badge { display: inline-block; background: #E8F5E9; color: #2E7D32; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>ACROXIA</h1>
+      <p style="margin: 8px 0 0; opacity: 0.8;">Nuevo post pendiente de aprobación <span class="badge">Propietarios</span></p>
+    </div>
+    
+    <div class="content">
+      ${post.image ? `<img src="${post.image}" alt="Imagen destacada" class="featured-image">` : ''}
       
-      <div style="background: linear-gradient(135deg, #f8f6f3 0%, #fff 100%); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid #e5e3df;">
-        <span style="display: inline-block; background: #1F1D1B; color: #FAF8F5; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-bottom: 16px;">
-          ${post.category}
-        </span>
-        <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 22px; color: #1F1D1B; margin: 0 0 12px 0;">
-          ${post.title}
-        </h2>
-        <p style="color: #666; font-size: 15px; line-height: 1.6; margin: 0;">
-          ${post.excerpt}
-        </p>
-        ${imageHtml}
-      </div>
+      <span class="category">${post.category}</span>
+      <h2 class="post-title">${post.title}</h2>
+      <p class="excerpt">${post.excerpt}</p>
       
-      <div style="text-align: center; margin-bottom: 24px;">
-        <p style="color: #666; font-size: 14px; margin-bottom: 16px;">
-          ¿Quieres publicar este artículo?
-        </p>
-        <a href="${approveUrl}" style="display: inline-block; background: #1F1D1B; color: #FAF8F5; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 500; margin: 0 8px;">
-          ✓ Aprobar y publicar
-        </a>
-        <a href="${rejectUrl}" style="display: inline-block; background: transparent; color: #1F1D1B; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 500; border: 1px solid #1F1D1B; margin: 0 8px;">
-          ✗ Rechazar
-        </a>
+      ${post.content ? `
+      <div class="preview-content">
+        <h3>Vista previa del contenido:</h3>
+        <div>${post.content.substring(0, 1500)}${post.content.length > 1500 ? '...' : ''}</div>
       </div>
+      ` : ''}
       
-      <div style="text-align: center; padding-top: 24px; border-top: 1px solid #e5e3df;">
-        <p style="color: #999; font-size: 12px;">
-          Este email fue generado automáticamente por ACROXIA.<br>
-          El artículo permanecerá como borrador hasta que lo apruebes.
-        </p>
+      <div class="actions">
+        <a href="${approveUrl}" class="btn btn-approve">✓ Aprobar y Publicar</a>
+        <a href="${siteUrl}/admin/blog" class="btn btn-edit">✎ Editar Borrador</a>
       </div>
     </div>
-  `;
+    
+    <div class="footer">
+      <p>Este post se generó automáticamente y está guardado como borrador.</p>
+      <p>Si no haces nada, el post permanecerá sin publicar.</p>
+    </div>
+  </div>
+</body>
+</html>`;
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
@@ -204,9 +217,9 @@ async function sendApprovalEmail(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'ACROXIA Blog <blog@acroxia.es>',
-        to: ['david@acroxia.es'],
-        subject: `📋 [Propietarios] Nuevo post para aprobar: ${post.title}`,
+        from: 'ACROXIA <noreply@acroxia.com>',
+        to: ['nuriafrancis@gmail.com'],
+        subject: `📝 Nuevo post para aprobar: ${post.title}`,
         html: emailHtml,
       }),
     });
@@ -215,7 +228,7 @@ async function sendApprovalEmail(
       const error = await response.text();
       console.error('Error sending approval email:', error);
     } else {
-      console.log('Approval email sent successfully');
+      console.log('Approval email sent successfully to nuriafrancis@gmail.com');
     }
   } catch (error) {
     console.error('Error sending email:', error);
@@ -448,13 +461,14 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
     if (scheduleError) {
       console.error('Error creating scheduled post:', scheduleError);
     } else {
-      // Send approval email with image
+      // Send approval email with image and content preview
       await sendApprovalEmail(
         { 
           id: newPost.id, 
           title: newPost.title, 
           excerpt: newPost.excerpt,
           category: newPost.category,
+          content: postData.content,
           image: imageUrl
         },
         scheduledPost.approval_token
