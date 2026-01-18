@@ -215,7 +215,10 @@ export type Database = {
           confirmed_at: string | null
           created_at: string | null
           email: string
+          gdpr_consent: boolean | null
+          gdpr_consent_at: string | null
           id: string
+          ip_address: string | null
           unsubscribe_reason: string | null
           unsubscribed: boolean | null
           unsubscribed_at: string | null
@@ -227,7 +230,10 @@ export type Database = {
           confirmed_at?: string | null
           created_at?: string | null
           email: string
+          gdpr_consent?: boolean | null
+          gdpr_consent_at?: string | null
           id?: string
+          ip_address?: string | null
           unsubscribe_reason?: string | null
           unsubscribed?: boolean | null
           unsubscribed_at?: string | null
@@ -239,7 +245,10 @@ export type Database = {
           confirmed_at?: string | null
           created_at?: string | null
           email?: string
+          gdpr_consent?: boolean | null
+          gdpr_consent_at?: string | null
           id?: string
+          ip_address?: string | null
           unsubscribe_reason?: string | null
           unsubscribed?: boolean | null
           unsubscribed_at?: string | null
@@ -732,6 +741,75 @@ export type Database = {
           },
         ]
       }
+      marketing_contacts: {
+        Row: {
+          company_name: string | null
+          consent_details: string | null
+          consent_type: string
+          contact_count: number | null
+          contact_name: string | null
+          created_at: string | null
+          email: string
+          email_clicks: number | null
+          email_opens: number | null
+          id: string
+          last_contacted_at: string | null
+          notes: string | null
+          phone: string | null
+          segment: string
+          source: string
+          tags: string[] | null
+          unsubscribe_reason: string | null
+          unsubscribed: boolean | null
+          unsubscribed_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          consent_details?: string | null
+          consent_type?: string
+          contact_count?: number | null
+          contact_name?: string | null
+          created_at?: string | null
+          email: string
+          email_clicks?: number | null
+          email_opens?: number | null
+          id?: string
+          last_contacted_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          segment: string
+          source?: string
+          tags?: string[] | null
+          unsubscribe_reason?: string | null
+          unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          consent_details?: string | null
+          consent_type?: string
+          contact_count?: number | null
+          contact_name?: string | null
+          created_at?: string | null
+          email?: string
+          email_clicks?: number | null
+          email_opens?: number | null
+          id?: string
+          last_contacted_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          segment?: string
+          source?: string
+          tags?: string[] | null
+          unsubscribe_reason?: string | null
+          unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           address: string | null
@@ -787,10 +865,13 @@ export type Database = {
           full_name: string | null
           id: string
           last_name: string | null
+          marketing_consent: boolean | null
+          marketing_consent_at: string | null
           phone: string | null
           privacy_accepted_at: string | null
           terms_accepted_at: string | null
           updated_at: string
+          user_type: string | null
         }
         Insert: {
           cookies_consent?: Json | null
@@ -801,10 +882,13 @@ export type Database = {
           full_name?: string | null
           id: string
           last_name?: string | null
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
           phone?: string | null
           privacy_accepted_at?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
+          user_type?: string | null
         }
         Update: {
           cookies_consent?: Json | null
@@ -815,10 +899,13 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_name?: string | null
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
           phone?: string | null
           privacy_accepted_at?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
+          user_type?: string | null
         }
         Relationships: []
       }
