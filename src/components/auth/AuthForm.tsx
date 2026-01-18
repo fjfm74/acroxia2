@@ -14,12 +14,16 @@ interface AuthFormProps {
   mode: "login" | "register";
 }
 
+type UserType = "inquilino" | "propietario" | "profesional";
+
 const AuthForm = ({ mode }: AuthFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [userType, setUserType] = useState<UserType | null>(null);
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,6 +44,16 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           return;
         }
 
+        if (!userType) {
+          toast({
+            title: "Tipo de usuario requerido",
+            description: "Por favor, indica si eres inquilino, propietario o profesional.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -53,38 +67,58 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
         if (error) throw error;
 
-        // Save terms acceptance timestamp and log consent
+        // Save terms acceptance timestamp, user type, marketing consent and log consent
         if (data.user) {
           const now = new Date().toISOString();
           
-          // Update profile with acceptance timestamps
+          // Update profile with acceptance timestamps and user segmentation
           await supabase
             .from("profiles")
             .update({
               terms_accepted_at: now,
               privacy_accepted_at: now,
+              user_type: userType,
+              marketing_consent: marketingConsent,
+              marketing_consent_at: marketingConsent ? now : null,
             })
             .eq("id", data.user.id);
 
-          // Log consent in audit log
+          // Log terms and privacy consent in audit log
           await supabase.from("consent_logs").insert({
             user_id: data.user.id,
             consent_type: "terms_and_privacy",
             accepted: true,
             user_agent: navigator.userAgent,
-            document_version: "2026-01-08",
+            document_version: "2026-01-18",
             metadata: {
-              terms_version: "2026-01-08",
-              privacy_version: "2026-01-08",
+              terms_version: "2026-01-18",
+              privacy_version: "2026-01-18",
               registration_email: email,
+              user_type: userType,
             },
           });
+
+          // Log marketing consent separately if accepted
+          if (marketingConsent) {
+            await supabase.from("consent_logs").insert({
+              user_id: data.user.id,
+              consent_type: "marketing_consent",
+              accepted: true,
+              user_agent: navigator.userAgent,
+              document_version: "2026-01-18",
+              metadata: {
+                user_type: userType,
+                registration_email: email,
+              },
+            });
+          }
         }
 
         // Track sign_up conversion
         trackConversion('sign_up', {
           method: 'email',
           user_id: data.user?.id,
+          user_type: userType,
         });
         if (data.user) {
           identifyUser(data.user.id);
@@ -152,6 +186,12 @@ const AuthForm = ({ mode }: AuthFormProps) => {
     }
   };
 
+  const userTypeOptions: { value: UserType; label: string }[] = [
+    { value: "inquilino", label: "Inquilino" },
+    { value: "propietario", label: "Propietario" },
+    { value: "profesional", label: "Profesional" },
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {mode === "register" && (
@@ -216,27 +256,68 @@ const AuthForm = ({ mode }: AuthFormProps) => {
       </div>
 
       {mode === "register" && (
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="terms"
-            checked={acceptedTerms}
-            onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
-            className="mt-1"
-          />
-          <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-            He leído y acepto los{" "}
-            <Link to="/terminos" className="text-primary hover:underline" target="_blank">
-              Términos y Condiciones
-            </Link>{" "}
-            y la{" "}
-            <Link to="/privacidad" className="text-primary hover:underline" target="_blank">
-              Política de Privacidad
-            </Link>
-          </Label>
-        </div>
+        <>
+          {/* User Type Selector */}
+          <div className="space-y-3">
+            <Label>Soy principalmente...</Label>
+            <div className="flex flex-wrap gap-2">
+              {userTypeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setUserType(option.value)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    userType === option.value
+                      ? "bg-foreground text-background"
+                      : "bg-foreground/10 text-foreground hover:bg-foreground/20"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Terms and Privacy Checkbox */}
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="terms"
+              checked={acceptedTerms}
+              onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+              className="mt-1"
+            />
+            <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+              He leído y acepto los{" "}
+              <Link to="/terminos" className="text-primary hover:underline" target="_blank">
+                Términos y Condiciones
+              </Link>{" "}
+              y la{" "}
+              <Link to="/privacidad" className="text-primary hover:underline" target="_blank">
+                Política de Privacidad
+              </Link>
+            </Label>
+          </div>
+
+          {/* Marketing Consent Checkbox (optional) */}
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="marketing"
+              checked={marketingConsent}
+              onCheckedChange={(checked) => setMarketingConsent(checked as boolean)}
+              className="mt-1"
+            />
+            <Label htmlFor="marketing" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+              Acepto recibir comunicaciones comerciales y novedades de ACROXIA por email. Puedo darme de baja en cualquier momento.
+            </Label>
+          </div>
+        </>
       )}
 
-      <Button type="submit" className="w-full" disabled={loading || (mode === "register" && !acceptedTerms)}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={loading || (mode === "register" && (!acceptedTerms || !userType))}
+      >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
       </Button>
