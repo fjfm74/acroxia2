@@ -8,7 +8,8 @@ import {
   Briefcase,
   Share2,
   User,
-  Newspaper
+  Newspaper,
+  Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,11 @@ const menuItems = [
     title: "Monitor BOE",
     href: "/admin/boe",
     icon: Newspaper,
+  },
+  {
+    title: "Marketing B2B",
+    href: "/admin/marketing",
+    icon: Mail,
   },
   {
     title: "Documentos Legales",
