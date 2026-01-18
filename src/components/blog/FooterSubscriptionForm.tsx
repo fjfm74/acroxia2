@@ -2,7 +2,10 @@ import { useState } from "react";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const FooterSubscriptionForm = () => {
   const [audience, setAudience] = useState<"inquilino" | "propietario">("inquilino");
@@ -10,25 +13,49 @@ const FooterSubscriptionForm = () => {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [gdprConsent, setGdprConsent] = useState(false);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!gdprConsent) {
+      setStatus("error");
+      setErrorMessage("Debes aceptar la Política de Privacidad para suscribirte.");
+      return;
+    }
+    
     setIsSubscribing(true);
     setStatus("idle");
     setErrorMessage("");
 
     try {
+      // Get user's IP address
+      let ipAddress = "";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        ipAddress = ipData.ip;
+      } catch {
+        console.warn("Could not get IP address");
+      }
+
+      const now = new Date().toISOString();
+
       const { error: insertError } = await supabase
         .from("blog_subscribers")
         .insert({ 
           email: email.toLowerCase().trim(), 
-          audience 
+          audience,
+          gdpr_consent: true,
+          gdpr_consent_at: now,
+          ip_address: ipAddress,
         });
 
       if (insertError) {
         if (insertError.code === "23505") {
           setStatus("success");
           setEmail("");
+          setGdprConsent(false);
         } else {
           throw insertError;
         }
@@ -38,6 +65,7 @@ const FooterSubscriptionForm = () => {
         });
         setStatus("success");
         setEmail("");
+        setGdprConsent(false);
       }
     } catch (error) {
       console.error("Error subscribing:", error);
@@ -88,30 +116,52 @@ const FooterSubscriptionForm = () => {
       </div>
 
       {/* Formulario */}
-      <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-        <Input 
-          type="email" 
-          placeholder="tu@email.com" 
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          disabled={isSubscribing}
-          className="flex-1 bg-background"
-        />
-        <Button 
-          type="submit" 
-          className="rounded-full px-6"
-          disabled={isSubscribing || !email}
-        >
-          {isSubscribing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Enviando...
-            </>
-          ) : (
-            "Suscribirme"
-          )}
-        </Button>
+      <form onSubmit={handleSubscribe} className="space-y-3 max-w-md mx-auto">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Input 
+            type="email" 
+            placeholder="tu@email.com" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={isSubscribing}
+            className="flex-1 bg-background"
+          />
+          <Button 
+            type="submit" 
+            className="rounded-full px-6"
+            disabled={isSubscribing || !email || !gdprConsent}
+          >
+            {isSubscribing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              "Suscribirme"
+            )}
+          </Button>
+        </div>
+        
+        {/* GDPR Consent Checkbox */}
+        <div className="flex items-start gap-3 justify-center">
+          <Checkbox
+            id="footer-gdpr-consent"
+            checked={gdprConsent}
+            onCheckedChange={(checked) => setGdprConsent(checked as boolean)}
+            className="mt-0.5"
+          />
+          <Label 
+            htmlFor="footer-gdpr-consent" 
+            className="text-xs text-muted-foreground leading-relaxed cursor-pointer text-left"
+          >
+            Acepto la{" "}
+            <Link to="/privacidad" className="text-primary hover:underline">
+              Política de Privacidad
+            </Link>{" "}
+            y recibir emails con nuevos artículos.
+          </Label>
+        </div>
       </form>
 
       {status === "error" && (
