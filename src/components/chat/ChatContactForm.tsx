@@ -8,11 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, X } from "lucide-react";
+import { emailSchema, fullNameSchema } from "@/lib/validations";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Mínimo 2 caracteres"),
-  email: z.string().email("Email no válido"),
-  message: z.string().min(10, "Mínimo 10 caracteres"),
+  name: fullNameSchema,
+  email: emailSchema,
+  message: z.string().min(10, "Mínimo 10 caracteres").max(1000, "Máximo 1000 caracteres"),
 });
 
 type FormData = z.infer<typeof formSchema>;
