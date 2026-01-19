@@ -22,39 +22,26 @@ const ConfirmBlogSubscription = () => {
       }
 
       try {
-        // Find subscriber by token
-        const { data: subscriber, error: findError } = await supabase
-          .from("blog_subscribers")
-          .select("id, confirmed, audience")
-          .eq("confirmation_token", token)
-          .single();
+        // Call backend function (bypasses RLS)
+        const { data, error } = await supabase.functions.invoke("confirm-blog-subscription", {
+          body: { token }
+        });
 
-        if (findError || !subscriber) {
+        if (error) {
+          console.error("Error confirming subscription:", error);
           setStatus("error");
           return;
         }
 
-        if (subscriber.confirmed) {
-          setAudience(subscriber.audience);
+        if (data.status === "success") {
+          setAudience(data.audience);
+          setStatus("success");
+        } else if (data.status === "already_confirmed") {
+          setAudience(data.audience);
           setStatus("already_confirmed");
-          return;
+        } else {
+          setStatus("error");
         }
-
-        // Update to confirmed
-        const { error: updateError } = await supabase
-          .from("blog_subscribers")
-          .update({ 
-            confirmed: true, 
-            confirmed_at: new Date().toISOString() 
-          })
-          .eq("id", subscriber.id);
-
-        if (updateError) {
-          throw updateError;
-        }
-
-        setAudience(subscriber.audience);
-        setStatus("success");
       } catch (error) {
         console.error("Error confirming subscription:", error);
         setStatus("error");
