@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { emailSchema } from "@/lib/validations";
 
 const FooterSubscriptionForm = () => {
   const [audience, setAudience] = useState<"inquilino" | "propietario">("inquilino");
@@ -17,6 +18,15 @@ const FooterSubscriptionForm = () => {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email with Zod
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      setStatus("error");
+      setErrorMessage(emailResult.error.errors[0].message);
+      return;
+    }
+    const validatedEmail = emailResult.data;
     
     if (!gdprConsent) {
       setStatus("error");
@@ -44,7 +54,7 @@ const FooterSubscriptionForm = () => {
       const { error: insertError } = await supabase
         .from("blog_subscribers")
         .insert({ 
-          email: email.toLowerCase().trim(), 
+          email: validatedEmail, 
           audience,
           gdpr_consent: true,
           gdpr_consent_at: now,
@@ -61,7 +71,7 @@ const FooterSubscriptionForm = () => {
         }
       } else {
         await supabase.functions.invoke("send-blog-confirmation", {
-          body: { email: email.toLowerCase().trim(), audience }
+          body: { email: validatedEmail, audience }
         });
         setStatus("success");
         setEmail("");

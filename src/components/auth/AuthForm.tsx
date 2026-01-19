@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { checkUserIsAdmin } from "@/hooks/useIsAdmin";
 import { trackConversion, identifyUser } from "@/lib/analytics";
+import { emailSchema, passwordSchema, fullNameSchema } from "@/lib/validations";
 
 interface AuthFormProps {
   mode: "login" | "register";
@@ -32,8 +33,46 @@ const AuthForm = ({ mode }: AuthFormProps) => {
     e.preventDefault();
     setLoading(true);
 
+    // Validate email with Zod
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      toast({
+        title: "Email inválido",
+        description: emailResult.error.errors[0].message,
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+    const validatedEmail = emailResult.data;
+
+    // Validate password with Zod
+    const passwordResult = passwordSchema.safeParse(password);
+    if (!passwordResult.success) {
+      toast({
+        title: "Contraseña inválida",
+        description: passwordResult.error.errors[0].message,
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       if (mode === "register") {
+        // Validate full name for registration
+        const nameResult = fullNameSchema.safeParse(fullName);
+        if (!nameResult.success) {
+          toast({
+            title: "Nombre inválido",
+            description: nameResult.error.errors[0].message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        const validatedName = nameResult.data;
+
         if (!acceptedTerms) {
           toast({
             title: "Términos requeridos",
@@ -55,12 +94,12 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         }
 
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: validatedEmail,
           password,
           options: {
             emailRedirectTo: window.location.origin,
             data: {
-              full_name: fullName,
+              full_name: validatedName,
             },
           },
         });
@@ -132,7 +171,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         navigate("/dashboard");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: validatedEmail,
           password,
         });
 
