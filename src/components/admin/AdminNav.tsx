@@ -9,7 +9,7 @@ import {
   Share2,
   User,
   Newspaper,
-  Mail
+  UsersRound
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +39,9 @@ const menuItems = [
     icon: Newspaper,
   },
   {
-    title: "Marketing B2B",
+    title: "CRM Contactos",
     href: "/admin/marketing",
-    icon: Mail,
+    icon: UsersRound,
   },
   {
     title: "Documentos Legales",
