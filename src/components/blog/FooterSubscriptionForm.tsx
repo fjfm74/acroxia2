@@ -10,6 +10,7 @@ import { emailSchema } from "@/lib/validations";
 
 const FooterSubscriptionForm = () => {
   const [audience, setAudience] = useState<"inquilino" | "propietario">("inquilino");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -56,6 +57,7 @@ const FooterSubscriptionForm = () => {
         .insert({ 
           email: validatedEmail, 
           audience,
+          name: name.trim() || null,
           gdpr_consent: true,
           gdpr_consent_at: now,
           ip_address: ipAddress,
@@ -64,6 +66,7 @@ const FooterSubscriptionForm = () => {
       if (insertError) {
         if (insertError.code === "23505") {
           setStatus("success");
+          setName("");
           setEmail("");
           setGdprConsent(false);
         } else {
@@ -74,6 +77,7 @@ const FooterSubscriptionForm = () => {
           body: { email: validatedEmail, audience }
         });
         setStatus("success");
+        setName("");
         setEmail("");
         setGdprConsent(false);
       }
@@ -128,6 +132,14 @@ const FooterSubscriptionForm = () => {
       {/* Formulario */}
       <form onSubmit={handleSubscribe} className="space-y-3 max-w-md mx-auto">
         <div className="flex flex-col sm:flex-row gap-3">
+          <Input 
+            type="text" 
+            placeholder="Tu nombre (opcional)" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={isSubscribing}
+            className="flex-1 bg-background"
+          />
           <Input 
             type="email" 
             placeholder="tu@email.com" 
