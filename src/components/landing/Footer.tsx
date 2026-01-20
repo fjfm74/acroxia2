@@ -6,6 +6,19 @@ const Footer = () => {
   return (
     <footer className="bg-muted">
       <div className="container mx-auto px-6 py-20">
+        {/* Newsletter Subscription - Arriba de todo */}
+        <div className="pb-12 mb-12 border-b border-border">
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="font-serif text-xl font-medium text-foreground mb-2">
+              Suscríbete a nuestro newsletter
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Recibe artículos y novedades legales según tu perfil
+            </p>
+            <FooterSubscriptionForm />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-2">
@@ -117,19 +130,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Newsletter Subscription */}
-        <div className="border-t border-border pt-12 pb-8">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="font-serif text-xl font-medium text-foreground mb-2">
-              Suscríbete a nuestro newsletter
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Recibe artículos y novedades legales según tu perfil
-            </p>
-            <FooterSubscriptionForm />
-          </div>
-        </div>
-        
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
             © 2026 ACROXIA. Todos los derechos reservados.

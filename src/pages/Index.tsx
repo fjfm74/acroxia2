@@ -5,7 +5,7 @@ import StatsSection from "@/components/landing/StatsSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import Footer from "@/components/landing/Footer";
 import FadeIn from "@/components/animations/FadeIn";
-import BlogSubscriptionForm from "@/components/blog/BlogSubscriptionForm";
+
 
 const Index = () => {
   // Schema Organization - Enriquecido para E-E-A-T
@@ -128,23 +128,6 @@ const Index = () => {
           <HeroSection />
           <StatsSection />
           <HowItWorksSection />
-          
-          {/* Newsletter Inquilinos */}
-          <section className="bg-muted py-20">
-            <div className="container mx-auto px-6">
-              <FadeIn>
-                <div className="max-w-xl mx-auto text-center">
-                  <h2 className="font-serif text-3xl font-medium text-foreground mb-4">
-                    Mantente informado
-                  </h2>
-                  <p className="text-muted-foreground mb-8">
-                    Recibe artículos sobre derechos del inquilino, cláusulas abusivas y novedades legales.
-                  </p>
-                  <BlogSubscriptionForm selectedAudience="inquilino" />
-                </div>
-              </FadeIn>
-            </div>
-          </section>
         </main>
         <Footer />
       </div>
