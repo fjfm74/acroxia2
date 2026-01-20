@@ -250,7 +250,7 @@ const handler = async (req: Request): Promise<Response> => {
             body: JSON.stringify({
               from: "ACROXIA Blog <blog@acroxia.com>",
               to: [subscriber.email],
-              subject: `Nuevo artículo: ${post.title}`,
+              subject: post.title,
               html: emailHtml,
             }),
           });
