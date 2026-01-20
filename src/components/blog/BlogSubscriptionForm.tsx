@@ -126,7 +126,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
       <form onSubmit={handleSubscribe} className="space-y-3">
         <Input
           type="text"
-          placeholder="Tu nombre (opcional)"
+          placeholder="Tu nombre"
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={isSubscribing}
