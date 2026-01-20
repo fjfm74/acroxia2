@@ -209,9 +209,9 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "ACROXIA Blog <blog@acroxia.com>",
+        from: "ACROXIA <noreply@acroxia.com>",
         to: [email],
-        subject: "Confirma tu suscripción al blog de ACROXIA",
+        subject: "Confirma tu suscripción",
         html: emailHtml,
       }),
     });

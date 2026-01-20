@@ -219,6 +219,7 @@ export type Database = {
           gdpr_consent_at: string | null
           id: string
           ip_address: string | null
+          name: string | null
           unsubscribe_reason: string | null
           unsubscribed: boolean | null
           unsubscribed_at: string | null
@@ -234,6 +235,7 @@ export type Database = {
           gdpr_consent_at?: string | null
           id?: string
           ip_address?: string | null
+          name?: string | null
           unsubscribe_reason?: string | null
           unsubscribed?: boolean | null
           unsubscribed_at?: string | null
@@ -249,6 +251,7 @@ export type Database = {
           gdpr_consent_at?: string | null
           id?: string
           ip_address?: string | null
+          name?: string | null
           unsubscribe_reason?: string | null
           unsubscribed?: boolean | null
           unsubscribed_at?: string | null

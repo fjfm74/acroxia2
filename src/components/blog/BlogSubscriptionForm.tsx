@@ -13,6 +13,7 @@ interface BlogSubscriptionFormProps {
 }
 
 const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -60,6 +61,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
         .insert({ 
           email: validatedEmail, 
           audience: selectedAudience,
+          name: name.trim() || null,
           gdpr_consent: true,
           gdpr_consent_at: now,
           ip_address: ipAddress,
@@ -69,6 +71,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
         // Unique constraint violation = already subscribed
         if (insertError.code === "23505") {
           setStatus("success");
+          setName("");
           setEmail("");
           setGdprConsent(false);
         } else {
@@ -80,6 +83,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
           body: { email: validatedEmail, audience: selectedAudience }
         });
         setStatus("success");
+        setName("");
         setEmail("");
         setGdprConsent(false);
       }
@@ -120,6 +124,14 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
         Te avisamos cuando publiquemos contenido para {audienceLabel}.
       </p>
       <form onSubmit={handleSubscribe} className="space-y-3">
+        <Input
+          type="text"
+          placeholder="Tu nombre (opcional)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={isSubscribing}
+          className="bg-background"
+        />
         <Input
           type="email"
           placeholder="tu@email.com"

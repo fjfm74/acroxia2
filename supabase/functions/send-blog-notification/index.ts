@@ -126,7 +126,7 @@ interface BlogPost {
   read_time: string;
 }
 
-const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
+const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string, subscriberName?: string) => {
   const postUrl = `https://acroxia.com/blog/${post.slug}`;
   const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
   
@@ -208,7 +208,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Get confirmed subscribers for this audience
     const { data: subscribers, error: subscribersError } = await supabase
       .from("blog_subscribers")
-      .select("email, confirmation_token")
+      .select("email, confirmation_token, name")
       .eq("audience", post.audience)
       .eq("confirmed", true)
       .eq("unsubscribed", false);
@@ -238,7 +238,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       const emailPromises = batch.map(async (subscriber) => {
         const unsubscribeUrl = `https://acroxia.com/blog/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${subscriber.confirmation_token}`;
-        const emailHtml = generateNewPostEmail(post, unsubscribeUrl);
+        const emailHtml = generateNewPostEmail(post, unsubscribeUrl, subscriber.name);
 
         try {
           const response = await fetch("https://api.resend.com/emails", {
