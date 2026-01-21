@@ -385,6 +385,7 @@ async function handler(req: Request): Promise<Response> {
               body: JSON.stringify({
                 from: "ACROXIA BOE Monitor <alertas@acroxia.com>",
                 to: [email],
+                reply_to: "contacto@acroxia.com",
                 subject: subject,
                 html: emailHtml
               })

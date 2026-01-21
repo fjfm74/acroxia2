@@ -219,6 +219,7 @@ async function sendApprovalEmail(
       body: JSON.stringify({
         from: 'ACROXIA <noreply@acroxia.com>',
         to: ['nuriafrancis@gmail.com'],
+        reply_to: 'contacto@acroxia.com',
         subject: `📝 Nuevo post para aprobar: ${post.title}`,
         html: emailHtml,
       }),
