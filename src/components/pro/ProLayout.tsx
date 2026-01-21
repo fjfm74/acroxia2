@@ -32,7 +32,7 @@ const ProLayout = ({ children, title, subtitle }: ProLayoutProps) => {
           {children}
         </div>
       </main>
-      <Footer />
+      <Footer hideSubscription />
     </div>
   );
 };

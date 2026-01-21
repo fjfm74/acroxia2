@@ -32,7 +32,7 @@ const LandlordLayout = ({ children, title, subtitle }: LandlordLayoutProps) => {
           {children}
         </div>
       </main>
-      <Footer />
+      <Footer hideSubscription />
     </div>
   );
 };
