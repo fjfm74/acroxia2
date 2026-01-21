@@ -281,7 +281,7 @@ const Dashboard = () => {
           </div>
         </main>
 
-        <Footer />
+        <Footer hideSubscription />
       </div>
     </>
   );
