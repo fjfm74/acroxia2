@@ -161,6 +161,7 @@ serve(async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "ACROXIA <noreply@acroxia.com>",
         to: [email],
+        reply_to: "contacto@acroxia.com",
         subject: `Tu contrato tiene ${result.illegal_clauses || 0} cláusulas potencialmente ilegales`,
         html: emailHtml,
       }),

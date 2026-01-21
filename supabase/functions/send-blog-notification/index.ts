@@ -250,6 +250,7 @@ const handler = async (req: Request): Promise<Response> => {
             body: JSON.stringify({
               from: "ACROXIA Blog <blog@acroxia.com>",
               to: [subscriber.email],
+              reply_to: "contacto@acroxia.com",
               subject: post.title,
               html: emailHtml,
             }),

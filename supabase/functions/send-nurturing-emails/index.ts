@@ -104,6 +104,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             from: "ACROXIA <info@acroxia.com>",
             to: [lead.email],
+            reply_to: "contacto@acroxia.com",
             subject: emailTemplate.subject,
             html: emailTemplate.html,
           }),
@@ -156,6 +157,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             from: "ACROXIA <info@acroxia.com>",
             to: [lead.email],
+            reply_to: "contacto@acroxia.com",
             subject: emailTemplate.subject,
             html: emailTemplate.html,
           }),

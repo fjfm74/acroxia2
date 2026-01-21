@@ -211,6 +211,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "ACROXIA <noreply@acroxia.com>",
         to: [email],
+        reply_to: "contacto@acroxia.com",
         subject: "Confirma tu suscripción",
         html: emailHtml,
       }),
