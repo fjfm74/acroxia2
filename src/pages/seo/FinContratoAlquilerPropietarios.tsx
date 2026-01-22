@@ -134,7 +134,7 @@ const faqs = [
 
 const FinContratoAlquilerPropietarios = () => {
   const breadcrumbItems = [
-    { label: "Para Propietarios" },
+    { label: "Propietarios", href: "/propietarios" },
     { label: "Fin de Contrato" },
   ];
 

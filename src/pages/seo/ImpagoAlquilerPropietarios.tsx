@@ -103,7 +103,7 @@ const faqs = [
 
 const ImpagoAlquilerPropietarios = () => {
   const breadcrumbItems = [
-    { label: "Para Propietarios" },
+    { label: "Propietarios", href: "/propietarios" },
     { label: "Impago de Alquiler" },
   ];
 

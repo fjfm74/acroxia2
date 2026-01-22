@@ -119,7 +119,7 @@ const faqs = [
 
 const ZonasTensionadasPropietarios = () => {
   const breadcrumbItems = [
-    { label: "Para Propietarios" },
+    { label: "Propietarios", href: "/propietarios" },
     { label: "Zonas Tensionadas" },
   ];
 
