@@ -57,6 +57,10 @@ import ClausulasAbusivas from "./pages/seo/ClausulasAbusivas";
 import DevolucionFianza from "./pages/seo/DevolucionFianza";
 import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
 import ContratoAlquilerPropietarios from "./pages/seo/ContratoAlquilerPropietarios";
+import ImpagoAlquilerPropietarios from "./pages/seo/ImpagoAlquilerPropietarios";
+import ZonasTensionadasPropietarios from "./pages/seo/ZonasTensionadasPropietarios";
+import DepositoFianzaPropietarios from "./pages/seo/DepositoFianzaPropietarios";
+import FinContratoAlquilerPropietarios from "./pages/seo/FinContratoAlquilerPropietarios";
 import Contacto from "./pages/Contacto";
 import Inmobiliarias from "./pages/profesionales/Inmobiliarias";
 import Gestorias from "./pages/profesionales/Gestorias";
@@ -140,6 +144,10 @@ const App = () => (
               <Route path="/devolucion-fianza-alquiler" element={<DevolucionFianza />} />
               <Route path="/subida-alquiler-2026" element={<SubidaAlquiler2026 />} />
               <Route path="/contrato-alquiler-propietarios" element={<ContratoAlquilerPropietarios />} />
+              <Route path="/impago-alquiler-propietarios" element={<ImpagoAlquilerPropietarios />} />
+              <Route path="/zonas-tensionadas-propietarios" element={<ZonasTensionadasPropietarios />} />
+              <Route path="/deposito-fianza-propietarios" element={<DepositoFianzaPropietarios />} />
+              <Route path="/fin-contrato-alquiler-propietarios" element={<FinContratoAlquilerPropietarios />} />
               <Route path="/profesionales/inmobiliarias" element={<Inmobiliarias />} />
               <Route path="/profesionales/gestorias" element={<Gestorias />} />
               <Route path="/propietarios" element={<Propietarios />} />
