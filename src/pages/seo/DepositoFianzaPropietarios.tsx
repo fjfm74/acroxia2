@@ -127,7 +127,7 @@ const faqs = [
 
 const DepositoFianzaPropietarios = () => {
   const breadcrumbItems = [
-    { label: "Para Propietarios" },
+    { label: "Propietarios", href: "/propietarios" },
     { label: "Depósito de Fianza" },
   ];
 
