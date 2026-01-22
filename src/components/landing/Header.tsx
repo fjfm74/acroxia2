@@ -31,7 +31,9 @@ import {
   ChevronDown,
   Settings,
   Home,
-  Key
+  Key,
+  MapPin,
+  Clock
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsProfessional } from "@/hooks/useIsProfessional";
@@ -221,52 +223,113 @@ const Header = () => {
                   exit="exit"
                   variants={menuVariants}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[520px] bg-cream rounded-xl shadow-lg border border-charcoal/5 p-4 z-50"
                 >
-                  <Link 
-                    to="/clausulas-abusivas-alquiler" 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-5 h-5 text-amber-600" />
-                    </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Columna Inquilinos */}
                     <div>
-                      <p className="font-medium text-foreground text-sm">Cláusulas abusivas</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Identifica cláusulas ilegales</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Inquilinos</p>
+                      <Link 
+                        to="/clausulas-abusivas-alquiler" 
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <AlertTriangle className="w-4 h-4 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">Cláusulas abusivas</p>
+                          <p className="text-xs text-muted-foreground">Identifica cláusulas ilegales</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/devolucion-fianza-alquiler" 
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                          <Wallet className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">Devolución de fianza</p>
+                          <p className="text-xs text-muted-foreground">Recupera tu depósito</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/subida-alquiler-2026" 
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <TrendingUp className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
+                          <p className="text-xs text-muted-foreground">Límites IRAV y normativa</p>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                  <Link 
-                    to="/devolucion-fianza-alquiler" 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <Wallet className="w-5 h-5 text-emerald-600" />
-                    </div>
+                    
+                    {/* Columna Propietarios */}
                     <div>
-                      <p className="font-medium text-foreground text-sm">Devolución de fianza</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Recupera tu depósito</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Propietarios</p>
+                      <Link 
+                        to="/impago-alquiler-propietarios" 
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                          <AlertTriangle className="w-4 h-4 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">Impago de alquiler</p>
+                          <p className="text-xs text-muted-foreground">Pasos ante morosos</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/zonas-tensionadas-propietarios" 
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">Zonas tensionadas</p>
+                          <p className="text-xs text-muted-foreground">SERPAVI y límites</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/deposito-fianza-propietarios" 
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <Wallet className="w-4 h-4 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">Depósito de fianza</p>
+                          <p className="text-xs text-muted-foreground">INCASOL, IVIMA...</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/fin-contrato-alquiler-propietarios" 
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-4 h-4 text-slate-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">Fin de contrato</p>
+                          <p className="text-xs text-muted-foreground">Prórrogas y recuperación</p>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                  <Link 
-                    to="/subida-alquiler-2026" 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <TrendingUp className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Límites y normativa actual</p>
-                    </div>
-                  </Link>
-                  <div className="border-t border-charcoal/10 my-2" />
-                  <Link 
-                    to="/faq" 
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                    Todas las preguntas
-                  </Link>
+                  </div>
+                  
+                  <div className="border-t border-charcoal/10 mt-3 pt-2">
+                    <Link 
+                      to="/faq" 
+                      className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                    >
+                      <HelpCircle className="w-4 h-4" />
+                      Todas las preguntas frecuentes
+                    </Link>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -416,9 +479,9 @@ const Header = () => {
                 </div>
               </div>
 
-              {/* Guías SEO en móvil */}
+              {/* Guías para Inquilinos en móvil */}
               <div className="pt-4 border-t border-charcoal/10">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Guías</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Guías para Inquilinos</p>
                 <div className="flex flex-col gap-3">
                   <Link 
                     to="/clausulas-abusivas-alquiler" 
@@ -440,6 +503,41 @@ const Header = () => {
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Subida alquiler 2026
+                  </Link>
+                </div>
+              </div>
+
+              {/* Guías para Propietarios en móvil */}
+              <div className="pt-4 border-t border-charcoal/10">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Guías para Propietarios</p>
+                <div className="flex flex-col gap-3">
+                  <Link 
+                    to="/impago-alquiler-propietarios" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Impago de alquiler
+                  </Link>
+                  <Link 
+                    to="/zonas-tensionadas-propietarios" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Zonas tensionadas
+                  </Link>
+                  <Link 
+                    to="/deposito-fianza-propietarios" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Depósito de fianza
+                  </Link>
+                  <Link 
+                    to="/fin-contrato-alquiler-propietarios" 
+                    onClick={closeMobileMenu}
+                    className="text-foreground/70 hover:text-foreground transition-colors text-sm"
+                  >
+                    Fin de contrato
                   </Link>
                 </div>
               </div>
