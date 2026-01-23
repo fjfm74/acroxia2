@@ -14,6 +14,7 @@ import {
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedLandlordGuides from "@/components/seo/RelatedLandlordGuides";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -150,6 +151,32 @@ const ZonasTensionadasPropietarios = () => {
     }))
   };
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Zonas Tensionadas: Guía para Propietarios | Límites de Renta 2026",
+    "description": "Cómo consultar SERPAVI, límites de renta, obligaciones legales y excepciones permitidas en zonas tensionadas.",
+    "author": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://acroxia.com/acroxia-logo.png"
+      }
+    },
+    "datePublished": "2026-01-22",
+    "dateModified": "2026-01-23",
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -172,6 +199,9 @@ const ZonasTensionadasPropietarios = () => {
         </script>
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
         </script>
       </Helmet>
 
@@ -205,6 +235,29 @@ const ZonasTensionadasPropietarios = () => {
                     <Link to="/analizar-gratis">Analizar mi contrato</Link>
                   </Button>
                 </div>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* TL;DR Resumen rápido */}
+        <section className="bg-amber-50 border-y border-amber-200 py-6">
+          <div className="container mx-auto px-6">
+            <FadeIn>
+              <div className="max-w-3xl mx-auto">
+                <p className="text-sm font-medium text-foreground mb-2">Resumen rápido</p>
+                <p className="text-muted-foreground speakable-summary">
+                  Consulta si tu vivienda está en zona tensionada en serpavi.mivau.gob.es. Si lo está, 
+                  la renta de nuevos contratos está limitada a la del contrato anterior o al índice SERPAVI. 
+                  Debes declararlo obligatoriamente en el{" "}
+                  <Link to="/contrato-alquiler-propietarios" className="underline hover:text-foreground">contrato de alquiler</Link>. 
+                  Consulta también las reglas de{" "}
+                  <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">depósito de fianza</Link> y{" "}
+                  <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link>.
+                </p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Última actualización: enero 2026 | Normativa vigente: Ley de Vivienda y LAU
+                </p>
               </div>
             </FadeIn>
           </div>
@@ -447,6 +500,9 @@ const ZonasTensionadasPropietarios = () => {
             </FadeIn>
           </div>
         </section>
+
+        {/* Guías relacionadas */}
+        <RelatedLandlordGuides currentSlug="/zonas-tensionadas-propietarios" />
       </main>
 
       <Footer />

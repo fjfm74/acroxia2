@@ -14,6 +14,7 @@ import {
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedLandlordGuides from "@/components/seo/RelatedLandlordGuides";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -147,6 +148,32 @@ const ImpagoAlquilerPropietarios = () => {
     }))
   };
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Qué Hacer Ante el Impago de Alquiler | Guía para Propietarios 2026",
+    "description": "Pasos legales, desahucio express, seguros de impago y protección preventiva para propietarios.",
+    "author": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://acroxia.com/acroxia-logo.png"
+      }
+    },
+    "datePublished": "2026-01-22",
+    "dateModified": "2026-01-23",
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -172,6 +199,9 @@ const ImpagoAlquilerPropietarios = () => {
         </script>
         <script type="application/ld+json">
           {JSON.stringify(howToSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
         </script>
       </Helmet>
 
@@ -208,17 +238,33 @@ const ImpagoAlquilerPropietarios = () => {
           </div>
         </section>
 
-        {/* Alerta importante */}
+        {/* Alerta importante + TL;DR */}
         <section className="bg-amber-50 border-y border-amber-200 py-8">
           <div className="container mx-auto px-6">
             <FadeIn>
-              <div className="flex items-start gap-4 max-w-3xl mx-auto">
-                <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h2 className="font-medium text-foreground mb-2">Importante: Nunca tomes la justicia por tu mano</h2>
-                  <p className="text-muted-foreground text-sm">
-                    Cambiar la cerradura, cortar suministros o intimidar al inquilino son delitos que pueden 
-                    volverse en tu contra. Siempre sigue el procedimiento legal, aunque sea más lento.
+              <div className="max-w-3xl mx-auto">
+                <div className="flex items-start gap-4 mb-6">
+                  <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h2 className="font-medium text-foreground mb-2">Importante: Nunca tomes la justicia por tu mano</h2>
+                    <p className="text-muted-foreground text-sm">
+                      Cambiar la cerradura, cortar suministros o intimidar al inquilino son delitos que pueden 
+                      volverse en tu contra. Siempre sigue el procedimiento legal, aunque sea más lento.
+                    </p>
+                  </div>
+                </div>
+                <div className="border-t border-amber-200 pt-6">
+                  <p className="text-sm font-medium text-foreground mb-2">Resumen rápido</p>
+                  <p className="text-muted-foreground speakable-summary">
+                    Ante el impago del alquiler, envía primero un burofax de requerimiento dando 7-15 días de plazo. 
+                    Si no hay respuesta, puedes iniciar un desahucio express que tarda 4-8 meses. Para prevenirlo, 
+                    considera un seguro de impago (3-5% anual) o asegúrate de que tu{" "}
+                    <Link to="/contrato-alquiler-propietarios" className="underline hover:text-foreground">contrato cumple la LAU</Link>. 
+                    Al finalizar, recuerda las reglas de{" "}
+                    <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">devolución de fianza</Link>.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Última actualización: enero 2026 | Normativa vigente: LAU y LEC
                   </p>
                 </div>
               </div>
@@ -401,6 +447,9 @@ const ImpagoAlquilerPropietarios = () => {
             </FadeIn>
           </div>
         </section>
+
+        {/* Guías relacionadas */}
+        <RelatedLandlordGuides currentSlug="/impago-alquiler-propietarios" />
       </main>
 
       <Footer />
