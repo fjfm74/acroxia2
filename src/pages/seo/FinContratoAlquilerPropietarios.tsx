@@ -15,6 +15,7 @@ import {
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedLandlordGuides from "@/components/seo/RelatedLandlordGuides";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -165,6 +166,32 @@ const FinContratoAlquilerPropietarios = () => {
     }))
   };
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Fin de Contrato de Alquiler: Guía para Propietarios 2026",
+    "description": "Prórrogas obligatorias, preaviso, recuperar vivienda por necesidad y desahucio por expiración de plazo.",
+    "author": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://acroxia.com/acroxia-logo.png"
+      }
+    },
+    "datePublished": "2026-01-22",
+    "dateModified": "2026-01-23",
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -187,6 +214,9 @@ const FinContratoAlquilerPropietarios = () => {
         </script>
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
         </script>
       </Helmet>
 
@@ -218,6 +248,29 @@ const FinContratoAlquilerPropietarios = () => {
                     <Link to="/analizar-gratis">Analizar mi contrato</Link>
                   </Button>
                 </div>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* TL;DR Resumen rápido */}
+        <section className="bg-amber-50 border-y border-amber-200 py-6">
+          <div className="container mx-auto px-6">
+            <FadeIn>
+              <div className="max-w-3xl mx-auto">
+                <p className="text-sm font-medium text-foreground mb-2">Resumen rápido</p>
+                <p className="text-muted-foreground speakable-summary">
+                  Solo puedes no renovar el contrato tras 5 años (particular) o 7 años (empresa) + 3 años de 
+                  prórrogas obligatorias, notificando con 4 meses de antelación. Para recuperar antes por necesidad 
+                  propia, debe estar previsto en el{" "}
+                  <Link to="/contrato-alquiler-propietarios" className="underline hover:text-foreground">contrato</Link>. 
+                  Conoce también las reglas de{" "}
+                  <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">devolución de fianza</Link> y qué hacer ante{" "}
+                  <Link to="/impago-alquiler-propietarios" className="underline hover:text-foreground">impago de alquiler</Link>.
+                </p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Última actualización: enero 2026 | Normativa vigente: LAU
+                </p>
               </div>
             </FadeIn>
           </div>
@@ -471,6 +524,9 @@ const FinContratoAlquilerPropietarios = () => {
             </FadeIn>
           </div>
         </section>
+
+        {/* Guías relacionadas */}
+        <RelatedLandlordGuides currentSlug="/fin-contrato-alquiler-propietarios" />
       </main>
 
       <Footer />

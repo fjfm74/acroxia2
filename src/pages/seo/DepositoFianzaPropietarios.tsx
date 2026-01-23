@@ -14,6 +14,7 @@ import {
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedLandlordGuides from "@/components/seo/RelatedLandlordGuides";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -158,6 +159,32 @@ const DepositoFianzaPropietarios = () => {
     }))
   };
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Depósito de Fianza: Guía Completa para Propietarios 2026",
+    "description": "Dónde depositar la fianza, plazos por CCAA, devolución al inquilino y descuentos permitidos.",
+    "author": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://acroxia.com/acroxia-logo.png"
+      }
+    },
+    "datePublished": "2026-01-22",
+    "dateModified": "2026-01-23",
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -180,6 +207,9 @@ const DepositoFianzaPropietarios = () => {
         </script>
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
         </script>
       </Helmet>
 
@@ -211,6 +241,28 @@ const DepositoFianzaPropietarios = () => {
                     <Link to="/analizar-gratis">Analizar mi contrato</Link>
                   </Button>
                 </div>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* TL;DR Resumen rápido */}
+        <section className="bg-amber-50 border-y border-amber-200 py-6">
+          <div className="container mx-auto px-6">
+            <FadeIn>
+              <div className="max-w-3xl mx-auto">
+                <p className="text-sm font-medium text-foreground mb-2">Resumen rápido</p>
+                <p className="text-muted-foreground speakable-summary">
+                  Debes depositar la fianza (1 mes) en el organismo de tu comunidad autónoma (INCASOL en Cataluña, 
+                  IVIMA en Madrid) en el plazo establecido (15-60 días). Al finalizar el contrato, tienes 1 mes 
+                  para devolverla al inquilino. Recuerda que el{" "}
+                  <Link to="/contrato-alquiler-propietarios" className="underline hover:text-foreground">contrato debe cumplir la LAU</Link> y 
+                  conoce las reglas de{" "}
+                  <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link>.
+                </p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Última actualización: enero 2026 | Normativa vigente: LAU y legislación autonómica
+                </p>
               </div>
             </FadeIn>
           </div>
@@ -448,6 +500,9 @@ const DepositoFianzaPropietarios = () => {
             </FadeIn>
           </div>
         </section>
+
+        {/* Guías relacionadas */}
+        <RelatedLandlordGuides currentSlug="/deposito-fianza-propietarios" />
       </main>
 
       <Footer />

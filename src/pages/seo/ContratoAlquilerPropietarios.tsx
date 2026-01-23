@@ -4,6 +4,7 @@ import { Key, FileText, Shield, Euro, MapPin, Home, Clock, AlertTriangle, CheckC
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedLandlordGuides from "@/components/seo/RelatedLandlordGuides";
 import FadeIn from "@/components/animations/FadeIn";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,13 +20,40 @@ const schemaWebPage = {
   "name": "Contrato de Alquiler para Propietarios 2026",
   "description": "Guía completa para propietarios sobre contratos de alquiler en 2026. Requisitos LAU, fianzas permitidas (máximo 3 meses), zonas tensionadas y gastos del arrendador.",
   "url": "https://acroxia.com/contrato-alquiler-propietarios",
+  "inLanguage": "es-ES",
   "publisher": {
     "@type": "Organization",
     "name": "ACROXIA",
     "url": "https://acroxia.com"
   },
   "datePublished": "2026-01-14",
-  "dateModified": "2026-01-14"
+  "dateModified": "2026-01-23"
+};
+
+const schemaArticle = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Contrato de Alquiler para Propietarios 2026: Guía LAU Completa",
+  "description": "Requisitos legales, fianzas permitidas y limitaciones en zonas tensionadas para redactar un contrato conforme a la LAU.",
+  "author": {
+    "@type": "Organization",
+    "name": "ACROXIA",
+    "url": "https://acroxia.com"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ACROXIA",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://acroxia.com/acroxia-logo.png"
+    }
+  },
+  "datePublished": "2026-01-14",
+  "dateModified": "2026-01-23",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": ["h1", ".speakable-summary"]
+  }
 };
 
 const schemaFAQ = {
@@ -147,6 +175,9 @@ const ContratoAlquilerPropietarios = () => {
         <script type="application/ld+json">
           {JSON.stringify(schemaFAQ)}
         </script>
+        <script type="application/ld+json">
+          {JSON.stringify(schemaArticle)}
+        </script>
       </Helmet>
 
       <Header />
@@ -189,6 +220,28 @@ const ContratoAlquilerPropietarios = () => {
                 </div>
               </FadeIn>
             </div>
+          </div>
+        </section>
+
+        {/* TL;DR Resumen rápido */}
+        <section className="bg-amber-50 border-y border-amber-200 py-6">
+          <div className="container mx-auto px-6">
+            <FadeIn>
+              <div className="max-w-3xl mx-auto">
+                <p className="text-sm font-medium text-foreground mb-2">Resumen rápido</p>
+                <p className="text-muted-foreground speakable-summary">
+                  En 2026, un contrato de alquiler de vivienda habitual debe tener una duración mínima de 5 años 
+                  (7 si el arrendador es empresa). Solo puedes pedir 1 mes de fianza legal más un máximo de 2 meses 
+                  de garantía adicional (total 3 meses). Si tu vivienda está en{" "}
+                  <Link to="/zonas-tensionadas-propietarios" className="underline hover:text-foreground">zona tensionada</Link>, 
+                  la renta está limitada. Consulta también las obligaciones sobre{" "}
+                  <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">depósito de fianza</Link>.
+                </p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Última actualización: enero 2026 | Normativa vigente: LAU y Ley de Vivienda
+                </p>
+              </div>
+            </FadeIn>
           </div>
         </section>
 
@@ -670,6 +723,9 @@ const ContratoAlquilerPropietarios = () => {
             </FadeIn>
           </div>
         </section>
+
+        {/* Guías relacionadas */}
+        <RelatedLandlordGuides currentSlug="/contrato-alquiler-propietarios" />
       </main>
 
       <Footer />

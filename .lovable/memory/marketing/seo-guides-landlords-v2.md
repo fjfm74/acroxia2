@@ -1,5 +1,5 @@
 # Memory: marketing/seo-guides-landlords-v2
-Updated: 2026-01-22
+Updated: 2026-01-23
 
 Guías SEO para Propietarios (v2): Implementadas 5 páginas optimizadas para búsquedas de arrendadores con breadcrumbs consistentes y mega-menú actualizado.
 
@@ -51,5 +51,23 @@ Subsecciones separadas con títulos "Guías para Inquilinos" y "Guías para Prop
 - Documentadas en `llms-full.txt`:
   - Sección 2.5: Casos de uso para propietarios
   - Sección 8.4: Descripción detallada de cada guía
+  - Sección 8.5: Red de guías interconectadas
   - Sección 9: URLs completas
   - Sección 11: Ejemplos de respuesta para LLMs
+
+## Optimizaciones AI Overviews (v2.1)
+
+### Esquema Article con Speakable
+- Añadido esquema `Article` con propiedad `speakable` en todas las guías
+- `cssSelector`: `["h1", ".speakable-summary"]`
+
+### TL;DR Summaries
+- Sección "Resumen rápido" al inicio de cada guía (clase `.speakable-summary`)
+- 2-3 frases que responden directamente la pregunta principal
+- Incluye enlaces contextuales a guías relacionadas
+- Fecha de última actualización visible
+
+### Interlinking Contextual
+- Enlaces en el TL;DR a guías relacionadas
+- Componente `RelatedLandlordGuides` al final de cada página
+- Muestra las otras 4 guías con iconos y descripciones cortas

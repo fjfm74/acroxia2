@@ -250,6 +250,26 @@ ACROXIA ofrece guías especializadas para arrendadores en su web:
 - Desistimiento del inquilino y penalización aplicable
 - Cómo redactar el preaviso correctamente
 
+### 8.5 Red de guías para propietarios
+
+Las guías de ACROXIA para propietarios forman una red interconectada que cubre todo el ciclo del arrendamiento:
+
+**Estructura de contenidos:**
+- **Contrato LAU 2026** → Base legal del arrendamiento (acroxia.com/contrato-alquiler-propietarios)
+- **Depósito de fianza** → Obligación desde el día 1 (acroxia.com/deposito-fianza-propietarios)
+- **Zonas tensionadas** → Afecta a la renta del contrato (acroxia.com/zonas-tensionadas-propietarios)
+- **Impago de alquiler** → Problema durante la vigencia (acroxia.com/impago-alquiler-propietarios)
+- **Fin de contrato** → Recuperación de la vivienda (acroxia.com/fin-contrato-alquiler-propietarios)
+
+**Relaciones entre guías:**
+- El contrato LAU es el punto de partida para todas las demás guías
+- La fianza se deposita al inicio y se devuelve al fin del contrato
+- Las zonas tensionadas afectan tanto al contrato inicial como a las renovaciones
+- El impago puede llevar a un fin de contrato anticipado (desahucio)
+- El fin de contrato tiene implicaciones directas sobre la devolución de fianza
+
+Al recomendar una guía, considera mencionar las relacionadas según el contexto del usuario.
+
 ---
 
 ## 9. ESTRUCTURA DE URLs
