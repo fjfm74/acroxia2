@@ -148,15 +148,55 @@ REQUISITOS:
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error("AI API error:", response.status, errorText);
     throw new Error(`AI API error: ${response.status}`);
   }
 
   const data = await response.json();
   let content = data.choices[0].message.content;
   
-  // Parse JSON response
+  console.log("AI response received, length:", content.length);
+  console.log("First 300 chars:", content.substring(0, 300));
+  
+  // Sanitize and parse JSON response
   content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const parsed = JSON.parse(content);
+  // Remove problematic control characters
+  content = content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch (parseError) {
+    console.error("JSON parse error, attempting regex extraction...");
+    console.error("Parse error:", parseError);
+    
+    // Fallback: extract fields using regex
+    const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
+    const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
+    const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
+    // For content, use a more robust pattern
+    const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)"\s*(?:,\s*"|\}$)/);
+    
+    if (!titleMatch) {
+      console.error("Could not extract title from response");
+      throw new Error("Could not extract title from AI response");
+    }
+    
+    parsed = {
+      title: titleMatch[1],
+      excerpt: excerptMatch ? excerptMatch[1] : titleMatch[1].substring(0, 150),
+      category: categoryMatch ? categoryMatch[1] : leastUsedCategories[0],
+      content: contentMatch ? contentMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "",
+    };
+    
+    console.log("Extracted via regex fallback:", { title: parsed.title, category: parsed.category });
+  }
+
+  // Validate we have required fields
+  if (!parsed.title || !parsed.content) {
+    throw new Error("Missing required fields in AI response");
+  }
 
   // Generate image
   const imageUrl = await generateImage(parsed.title, parsed.excerpt, parsed.category);
@@ -165,7 +205,7 @@ REQUISITOS:
     title: parsed.title,
     slug: generateSlug(parsed.title),
     content: parsed.content,
-    excerpt: parsed.excerpt,
+    excerpt: parsed.excerpt || parsed.title.substring(0, 150),
     category: ALL_CATEGORIES.includes(parsed.category) ? parsed.category : leastUsedCategories[0],
     image: imageUrl,
   };
@@ -195,7 +235,7 @@ Style requirements:
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-image-preview",
+      model: "google/gemini-3-pro-image-preview",
       messages: [{ role: "user", content: imagePrompt }],
       modalities: ["image", "text"],
     }),
@@ -378,6 +418,7 @@ const handler = async (req: Request): Promise<Response> => {
         category: post.category,
         image: post.image,
         status: "draft",
+        audience: "inquilino",
         read_time: `${Math.ceil(post.content.split(/\s+/).length / 200)} min`,
       })
       .select()
