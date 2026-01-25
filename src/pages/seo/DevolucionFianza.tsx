@@ -1,9 +1,10 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { Wallet, Clock, CheckCircle2, AlertTriangle, ArrowRight, FileText, Calculator } from "lucide-react";
+import { Wallet, Clock, CheckCircle2, AlertTriangle, ArrowRight, FileText, Calculator, Calendar } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedTenantGuides from "@/components/seo/RelatedTenantGuides";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -52,11 +53,11 @@ const motivosIlegales = [
 const faqs = [
   {
     question: "¿Cuánto tiempo tiene el casero para devolverme la fianza?",
-    answer: "Según el artículo 36.4 de la LAU, el propietario dispone de un plazo de 30 días naturales desde la entrega de llaves para devolverte la fianza. Si no lo hace en ese plazo, empiezan a generarse intereses legales a tu favor."
+    answer: "30 días naturales. Según el artículo 36.4 de la LAU, el propietario dispone de este plazo desde la entrega de llaves para devolverte la fianza. Si no lo hace, empiezan a generarse intereses legales a tu favor."
   },
   {
     question: "¿Puede el casero quedarse mi fianza por el desgaste normal?",
-    answer: "Según la jurisprudencia, el desgaste normal derivado del uso habitual de la vivienda generalmente no justificaría retener la fianza. La pintura ligeramente deteriorada, pequeñas marcas en paredes o el uso normal de electrodomésticos se consideran desgaste natural, no daños imputables al inquilino."
+    answer: "No, generalmente no. Según la jurisprudencia, el desgaste normal derivado del uso habitual de la vivienda no justificaría retener la fianza. La pintura ligeramente deteriorada, pequeñas marcas en paredes o el uso normal de electrodomésticos se consideran desgaste natural, no daños imputables al inquilino."
   },
   {
     question: "¿Qué puedo hacer si no me devuelven la fianza en 30 días?",
@@ -64,7 +65,7 @@ const faqs = [
   },
   {
     question: "¿Cuánto dinero de fianza me pueden pedir legalmente?",
-    answer: "La fianza legal obligatoria es de 1 mensualidad para vivienda habitual. Además, pueden pedir hasta 2 meses como garantía adicional. En total, máximo 3 meses. Cualquier cantidad superior se consideraría contraria a la LAU."
+    answer: "Máximo 3 meses. La fianza legal obligatoria es de 1 mensualidad para vivienda habitual. Además, pueden pedir hasta 2 meses como garantía adicional. Cualquier cantidad superior se consideraría contraria a la LAU."
   },
   {
     question: "¿Puedo usar la fianza para pagar el último mes de alquiler?",
@@ -72,7 +73,7 @@ const faqs = [
   },
   {
     question: "¿Qué intereses me corresponden si no me devuelven la fianza a tiempo?",
-    answer: "A partir del día 31, la fianza genera el interés legal del dinero (actualmente en torno al 3-4% anual). Estos intereses se calculan desde el día siguiente al vencimiento del plazo de 30 días hasta la devolución efectiva."
+    answer: "El interés legal del dinero (actualmente en torno al 3-4% anual). Estos intereses se calculan desde el día 31 hasta la devolución efectiva de la fianza."
   },
 ];
 
@@ -83,7 +84,8 @@ const DevolucionFianza = () => {
     "name": "Devolución de Fianza de Alquiler - Guía 2026",
     "description": "Guía completa sobre cómo recuperar la fianza de tu alquiler. Plazos legales, motivos de retención ilegales y cómo reclamar paso a paso.",
     "url": "https://acroxia.com/devolucion-fianza-alquiler",
-    "dateModified": "2026-01-15",
+    "dateModified": "2026-01-25",
+    "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
       "name": "ACROXIA",
@@ -123,19 +125,58 @@ const DevolucionFianza = () => {
     }))
   };
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Devolución de Fianza de Alquiler 2026: Cómo Recuperarla",
+    "description": "Guía completa sobre cómo recuperar la fianza de tu alquiler. Plazos legales, motivos de retención ilegales y cómo reclamar.",
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-01-25",
+    "author": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://acroxia.com/acroxia-logo.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://acroxia.com/devolucion-fianza-alquiler"
+    },
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    },
+    "inLanguage": "es-ES"
+  };
+
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>Devolución de Fianza de Alquiler 2026 | Cómo Recuperarla</title>
         <meta 
           name="description" 
-          content="Guía completa para recuperar tu fianza de alquiler. Plazo legal de 30 días, motivos de retención ilegales y cómo reclamar paso a paso. Actualizado 2026." 
+          content="¿Cuánto tiempo tiene el casero para devolver la fianza? 30 días. Guía completa para recuperar tu fianza de alquiler, motivos de retención ilegales y cómo reclamar." 
         />
         <meta 
           name="keywords" 
           content="devolución fianza alquiler, recuperar fianza, fianza no devuelta, plazo devolución fianza, reclamar fianza alquiler" 
         />
         <link rel="canonical" href="https://acroxia.com/devolucion-fianza-alquiler" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/devolucion-fianza-alquiler" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/devolucion-fianza-alquiler" />
+        <meta property="og:title" content="Devolución de Fianza de Alquiler 2026: Cómo Recuperarla" />
+        <meta property="og:description" content="¿Cuánto tiempo tiene el casero para devolver la fianza? 30 días según la LAU." />
+        <meta property="og:url" content="https://acroxia.com/devolucion-fianza-alquiler" />
+        <meta property="og:type" content="article" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>
@@ -145,13 +186,16 @@ const DevolucionFianza = () => {
         <script type="application/ld+json">
           {JSON.stringify(howToSchema)}
         </script>
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-background">
         <Header />
         <Breadcrumbs 
           items={[
-            { label: "Guías", href: "/faq" },
+            { label: "Guías para Inquilinos", href: "/faq" },
             { label: "Devolución de Fianza" }
           ]} 
         />
@@ -172,10 +216,20 @@ const DevolucionFianza = () => {
                 </h1>
               </FadeIn>
               <FadeIn delay={0.2}>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                  Tu casero tiene 30 días para devolverte la fianza. Aprende cuándo pueden retenerla 
-                  legalmente y cómo reclamar si no te la devuelven.
-                </p>
+                {/* TL;DR Speakable Summary */}
+                <div className="speakable-summary bg-background/60 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-border">
+                  <p className="text-lg text-foreground font-medium">
+                    <strong>Resumen rápido:</strong> El casero tiene 30 días para devolverte la fianza desde la entrega de llaves. 
+                    Si no lo hace, se generan intereses legales a tu favor. El desgaste normal por uso no justifica 
+                    retener la fianza. Puedes reclamar en la OMIC o mediante proceso monitorio.
+                  </p>
+                </div>
+              </FadeIn>
+              <FadeIn delay={0.25}>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+                  <Calendar className="w-4 h-4" />
+                  <span>Última actualización: enero 2026</span>
+                </div>
               </FadeIn>
               <FadeIn delay={0.3}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -268,6 +322,21 @@ const DevolucionFianza = () => {
                   </FadeIn>
                 ))}
               </div>
+
+              {/* Contextual links to related guides */}
+              <FadeIn delay={0.4}>
+                <div className="mt-12 p-6 bg-muted/50 rounded-2xl border border-border">
+                  <h3 className="font-semibold text-foreground mb-3">¿Tu contrato tiene cláusulas abusivas sobre la fianza?</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Si te pidieron más de 3 meses de fianza o hay cláusulas que permiten retenciones injustificadas, 
+                    consulta nuestra guía sobre 
+                    <Link to="/clausulas-abusivas-alquiler" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
+                      cláusulas abusivas en contratos de alquiler
+                    </Link>
+                    para saber cómo reclamar.
+                  </p>
+                </div>
+              </FadeIn>
             </div>
           </div>
         </section>
@@ -328,6 +397,22 @@ const DevolucionFianza = () => {
             </div>
           </div>
         </section>
+
+        {/* Trust Notice */}
+        <section className="py-12 bg-muted/50">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <p className="text-sm text-muted-foreground">
+                <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal. 
+                Para casos específicos, consulta con un profesional del derecho. ACROXIA es una herramienta de análisis 
+                que ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Related Tenant Guides */}
+        <RelatedTenantGuides currentSlug="/devolucion-fianza-alquiler" />
 
         <Footer />
       </div>
