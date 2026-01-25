@@ -1,9 +1,10 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, XCircle, ArrowRight, FileText, Shield, Scale } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle, ArrowRight, FileText, Shield, Scale, Calendar } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedTenantGuides from "@/components/seo/RelatedTenantGuides";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
 import {
@@ -86,7 +87,8 @@ const ClausulasAbusivas = () => {
     "name": "Cláusulas Abusivas en Contratos de Alquiler - Guía 2026",
     "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler. Guía completa sobre qué cláusulas podrían ser nulas según la LAU y cómo reclamar.",
     "url": "https://acroxia.com/clausulas-abusivas-alquiler",
-    "dateModified": "2026-01-15",
+    "dateModified": "2026-01-25",
+    "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
       "name": "ACROXIA",
@@ -112,9 +114,42 @@ const ClausulasAbusivas = () => {
     }))
   };
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Cláusulas Abusivas en Contratos de Alquiler 2026",
+    "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler según la LAU.",
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-01-25",
+    "author": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://acroxia.com/acroxia-logo.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://acroxia.com/clausulas-abusivas-alquiler"
+    },
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    },
+    "inLanguage": "es-ES"
+  };
+
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>Cláusulas Abusivas en Contratos de Alquiler 2026 | Guía Completa</title>
         <meta 
           name="description" 
@@ -125,11 +160,20 @@ const ClausulasAbusivas = () => {
           content="cláusulas abusivas alquiler, cláusulas ilegales contrato, LAU cláusulas nulas, contrato alquiler ilegal, detectar cláusulas abusivas" 
         />
         <link rel="canonical" href="https://acroxia.com/clausulas-abusivas-alquiler" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/clausulas-abusivas-alquiler" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/clausulas-abusivas-alquiler" />
+        <meta property="og:title" content="Cláusulas Abusivas en Contratos de Alquiler 2026" />
+        <meta property="og:description" content="Descubre qué cláusulas podrían ser ilegales en tu contrato de alquiler según la LAU." />
+        <meta property="og:url" content="https://acroxia.com/clausulas-abusivas-alquiler" />
+        <meta property="og:type" content="article" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
         </script>
       </Helmet>
 
@@ -137,7 +181,7 @@ const ClausulasAbusivas = () => {
         <Header />
         <Breadcrumbs 
           items={[
-            { label: "Guías", href: "/faq" },
+            { label: "Guías para Inquilinos", href: "/faq" },
             { label: "Cláusulas Abusivas" }
           ]} 
         />
@@ -158,10 +202,20 @@ const ClausulasAbusivas = () => {
                 </h1>
               </FadeIn>
               <FadeIn delay={0.2}>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                  Guía completa para identificar cláusulas potencialmente ilegales en tu contrato según la LAU. 
-                  Aprende cuáles podrían considerarse nulas de pleno derecho y cómo reclamar.
-                </p>
+                {/* TL;DR Speakable Summary */}
+                <div className="speakable-summary bg-background/60 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-border">
+                  <p className="text-lg text-foreground font-medium">
+                    <strong>Resumen rápido:</strong> Las cláusulas abusivas en contratos de alquiler son nulas de pleno derecho según la LAU. 
+                    Las más comunes incluyen: fianzas superiores a 3 meses, cobrar honorarios de inmobiliaria al inquilino, 
+                    obligar a pagar el IBI, o penalizaciones excesivas por desistimiento.
+                  </p>
+                </div>
+              </FadeIn>
+              <FadeIn delay={0.25}>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+                  <Calendar className="w-4 h-4" />
+                  <span>Última actualización: enero 2026</span>
+                </div>
               </FadeIn>
               <FadeIn delay={0.3}>
                 <Button asChild size="lg" className="rounded-full px-8">
@@ -218,6 +272,24 @@ const ClausulasAbusivas = () => {
                   </FadeIn>
                 ))}
               </div>
+
+              {/* Contextual links to related guides */}
+              <FadeIn delay={0.5}>
+                <div className="mt-12 p-6 bg-muted/50 rounded-2xl border border-border">
+                  <h3 className="font-semibold text-foreground mb-3">Guías relacionadas</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Si tu contrato tiene cláusulas sobre fianzas excesivas, consulta nuestra guía sobre 
+                    <Link to="/devolucion-fianza-alquiler" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
+                      devolución de fianza
+                    </Link>
+                    para conocer tus derechos al finalizar el alquiler. Si además te están aplicando subidas 
+                    ilegales, revisa la guía sobre 
+                    <Link to="/subida-alquiler-2026" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
+                      subida de alquiler en 2026
+                    </Link>.
+                  </p>
+                </div>
+              </FadeIn>
             </div>
           </div>
         </section>
@@ -285,6 +357,22 @@ const ClausulasAbusivas = () => {
             </div>
           </div>
         </section>
+
+        {/* Trust Notice */}
+        <section className="py-12 bg-muted/50">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <p className="text-sm text-muted-foreground">
+                <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal. 
+                Para casos específicos, consulta con un profesional del derecho. ACROXIA es una herramienta de análisis 
+                que ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Related Tenant Guides */}
+        <RelatedTenantGuides currentSlug="/clausulas-abusivas-alquiler" />
 
         <Footer />
       </div>
