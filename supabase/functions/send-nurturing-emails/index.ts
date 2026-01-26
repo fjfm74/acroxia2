@@ -7,6 +7,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function to send error alerts
+async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        process: "send-nurturing-emails",
+        processName: "Emails de Nurturing",
+        error,
+        context,
+      }),
+    });
+    console.log("Alert email sent for send-nurturing-emails error");
+  } catch (alertError) {
+    console.error("Failed to send alert email:", alertError);
+  }
+}
+
 interface Lead {
   id: string;
   email: string;
@@ -210,6 +230,12 @@ serve(async (req: Request) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error in send-nurturing-emails:", error);
+    
+    // Send alert email to admin if there's a critical error
+    await sendErrorAlert(errorMessage, {
+      attempted_at: new Date().toISOString(),
+    });
+    
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       {

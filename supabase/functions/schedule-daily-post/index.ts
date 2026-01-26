@@ -11,6 +11,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function to send error alerts
+async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/send-alert-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        process: "schedule-daily-post",
+        processName: "Generación Blog Inquilinos",
+        error,
+        context: { ...context, audience: "inquilino" },
+      }),
+    });
+    console.log("Alert email sent for schedule-daily-post error");
+  } catch (alertError) {
+    console.error("Failed to send alert email:", alertError);
+  }
+}
+
 const ALL_CATEGORIES = ["Cláusulas", "Fianzas", "Derechos", "Subidas de renta", "Legislación", "Consejos"];
 
 const TITLE_FORMATS = [
@@ -473,6 +492,13 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: unknown) {
     console.error("Error in schedule-daily-post:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
+    // Send alert email to admin
+    await sendErrorAlert(errorMessage, {
+      attempted_at: new Date().toISOString(),
+      scheduling_enabled: true,
+    });
+    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
