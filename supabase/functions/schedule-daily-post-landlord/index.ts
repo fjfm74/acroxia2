@@ -12,6 +12,25 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
 const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
+// Helper function to send error alerts
+async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        process: "schedule-daily-post-landlord",
+        processName: "Generación Blog Propietarios",
+        error,
+        context: { ...context, audience: "propietario" },
+      }),
+    });
+    console.log("Alert email sent for schedule-daily-post-landlord error");
+  } catch (alertError) {
+    console.error("Failed to send alert email:", alertError);
+  }
+}
+
 // Categorías específicas para propietarios
 const LANDLORD_CATEGORIES = ["Contratos", "Impagos", "Garantías", "Normativa", "Seguros", "Gestión"];
 
@@ -499,6 +518,12 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in schedule-daily-post-landlord:', error);
+    
+    // Send alert email to admin
+    await sendErrorAlert(errorMessage, {
+      attempted_at: new Date().toISOString(),
+    });
+    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -6,6 +6,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function to send error alerts
+async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        process: "monitor-boe",
+        processName: "Monitor BOE",
+        error,
+        context,
+      }),
+    });
+    console.log("Alert email sent for monitor-boe error");
+  } catch (alertError) {
+    console.error("Failed to send alert email:", alertError);
+  }
+}
+
 // Términos de búsqueda por defecto (se pueden configurar en site_config)
 const DEFAULT_SEARCH_TERMS = [
   "arrendamiento", "alquiler", "vivienda", "LAU", "fianza", 
@@ -441,6 +461,13 @@ async function handler(req: Request): Promise<Response> {
     logEntry.next_retry_at = nextRetry.toISOString();
     
     await supabase.from("boe_monitoring_logs").insert(logEntry);
+    
+    // Send alert email to admin
+    await sendErrorAlert(error.message || "Unknown error", {
+      attempted_at: new Date().toISOString(),
+      retry_scheduled_at: logEntry.next_retry_at,
+      source,
+    });
     
     return new Response(JSON.stringify({
       success: false,
