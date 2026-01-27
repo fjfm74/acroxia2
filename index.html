@@ -4,22 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-55VCM5N9');</script>
-    <!-- End Google Tag Manager -->
-    
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BCJK9MP2NV"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-BCJK9MP2NV');
-    </script>
+    <!-- CRITICAL: Preload LCP image FIRST -->
+    <link rel="preload" href="/images/hero-professional.webp" as="image" type="image/webp" fetchpriority="high">
     
     <!-- SEO Base -->
     <title>ACROXIA - Analiza tu Contrato de Alquiler con IA</title>
@@ -44,16 +30,18 @@
     <meta name="twitter:description" content="Detecta cláusulas abusivas en 2 minutos" />
     <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
     
-    <!-- Font Preloads (Critical for FCP) -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" as="style">
-    
-    <!-- Font Connections -->
+    <!-- Font Connections (kept for DNS prefetch) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <!-- Font Stylesheets -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Non-blocking Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" 
+          rel="stylesheet" 
+          media="print" 
+          onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    </noscript>
     
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="/favicon.png?v=2" />
@@ -62,6 +50,12 @@
     
     <!-- LLM Context Files -->
     <!-- /llms.txt and /llms-full.txt available for AI assistants -->
+    
+    <!-- Critical CSS for fonts fallback -->
+    <style>
+      body { font-family: Inter, system-ui, -apple-system, sans-serif; }
+      h1, h2, h3, h4, h5, h6, .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+    </style>
   </head>
 
   <body>
@@ -72,5 +66,33 @@
     
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Deferred Analytics - Load after page is interactive -->
+    <script>
+      // Load GTM after page load to not block FCP
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          // Google Tag Manager
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','GTM-55VCM5N9');
+          
+          // Google Analytics
+          var gaScript = document.createElement('script');
+          gaScript.async = true;
+          gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BCJK9MP2NV';
+          document.head.appendChild(gaScript);
+          
+          gaScript.onload = function() {
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-BCJK9MP2NV');
+          };
+        }, 100);
+      });
+    </script>
   </body>
 </html>
