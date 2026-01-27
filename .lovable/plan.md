@@ -1,228 +1,210 @@
 
-## Plan: Sistema de Alertas para Cron Jobs y Procesos Críticos
+## Plan de Optimización PageSpeed Mobile (57 → 85+)
 
-### Problema actual
-Actualmente tienes 7+ cron jobs ejecutándose diariamente sin ningún sistema de notificación cuando fallan. Si algo sale mal, no te enteras hasta que verificas manualmente.
+### Diagnóstico actual
 
-### Solución propuesta
+| Métrica | Valor actual | Objetivo |
+|---------|--------------|----------|
+| FCP | 7.7s | < 2.5s |
+| LCP | 11.5s | < 2.5s |
+| Speed Index | 8.0s | < 3.5s |
+| TBT | 70ms | OK |
+| CLS | 0 | OK |
 
-Crear una **edge function centralizada de alertas** que envíe emails cuando cualquier proceso crítico falle, incluyendo:
-- Los 2 generadores de blog diarios
-- El monitor del BOE
-- Los emails de nurturing
-- Cualquier otro proceso crítico
-
----
-
-## Arquitectura del Sistema
-
-```text
-┌─────────────────────┐
-│   Cron Jobs         │
-│   (pg_cron)         │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐     En caso de ERROR
-│   Edge Functions    │ ─────────────────────────┐
-│   (procesos)        │                          │
-└──────────┬──────────┘                          ▼
-           │                          ┌─────────────────────┐
-           ▼                          │  send-alert-email   │
-┌─────────────────────┐               │  (nueva función)    │
-│   Logs + Response   │               └──────────┬──────────┘
-│   Status codes      │                          │
-└─────────────────────┘                          ▼
-                                      ┌─────────────────────┐
-                                      │  Email a admin      │
-                                      │  nuriafrancis@      │
-                                      │  gmail.com          │
-                                      └─────────────────────┘
-```
+Los problemas principales son **FCP** y **LCP**, ambos relacionados con recursos que bloquean el renderizado.
 
 ---
 
-## Fase 1: Crear edge function de alertas
+## Fase 1: Optimización de recursos críticos (Mayor impacto)
 
-### Nueva función: `supabase/functions/send-alert-email/index.ts`
+### 1.1 Precargar la imagen LCP
+La imagen del hero (`hero-professional.webp`) es el elemento LCP pero no tiene preload.
 
-Esta función centralizada recibirá alertas de cualquier proceso y enviará un email formateado con:
+**Archivo: `index.html`**
+- Añadir `<link rel="preload">` para la imagen hero antes de cualquier script
+- Mover el preload de fuentes DESPUÉS del preload de la imagen
 
-- Nombre del proceso que falló
-- Hora del fallo
-- Mensaje de error
-- Detalles adicionales (contexto)
-- Link al panel de administración
+### 1.2 Diferir Google Fonts (render-blocking)
+Actualmente las fuentes bloquean el renderizado. Cambiar la estrategia:
 
-**Ejemplo de payload:**
-```json
-{
-  "process": "schedule-daily-post-landlord",
-  "error": "Could not parse JSON from AI response",
-  "context": {
-    "audience": "propietario",
-    "attempted_at": "2026-01-26T09:00:00Z",
-    "ai_response_length": 0
-  }
-}
-```
+**Archivo: `index.html`**
+- Convertir los `<link rel="stylesheet">` de fuentes a carga asíncrona con un fallback
+- Usar `media="print" onload="this.media='all'"` para carga no bloqueante
+- Mantener los preconnects pero eliminar los preloads redundantes
+
+### 1.3 Diferir GTM y GA4
+Los scripts de analytics no deberían bloquear el FCP.
+
+**Archivo: `index.html`**
+- Mover GTM al final del body o cargarlo después del evento DOMContentLoaded
+- Añadir `defer` o cargar GA4 de forma asíncrona real
 
 ---
 
-## Fase 2: Modificar funciones existentes para enviar alertas
+## Fase 2: Code Splitting y Lazy Loading
 
-### 2.1 `schedule-daily-post/index.ts` (inquilinos)
+### 2.1 Lazy load de rutas no críticas
+La mayoría de las 60+ rutas se importan síncronamente en App.tsx.
 
-Añadir función helper para enviar alertas:
-```typescript
-async function sendErrorAlert(error: string, context: Record<string, any>) {
-  await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      process: 'schedule-daily-post',
-      processName: 'Generación Blog Inquilinos',
-      error,
-      context: { ...context, audience: 'inquilino' }
-    })
+**Archivo: `src/App.tsx`**
+- Convertir todas las rutas excepto `Index` a `React.lazy()`:
+  ```tsx
+  const Blog = lazy(() => import("./pages/Blog"));
+  const Pricing = lazy(() => import("./pages/Pricing"));
+  // etc.
+  ```
+- Envolver las rutas con `<Suspense fallback={...}>`
+- La página Index NO debe ser lazy (es la landing principal)
+
+### 2.2 Lazy load de componentes pesados
+**Archivos a modificar:**
+- `ChatContainer.tsx`: El chat assistant se carga en todas las páginas públicas pero no es crítico
+- `CookieBanner.tsx`: Tiene un delay de 500ms, perfecto para lazy load
+- `Footer.tsx`: Está below the fold, puede cargarse diferido
+
+### 2.3 Eliminar Framer Motion del critical path
+Framer Motion es grande (~60KB gzip). El componente `FadeIn` se usa en el Hero.
+
+**Archivo: `src/components/landing/HeroSection.tsx`**
+- Para el contenido above-the-fold, usar CSS animations en lugar de Framer Motion
+- Crear una versión "light" del componente FadeIn para el Hero
+
+---
+
+## Fase 3: Optimización de imágenes
+
+### 3.1 Añadir dimensiones explícitas a la imagen hero
+**Archivo: `src/components/landing/HeroSection.tsx`**
+- Añadir `width` y `height` explícitos para evitar CLS y ayudar al browser
+- Considerar usar `srcset` para diferentes tamaños de pantalla
+
+### 3.2 Optimizar imágenes de Unsplash en HowItWorksSection
+**Archivo: `src/components/landing/HowItWorksSection.tsx`**
+- Las imágenes actuales son de alta resolución (2070px)
+- Reducir el tamaño solicitado: `w=800` en lugar de `w=2070`
+- Añadir `width` y `height` explícitos
+
+---
+
+## Fase 4: Optimización del Service Worker
+
+### 4.1 Precachear la imagen hero
+**Archivo: `public/sw.js`**
+- Añadir `/images/hero-professional.webp` a `STATIC_ASSETS` para precarga
+
+---
+
+## Archivos a modificar
+
+| Archivo | Cambios | Prioridad |
+|---------|---------|-----------|
+| `index.html` | Preload LCP, diferir fuentes, diferir GTM | Alta |
+| `src/App.tsx` | Code splitting con React.lazy | Alta |
+| `src/components/landing/HeroSection.tsx` | CSS animations, dimensiones img | Alta |
+| `src/components/landing/HowItWorksSection.tsx` | Optimizar URLs Unsplash | Media |
+| `public/sw.js` | Precachear hero image | Media |
+| `src/components/chat/ChatContainer.tsx` | Lazy load ChatAssistant | Baja |
+| `src/components/CookieBanner.tsx` | Ya tiene delay, considerar lazy | Baja |
+
+---
+
+## Impacto estimado
+
+| Optimización | Impacto FCP | Impacto LCP |
+|--------------|-------------|-------------|
+| Preload imagen hero | - | -3s |
+| Diferir fuentes | -2s | - |
+| Diferir GTM/GA4 | -1s | - |
+| Code splitting | -1s | -1s |
+| Optimizar imágenes | - | -0.5s |
+
+**Puntuación esperada**: 80-90 en móvil (actualmente 57)
+
+---
+
+## Detalles técnicos
+
+### Cambios en index.html
+
+```html
+<!-- ANTES de cualquier script -->
+<link rel="preload" href="/images/hero-professional.webp" as="image" fetchpriority="high">
+
+<!-- Fuentes sin bloqueo de render -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=..." 
+      rel="stylesheet" 
+      media="print" 
+      onload="this.media='all'">
+<noscript>
+  <link href="https://fonts.googleapis.com/css2?family=..." rel="stylesheet">
+</noscript>
+
+<!-- GTM diferido -->
+<script>
+  window.addEventListener('load', function() {
+    // Cargar GTM después del load
   });
-}
+</script>
 ```
 
-Modificar el catch principal para:
-```typescript
-catch (error) {
-  console.error("Error:", error);
-  
-  // Enviar alerta al admin
-  await sendErrorAlert(
-    error instanceof Error ? error.message : 'Unknown error',
-    { attempted_at: new Date().toISOString() }
-  );
-  
-  return new Response(JSON.stringify({ error: ... }), { status: 500 });
-}
+### Estructura de lazy loading en App.tsx
+
+```tsx
+import { Suspense, lazy } from "react";
+
+// Componente crítico (no lazy)
+import Index from "./pages/Index";
+
+// Componentes lazy
+const Blog = lazy(() => import("./pages/Blog"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+// ... resto de páginas
+
+// Fallback mínimo
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
+  </div>
+);
+
+// En las rutas
+<Route path="/blog" element={
+  <Suspense fallback={<PageLoader />}>
+    <Blog />
+  </Suspense>
+} />
 ```
 
-### 2.2 `schedule-daily-post-landlord/index.ts` (propietarios)
+### CSS animation para Hero (reemplazar FadeIn)
 
-Mismo patrón con `audience: 'propietario'`.
-
-### 2.3 `monitor-boe/index.ts`
-
-Añadir alerta cuando falla el scraping o procesamiento del BOE.
-
-### 2.4 `send-nurturing-emails/index.ts`
-
-Alertar si hay errores críticos al enviar emails masivos.
-
----
-
-## Fase 3: Resumen diario de ejecuciones (opcional pero recomendado)
-
-Crear una tabla `cron_execution_logs` para registrar cada ejecución:
-
-| id | job_name | executed_at | success | error_message | duration_ms |
-|----|----------|-------------|---------|---------------|-------------|
-| uuid | schedule-daily-post | 2026-01-26 08:00 | false | JSON parse error | 45000 |
-
-Y un email de resumen diario a las 23:00 con:
-- Jobs ejecutados correctamente hoy
-- Jobs que fallaron hoy
-- Siguiente ejecución programada
-
----
-
-## Fase 4: Añadir reintentos automáticos
-
-Implementar lógica de reintentos en las funciones de blog:
-
-```typescript
-const MAX_RETRIES = 2;
-let lastError;
-
-for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-  try {
-    // Lógica de generación...
-    return successResponse;
-  } catch (error) {
-    lastError = error;
-    console.log(`Attempt ${attempt + 1} failed, retrying...`);
-    await new Promise(r => setTimeout(r, 5000)); // Esperar 5 segundos
+```css
+/* En index.css */
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-// Si llegamos aquí, todos los reintentos fallaron
-await sendErrorAlert(lastError.message, { attempts: MAX_RETRIES + 1 });
+.hero-animate {
+  animation: hero-fade-up 0.6s ease-out forwards;
+}
+
+.hero-animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.hero-animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
 ```
 
 ---
 
-## Archivos a crear/modificar
+## Notas importantes
 
-| Archivo | Acción | Descripción |
-|---------|--------|-------------|
-| `supabase/functions/send-alert-email/index.ts` | **CREAR** | Nueva función centralizada de alertas |
-| `supabase/functions/schedule-daily-post/index.ts` | Modificar | Añadir envío de alertas en catch |
-| `supabase/functions/schedule-daily-post-landlord/index.ts` | Modificar | Añadir envío de alertas en catch |
-| `supabase/functions/monitor-boe/index.ts` | Modificar | Añadir envío de alertas |
-| `supabase/functions/send-nurturing-emails/index.ts` | Modificar | Añadir envío de alertas |
-| `supabase/config.toml` | Modificar | Añadir config para send-alert-email |
-
----
-
-## Diseño del email de alerta
-
-```text
-┌─────────────────────────────────────────────────┐
-│                   ACROXIA                        │
-│           ⚠️ ALERTA DEL SISTEMA                 │
-├─────────────────────────────────────────────────┤
-│                                                  │
-│  Ha fallado un proceso programado:              │
-│                                                  │
-│  ┌─────────────────────────────────────────┐    │
-│  │ Proceso: Generación Blog Propietarios    │    │
-│  │ Hora: 26/01/2026 09:00 CET               │    │
-│  │ Error: Could not parse JSON from AI      │    │
-│  └─────────────────────────────────────────┘    │
-│                                                  │
-│  Detalles adicionales:                          │
-│  - AI response length: 0 caracteres             │
-│  - Intentos realizados: 3                       │
-│                                                  │
-│  ┌─────────────────────────┐                    │
-│  │   Ir al Panel Admin     │                    │
-│  └─────────────────────────┘                    │
-│                                                  │
-│  ┌─────────────────────────┐                    │
-│  │  Ejecutar Manualmente   │                    │
-│  └─────────────────────────┘                    │
-│                                                  │
-├─────────────────────────────────────────────────┤
-│  Este email se genera automáticamente.          │
-│  No es necesaria ninguna acción si el proceso   │
-│  se ha recuperado posteriormente.               │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-## Resultado esperado
-
-Después de implementar este sistema:
-
-1. **Recibirás un email inmediato** cuando cualquier cron job falle
-2. El email incluirá **detalles del error** para diagnóstico rápido
-3. Tendrás **links directos** al panel de admin y para ejecutar manualmente
-4. Los procesos de blog intentarán **2 reintentos automáticos** antes de alertar
-5. Opcional: Recibirás un **resumen diario** de todas las ejecuciones
-
----
-
-## Prioridad de implementación
-
-1. **Alta**: Crear `send-alert-email` y conectar a los 2 generadores de blog
-2. **Media**: Añadir alertas a `monitor-boe` y `send-nurturing-emails`
-3. **Baja**: Implementar reintentos automáticos
-4. **Opcional**: Tabla de logs y resumen diario
+1. **No romper la funcionalidad**: El código splitting debe probarse cuidadosamente con todas las rutas protegidas
+2. **Mantener SEO**: Las optimizaciones no deben afectar al contenido visible para crawlers
+3. **Fallbacks**: Siempre incluir fallbacks para fuentes y scripts diferidos
+4. **Testing**: Verificar con PageSpeed después de cada fase para medir el impacto real
