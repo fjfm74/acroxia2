@@ -1,7 +1,8 @@
-const CACHE_NAME = 'acroxia-v2';
+const CACHE_NAME = 'acroxia-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+  '/images/hero-professional.webp',
 ];
 
 // Assets to cache on first load

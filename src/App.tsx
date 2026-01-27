@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,67 +12,94 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import ProfessionalRoute from "./components/auth/ProfessionalRoute";
 import LandlordRoute from "./components/auth/LandlordRoute";
-import DashboardPro from "./pages/DashboardPro";
-import SettingsPage from "./pages/pro/SettingsPage";
-import CreateContractPage from "./pages/pro/CreateContractPage";
+
+// Critical page - loaded eagerly (landing page)
 import Index from "./pages/Index";
-import Pricing from "./pages/Pricing";
-import Profile from "./pages/Profile";
-import FAQ from "./pages/FAQ";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import DashboardLandlord from "./pages/DashboardLandlord";
-import MyContractsPage from "./pages/landlord/MyContractsPage";
-import CreateContractLandlordPage from "./pages/landlord/CreateContractPage";
-import AnalyzeLandlordPage from "./pages/landlord/AnalyzeLandlordPage";
-import Analyze from "./pages/Analyze";
-import AnalyzePublic from "./pages/AnalyzePublic";
-import AnalysisResult from "./pages/AnalysisResult";
-import FreeResultPreview from "./pages/FreeResultPreview";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminBlog from "./pages/admin/AdminBlog";
-import AdminBlogNew from "./pages/admin/AdminBlogNew";
-import AdminBlogEdit from "./pages/admin/AdminBlogEdit";
-import AdminSocial from "./pages/admin/AdminSocial";
-import AdminSocialNew from "./pages/admin/AdminSocialNew";
-import AdminSocialEdit from "./pages/admin/AdminSocialEdit";
-import AdminDocuments from "./pages/admin/AdminDocuments";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminBOE from "./pages/admin/AdminBOE";
-import AdminContactsCRM from "./pages/admin/AdminContactsCRM";
-import NotFound from "./pages/NotFound";
-import AvisoLegal from "./pages/legal/AvisoLegal";
-import Privacidad from "./pages/legal/Privacidad";
-import Terminos from "./pages/legal/Terminos";
-import Cookies from "./pages/legal/Cookies";
-import TransparenciaIA from "./pages/legal/TransparenciaIA";
-import Desistimiento from "./pages/legal/Desistimiento";
-import Accesibilidad from "./pages/legal/Accesibilidad";
-import ClausulasAbusivas from "./pages/seo/ClausulasAbusivas";
-import DevolucionFianza from "./pages/seo/DevolucionFianza";
-import SubidaAlquiler2026 from "./pages/seo/SubidaAlquiler2026";
-import ContratoAlquilerPropietarios from "./pages/seo/ContratoAlquilerPropietarios";
-import ImpagoAlquilerPropietarios from "./pages/seo/ImpagoAlquilerPropietarios";
-import ZonasTensionadasPropietarios from "./pages/seo/ZonasTensionadasPropietarios";
-import DepositoFianzaPropietarios from "./pages/seo/DepositoFianzaPropietarios";
-import FinContratoAlquilerPropietarios from "./pages/seo/FinContratoAlquilerPropietarios";
-import Contacto from "./pages/Contacto";
-import Inmobiliarias from "./pages/profesionales/Inmobiliarias";
-import Gestorias from "./pages/profesionales/Gestorias";
-import Propietarios from "./pages/Propietarios";
-import CookieBanner from "./components/CookieBanner";
-import ChatContainer from "./components/chat/ChatContainer";
-import AprobarPost from "./pages/AprobarPost";
-import Unsubscribe from "./pages/Unsubscribe";
-import ConfirmBlogSubscription from "./pages/ConfirmBlogSubscription";
-import UnsubscribeBlog from "./pages/UnsubscribeBlog";
+
+// Lazy loaded pages - split by route
+const Pricing = lazy(() => import("./pages/Pricing"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Contacto = lazy(() => import("./pages/Contacto"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DashboardLandlord = lazy(() => import("./pages/DashboardLandlord"));
+const DashboardPro = lazy(() => import("./pages/DashboardPro"));
+const Analyze = lazy(() => import("./pages/Analyze"));
+const AnalyzePublic = lazy(() => import("./pages/AnalyzePublic"));
+const AnalysisResult = lazy(() => import("./pages/AnalysisResult"));
+const FreeResultPreview = lazy(() => import("./pages/FreeResultPreview"));
+
+// Landlord pages
+const MyContractsPage = lazy(() => import("./pages/landlord/MyContractsPage"));
+const CreateContractLandlordPage = lazy(() => import("./pages/landlord/CreateContractPage"));
+const AnalyzeLandlordPage = lazy(() => import("./pages/landlord/AnalyzeLandlordPage"));
+
+// Professional pages
+const SettingsPage = lazy(() => import("./pages/pro/SettingsPage"));
+const CreateContractPage = lazy(() => import("./pages/pro/CreateContractPage"));
+
+// Admin pages
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
+const AdminBlogNew = lazy(() => import("./pages/admin/AdminBlogNew"));
+const AdminBlogEdit = lazy(() => import("./pages/admin/AdminBlogEdit"));
+const AdminSocial = lazy(() => import("./pages/admin/AdminSocial"));
+const AdminSocialNew = lazy(() => import("./pages/admin/AdminSocialNew"));
+const AdminSocialEdit = lazy(() => import("./pages/admin/AdminSocialEdit"));
+const AdminDocuments = lazy(() => import("./pages/admin/AdminDocuments"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminBOE = lazy(() => import("./pages/admin/AdminBOE"));
+const AdminContactsCRM = lazy(() => import("./pages/admin/AdminContactsCRM"));
+
+// Legal pages
+const AvisoLegal = lazy(() => import("./pages/legal/AvisoLegal"));
+const Privacidad = lazy(() => import("./pages/legal/Privacidad"));
+const Terminos = lazy(() => import("./pages/legal/Terminos"));
+const Cookies = lazy(() => import("./pages/legal/Cookies"));
+const TransparenciaIA = lazy(() => import("./pages/legal/TransparenciaIA"));
+const Desistimiento = lazy(() => import("./pages/legal/Desistimiento"));
+const Accesibilidad = lazy(() => import("./pages/legal/Accesibilidad"));
+
+// SEO pages
+const ClausulasAbusivas = lazy(() => import("./pages/seo/ClausulasAbusivas"));
+const DevolucionFianza = lazy(() => import("./pages/seo/DevolucionFianza"));
+const SubidaAlquiler2026 = lazy(() => import("./pages/seo/SubidaAlquiler2026"));
+const ContratoAlquilerPropietarios = lazy(() => import("./pages/seo/ContratoAlquilerPropietarios"));
+const ImpagoAlquilerPropietarios = lazy(() => import("./pages/seo/ImpagoAlquilerPropietarios"));
+const ZonasTensionadasPropietarios = lazy(() => import("./pages/seo/ZonasTensionadasPropietarios"));
+const DepositoFianzaPropietarios = lazy(() => import("./pages/seo/DepositoFianzaPropietarios"));
+const FinContratoAlquilerPropietarios = lazy(() => import("./pages/seo/FinContratoAlquilerPropietarios"));
+
+// Professional landing pages
+const Inmobiliarias = lazy(() => import("./pages/profesionales/Inmobiliarias"));
+const Gestorias = lazy(() => import("./pages/profesionales/Gestorias"));
+const Propietarios = lazy(() => import("./pages/Propietarios"));
+
+// Utility pages
+const AprobarPost = lazy(() => import("./pages/AprobarPost"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const ConfirmBlogSubscription = lazy(() => import("./pages/ConfirmBlogSubscription"));
+const UnsubscribeBlog = lazy(() => import("./pages/UnsubscribeBlog"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Lazy loaded components (below the fold / non-critical)
+const CookieBanner = lazy(() => import("./components/CookieBanner"));
+const ChatContainer = lazy(() => import("./components/chat/ChatContainer"));
 
 const queryClient = new QueryClient();
+
+// Minimal page loader for Suspense fallback
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
+  </div>
+);
 
 // SPA Page View Tracker Component
 const PageViewTracker = () => {
@@ -96,69 +123,98 @@ const App = () => (
             <ScrollToTop />
             <PageViewTracker />
             <Routes>
+              {/* Critical route - no suspense wrapper needed */}
               <Route path="/" element={<Index />} />
-              <Route path="/precios" element={<Pricing />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/contacto" element={<Contacto />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/registro" element={<Register />} />
-              <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/inquilino" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/analizar" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
-              <Route path="/resultado/:id" element={<ProtectedRoute><AnalysisResult /></ProtectedRoute>} />
-              <Route path="/analizar-gratis" element={<AnalyzePublic />} />
-              <Route path="/resultado-previo/:id" element={<FreeResultPreview />} />
+              
+              {/* Public pages */}
+              <Route path="/precios" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
+              <Route path="/faq" element={<Suspense fallback={<PageLoader />}><FAQ /></Suspense>} />
+              <Route path="/contacto" element={<Suspense fallback={<PageLoader />}><Contacto /></Suspense>} />
+              <Route path="/blog" element={<Suspense fallback={<PageLoader />}><Blog /></Suspense>} />
+              <Route path="/blog/:slug" element={<Suspense fallback={<PageLoader />}><BlogPost /></Suspense>} />
+              
+              {/* Auth pages */}
+              <Route path="/login" element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
+              <Route path="/registro" element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
+              <Route path="/recuperar-contrasena" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
+              <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+              
+              {/* Protected user routes */}
+              <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></ProtectedRoute>} />
+              <Route path="/inquilino" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></ProtectedRoute>} />
+              <Route path="/perfil" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Profile /></Suspense></ProtectedRoute>} />
+              <Route path="/analizar" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Analyze /></Suspense></ProtectedRoute>} />
+              <Route path="/resultado/:id" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><AnalysisResult /></Suspense></ProtectedRoute>} />
+              
+              {/* Public analysis routes */}
+              <Route path="/analizar-gratis" element={<Suspense fallback={<PageLoader />}><AnalyzePublic /></Suspense>} />
+              <Route path="/resultado-previo/:id" element={<Suspense fallback={<PageLoader />}><FreeResultPreview /></Suspense>} />
+              
               {/* Landlord Routes */}
-              <Route path="/propietario" element={<LandlordRoute><DashboardLandlord /></LandlordRoute>} />
-              <Route path="/propietario/analizar" element={<LandlordRoute><AnalyzeLandlordPage /></LandlordRoute>} />
-              <Route path="/propietario/contratos" element={<LandlordRoute><MyContractsPage /></LandlordRoute>} />
-              <Route path="/propietario/crear-contrato" element={<LandlordRoute><CreateContractLandlordPage /></LandlordRoute>} />
+              <Route path="/propietario" element={<LandlordRoute><Suspense fallback={<PageLoader />}><DashboardLandlord /></Suspense></LandlordRoute>} />
+              <Route path="/propietario/analizar" element={<LandlordRoute><Suspense fallback={<PageLoader />}><AnalyzeLandlordPage /></Suspense></LandlordRoute>} />
+              <Route path="/propietario/contratos" element={<LandlordRoute><Suspense fallback={<PageLoader />}><MyContractsPage /></Suspense></LandlordRoute>} />
+              <Route path="/propietario/crear-contrato" element={<LandlordRoute><Suspense fallback={<PageLoader />}><CreateContractLandlordPage /></Suspense></LandlordRoute>} />
+              
               {/* Professional Routes */}
-              <Route path="/pro" element={<ProfessionalRoute><DashboardPro /></ProfessionalRoute>} />
-              <Route path="/pro/configuracion" element={<ProfessionalRoute><SettingsPage /></ProfessionalRoute>} />
-              <Route path="/pro/crear-contrato" element={<ProfessionalRoute><CreateContractPage /></ProfessionalRoute>} />
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/blog" element={<AdminRoute><AdminBlog /></AdminRoute>} />
-              <Route path="/admin/blog/nuevo" element={<AdminRoute><AdminBlogNew /></AdminRoute>} />
-              <Route path="/admin/blog/editar/:id" element={<AdminRoute><AdminBlogEdit /></AdminRoute>} />
-              <Route path="/admin/social" element={<AdminRoute><AdminSocial /></AdminRoute>} />
-              <Route path="/admin/social/nuevo" element={<AdminRoute><AdminSocialNew /></AdminRoute>} />
-              <Route path="/admin/social/editar/:id" element={<AdminRoute><AdminSocialEdit /></AdminRoute>} />
-              <Route path="/admin/documentos" element={<AdminRoute><AdminDocuments /></AdminRoute>} />
-              <Route path="/admin/usuarios" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-              <Route path="/admin/boe" element={<AdminRoute><AdminBOE /></AdminRoute>} />
-              <Route path="/admin/marketing" element={<AdminRoute><AdminContactsCRM /></AdminRoute>} />
-              <Route path="/aviso-legal" element={<AvisoLegal />} />
-              <Route path="/privacidad" element={<Privacidad />} />
-              <Route path="/terminos" element={<Terminos />} />
-              <Route path="/cookies" element={<Cookies />} />
-              <Route path="/transparencia-ia" element={<TransparenciaIA />} />
-              <Route path="/desistimiento" element={<Desistimiento />} />
-              <Route path="/accesibilidad" element={<Accesibilidad />} />
-              <Route path="/clausulas-abusivas-alquiler" element={<ClausulasAbusivas />} />
-              <Route path="/devolucion-fianza-alquiler" element={<DevolucionFianza />} />
-              <Route path="/subida-alquiler-2026" element={<SubidaAlquiler2026 />} />
-              <Route path="/contrato-alquiler-propietarios" element={<ContratoAlquilerPropietarios />} />
-              <Route path="/impago-alquiler-propietarios" element={<ImpagoAlquilerPropietarios />} />
-              <Route path="/zonas-tensionadas-propietarios" element={<ZonasTensionadasPropietarios />} />
-              <Route path="/deposito-fianza-propietarios" element={<DepositoFianzaPropietarios />} />
-              <Route path="/fin-contrato-alquiler-propietarios" element={<FinContratoAlquilerPropietarios />} />
-              <Route path="/profesionales/inmobiliarias" element={<Inmobiliarias />} />
-              <Route path="/profesionales/gestorias" element={<Gestorias />} />
-              <Route path="/propietarios" element={<Propietarios />} />
-              <Route path="/aprobar-post/:token" element={<AprobarPost />} />
-              <Route path="/unsubscribe" element={<Unsubscribe />} />
-              <Route path="/confirmar-blog" element={<ConfirmBlogSubscription />} />
-              <Route path="/blog/unsubscribe" element={<UnsubscribeBlog />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/pro" element={<ProfessionalRoute><Suspense fallback={<PageLoader />}><DashboardPro /></Suspense></ProfessionalRoute>} />
+              <Route path="/pro/configuracion" element={<ProfessionalRoute><Suspense fallback={<PageLoader />}><SettingsPage /></Suspense></ProfessionalRoute>} />
+              <Route path="/pro/crear-contrato" element={<ProfessionalRoute><Suspense fallback={<PageLoader />}><CreateContractPage /></Suspense></ProfessionalRoute>} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></AdminRoute>} />
+              <Route path="/admin/blog" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBlog /></Suspense></AdminRoute>} />
+              <Route path="/admin/blog/nuevo" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBlogNew /></Suspense></AdminRoute>} />
+              <Route path="/admin/blog/editar/:id" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBlogEdit /></Suspense></AdminRoute>} />
+              <Route path="/admin/social" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminSocial /></Suspense></AdminRoute>} />
+              <Route path="/admin/social/nuevo" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminSocialNew /></Suspense></AdminRoute>} />
+              <Route path="/admin/social/editar/:id" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminSocialEdit /></Suspense></AdminRoute>} />
+              <Route path="/admin/documentos" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminDocuments /></Suspense></AdminRoute>} />
+              <Route path="/admin/usuarios" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminUsers /></Suspense></AdminRoute>} />
+              <Route path="/admin/boe" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBOE /></Suspense></AdminRoute>} />
+              <Route path="/admin/marketing" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminContactsCRM /></Suspense></AdminRoute>} />
+              
+              {/* Legal pages */}
+              <Route path="/aviso-legal" element={<Suspense fallback={<PageLoader />}><AvisoLegal /></Suspense>} />
+              <Route path="/privacidad" element={<Suspense fallback={<PageLoader />}><Privacidad /></Suspense>} />
+              <Route path="/terminos" element={<Suspense fallback={<PageLoader />}><Terminos /></Suspense>} />
+              <Route path="/cookies" element={<Suspense fallback={<PageLoader />}><Cookies /></Suspense>} />
+              <Route path="/transparencia-ia" element={<Suspense fallback={<PageLoader />}><TransparenciaIA /></Suspense>} />
+              <Route path="/desistimiento" element={<Suspense fallback={<PageLoader />}><Desistimiento /></Suspense>} />
+              <Route path="/accesibilidad" element={<Suspense fallback={<PageLoader />}><Accesibilidad /></Suspense>} />
+              
+              {/* SEO pages */}
+              <Route path="/clausulas-abusivas-alquiler" element={<Suspense fallback={<PageLoader />}><ClausulasAbusivas /></Suspense>} />
+              <Route path="/devolucion-fianza-alquiler" element={<Suspense fallback={<PageLoader />}><DevolucionFianza /></Suspense>} />
+              <Route path="/subida-alquiler-2026" element={<Suspense fallback={<PageLoader />}><SubidaAlquiler2026 /></Suspense>} />
+              <Route path="/contrato-alquiler-propietarios" element={<Suspense fallback={<PageLoader />}><ContratoAlquilerPropietarios /></Suspense>} />
+              <Route path="/impago-alquiler-propietarios" element={<Suspense fallback={<PageLoader />}><ImpagoAlquilerPropietarios /></Suspense>} />
+              <Route path="/zonas-tensionadas-propietarios" element={<Suspense fallback={<PageLoader />}><ZonasTensionadasPropietarios /></Suspense>} />
+              <Route path="/deposito-fianza-propietarios" element={<Suspense fallback={<PageLoader />}><DepositoFianzaPropietarios /></Suspense>} />
+              <Route path="/fin-contrato-alquiler-propietarios" element={<Suspense fallback={<PageLoader />}><FinContratoAlquilerPropietarios /></Suspense>} />
+              
+              {/* Professional landing pages */}
+              <Route path="/profesionales/inmobiliarias" element={<Suspense fallback={<PageLoader />}><Inmobiliarias /></Suspense>} />
+              <Route path="/profesionales/gestorias" element={<Suspense fallback={<PageLoader />}><Gestorias /></Suspense>} />
+              <Route path="/propietarios" element={<Suspense fallback={<PageLoader />}><Propietarios /></Suspense>} />
+              
+              {/* Utility pages */}
+              <Route path="/aprobar-post/:token" element={<Suspense fallback={<PageLoader />}><AprobarPost /></Suspense>} />
+              <Route path="/unsubscribe" element={<Suspense fallback={<PageLoader />}><Unsubscribe /></Suspense>} />
+              <Route path="/confirmar-blog" element={<Suspense fallback={<PageLoader />}><ConfirmBlogSubscription /></Suspense>} />
+              <Route path="/blog/unsubscribe" element={<Suspense fallback={<PageLoader />}><UnsubscribeBlog /></Suspense>} />
+              
+              {/* 404 */}
+              <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
             </Routes>
-            <CookieBanner />
-            <ChatContainer />
+            
+            {/* Non-critical components loaded after main content */}
+            <Suspense fallback={null}>
+              <CookieBanner />
+            </Suspense>
+            <Suspense fallback={null}>
+              <ChatContainer />
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

@@ -5,19 +5,19 @@ const steps = [
     number: "01",
     title: "Sube tu contrato",
     description: "Arrastra tu PDF o imagen del contrato. Aceptamos cualquier formato legible.",
-    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=800&auto=format&fit=crop",
   },
   {
     number: "02",
     title: "Análisis IA",
     description: "Nuestra inteligencia artificial revisa cada cláusula según la legislación vigente.",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2070&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop",
   },
   {
     number: "03",
     title: "Recibe tu informe",
     description: "Obtén un informe detallado con orientaciones claras sobre cada cláusula.",
-    image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=800&auto=format&fit=crop",
   },
 ];
 
