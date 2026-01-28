@@ -11,6 +11,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 5000;
+
+// Helper function to sleep
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Helper function to send error alerts
 async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
   try {
@@ -28,6 +37,66 @@ async function sendErrorAlert(error: string, context: Record<string, any>): Prom
   } catch (alertError) {
     console.error("Failed to send alert email:", alertError);
   }
+}
+
+// Robust JSON sanitization
+function sanitizeJsonString(rawContent: string): string {
+  const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return '';
+  
+  let json = jsonMatch[0];
+  
+  // Remove problematic control characters
+  json = json.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  
+  return json;
+}
+
+// Parse AI response with multiple fallback strategies
+interface PostData {
+  title: string;
+  excerpt: string;
+  category: string;
+  content: string;
+}
+
+function parseAiResponse(content: string, fallbackCategory: string): PostData {
+  // Strategy 1: Direct JSON.parse after sanitization
+  try {
+    const sanitized = sanitizeJsonString(content);
+    if (sanitized) {
+      const parsed = JSON.parse(sanitized);
+      if (parsed.title && parsed.content) {
+        return {
+          title: parsed.title,
+          excerpt: parsed.excerpt || parsed.title,
+          category: parsed.category || fallbackCategory,
+          content: parsed.content,
+        };
+      }
+    }
+  } catch (e) {
+    console.log('Direct JSON parse failed, trying regex extraction...');
+  }
+  
+  // Strategy 2: Regex extraction field by field
+  const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
+  const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
+  const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
+  
+  // For content, use a more flexible pattern
+  const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)(?:"\s*[,}])/);
+  
+  if (!titleMatch) {
+    throw new Error('Could not extract title from AI response');
+  }
+  
+  return {
+    title: titleMatch[1],
+    excerpt: excerptMatch?.[1] || titleMatch[1],
+    category: categoryMatch?.[1] || fallbackCategory,
+    content: contentMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') || '',
+  };
 }
 
 const ALL_CATEGORIES = ["Cláusulas", "Fianzas", "Derechos", "Subidas de renta", "Legislación", "Consejos"];
@@ -70,21 +139,13 @@ function getLeastUsedCategories(existingPosts: Array<{ category: string }>): str
     .map(([cat]) => cat);
 }
 
-async function generateBlogPost(supabase: any): Promise<{ title: string; slug: string; content: string; excerpt: string; category: string; image: string }> {
-  // Fetch existing posts to avoid duplicates
-  const { data: existingPosts } = await supabase
-    .from("blog_posts")
-    .select("title, category")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
+// Main generation function with retry logic
+async function generateBlogPostWithRetries(supabase: any, leastUsedCategories: string[], existingPosts: any[]): Promise<PostData> {
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const currentMonth = months[currentDate.getMonth()];
 
-  const leastUsedCategories = getLeastUsedCategories(existingPosts || []);
-  
   const existingContext = existingPosts && existingPosts.length > 0
     ? `POSTS YA PUBLICADOS (NO repetir temas similares):\n${existingPosts.map((p: any) => `- "${p.title}" (${p.category})`).join('\n')}`
     : '';
@@ -150,84 +211,73 @@ REQUISITOS:
 3. Prioriza categorías: ${leastUsedCategories.join(', ')}
 4. Referencias temporales correctas (estamos en ${currentYear})`;
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      temperature: 0.8,
-    }),
-  });
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("AI API error:", response.status, errorText);
-    throw new Error(`AI API error: ${response.status}`);
-  }
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`Retry attempt ${attempt} of ${MAX_RETRIES}...`);
+        await sleep(RETRY_DELAY_MS);
+      }
 
-  const data = await response.json();
-  let content = data.choices[0].message.content;
-  
-  console.log("AI response received, length:", content.length);
-  console.log("First 300 chars:", content.substring(0, 300));
-  
-  // Sanitize and parse JSON response
-  content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  // Remove problematic control characters
-  content = content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-  
-  let parsed;
-  try {
-    parsed = JSON.parse(content);
-  } catch (parseError) {
-    console.error("JSON parse error, attempting regex extraction...");
-    console.error("Parse error:", parseError);
-    
-    // Fallback: extract fields using regex
-    const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
-    const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
-    const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
-    // For content, use a more robust pattern
-    const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)"\s*(?:,\s*"|\}$)/);
-    
-    if (!titleMatch) {
-      console.error("Could not extract title from response");
-      throw new Error("Could not extract title from AI response");
+      console.log(`Attempt ${attempt + 1}: Calling Lovable AI Gateway...`);
+
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.8,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`AI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0]?.message?.content;
+      
+      if (!content) {
+        throw new Error('No content received from AI');
+      }
+
+      console.log(`Attempt ${attempt + 1}: AI response received, parsing...`);
+
+      // Parse with robust fallback
+      const postData = parseAiResponse(content, leastUsedCategories[0]);
+
+      // Validate required fields
+      if (!postData.title || !postData.content) {
+        throw new Error('Missing required fields in AI response');
+      }
+
+      // Validate category
+      postData.category = ALL_CATEGORIES.includes(postData.category) ? postData.category : leastUsedCategories[0];
+
+      console.log(`Attempt ${attempt + 1}: Successfully parsed post: "${postData.title}"`);
+      return postData;
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
+      
+      if (attempt === MAX_RETRIES) {
+        console.error('All retry attempts exhausted');
+        break;
+      }
     }
-    
-    parsed = {
-      title: titleMatch[1],
-      excerpt: excerptMatch ? excerptMatch[1] : titleMatch[1].substring(0, 150),
-      category: categoryMatch ? categoryMatch[1] : leastUsedCategories[0],
-      content: contentMatch ? contentMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "",
-    };
-    
-    console.log("Extracted via regex fallback:", { title: parsed.title, category: parsed.category });
   }
 
-  // Validate we have required fields
-  if (!parsed.title || !parsed.content) {
-    throw new Error("Missing required fields in AI response");
-  }
-
-  // Generate image
-  const imageUrl = await generateImage(parsed.title, parsed.excerpt, parsed.category);
-
-  return {
-    title: parsed.title,
-    slug: generateSlug(parsed.title),
-    content: parsed.content,
-    excerpt: parsed.excerpt || parsed.title.substring(0, 150),
-    category: ALL_CATEGORIES.includes(parsed.category) ? parsed.category : leastUsedCategories[0],
-    image: imageUrl,
-  };
+  throw lastError || new Error('All retry attempts failed');
 }
 
 async function generateImage(title: string, excerpt: string, category: string): Promise<string> {
@@ -416,26 +466,39 @@ const handler = async (req: Request): Promise<Response> => {
     }
     
     // Get site URL from request or default
-    const url = new URL(req.url);
     const siteUrl = req.headers.get("origin") || "https://acroxia.com";
 
-    console.log("Generating daily blog post...");
+    console.log("Starting daily blog post generation...");
     
-    // Generate the blog post
-    const post = await generateBlogPost(supabase);
+    // Fetch existing posts to avoid duplicates
+    const { data: existingPosts } = await supabase
+      .from("blog_posts")
+      .select("title, category")
+      .eq("audience", "inquilino")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    const leastUsedCategories = getLeastUsedCategories(existingPosts || []);
+    console.log(`Least used categories: ${leastUsedCategories.join(', ')}`);
+
+    // Generate the blog post with automatic retries
+    const post = await generateBlogPostWithRetries(supabase, leastUsedCategories, existingPosts || []);
     
     console.log("Post generated:", post.title);
+
+    // Generate image
+    const imageUrl = await generateImage(post.title, post.excerpt, post.category);
 
     // Save as draft
     const { data: blogPost, error: insertError } = await supabase
       .from("blog_posts")
       .insert({
         title: post.title,
-        slug: post.slug,
+        slug: generateSlug(post.title),
         content: post.content,
         excerpt: post.excerpt,
         category: post.category,
-        image: post.image,
+        image: imageUrl,
         status: "draft",
         audience: "inquilino",
         read_time: `${Math.ceil(post.content.split(/\s+/).length / 200)} min`,
@@ -467,7 +530,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send approval email
     await sendApprovalEmail(
-      { ...post, id: blogPost.id },
+      { ...post, id: blogPost.id, image: imageUrl },
       scheduledPost.approval_token,
       siteUrl
     );
@@ -493,10 +556,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in schedule-daily-post:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     
-    // Send alert email to admin
+    // Send alert email to admin only after all retries have failed
     await sendErrorAlert(errorMessage, {
       attempted_at: new Date().toISOString(),
-      scheduling_enabled: true,
+      total_attempts: MAX_RETRIES + 1,
     });
     
     return new Response(

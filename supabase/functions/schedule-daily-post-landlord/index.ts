@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +10,15 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
 const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 5000;
+
+// Helper function to sleep
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 // Helper function to send error alerts
 async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
@@ -29,6 +37,66 @@ async function sendErrorAlert(error: string, context: Record<string, any>): Prom
   } catch (alertError) {
     console.error("Failed to send alert email:", alertError);
   }
+}
+
+// Robust JSON sanitization
+function sanitizeJsonString(rawContent: string): string {
+  const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return '';
+  
+  let json = jsonMatch[0];
+  
+  // Remove problematic control characters
+  json = json.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  
+  return json;
+}
+
+// Parse AI response with multiple fallback strategies
+interface PostData {
+  title: string;
+  excerpt: string;
+  category: string;
+  content: string;
+}
+
+function parseAiResponse(content: string, fallbackCategory: string): PostData {
+  // Strategy 1: Direct JSON.parse after sanitization
+  try {
+    const sanitized = sanitizeJsonString(content);
+    if (sanitized) {
+      const parsed = JSON.parse(sanitized);
+      if (parsed.title && parsed.content) {
+        return {
+          title: parsed.title,
+          excerpt: parsed.excerpt || parsed.title,
+          category: parsed.category || fallbackCategory,
+          content: parsed.content,
+        };
+      }
+    }
+  } catch (e) {
+    console.log('Direct JSON parse failed, trying regex extraction...');
+  }
+  
+  // Strategy 2: Regex extraction field by field
+  const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
+  const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
+  const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
+  
+  // For content, use a more flexible pattern
+  const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)(?:"\s*[,}])/);
+  
+  if (!titleMatch) {
+    throw new Error('Could not extract title from AI response');
+  }
+  
+  return {
+    title: titleMatch[1],
+    excerpt: excerptMatch?.[1] || titleMatch[1],
+    category: categoryMatch?.[1] || fallbackCategory,
+    content: contentMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') || '',
+  };
 }
 
 // Categorías específicas para propietarios
@@ -255,51 +323,19 @@ async function sendApprovalEmail(
   }
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+// Main generation function with retry logic
+async function generateBlogPostWithRetries(supabase: any, leastUsedCategory: string, existingPosts: any[]): Promise<PostData> {
+  const currentDate = new Date().toLocaleDateString('es-ES', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 
-  try {
-    console.log('Starting daily landlord blog post generation...');
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const currentDate = new Date().toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+  const existingTopicsContext = existingPosts?.length 
+    ? `\n\nTEMAS YA CUBIERTOS (no repetir):\n${existingPosts.slice(0, 20).map((p: any) => `- ${p.title}`).join('\n')}`
+    : '';
 
-    // Obtener posts existentes de propietarios para evitar duplicados
-    const { data: existingPosts } = await supabase
-      .from('blog_posts')
-      .select('title, category')
-      .eq('audience', 'propietario')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    const existingTitles = existingPosts?.map(p => p.title.toLowerCase()) || [];
-    const existingTopicsContext = existingPosts?.length 
-      ? `\n\nTEMAS YA CUBIERTOS (no repetir):\n${existingPosts.slice(0, 20).map(p => `- ${p.title}`).join('\n')}`
-      : '';
-
-    // Contar posts por categoría para balancear
-    const categoryCounts: Record<string, number> = {};
-    LANDLORD_CATEGORIES.forEach(cat => categoryCounts[cat] = 0);
-    existingPosts?.forEach(post => {
-      if (categoryCounts[post.category] !== undefined) {
-        categoryCounts[post.category]++;
-      }
-    });
-
-    // Encontrar categoría con menos posts
-    const leastUsedCategory = LANDLORD_CATEGORIES.reduce((min, cat) => 
-      (categoryCounts[cat] || 0) < (categoryCounts[min] || 0) ? cat : min
-    , LANDLORD_CATEGORIES[0]);
-
-    console.log(`Least used category for landlords: ${leastUsedCategory}`);
-
-    const systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España, especializado en ayudar a PROPIETARIOS y ARRENDADORES.
+  const systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España, especializado en ayudar a PROPIETARIOS y ARRENDADORES.
 
 FECHA ACTUAL: ${currentDate} (Enero 2026)
 CONTEXTO: El IRAV ha sustituido al IPC para actualizar rentas desde 2025. Las zonas tensionadas tienen limitaciones específicas.
@@ -341,7 +377,7 @@ Responde SOLO con un JSON válido:
   "content": "contenido completo en Markdown"
 }`;
 
-    const userPrompt = `Genera un artículo de blog NUEVO y ÚNICO para PROPIETARIOS de viviendas en alquiler en España.
+  const userPrompt = `Genera un artículo de blog NUEVO y ÚNICO para PROPIETARIOS de viviendas en alquiler en España.
 
 El artículo debe:
 1. Ser útil y práctico para propietarios/arrendadores
@@ -354,80 +390,114 @@ El artículo debe:
 
 IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no cubiertos.`;
 
-    console.log('Calling Lovable AI Gateway for landlord post...');
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`Retry attempt ${attempt} of ${MAX_RETRIES}...`);
+        await sleep(RETRY_DELAY_MS);
+      }
+
+      console.log(`Attempt ${attempt + 1}: Calling Lovable AI Gateway for landlord post...`);
+      
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${lovableApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 4000,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`AI Gateway error: ${response.status} - ${errorText}`);
+      }
+
+      const aiResponse = await response.json();
+      const content = aiResponse.choices[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('No content received from AI');
+      }
+
+      console.log(`Attempt ${attempt + 1}: AI response received, parsing...`);
+
+      // Parse with robust fallback
+      const postData = parseAiResponse(content, leastUsedCategory);
+      
+      // Validate required fields
+      if (!postData.title || !postData.content) {
+        throw new Error('Missing required fields in AI response');
+      }
+
+      // Validate category
+      postData.category = LANDLORD_CATEGORIES.includes(postData.category) ? postData.category : leastUsedCategory;
+
+      console.log(`Attempt ${attempt + 1}: Successfully parsed post: "${postData.title}"`);
+      return postData;
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
+      
+      if (attempt === MAX_RETRIES) {
+        console.error('All retry attempts exhausted');
+        break;
+      }
+    }
+  }
+
+  throw lastError || new Error('All retry attempts failed');
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    console.log('Starting daily landlord blog post generation...');
     
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${lovableApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.8,
-        max_tokens: 4000,
-      }),
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Obtener posts existentes de propietarios para evitar duplicados
+    const { data: existingPosts } = await supabase
+      .from('blog_posts')
+      .select('title, category')
+      .eq('audience', 'propietario')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    const existingTitles = existingPosts?.map((p: any) => p.title.toLowerCase()) || [];
+
+    // Contar posts por categoría para balancear
+    const categoryCounts: Record<string, number> = {};
+    LANDLORD_CATEGORIES.forEach(cat => categoryCounts[cat] = 0);
+    existingPosts?.forEach((post: any) => {
+      if (categoryCounts[post.category] !== undefined) {
+        categoryCounts[post.category]++;
+      }
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI Gateway error:', errorText);
-      throw new Error(`AI Gateway error: ${response.status}`);
-    }
+    // Encontrar categoría con menos posts
+    const leastUsedCategory = LANDLORD_CATEGORIES.reduce((min, cat) => 
+      (categoryCounts[cat] || 0) < (categoryCounts[min] || 0) ? cat : min
+    , LANDLORD_CATEGORIES[0]);
 
-    const aiResponse = await response.json();
-    const content = aiResponse.choices[0]?.message?.content;
+    console.log(`Least used category for landlords: ${leastUsedCategory}`);
 
-    if (!content) {
-      throw new Error('No content received from AI');
-    }
-
-    console.log('AI response received, parsing...');
-
-    // Parse JSON from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Could not parse JSON from AI response');
-    }
-
-    // Sanitize JSON string to remove control characters that break parsing
-    let jsonString = jsonMatch[0];
-    // Replace control characters (except newlines and tabs which we'll handle)
-    jsonString = jsonString.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-    // Escape unescaped newlines inside string values
-    jsonString = jsonString.replace(/(?<!\\)\n(?=(?:[^"]*"[^"]*")*[^"]*"[^"]*$)/g, '\\n');
-    
-    let postData;
-    try {
-      postData = JSON.parse(jsonString);
-    } catch (parseError) {
-      console.error('JSON parse error, attempting to extract fields manually...');
-      // Fallback: extract fields using regex
-      const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
-      const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
-      const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
-      const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)"\s*\}/);
-      
-      if (!titleMatch || !contentMatch) {
-        throw new Error('Could not extract required fields from AI response');
-      }
-      
-      postData = {
-        title: titleMatch[1],
-        excerpt: excerptMatch ? excerptMatch[1] : titleMatch[1],
-        category: categoryMatch ? categoryMatch[1] : leastUsedCategory,
-        content: contentMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'),
-      };
-    }
-    
-    // Validate required fields
-    if (!postData.title || !postData.content || !postData.category) {
-      throw new Error('Missing required fields in AI response');
-    }
+    // Generate post with automatic retries
+    const postData = await generateBlogPostWithRetries(supabase, leastUsedCategory, existingPosts || []);
 
     // Check for duplicate title
     if (existingTitles.includes(postData.title.toLowerCase())) {
@@ -436,11 +506,10 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
     }
 
     const slug = generateSlug(postData.title);
-    const validCategory = LANDLORD_CATEGORIES.includes(postData.category) ? postData.category : leastUsedCategory;
 
     // Generate image for the post
     console.log('Generating image for post...');
-    const imageUrl = await generateImage(postData.title, postData.excerpt || postData.title, validCategory);
+    const imageUrl = await generateImage(postData.title, postData.excerpt || postData.title, postData.category);
 
     // Insert blog post as draft with audience = 'propietario'
     const { data: newPost, error: insertError } = await supabase
@@ -450,10 +519,10 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
         slug: slug,
         excerpt: postData.excerpt || postData.title,
         content: postData.content,
-        category: validCategory,
+        category: postData.category,
         status: 'draft',
         read_time: `${Math.ceil(postData.content.split(/\s+/).length / 200)} min`,
-        keywords: ['propietarios', 'arrendadores', 'alquiler', 'LAU', validCategory.toLowerCase()],
+        keywords: ['propietarios', 'arrendadores', 'alquiler', 'LAU', postData.category.toLowerCase()],
         meta_description: postData.excerpt?.substring(0, 160) || postData.title,
         audience: 'propietario',
         image: imageUrl,
@@ -480,37 +549,39 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
 
     if (scheduleError) {
       console.error('Error creating scheduled post:', scheduleError);
-    } else {
-      // Send approval email with image and content preview
-      await sendApprovalEmail(
-        { 
-          id: newPost.id, 
-          title: newPost.title, 
-          excerpt: newPost.excerpt,
-          category: newPost.category,
-          content: postData.content,
-          image: imageUrl
-        },
-        scheduledPost.approval_token
-      );
-
-      // Update email sent timestamp
-      await supabase
-        .from('scheduled_posts')
-        .update({ email_sent_at: new Date().toISOString() })
-        .eq('id', scheduledPost.id);
+      throw scheduleError;
     }
 
+    // Send approval email
+    await sendApprovalEmail(
+      { 
+        id: newPost.id, 
+        title: newPost.title, 
+        excerpt: newPost.excerpt,
+        category: newPost.category,
+        content: postData.content,
+        image: imageUrl,
+      }, 
+      scheduledPost.approval_token
+    );
+
+    // Update email sent timestamp
+    await supabase
+      .from('scheduled_posts')
+      .update({ email_sent_at: new Date().toISOString() })
+      .eq('id', scheduledPost.id);
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        post: { 
-          id: newPost.id, 
+      JSON.stringify({
+        success: true,
+        message: 'Landlord blog post generated and pending approval',
+        post: {
+          id: newPost.id,
           title: newPost.title,
+          slug: newPost.slug,
           category: newPost.category,
-          audience: 'propietario',
-          image: imageUrl
-        } 
+          image: imageUrl,
+        },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -519,9 +590,10 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in schedule-daily-post-landlord:', error);
     
-    // Send alert email to admin
+    // Send alert email only after all retries have failed
     await sendErrorAlert(errorMessage, {
       attempted_at: new Date().toISOString(),
+      total_attempts: MAX_RETRIES + 1,
     });
     
     return new Response(
