@@ -220,6 +220,8 @@ const AdminBlogEdit = () => {
     setSaving(true);
     try {
       const newStatus = publish ? "published" : "draft";
+      const isFirstTimePublishing = publish && originalStatus !== "published";
+      
       const { error } = await supabase
         .from("blog_posts")
         .update({
@@ -234,7 +236,7 @@ const AdminBlogEdit = () => {
           keywords: post.keywords,
           audience: post.audience,
           status: newStatus,
-          published_at: publish && originalStatus !== "published" 
+          published_at: isFirstTimePublishing 
             ? new Date().toISOString() 
             : undefined,
           updated_at: new Date().toISOString(),
@@ -243,11 +245,26 @@ const AdminBlogEdit = () => {
 
       if (error) throw error;
 
+      // Si es la primera vez que se publica, enviar notificaciones a suscriptores
+      if (isFirstTimePublishing && id) {
+        try {
+          await supabase.functions.invoke("send-blog-notification", {
+            body: { postId: id }
+          });
+          console.log("Newsletter notifications triggered for post:", id);
+        } catch (notifyError) {
+          // No bloquear la publicación si falla la notificación
+          console.error("Error sending newsletter notifications:", notifyError);
+        }
+      }
+
       toast({
         title: publish ? "Post publicado" : "Cambios guardados",
-        description: publish 
-          ? "El post ya está visible en el blog" 
-          : "Los cambios se han guardado correctamente",
+        description: isFirstTimePublishing 
+          ? "El post ya está visible en el blog y se ha notificado a los suscriptores" 
+          : publish 
+            ? "El post ya está visible en el blog"
+            : "Los cambios se han guardado correctamente",
       });
 
       navigate("/admin/blog");
