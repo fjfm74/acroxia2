@@ -1,216 +1,179 @@
 
 
-## Plan: Reintentos Automáticos para Generación de Blog
+## Plan: Automatización Completa de Archivos SEO
 
-### Problema identificado
+### Problema actual
 
-Cuando la IA devuelve un JSON malformado (caracteres de control, saltos de línea incorrectos), la función falla inmediatamente y envía la alerta. Pero un segundo intento con la misma llamada suele funcionar porque la IA genera una respuesta diferente.
+Tienes 3 niveles de archivos SEO y solo 1 está automatizado:
 
-**Error de hoy:**
-```
-Error: Could not parse JSON from AI response
-```
+| Archivo | Estado actual | Problema |
+|---------|--------------|----------|
+| Sitemap dinámico | ✅ Automatizado | Funciona bien vía trigger |
+| `public/sitemap.xml` | ❌ Estático | Se quedó en enero, no refleja posts nuevos |
+| `llms.txt` / `llms-full.txt` | ❌ Estáticos | Nunca mencionan los posts del blog |
 
----
+### Solución propuesta
 
-### Solución: Sistema de reintentos inteligente
-
-Implementar un bucle de reintentos que:
-1. Intente generar el post hasta **3 veces** (1 original + 2 reintentos)
-2. Espere **5 segundos** entre intentos
-3. Mejore el parsing de JSON con sanitización más robusta
-4. **Solo envíe la alerta si todos los intentos fallan**
+Crear un sistema que regenere TODOS los archivos SEO automáticamente cuando:
+1. Se publique un nuevo post del blog
+2. Se apruebe un post generado por IA
+3. Se modifique el estado de un post existente
 
 ---
 
-### Cambios técnicos
+## Fase 1: Eliminar archivo sitemap estático
 
-#### Archivo 1: `supabase/functions/schedule-daily-post-landlord/index.ts`
+El archivo `public/sitemap.xml` es **redundante** porque:
+- `robots.txt` ya apunta al sitemap dinámico
+- Google usa el sitemap dinámico
 
-Refactorizar la lógica principal para incluir reintentos:
+**Acción**: Eliminar `public/sitemap.xml` para evitar confusión y posibles conflictos de caché.
 
-```typescript
-const MAX_RETRIES = 2;
-const RETRY_DELAY_MS = 5000;
+---
 
-// Función auxiliar para esperar
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+## Fase 2: Crear Edge Function para regenerar archivos LLM
 
-// Función auxiliar para sanitizar JSON de forma más robusta
-function sanitizeJsonString(rawContent: string): string {
-  // Extraer el bloque JSON
-  const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return '';
-  
-  let json = jsonMatch[0];
-  
-  // Eliminar caracteres de control problemáticos
-  json = json.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-  
-  // Intentar arreglar newlines dentro de strings
-  json = json.replace(/(?<!\\)\n(?=[^"]*"(?:[^"]*"[^"]*")*[^"]*$)/g, '\\n');
-  
-  return json;
-}
+### Nueva función: `regenerate-llm-files/index.ts`
 
-// En el handler principal:
-let lastError: Error | null = null;
+Esta función se encargará de generar versiones actualizadas de `llms.txt` y `llms-full.txt` que incluyan:
 
-for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-  try {
-    if (attempt > 0) {
-      console.log(`Retry attempt ${attempt} of ${MAX_RETRIES}...`);
-      await sleep(RETRY_DELAY_MS);
-    }
-    
-    // Llamar a la IA
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {...});
-    
-    const aiResponse = await response.json();
-    const content = aiResponse.choices[0]?.message?.content;
-    
-    // Sanitizar y parsear
-    const sanitizedJson = sanitizeJsonString(content);
-    const postData = JSON.parse(sanitizedJson);
-    
-    // Si llegamos aquí, el parsing fue exitoso
-    // Continuar con la creación del post...
-    
-    return successResponse; // Salir del bucle
-    
-  } catch (error) {
-    lastError = error instanceof Error ? error : new Error(String(error));
-    console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
-    
-    // Si es el último intento, salir del bucle
-    if (attempt === MAX_RETRIES) break;
-  }
-}
+1. **Lista de posts recientes del blog** (últimos 10-20)
+2. **Fecha de última actualización real**
+3. **URLs de posts destacados**
 
-// Todos los intentos fallaron - enviar alerta
-await sendErrorAlert(
-  lastError?.message || 'Unknown error',
-  { 
-    attempts: MAX_RETRIES + 1,
-    attempted_at: new Date().toISOString() 
-  }
+**Estructura propuesta para llms.txt:**
+
+```markdown
+# ACROXIA - Análisis de Contratos de Alquiler con IA
+
+> Última actualización automática: 2026-01-28
+
+## Artículos recientes del blog
+
+### Para inquilinos
+- Cláusulas de prórroga voluntaria: acroxia.com/blog/tu-contrato-de-alquiler-...
+- Depósito de garantía adicional: acroxia.com/blog/deposito-de-garantia-...
+
+### Para propietarios
+- IPC o IRAV en 2026: acroxia.com/blog/ipc-o-irav-la-verdad-...
+- Guía de alquiler 2026: acroxia.com/blog/alquiler-en-2026-...
+
+[... resto del contenido estático ...]
+```
+
+**Problema técnico**: Los archivos `public/` son estáticos y no se pueden modificar desde Edge Functions. 
+
+**Solución**: Servir los archivos LLM de forma dinámica mediante Edge Functions, similar al sitemap.
+
+---
+
+## Fase 3: Edge Functions dinámicas para LLM files
+
+### Opción A: Edge Functions que sirven el contenido (Recomendado)
+
+Crear 2 nuevas Edge Functions:
+- `supabase/functions/llms/index.ts` - Sirve `llms.txt` dinámico
+- `supabase/functions/llms-full/index.ts` - Sirve `llms-full.txt` dinámico
+
+El contenido se genera dinámicamente incluyendo los posts más recientes de la base de datos.
+
+**Configuración en robots.txt:**
+```
+# Archivos para LLMs
+Sitemap: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/sitemap
+LLMs: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
+```
+
+**Ventajas:**
+- Siempre actualizado en tiempo real
+- No depende de archivos estáticos
+- Se puede cachear en Edge para rendimiento
+
+### Opción B: Caché en base de datos (Similar al sitemap)
+
+Crear tablas `llms_cache` similar a `sitemap_cache`:
+- El contenido se regenera cuando cambian los posts
+- Se sirve desde caché para velocidad
+
+---
+
+## Fase 4: Integrar con el trigger existente
+
+Modificar la función `trigger_sitemap_regeneration` para que también llame a las nuevas Edge Functions:
+
+```sql
+-- Además de regenerar sitemap, regenerar archivos LLM
+PERFORM net.http_post(
+  url := '.../functions/v1/regenerate-llms',
+  headers := '{"Content-Type": "application/json"}'::jsonb,
+  body := '{}'::jsonb
 );
 ```
 
-#### Archivo 2: `supabase/functions/schedule-daily-post/index.ts`
-
-Aplicar la misma lógica de reintentos a la función de inquilinos.
+O crear un trigger adicional que solo se ejecute para posts publicados.
 
 ---
 
-### Mejoras adicionales de parsing
+## Archivos a crear/modificar
 
-El parsing actual tiene fallos con JSONs complejos. Añadir un fallback con extracción por regex más robusta:
-
-```typescript
-function parseAiResponse(content: string, fallbackCategory: string): PostData {
-  // Intento 1: JSON.parse directo tras sanitización
-  try {
-    const sanitized = sanitizeJsonString(content);
-    return JSON.parse(sanitized);
-  } catch (e) {
-    console.log('Direct parse failed, trying regex extraction...');
-  }
-  
-  // Intento 2: Extracción por regex campo a campo
-  const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
-  const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
-  const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
-  
-  // Para content, usar regex más flexible
-  const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)(?:"\s*[,}])/);
-  
-  if (!titleMatch) {
-    throw new Error('Could not extract title from AI response');
-  }
-  
-  return {
-    title: titleMatch[1],
-    excerpt: excerptMatch?.[1] || titleMatch[1],
-    category: categoryMatch?.[1] || fallbackCategory,
-    content: contentMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') || '',
-  };
-}
-```
+| Archivo | Acción | Descripción |
+|---------|--------|-------------|
+| `public/sitemap.xml` | **ELIMINAR** | Redundante con el dinámico |
+| `supabase/functions/llms/index.ts` | **CREAR** | Sirve llms.txt dinámico |
+| `supabase/functions/llms-full/index.ts` | **CREAR** | Sirve llms-full.txt completo dinámico |
+| `supabase/config.toml` | Modificar | Añadir config para nuevas functions |
+| `public/robots.txt` | Modificar | Añadir referencia a archivos LLM dinámicos |
+| Trigger SQL | Modificar | Incluir llamada a regenerar LLMs |
 
 ---
 
-### Archivos a modificar
-
-| Archivo | Cambios |
-|---------|---------|
-| `supabase/functions/schedule-daily-post-landlord/index.ts` | Añadir reintentos, mejorar parsing |
-| `supabase/functions/schedule-daily-post/index.ts` | Añadir reintentos, mejorar parsing |
-
----
-
-### Flujo final con reintentos
+## Flujo final automatizado
 
 ```text
-Cron job ejecuta a las 09:00/10:00
-        │
-        ▼
-┌───────────────────────────┐
-│  Intento 1: Llamar IA     │
-└───────────┬───────────────┘
-            │
-      ¿Éxito? ──────────────► SÍ ──► Crear post + Email aprobación
-            │
-           NO
-            │
-            ▼
-      Esperar 5 segundos
-            │
-            ▼
-┌───────────────────────────┐
-│  Intento 2: Llamar IA     │
-└───────────┬───────────────┘
-            │
-      ¿Éxito? ──────────────► SÍ ──► Crear post + Email aprobación
-            │
-           NO
-            │
-            ▼
-      Esperar 5 segundos
-            │
-            ▼
-┌───────────────────────────┐
-│  Intento 3: Llamar IA     │
-└───────────┬───────────────┘
-            │
-      ¿Éxito? ──────────────► SÍ ──► Crear post + Email aprobación
-            │
-           NO
-            │
-            ▼
-┌───────────────────────────┐
-│  ENVIAR ALERTA EMAIL      │
-│  (todos los intentos      │
-│   fallaron)               │
-└───────────────────────────┘
+Post aprobado / publicado / modificado
+              │
+              ▼
+    Trigger en blog_posts
+              │
+              ├──► Regenerar Sitemap (ya funciona)
+              │
+              └──► Regenerar archivos LLM (nuevo)
+                        │
+                        ▼
+              ┌─────────────────┐
+              │ Edge Functions  │
+              │ sirven archivos │
+              │ actualizados    │
+              └─────────────────┘
 ```
 
 ---
 
-### Resultado esperado
+## Contenido dinámico de llms.txt
 
-1. **Menos alertas falsas**: La mayoría de errores de parsing se resolverán en el 2º o 3º intento
-2. **Email de alerta incluirá el número de intentos realizados**: Para que sepas que ya se intentó varias veces
-3. **Parsing más robusto**: El fallback por regex capturará casos donde el JSON tiene errores menores
-4. **Logging mejorado**: Verás en los logs cada intento y su resultado
+La nueva versión incluirá automáticamente:
+
+1. **Fecha de última actualización** (real, no hardcodeada)
+2. **Sección de posts recientes** con los últimos 10 artículos del blog
+3. **Categorización por audiencia** (inquilinos vs propietarios)
+4. **Todo el contenido estático actual** (servicios, precios, URLs, etc.)
 
 ---
 
-### Notas técnicas
+## Beneficios
 
-- El delay de 5 segundos es suficiente para que la IA genere una respuesta diferente
-- El timeout total del edge function (60s por defecto) permite hasta 3 intentos cómodamente
-- Si el error no es de parsing (ej: error de red, API caída), también reintentará
+1. **SEO mejorado**: Los LLMs verán contenido fresco con fechas actualizadas
+2. **Sin mantenimiento manual**: Todo se actualiza automáticamente
+3. **Consistencia**: Sitemap y archivos LLM siempre sincronizados
+4. **Mejor indexación**: Posts nuevos aparecen inmediatamente en contexto para IAs
+
+---
+
+## Resultado esperado
+
+Cada vez que se publique un post:
+1. El sitemap dinámico se regenera (ya funciona)
+2. Los archivos `llms.txt` y `llms-full.txt` se actualizan con el nuevo post
+3. La fecha de "última actualización" refleja la fecha real
+4. Los LLMs que consulten estos archivos verán el contenido más reciente
 
