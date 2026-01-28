@@ -104,12 +104,29 @@ const AdminBlogNew = () => {
           mode,
           prompt: mode === "custom" ? customPrompt : undefined,
           existingPosts: existingPosts || [],
+          audience: audience,
         },
       });
 
       if (response.error) throw response.error;
 
       const generated = response.data;
+      
+      // Sincronizar la audiencia basada en la categoría generada
+      const tenantCategories = ["Cláusulas", "Fianzas", "Derechos", "Subidas de renta", "Legislación", "Consejos"];
+      const landlordCategories = ["Contratos", "Impagos", "Garantías", "Normativa", "Seguros", "Gestión"];
+      
+      let detectedAudience: Audience = audience;
+      if (tenantCategories.includes(generated.category)) {
+        detectedAudience = "inquilino";
+      } else if (landlordCategories.includes(generated.category)) {
+        detectedAudience = "propietario";
+      }
+      
+      if (detectedAudience !== audience) {
+        setAudience(detectedAudience);
+      }
+      
       setPost({
         title: generated.title,
         slug: generateSlug(generated.title),
@@ -124,8 +141,35 @@ const AdminBlogNew = () => {
 
       toast({
         title: "Post generado",
-        description: "Revisa el contenido antes de publicar",
+        description: generated.image 
+          ? "Post e imagen generados correctamente" 
+          : "Revisa el contenido antes de publicar",
       });
+      
+      // Auto-generar imagen si no viene incluida
+      if (!generated.image && generated.title) {
+        setGeneratingImage(true);
+        try {
+          const imageResponse = await supabase.functions.invoke("generate-blog-image", {
+            body: {
+              title: generated.title,
+              excerpt: generated.excerpt,
+              category: generated.category,
+            },
+          });
+          if (imageResponse.data?.image_url) {
+            setPost(prev => ({ ...prev, image: imageResponse.data.image_url }));
+            toast({
+              title: "Imagen generada",
+              description: "Se ha añadido la imagen destacada",
+            });
+          }
+        } catch (imgError) {
+          console.error("Error auto-generating image:", imgError);
+        } finally {
+          setGeneratingImage(false);
+        }
+      }
     } catch (error: any) {
       console.error("Error generating post:", error);
       toast({
