@@ -71,3 +71,9 @@ verify_jwt = false
 
 [functions.send-alert-email]
 verify_jwt = false
+
+[functions.llms]
+verify_jwt = false
+
+[functions.llms-full]
+verify_jwt = false
