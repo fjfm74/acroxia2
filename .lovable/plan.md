@@ -1,210 +1,216 @@
 
-## Plan de Optimización PageSpeed Mobile (57 → 85+)
 
-### Diagnóstico actual
+## Plan: Reintentos Automáticos para Generación de Blog
 
-| Métrica | Valor actual | Objetivo |
-|---------|--------------|----------|
-| FCP | 7.7s | < 2.5s |
-| LCP | 11.5s | < 2.5s |
-| Speed Index | 8.0s | < 3.5s |
-| TBT | 70ms | OK |
-| CLS | 0 | OK |
+### Problema identificado
 
-Los problemas principales son **FCP** y **LCP**, ambos relacionados con recursos que bloquean el renderizado.
+Cuando la IA devuelve un JSON malformado (caracteres de control, saltos de línea incorrectos), la función falla inmediatamente y envía la alerta. Pero un segundo intento con la misma llamada suele funcionar porque la IA genera una respuesta diferente.
 
----
-
-## Fase 1: Optimización de recursos críticos (Mayor impacto)
-
-### 1.1 Precargar la imagen LCP
-La imagen del hero (`hero-professional.webp`) es el elemento LCP pero no tiene preload.
-
-**Archivo: `index.html`**
-- Añadir `<link rel="preload">` para la imagen hero antes de cualquier script
-- Mover el preload de fuentes DESPUÉS del preload de la imagen
-
-### 1.2 Diferir Google Fonts (render-blocking)
-Actualmente las fuentes bloquean el renderizado. Cambiar la estrategia:
-
-**Archivo: `index.html`**
-- Convertir los `<link rel="stylesheet">` de fuentes a carga asíncrona con un fallback
-- Usar `media="print" onload="this.media='all'"` para carga no bloqueante
-- Mantener los preconnects pero eliminar los preloads redundantes
-
-### 1.3 Diferir GTM y GA4
-Los scripts de analytics no deberían bloquear el FCP.
-
-**Archivo: `index.html`**
-- Mover GTM al final del body o cargarlo después del evento DOMContentLoaded
-- Añadir `defer` o cargar GA4 de forma asíncrona real
-
----
-
-## Fase 2: Code Splitting y Lazy Loading
-
-### 2.1 Lazy load de rutas no críticas
-La mayoría de las 60+ rutas se importan síncronamente en App.tsx.
-
-**Archivo: `src/App.tsx`**
-- Convertir todas las rutas excepto `Index` a `React.lazy()`:
-  ```tsx
-  const Blog = lazy(() => import("./pages/Blog"));
-  const Pricing = lazy(() => import("./pages/Pricing"));
-  // etc.
-  ```
-- Envolver las rutas con `<Suspense fallback={...}>`
-- La página Index NO debe ser lazy (es la landing principal)
-
-### 2.2 Lazy load de componentes pesados
-**Archivos a modificar:**
-- `ChatContainer.tsx`: El chat assistant se carga en todas las páginas públicas pero no es crítico
-- `CookieBanner.tsx`: Tiene un delay de 500ms, perfecto para lazy load
-- `Footer.tsx`: Está below the fold, puede cargarse diferido
-
-### 2.3 Eliminar Framer Motion del critical path
-Framer Motion es grande (~60KB gzip). El componente `FadeIn` se usa en el Hero.
-
-**Archivo: `src/components/landing/HeroSection.tsx`**
-- Para el contenido above-the-fold, usar CSS animations en lugar de Framer Motion
-- Crear una versión "light" del componente FadeIn para el Hero
-
----
-
-## Fase 3: Optimización de imágenes
-
-### 3.1 Añadir dimensiones explícitas a la imagen hero
-**Archivo: `src/components/landing/HeroSection.tsx`**
-- Añadir `width` y `height` explícitos para evitar CLS y ayudar al browser
-- Considerar usar `srcset` para diferentes tamaños de pantalla
-
-### 3.2 Optimizar imágenes de Unsplash en HowItWorksSection
-**Archivo: `src/components/landing/HowItWorksSection.tsx`**
-- Las imágenes actuales son de alta resolución (2070px)
-- Reducir el tamaño solicitado: `w=800` en lugar de `w=2070`
-- Añadir `width` y `height` explícitos
-
----
-
-## Fase 4: Optimización del Service Worker
-
-### 4.1 Precachear la imagen hero
-**Archivo: `public/sw.js`**
-- Añadir `/images/hero-professional.webp` a `STATIC_ASSETS` para precarga
-
----
-
-## Archivos a modificar
-
-| Archivo | Cambios | Prioridad |
-|---------|---------|-----------|
-| `index.html` | Preload LCP, diferir fuentes, diferir GTM | Alta |
-| `src/App.tsx` | Code splitting con React.lazy | Alta |
-| `src/components/landing/HeroSection.tsx` | CSS animations, dimensiones img | Alta |
-| `src/components/landing/HowItWorksSection.tsx` | Optimizar URLs Unsplash | Media |
-| `public/sw.js` | Precachear hero image | Media |
-| `src/components/chat/ChatContainer.tsx` | Lazy load ChatAssistant | Baja |
-| `src/components/CookieBanner.tsx` | Ya tiene delay, considerar lazy | Baja |
-
----
-
-## Impacto estimado
-
-| Optimización | Impacto FCP | Impacto LCP |
-|--------------|-------------|-------------|
-| Preload imagen hero | - | -3s |
-| Diferir fuentes | -2s | - |
-| Diferir GTM/GA4 | -1s | - |
-| Code splitting | -1s | -1s |
-| Optimizar imágenes | - | -0.5s |
-
-**Puntuación esperada**: 80-90 en móvil (actualmente 57)
-
----
-
-## Detalles técnicos
-
-### Cambios en index.html
-
-```html
-<!-- ANTES de cualquier script -->
-<link rel="preload" href="/images/hero-professional.webp" as="image" fetchpriority="high">
-
-<!-- Fuentes sin bloqueo de render -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=..." 
-      rel="stylesheet" 
-      media="print" 
-      onload="this.media='all'">
-<noscript>
-  <link href="https://fonts.googleapis.com/css2?family=..." rel="stylesheet">
-</noscript>
-
-<!-- GTM diferido -->
-<script>
-  window.addEventListener('load', function() {
-    // Cargar GTM después del load
-  });
-</script>
+**Error de hoy:**
+```
+Error: Could not parse JSON from AI response
 ```
 
-### Estructura de lazy loading en App.tsx
+---
 
-```tsx
-import { Suspense, lazy } from "react";
+### Solución: Sistema de reintentos inteligente
 
-// Componente crítico (no lazy)
-import Index from "./pages/Index";
+Implementar un bucle de reintentos que:
+1. Intente generar el post hasta **3 veces** (1 original + 2 reintentos)
+2. Espere **5 segundos** entre intentos
+3. Mejore el parsing de JSON con sanitización más robusta
+4. **Solo envíe la alerta si todos los intentos fallan**
 
-// Componentes lazy
-const Blog = lazy(() => import("./pages/Blog"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-// ... resto de páginas
+---
 
-// Fallback mínimo
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
-  </div>
+### Cambios técnicos
+
+#### Archivo 1: `supabase/functions/schedule-daily-post-landlord/index.ts`
+
+Refactorizar la lógica principal para incluir reintentos:
+
+```typescript
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 5000;
+
+// Función auxiliar para esperar
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Función auxiliar para sanitizar JSON de forma más robusta
+function sanitizeJsonString(rawContent: string): string {
+  // Extraer el bloque JSON
+  const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return '';
+  
+  let json = jsonMatch[0];
+  
+  // Eliminar caracteres de control problemáticos
+  json = json.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  
+  // Intentar arreglar newlines dentro de strings
+  json = json.replace(/(?<!\\)\n(?=[^"]*"(?:[^"]*"[^"]*")*[^"]*$)/g, '\\n');
+  
+  return json;
+}
+
+// En el handler principal:
+let lastError: Error | null = null;
+
+for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  try {
+    if (attempt > 0) {
+      console.log(`Retry attempt ${attempt} of ${MAX_RETRIES}...`);
+      await sleep(RETRY_DELAY_MS);
+    }
+    
+    // Llamar a la IA
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {...});
+    
+    const aiResponse = await response.json();
+    const content = aiResponse.choices[0]?.message?.content;
+    
+    // Sanitizar y parsear
+    const sanitizedJson = sanitizeJsonString(content);
+    const postData = JSON.parse(sanitizedJson);
+    
+    // Si llegamos aquí, el parsing fue exitoso
+    // Continuar con la creación del post...
+    
+    return successResponse; // Salir del bucle
+    
+  } catch (error) {
+    lastError = error instanceof Error ? error : new Error(String(error));
+    console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
+    
+    // Si es el último intento, salir del bucle
+    if (attempt === MAX_RETRIES) break;
+  }
+}
+
+// Todos los intentos fallaron - enviar alerta
+await sendErrorAlert(
+  lastError?.message || 'Unknown error',
+  { 
+    attempts: MAX_RETRIES + 1,
+    attempted_at: new Date().toISOString() 
+  }
 );
-
-// En las rutas
-<Route path="/blog" element={
-  <Suspense fallback={<PageLoader />}>
-    <Blog />
-  </Suspense>
-} />
 ```
 
-### CSS animation para Hero (reemplazar FadeIn)
+#### Archivo 2: `supabase/functions/schedule-daily-post/index.ts`
 
-```css
-/* En index.css */
-@keyframes hero-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+Aplicar la misma lógica de reintentos a la función de inquilinos.
+
+---
+
+### Mejoras adicionales de parsing
+
+El parsing actual tiene fallos con JSONs complejos. Añadir un fallback con extracción por regex más robusta:
+
+```typescript
+function parseAiResponse(content: string, fallbackCategory: string): PostData {
+  // Intento 1: JSON.parse directo tras sanitización
+  try {
+    const sanitized = sanitizeJsonString(content);
+    return JSON.parse(sanitized);
+  } catch (e) {
+    console.log('Direct parse failed, trying regex extraction...');
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  // Intento 2: Extracción por regex campo a campo
+  const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
+  const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
+  const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
+  
+  // Para content, usar regex más flexible
+  const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)(?:"\s*[,}])/);
+  
+  if (!titleMatch) {
+    throw new Error('Could not extract title from AI response');
   }
+  
+  return {
+    title: titleMatch[1],
+    excerpt: excerptMatch?.[1] || titleMatch[1],
+    category: categoryMatch?.[1] || fallbackCategory,
+    content: contentMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') || '',
+  };
 }
-
-.hero-animate {
-  animation: hero-fade-up 0.6s ease-out forwards;
-}
-
-.hero-animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
-.hero-animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
 ```
 
 ---
 
-## Notas importantes
+### Archivos a modificar
 
-1. **No romper la funcionalidad**: El código splitting debe probarse cuidadosamente con todas las rutas protegidas
-2. **Mantener SEO**: Las optimizaciones no deben afectar al contenido visible para crawlers
-3. **Fallbacks**: Siempre incluir fallbacks para fuentes y scripts diferidos
-4. **Testing**: Verificar con PageSpeed después de cada fase para medir el impacto real
+| Archivo | Cambios |
+|---------|---------|
+| `supabase/functions/schedule-daily-post-landlord/index.ts` | Añadir reintentos, mejorar parsing |
+| `supabase/functions/schedule-daily-post/index.ts` | Añadir reintentos, mejorar parsing |
+
+---
+
+### Flujo final con reintentos
+
+```text
+Cron job ejecuta a las 09:00/10:00
+        │
+        ▼
+┌───────────────────────────┐
+│  Intento 1: Llamar IA     │
+└───────────┬───────────────┘
+            │
+      ¿Éxito? ──────────────► SÍ ──► Crear post + Email aprobación
+            │
+           NO
+            │
+            ▼
+      Esperar 5 segundos
+            │
+            ▼
+┌───────────────────────────┐
+│  Intento 2: Llamar IA     │
+└───────────┬───────────────┘
+            │
+      ¿Éxito? ──────────────► SÍ ──► Crear post + Email aprobación
+            │
+           NO
+            │
+            ▼
+      Esperar 5 segundos
+            │
+            ▼
+┌───────────────────────────┐
+│  Intento 3: Llamar IA     │
+└───────────┬───────────────┘
+            │
+      ¿Éxito? ──────────────► SÍ ──► Crear post + Email aprobación
+            │
+           NO
+            │
+            ▼
+┌───────────────────────────┐
+│  ENVIAR ALERTA EMAIL      │
+│  (todos los intentos      │
+│   fallaron)               │
+└───────────────────────────┘
+```
+
+---
+
+### Resultado esperado
+
+1. **Menos alertas falsas**: La mayoría de errores de parsing se resolverán en el 2º o 3º intento
+2. **Email de alerta incluirá el número de intentos realizados**: Para que sepas que ya se intentó varias veces
+3. **Parsing más robusto**: El fallback por regex capturará casos donde el JSON tiene errores menores
+4. **Logging mejorado**: Verás en los logs cada intento y su resultado
+
+---
+
+### Notas técnicas
+
+- El delay de 5 segundos es suficiente para que la IA genere una respuesta diferente
+- El timeout total del edge function (60s por defecto) permite hasta 3 intentos cómodamente
+- Si el error no es de parsing (ej: error de red, API caída), también reintentará
+
