@@ -235,7 +235,7 @@ const AdminBlogNew = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("blog_posts").insert({
+      const { data, error } = await supabase.from("blog_posts").insert({
         title: post.title,
         slug: post.slug || generateSlug(post.title),
         excerpt: post.excerpt,
@@ -249,14 +249,27 @@ const AdminBlogNew = () => {
         author_id: user?.id,
         published_at: publish ? new Date().toISOString() : null,
         audience: audience,
-      });
+      }).select("id").single();
 
       if (error) throw error;
+
+      // Si se publica, enviar notificaciones a suscriptores de la newsletter
+      if (publish && data?.id) {
+        try {
+          await supabase.functions.invoke("send-blog-notification", {
+            body: { postId: data.id }
+          });
+          console.log("Newsletter notifications triggered for post:", data.id);
+        } catch (notifyError) {
+          // No bloquear la publicación si falla la notificación
+          console.error("Error sending newsletter notifications:", notifyError);
+        }
+      }
 
       toast({
         title: publish ? "Post publicado" : "Borrador guardado",
         description: publish 
-          ? "El post ya está visible en el blog" 
+          ? "El post ya está visible en el blog y se ha notificado a los suscriptores" 
           : "Puedes continuar editándolo más tarde",
       });
 
