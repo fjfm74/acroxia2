@@ -22,6 +22,9 @@ Disallow: /resultado/
 Disallow: /admin/
 Disallow: /pro/
 
-# Sitemaps
-Sitemap: https://acroxia.com/sitemap.xml
+# Sitemap dinámico
 Sitemap: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/sitemap
+
+# Archivos para LLMs (dinámicos)
+# llms.txt: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
+# llms-full.txt: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms-full
