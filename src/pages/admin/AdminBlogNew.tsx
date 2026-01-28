@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Wand2, Save, Eye, RefreshCw, ImageIcon, Share2 } from "lucide-react";
+import { Sparkles, Wand2, Save, Eye, RefreshCw, ImageIcon, Share2, Users, Home } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,14 +21,27 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import ReactMarkdown from "react-markdown";
 
-const categories = [
-  "Cláusulas",
-  "Fianzas",
-  "Derechos",
-  "Subidas de renta",
-  "Legislación",
-  "Consejos",
-];
+// Categorías por audiencia
+const categoriesByAudience = {
+  inquilino: [
+    "Cláusulas",
+    "Fianzas",
+    "Derechos",
+    "Subidas de renta",
+    "Legislación",
+    "Consejos",
+  ],
+  propietario: [
+    "Contratos",
+    "Impagos",
+    "Garantías",
+    "Normativa",
+    "Seguros",
+    "Gestión",
+  ],
+};
+
+type Audience = "inquilino" | "propietario";
 
 const generateSlug = (title: string) => {
   return title
@@ -50,6 +63,7 @@ const AdminBlogNew = () => {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const [audience, setAudience] = useState<Audience>("inquilino");
   
   const [post, setPost] = useState({
     title: "",
@@ -62,6 +76,18 @@ const AdminBlogNew = () => {
     meta_description: "",
     keywords: [] as string[],
   });
+
+  // Obtener categorías según la audiencia seleccionada
+  const categories = categoriesByAudience[audience];
+
+  // Resetear categoría si no está disponible en la nueva audiencia
+  const handleAudienceChange = (newAudience: Audience) => {
+    setAudience(newAudience);
+    const newCategories = categoriesByAudience[newAudience];
+    if (!newCategories.includes(post.category)) {
+      setPost({ ...post, category: "" });
+    }
+  };
 
   const generateWithAI = async (mode: "auto" | "custom") => {
     setGenerating(true);
@@ -178,6 +204,7 @@ const AdminBlogNew = () => {
         status: publish ? "published" : "draft",
         author_id: user?.id,
         published_at: publish ? new Date().toISOString() : null,
+        audience: audience,
       });
 
       if (error) throw error;
@@ -226,6 +253,7 @@ const AdminBlogNew = () => {
         keywords: post.keywords,
         status: "draft",
         author_id: user?.id,
+        audience: audience,
       }).select("id").single();
 
       if (error) throw error;
@@ -332,6 +360,36 @@ const AdminBlogNew = () => {
             <Card className="border-border">
               <CardContent className="p-6 space-y-6">
                 <div className="grid gap-4">
+                  {/* Selector de Audiencia */}
+                  <div className="space-y-2">
+                    <Label>Audiencia</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={audience === "inquilino" ? "default" : "outline"}
+                        onClick={() => handleAudienceChange("inquilino")}
+                        className="flex-1 rounded-full"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Inquilino
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={audience === "propietario" ? "default" : "outline"}
+                        onClick={() => handleAudienceChange("propietario")}
+                        className="flex-1 rounded-full"
+                      >
+                        <Home className="h-4 w-4 mr-2" />
+                        Propietario
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {audience === "inquilino" 
+                        ? "Artículo dirigido a arrendatarios" 
+                        : "Artículo dirigido a arrendadores"}
+                    </p>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="title">Título</Label>
                     <Input
