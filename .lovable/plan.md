@@ -1,58 +1,51 @@
 
+## Plan: Regeneración Automática de LLM Files y Selector de Audiencia en Blog Admin
 
-## Plan: Restaurar Descubribilidad de Archivos LLM
+### Problema identificado
 
-### Problema confirmado
+1. **Regeneración LLM incompleta**: El trigger actual solo regenera el sitemap cuando se publica un post, pero NO notifica a las Edge Functions de LLM para que actualicen su caché.
 
-Los LLMs buscan automáticamente estas URLs estándar:
-- `https://acroxia.com/llms.txt`
-- `https://acroxia.com/llms-full.txt`
-
-Al eliminar los archivos estáticos, ahora devuelven 404. Los endpoints dinámicos existen pero están en URLs de Supabase que ningún LLM descubre automáticamente.
+2. **Creación manual de posts**: El formulario `/admin/blog/nuevo` no permite seleccionar la audiencia (inquilino/propietario), lo que significa que todos los posts manuales se crean como "inquilino" por defecto.
 
 ---
 
-### Solución: Archivos estáticos con contenido dinámico pre-generado
+### Solución propuesta
 
-Dado que Lovable no permite redirecciones del servidor, la mejor solución es **regenerar los archivos estáticos periódicamente** usando un cron job.
+#### Parte 1: Selector de Audiencia en Admin Blog New
 
----
+Modificar `src/pages/admin/AdminBlogNew.tsx` para añadir:
 
-## Fase 1: Crear Edge Function para regenerar archivos estáticos
+1. **Campo de selección de audiencia** con dos opciones:
+   - Inquilino (predeterminado)
+   - Propietario
 
-### Nueva función: `regenerate-llm-files/index.ts`
+2. **Categorías dinámicas** según la audiencia seleccionada:
+   - **Inquilino**: Cláusulas, Fianzas, Derechos, Subidas de renta, Legislación, Consejos
+   - **Propietario**: Contratos, Impagos, Garantías, Normativa, Seguros, Gestión
 
-Esta función:
-1. Lee los posts recientes de la base de datos
-2. Genera el contenido actualizado de llms.txt y llms-full.txt
-3. Guarda el contenido en una tabla de caché (similar a sitemap_cache)
-
-```typescript
-// Estructura similar a regenerate-sitemap
-// El contenido se genera dinámicamente y se almacena
-```
+3. **Campo audience en el INSERT** cuando se guarda el post
 
 ---
 
-## Fase 2: Crear tabla de caché para archivos LLM
+#### Parte 2: Crear Tabla de Caché para Archivos LLM
 
-### Migración SQL
+Crear una tabla `llm_files_cache` similar a `sitemap_cache`:
 
 ```sql
-CREATE TABLE IF NOT EXISTS llm_files_cache (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  file_name text NOT NULL UNIQUE, -- 'llms.txt' o 'llms-full.txt'
-  content text NOT NULL,
-  generated_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+CREATE TABLE public.llm_files_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  file_name TEXT NOT NULL UNIQUE,  -- 'llms.txt' o 'llms-full.txt'
+  content TEXT NOT NULL,
+  generated_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Insertar registros iniciales
+-- Registros iniciales
 INSERT INTO llm_files_cache (file_name, content) VALUES 
   ('llms.txt', ''),
   ('llms-full.txt', '');
 
--- Políticas RLS
+-- RLS
 ALTER TABLE llm_files_cache ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read llm cache" ON llm_files_cache FOR SELECT USING (true);
 CREATE POLICY "Admins can manage llm cache" ON llm_files_cache FOR ALL USING (has_role(auth.uid(), 'admin'));
@@ -60,19 +53,31 @@ CREATE POLICY "Admins can manage llm cache" ON llm_files_cache FOR ALL USING (ha
 
 ---
 
-## Fase 3: Modificar Edge Functions existentes
+#### Parte 3: Crear Edge Function para Regenerar LLM Files
 
-### `supabase/functions/llms/index.ts`
+Nueva función: `supabase/functions/regenerate-llm-files/index.ts`
 
-Cambiar para que:
-1. Primero intente leer del caché en la tabla
-2. Si no hay caché, genere en tiempo real
+Esta función:
+1. Lee los posts publicados recientes de `blog_posts`
+2. Genera el contenido actualizado de llms.txt y llms-full.txt
+3. Guarda el contenido en la tabla `llm_files_cache`
+4. Retorna confirmación de éxito
+
+---
+
+#### Parte 4: Modificar Edge Functions LLM para Usar Caché
+
+Actualizar `supabase/functions/llms/index.ts` y `llms-full/index.ts`:
+
+1. Intentar leer del caché primero
+2. Si hay caché válido, servirlo inmediatamente
+3. Si no hay caché, generar en tiempo real (fallback)
 
 ```typescript
-// Intentar leer del caché primero
+// Intentar leer del caché
 const { data: cache } = await supabase
   .from("llm_files_cache")
-  .select("content")
+  .select("content, generated_at")
   .eq("file_name", "llms.txt")
   .single();
 
@@ -86,138 +91,101 @@ if (cache?.content) {
 
 ---
 
-## Fase 4: Restaurar archivos estáticos con redirección JavaScript
+#### Parte 5: Extender el Trigger para Regenerar LLM Files
 
-### Crear `public/llms.txt`
-
-```
-# ACROXIA - Archivo de contexto para LLMs
-# Este archivo redirige al contenido dinámico actualizado
-
-# Para contenido actualizado en tiempo real, visitar:
-# https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
-
-# Última sincronización: 2026-01-28
-# El contenido completo se sirve desde la Edge Function para mayor frescura.
-
----
-
-A continuación se incluye una copia del contenido actual:
-
-[CONTENIDO SE REGENERA AUTOMÁTICAMENTE VÍA CRON]
-```
-
-**Problema**: Lovable no puede escribir archivos public/ desde Edge Functions.
-
----
-
-## Solución Final: Modificar el trigger para incluir regeneración LLM
-
-### Fase 5: Integrar regeneración LLM en el trigger existente
-
-Modificar `trigger_sitemap_regeneration` para que además de regenerar el sitemap, regenere los archivos LLM en la tabla de caché.
+Modificar la función SQL `trigger_sitemap_regeneration` para que TAMBIÉN llame a la nueva Edge Function:
 
 ```sql
-CREATE OR REPLACE FUNCTION trigger_sitemap_and_llm_regeneration()
-RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION public.trigger_sitemap_regeneration()
+RETURNS TRIGGER AS $$
 BEGIN
-  -- Regenerar sitemap (existente)
-  PERFORM net.http_post(...regenerate-sitemap...);
-  
-  -- Regenerar archivos LLM (nuevo)
-  PERFORM net.http_post(...regenerate-llm-files...);
+  IF (TG_OP = 'INSERT' AND NEW.status = 'published') OR
+     (TG_OP = 'UPDATE' AND (OLD.status IS DISTINCT FROM NEW.status OR OLD.slug IS DISTINCT FROM NEW.slug)) OR
+     (TG_OP = 'DELETE' AND OLD.status = 'published') THEN
+    
+    -- Regenerar sitemap (existente)
+    PERFORM net.http_post(
+      url := 'https://vmloiamemddwxyyunphz.supabase.co/functions/v1/regenerate-sitemap',
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := '{}'::jsonb
+    );
+    
+    -- NUEVO: Regenerar archivos LLM
+    PERFORM net.http_post(
+      url := 'https://vmloiamemddwxyyunphz.supabase.co/functions/v1/regenerate-llm-files',
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := '{}'::jsonb
+    );
+  END IF;
   
   RETURN COALESCE(NEW, OLD);
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 ```
 
 ---
 
-## Fase 6: Actualizar robots.txt
-
-### Descomentar las URLs de LLM
-
-```
-# Archivos para LLMs (dinámicos)
-# Los LLMs pueden acceder a estos endpoints para contexto actualizado
-LLMs: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
-```
-
-**Nota**: La directiva "LLMs:" no es estándar, pero algunos bots la reconocen.
-
----
-
-## Fase 7: Solución híbrida - Archivos estáticos + Link a dinámico
-
-La mejor solución práctica es:
-
-1. **Crear archivos estáticos mínimos** en `public/`:
-   - `public/llms.txt` - Con resumen estático + link al dinámico
-   - `public/llms-full.txt` - Con resumen estático + link al dinámico
-
-2. **El contenido estático incluye**:
-   - Descripción básica de ACROXIA (no cambia)
-   - URLs principales (no cambian)
-   - Link prominente a la versión dinámica
-
----
-
-## Archivos a crear/modificar
+### Archivos a crear/modificar
 
 | Archivo | Acción | Descripción |
 |---------|--------|-------------|
-| `public/llms.txt` | **CREAR** | Archivo estático con info básica + link a dinámico |
-| `public/llms-full.txt` | **CREAR** | Archivo estático completo + link a dinámico |
-| `public/robots.txt` | **MODIFICAR** | Descomentar referencias a LLMs |
-| `supabase/functions/llms/index.ts` | Ya existe | Mantener como fuente dinámica |
+| `src/pages/admin/AdminBlogNew.tsx` | **Modificar** | Añadir selector de audiencia + categorías dinámicas |
+| `supabase/functions/regenerate-llm-files/index.ts` | **Crear** | Nueva función para regenerar caché LLM |
+| `supabase/functions/llms/index.ts` | **Modificar** | Leer del caché primero |
+| `supabase/functions/llms-full/index.ts` | **Modificar** | Leer del caché primero |
+| `supabase/config.toml` | **Modificar** | Añadir nueva función |
+| Migración SQL | **Crear** | Tabla `llm_files_cache` + actualizar trigger |
 
 ---
 
-## Contenido propuesto para public/llms.txt
+### Flujo completo tras implementación
 
-```markdown
-# ACROXIA - Análisis de Contratos de Alquiler con IA
-
-> Última actualización: Enero 2026
-> Versión dinámica actualizada diariamente: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
-
-## Qué es ACROXIA
-
-ACROXIA es una plataforma española que utiliza IA para analizar contratos de alquiler y detectar cláusulas abusivas según la LAU 2026.
-
-## URLs principales
-
-- Analizar contrato gratis: https://acroxia.com/analizar-gratis
-- Blog actualizado diariamente: https://acroxia.com/blog
-- Preguntas frecuentes: https://acroxia.com/faq
-
-## Contenido actualizado
-
-Para acceder al contenido más reciente incluyendo los últimos artículos del blog, consultar la versión dinámica:
-https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
-
-[... resto del contenido estático que no cambia ...]
+```text
+Admin crea post manual
+     │
+     ├── Selecciona audiencia (Inquilino/Propietario)
+     ├── Categorías se ajustan dinámicamente
+     └── Guarda post
+            │
+            ▼
+Post publicado en blog_posts
+            │
+            ▼
+    Trigger se activa
+            │
+            ├──► Regenerar Sitemap ──► sitemap_cache actualizado
+            │
+            └──► Regenerar LLM Files ──► llm_files_cache actualizado
+                        │
+                        ▼
+              ┌─────────────────────┐
+              │ Edge Functions LLM  │
+              │ sirven desde caché  │
+              │ instantáneamente    │
+              └─────────────────────┘
 ```
 
 ---
 
-## Resultado
+### UI del Selector de Audiencia
 
-| Archivo | Ubicación | Descubrimiento |
-|---------|-----------|----------------|
-| `llms.txt` | `public/` | ✅ LLMs lo encuentran en ruta estándar |
-| `llms-full.txt` | `public/` | ✅ LLMs lo encuentran en ruta estándar |
-| `/functions/v1/llms` | Edge Function | ✅ Contenido dinámico actualizado |
-| Sitemap | Edge Function | ✅ Google lo indexa desde robots.txt |
+El formulario incluirá un selector visual con íconos:
+
+- **Inquilino** (icono Users): Para artículos dirigidos a arrendatarios
+- **Propietario** (icono Home): Para artículos dirigidos a arrendadores
+
+Al cambiar la audiencia, las categorías disponibles se actualizarán automáticamente:
+
+| Audiencia | Categorías disponibles |
+|-----------|----------------------|
+| Inquilino | Cláusulas, Fianzas, Derechos, Subidas de renta, Legislación, Consejos |
+| Propietario | Contratos, Impagos, Garantías, Normativa, Seguros, Gestión |
 
 ---
 
-## Beneficios de esta solución híbrida
+### Resultado esperado
 
-1. **Los LLMs encuentran el archivo** en la ruta estándar `/llms.txt`
-2. **El contenido estático incluye la info esencial** que no cambia
-3. **El link a la versión dinámica** permite acceder a contenido actualizado
-4. **No requiere regeneración automática de archivos estáticos** (imposible en Lovable)
-5. **Las Edge Functions siguen disponibles** para sistemas que las usen directamente
-
+1. **Los posts manuales pueden ser de inquilino o propietario**: Con categorías específicas para cada audiencia
+2. **Al publicar cualquier post, se regeneran sitemap Y archivos LLM**: Automáticamente
+3. **Los archivos LLM se sirven desde caché**: Mejora el rendimiento
+4. **Consistencia total**: El sitemap, llms.txt y llms-full.txt siempre reflejan el contenido más reciente
