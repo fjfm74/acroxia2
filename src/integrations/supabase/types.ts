@@ -744,6 +744,30 @@ export type Database = {
           },
         ]
       }
+      llm_files_cache: {
+        Row: {
+          content: string
+          file_name: string
+          generated_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string
+          file_name: string
+          generated_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          file_name?: string
+          generated_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       marketing_contacts: {
         Row: {
           company_name: string | null
