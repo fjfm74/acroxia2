@@ -25,6 +25,8 @@ Disallow: /pro/
 # Sitemap dinámico
 Sitemap: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/sitemap
 
-# Archivos para LLMs (dinámicos)
-# llms.txt: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
-# llms-full.txt: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms-full
+# Archivos para LLMs
+# Versión estática: /llms.txt y /llms-full.txt (rutas estándar)
+# Versión dinámica con blog actualizado:
+#   https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
+#   https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms-full
