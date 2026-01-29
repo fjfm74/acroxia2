@@ -76,12 +76,20 @@ const ChatAssistant = () => {
     };
   }, [isOpen]);
 
+  // Helper function to scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    }
+  }, []);
+
   // Scroll to bottom when messages change
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, showQuickReplies]);
+    scrollToBottom();
+  }, [messages, showQuickReplies, scrollToBottom]);
 
   // Focus input when chat opens
   useEffect(() => {
@@ -166,6 +174,13 @@ const ChatAssistant = () => {
                   );
                 }
                 return [...prev, { role: "assistant", content: assistantSoFar }];
+              });
+              // Scroll while streaming
+              requestAnimationFrame(() => {
+                const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+                if (viewport) {
+                  viewport.scrollTop = viewport.scrollHeight;
+                }
               });
             }
           } catch {
