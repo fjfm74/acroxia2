@@ -1,117 +1,40 @@
 
 
-## Auditoría SEO Completa - Estado Actual
+## Plan: Arreglar Auto-Scroll y Mejorar Inteligencia del Asistente
 
-### Resumen Ejecutivo
+### Problema 1: Auto-Scroll no Funciona
 
-| Componente | Estado | Notas |
-|------------|--------|-------|
-| **robots.txt** | OK | Apunta al sitemap dinámico, documenta archivos LLM |
-| **Sitemap (Edge Function)** | OK | 27 rutas estáticas + posts del blog |
-| **Sitemap Cache** | PARCIAL | Le faltan 4 rutas de propietarios |
-| **LLM Files Cache** | OK | Actualizado hoy (2026-01-29) |
-| **LLM Edge Functions** | OK | Sirven desde caché correctamente |
-| **Trigger de regeneración** | OK | Llama a sitemap y LLM al publicar posts |
-| **Cron Jobs** | OK | Posts diarios a las 08:00 y 09:00 UTC |
+**Causa raíz**: El componente `ScrollArea` de Radix UI tiene una estructura anidada:
 
----
-
-### Problema Detectado: Rutas Faltantes en regenerate-sitemap
-
-La Edge Function `regenerate-sitemap/index.ts` tiene **4 rutas de propietarios faltantes** que sí existen en `sitemap/index.ts`:
-
-| Ruta | En `sitemap/` | En `regenerate-sitemap/` |
-|------|---------------|--------------------------|
-| `/impago-alquiler-propietarios` | Si | **NO** |
-| `/zonas-tensionadas-propietarios` | Si | **NO** |
-| `/deposito-fianza-propietarios` | Si | **NO** |
-| `/fin-contrato-alquiler-propietarios` | Si | **NO** |
-
-**Impacto**: Cuando el trigger regenera el caché del sitemap tras publicar un post, el caché resultante NO incluye estas 4 páginas SEO. Google está recibiendo un sitemap incompleto desde el caché.
-
----
-
-### Solución Requerida
-
-Sincronizar la lista de `staticRoutes` en `regenerate-sitemap/index.ts` con la de `sitemap/index.ts`:
-
-```typescript
-// Añadir las 4 rutas faltantes después de /contrato-alquiler-propietarios
-{ loc: "/impago-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
-{ loc: "/zonas-tensionadas-propietarios", priority: "0.8", changefreq: "monthly" },
-{ loc: "/deposito-fianza-propietarios", priority: "0.8", changefreq: "monthly" },
-{ loc: "/fin-contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
+```text
+┌─────────────────────────────────────────┐
+│ ScrollAreaPrimitive.Root ← ref actual   │
+│   ┌─────────────────────────────────┐   │
+│   │ Viewport ← donde está el scroll │   │
+│   │   [contenido]                   │   │
+│   └─────────────────────────────────┘   │
+└─────────────────────────────────────────┘
 ```
 
----
+El `scrollRef.current.scrollTop` no funciona porque `scrollRef` apunta al `Root`, no al `Viewport` interno que es el elemento scrolleable.
 
-### Estado Detallado por Componente
-
-#### 1. robots.txt (public/robots.txt)
-- Permite bots principales (Googlebot, Bingbot, Twitterbot, etc.)
-- Bloquea rutas privadas (/dashboard, /admin/, /pro/)
-- Apunta al sitemap dinámico: `https://vmloiamemddwxyyunphz.supabase.co/functions/v1/sitemap`
-- Documenta archivos LLM (estáticos y dinámicos)
-
-#### 2. Archivos LLM Estáticos (public/llms.txt y llms-full.txt)
-- Contienen información básica de ACROXIA
-- Incluyen link prominente a las versiones dinámicas
-- Sirven como punto de descubrimiento para crawlers de LLMs
-
-#### 3. Edge Functions LLM (llms/ y llms-full/)
-- Implementan estrategia **cache-first**: leen de `llm_files_cache` primero
-- Si no hay caché, generan en tiempo real
-- El caché muestra fecha de hoy: `2026-01-29`
-- Incluyen posts separados por audiencia (inquilinos/propietarios)
-
-#### 4. Caché LLM (tabla llm_files_cache)
-- Contenido actualizado: 2026-01-29
-- Incluye los últimos posts del blog correctamente:
-  - 5 posts de inquilinos
-  - 5 posts de propietarios
-- Se regenera automáticamente al publicar posts (trigger)
-
-#### 5. Sitemap Edge Function (sitemap/)
-- 27 rutas estáticas incluyendo TODAS las páginas de propietarios
-- Añade dinámicamente los posts del blog publicados
-- Usa estrategia cache-first desde `sitemap_cache`
-
-#### 6. Regenerate Sitemap (regenerate-sitemap/)
-- Genera y guarda el sitemap en `sitemap_cache`
-- **PROBLEMA**: Solo tiene 23 rutas estáticas (faltan 4 de propietarios)
-- Se ejecuta automáticamente al publicar posts
-
-#### 7. Trigger de Base de Datos
-- Nombre: `on_blog_post_change_regenerate_sitemap`
-- Función: `trigger_sitemap_regeneration`
-- Se activa en INSERT/UPDATE/DELETE de posts publicados
-- Llama a AMBAS Edge Functions: `regenerate-sitemap` y `regenerate-llm-files`
-
-#### 8. Cron Jobs Activos
-| Job ID | Función | Horario (UTC) |
-|--------|---------|---------------|
-| 8 | schedule-daily-post (inquilinos) | 08:00 diario |
-| 9 | schedule-daily-post-landlord | 09:00 diario |
-| 3 | send-nurturing-emails | 10:00 diario |
-| 4,5,6 | monitor-boe | 09:00, 12:00, 22:00 |
-| 7 | cleanup-contracts | 03:00 diario |
+**Solución**: Usar `scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]')` para acceder al viewport real, o cambiar a un div nativo con `overflow-y-auto`.
 
 ---
 
-### Resumen de Posts en Blog
+### Problema 2: Asistente "Stackeholdeado"
 
-| Audiencia | Posts Publicados |
-|-----------|------------------|
-| Inquilinos | 25 |
-| Propietarios | 15 |
-| **Total** | **40** |
+**Estado actual**:
+- Modelo: `google/gemini-3-flash-preview` (correcto, es el más reciente)
+- `max_tokens: 500` (limitado)
+- `temperature: 0.7` (bastante conservador)
+- Prompt largo pero muy estructurado con reglas rígidas
 
----
-
-### Acciones a Implementar
-
-1. **Sincronizar rutas en regenerate-sitemap**: Añadir las 4 rutas de propietarios faltantes
-2. **Forzar regeneración del sitemap**: Una vez desplegada la corrección, invocar manualmente `regenerate-sitemap` para actualizar el caché
+**Mejoras propuestas**:
+1. Aumentar `max_tokens` a 800 para respuestas más completas
+2. Subir `temperature` a 0.8 para respuestas más naturales
+3. Reformular el prompt para ser menos "robótico" y más conversacional
+4. Añadir instrucciones para que sea empático y fluido
 
 ---
 
@@ -119,51 +42,105 @@ Sincronizar la lista de `staticRoutes` en `regenerate-sitemap/index.ts` con la d
 
 | Archivo | Cambio |
 |---------|--------|
-| `supabase/functions/regenerate-sitemap/index.ts` | Añadir 4 rutas de propietarios faltantes (líneas 21-22) |
+| `src/components/chat/ChatAssistant.tsx` | Arreglar auto-scroll accediendo al viewport real |
+| `supabase/functions/chat-assistant/index.ts` | Mejorar prompt y parámetros del modelo |
 
 ---
 
-### Código Exacto del Cambio
+### Cambios Técnicos Detallados
 
-En `supabase/functions/regenerate-sitemap/index.ts`, modificar la constante `staticRoutes` (líneas 11-34) para que incluya las rutas faltantes:
+#### 1. ChatAssistant.tsx - Arreglar Auto-Scroll
+
+Modificar el efecto de scroll (líneas 79-84):
 
 ```typescript
-const staticRoutes = [
-  { loc: "/", priority: "1.0", changefreq: "weekly" },
-  { loc: "/precios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/faq", priority: "0.7", changefreq: "monthly" },
-  { loc: "/blog", priority: "0.9", changefreq: "daily" },
-  { loc: "/contacto", priority: "0.7", changefreq: "monthly" },
-  { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly" },
-  { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly" },
-  { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly" },
-  { loc: "/propietarios", priority: "0.9", changefreq: "monthly" },
-  { loc: "/contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/impago-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },      // AÑADIR
-  { loc: "/zonas-tensionadas-propietarios", priority: "0.8", changefreq: "monthly" },   // AÑADIR
-  { loc: "/deposito-fianza-propietarios", priority: "0.8", changefreq: "monthly" },     // AÑADIR
-  { loc: "/fin-contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" }, // AÑADIR
-  { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly" },
-  { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly" },
-  { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly" },
-  { loc: "/login", priority: "0.3", changefreq: "yearly" },
-  { loc: "/registro", priority: "0.3", changefreq: "yearly" },
-  { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
-  { loc: "/privacidad", priority: "0.2", changefreq: "yearly" },
-  { loc: "/terminos", priority: "0.2", changefreq: "yearly" },
-  { loc: "/cookies", priority: "0.2", changefreq: "yearly" },
-  { loc: "/accesibilidad", priority: "0.2", changefreq: "yearly" },
-  { loc: "/desistimiento", priority: "0.2", changefreq: "yearly" },
-  { loc: "/transparencia-ia", priority: "0.2", changefreq: "yearly" },
-];
+// ANTES - No funciona
+useEffect(() => {
+  if (scrollRef.current) {
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }
+}, [messages, showQuickReplies]);
+
+// DESPUÉS - Accede al viewport real
+useEffect(() => {
+  if (scrollRef.current) {
+    const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }
+}, [messages, showQuickReplies]);
+```
+
+Además, añadir scroll durante el streaming para que se vea el texto mientras se escribe:
+
+```typescript
+// En streamChat, después de actualizar el mensaje
+if (content) {
+  assistantSoFar += content;
+  setMessages((prev) => {
+    // ... actualización existente ...
+  });
+  // Scroll mientras se escribe
+  requestAnimationFrame(() => {
+    const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  });
+}
+```
+
+#### 2. chat-assistant/index.ts - Mejorar IA
+
+**Cambios en parámetros** (líneas 390-399):
+
+```typescript
+// ANTES
+max_tokens: 500,
+temperature: 0.7,
+
+// DESPUÉS
+max_tokens: 800,
+temperature: 0.85,
+```
+
+**Mejorar las reglas del prompt** (líneas 300-314):
+
+```typescript
+// ANTES
+REGLAS DE RESPUESTA (OBLIGATORIAS)
+1. Respuestas CORTAS: 2-4 frases máximo. Sé directo.
+...
+
+// DESPUÉS - Más natural y empático
+ESTILO DE COMUNICACIÓN
+- Sé cercano y natural, como un compañero de trabajo que ayuda.
+- Usa un tono cálido pero profesional.
+- Puedes hacer preguntas de seguimiento si ayudan a entender mejor qué necesita el usuario.
+- Adapta la longitud de la respuesta a la complejidad de la pregunta: breve para consultas simples, más detallada si el usuario necesita orientación.
+- Usa emojis con moderación (máximo 1-2 por respuesta) para dar calidez.
+- Si el usuario parece frustrado o confundido, muestra empatía antes de dar la información.
+- Cuando des precios, usa formato claro: "El análisis completo cuesta **39€** (pago único)".
+- Evita sonar robótico o repetitivo. Varía tus respuestas.
 ```
 
 ---
 
 ### Resultado Esperado
 
-Tras implementar el cambio:
-- El sitemap cacheado incluirá las 27 rutas estáticas (igual que sitemap/)
-- Google recibirá todas las páginas SEO de propietarios
-- La próxima publicación de post regenerará el caché correctamente
+| Aspecto | Antes | Después |
+|---------|-------|---------|
+| **Auto-scroll** | No funciona, hay que scrollear manualmente | Se mueve automáticamente al escribir mensajes |
+| **Scroll durante streaming** | No se ve el texto mientras se genera | Se ve el texto en tiempo real mientras aparece |
+| **Tono del asistente** | Rígido, formulaico | Natural, empático, conversacional |
+| **Longitud de respuestas** | Siempre 2-4 frases | Adapta según complejidad |
+
+---
+
+### Notas Adicionales
+
+- El modelo `google/gemini-3-flash-preview` ya es el más avanzado disponible en Lovable AI
+- Aumentar `temperature` hará las respuestas menos predecibles pero más naturales
+- El auto-scroll se ejecutará tanto al añadir mensajes como durante el streaming
 
