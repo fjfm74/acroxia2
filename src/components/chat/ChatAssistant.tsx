@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,17 +24,34 @@ interface AssistantConfig {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`;
 
+// Storage keys for persistence
+const STORAGE_KEY_MESSAGES = "acroxia_chat_messages";
+const STORAGE_KEY_IS_OPEN = "acroxia_chat_is_open";
+
 const ChatAssistant = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    const saved = sessionStorage.getItem(STORAGE_KEY_IS_OPEN);
+    return saved === "true";
+  });
   const [showBubble, setShowBubble] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = sessionStorage.getItem(STORAGE_KEY_MESSAGES);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [config, setConfig] = useState<AssistantConfig>({
     bubble_message: "¿Tienes alguna duda sobre ACROXIA?",
-    quick_replies_initial: ["🏠 Soy inquilino", "🏢 Soy profesional"],
+    quick_replies_initial: ["🏠 Soy inquilino", "🏡 Soy propietario", "🏢 Soy profesional"],
     contact_trigger_phrases: ["ponerte en contacto", "contactar con nuestro equipo"],
     contact_success_message: "¡Perfecto! Hemos recibido tu mensaje. Nuestro equipo te contactará pronto.",
   });
@@ -58,6 +75,16 @@ const ChatAssistant = () => {
 
     fetchConfig();
   }, []);
+
+  // Persist messages to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
+  }, [messages]);
+
+  // Persist isOpen to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY_IS_OPEN, isOpen ? "true" : "false");
+  }, [isOpen]);
 
   // Show bubble after 10 seconds
   useEffect(() => {
@@ -98,13 +125,25 @@ const ChatAssistant = () => {
     }
   }, [isOpen]);
 
-  // Initialize with welcome message
+  // Initialize with welcome message (only if no persisted messages)
   useEffect(() => {
     if (isOpen && messages.length === 0 && config.welcome_message) {
       setMessages([{ role: "assistant", content: config.welcome_message }]);
       setShowQuickReplies(true);
     }
   }, [isOpen, config.welcome_message, messages.length]);
+
+  // Start new conversation
+  const handleNewConversation = () => {
+    setMessages([]);
+    setShowQuickReplies(true);
+    setShowContactForm(false);
+    sessionStorage.removeItem(STORAGE_KEY_MESSAGES);
+    // Re-add welcome message
+    if (config.welcome_message) {
+      setMessages([{ role: "assistant", content: config.welcome_message }]);
+    }
+  };
 
   const handleOpenChat = () => {
     setIsOpen(true);
@@ -307,14 +346,25 @@ const ChatAssistant = () => {
                   <p className="text-xs text-cream/70">Online</p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-cream hover:bg-cream/10"
-                onClick={() => setIsOpen(false)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-cream hover:bg-cream/10"
+                  onClick={handleNewConversation}
+                  title="Nueva conversación"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-cream hover:bg-cream/10"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
             {/* Messages */}
