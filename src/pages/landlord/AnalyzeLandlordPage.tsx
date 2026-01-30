@@ -126,7 +126,7 @@ const AnalyzeLandlordPage = () => {
 
       // Decrement credit if not admin
       if (!isAdmin) {
-        await supabase.rpc("decrement_credit", { user_id: profile?.id });
+        await supabase.rpc("decrement_credit");
         await refreshProfile();
       }
 
