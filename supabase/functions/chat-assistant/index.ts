@@ -158,24 +158,42 @@ async function getSiteConfig(supabase: any): Promise<FullSiteConfig> {
   };
 }
 
-function detectUserProfile(messages: Message[]): "inquilino" | "profesional" | "unknown" {
+function detectUserProfile(messages: Message[]): "inquilino" | "propietario" | "profesional" | "unknown" {
   const allText = messages.map(m => m.content.toLowerCase()).join(" ");
   
   const profesionalKeywords = [
     "inmobiliaria", "gestoría", "gestoria", "administrador", "api", "integración",
-    "volumen", "empresa", "profesional", "múltiples", "clientes", "agencia"
+    "volumen", "empresa", "profesional", "múltiples", "clientes", "agencia", "despacho",
+    "cartera de propiedades", "muchos pisos"
+  ];
+  
+  const propietarioKeywords = [
+    "soy propietario", "mi inquilino", "arrendador", "tengo una vivienda",
+    "quiero alquilar", "generar contrato", "mi piso en alquiler", "casero",
+    "zona tensionada", "impago", "desahucio", "no me paga", "tengo un piso",
+    "alquilar mi piso", "busco inquilino", "tengo varios pisos"
   ];
   
   const inquilinoKeywords = [
-    "mi contrato", "mi piso", "mi casero", "propietario", "fianza",
-    "alquiler", "arrendador", "renovar", "firmé", "inquilino", "soy inquilino"
+    "soy inquilino", "mi contrato", "mi piso", "mi casero", "fianza",
+    "arrendador me", "renovar", "firmé", "me quieren subir", "cláusula abusiva",
+    "voy a firmar", "me piden", "el propietario", "el casero"
   ];
   
   const profesionalScore = profesionalKeywords.filter(k => allText.includes(k)).length;
+  const propietarioScore = propietarioKeywords.filter(k => allText.includes(k)).length;
   const inquilinoScore = inquilinoKeywords.filter(k => allText.includes(k)).length;
   
-  if (profesionalScore > inquilinoScore && profesionalScore >= 2) return "profesional";
-  if (inquilinoScore >= 1) return "inquilino";
+  // Prioridad: profesional > propietario > inquilino
+  if (profesionalScore > propietarioScore && profesionalScore > inquilinoScore && profesionalScore >= 2) {
+    return "profesional";
+  }
+  if (propietarioScore > inquilinoScore && propietarioScore >= 1) {
+    return "propietario";
+  }
+  if (inquilinoScore >= 1) {
+    return "inquilino";
+  }
   return "unknown";
 }
 
@@ -224,12 +242,14 @@ function buildSystemPrompt(config: FullSiteConfig, userProfile: string): string 
   // Horario y contacto
   const schedule = companyInfo.schedule?.weekdays || "Lunes a Viernes, 9:00 - 18:00";
 
-  // Perfil detectado
+  // Perfil detectado - con instrucciones más específicas
   const profileNote = userProfile === "profesional"
-    ? "NOTA: Este usuario parece ser un PROFESIONAL (inmobiliaria, gestoría, etc). Enfócate en los planes B2B."
+    ? "PERFIL DETECTADO: PROFESIONAL (inmobiliaria, gestoría, etc). Enfócate en los planes B2B (99€/mes o 149€/mes) y menciona /profesionales/inmobiliarias o /profesionales/gestorias."
+    : userProfile === "propietario"
+    ? "PERFIL DETECTADO: PROPIETARIO particular. Enfócate en los planes para propietarios (49€ pago único, 99€/año, 149€/año) y menciona la página /propietarios."
     : userProfile === "inquilino"
-    ? "NOTA: Este usuario parece ser un INQUILINO particular. Enfócate en los planes B2C y el análisis individual."
-    : "";
+    ? "PERFIL DETECTADO: INQUILINO particular. Enfócate en los planes B2C (39€ análisis único) y el análisis gratuito en /analizar-gratis."
+    : "PERFIL NO DETECTADO: Tras 2-3 mensajes sin saber el perfil, haz una pregunta natural como: '¿Estás buscando revisar un contrato como inquilino o como propietario?' o '¿Es un contrato que vas a firmar tú o uno que quieres ofrecer a un inquilino?'. NO preguntes directamente '¿eres inquilino o propietario?' - intégralo de forma natural.";
 
   return `Eres el asistente virtual de ACROXIA. Tu trabajo es resolver dudas sobre la PLATAFORMA y sus servicios. NO das consejos legales.
 

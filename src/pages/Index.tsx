@@ -8,7 +8,7 @@ import FadeIn from "@/components/animations/FadeIn";
 
 
 const Index = () => {
-  // Schema Organization - Enriquecido para E-E-A-T
+  // Schema Organization - Enriquecido para E-E-A-T con image
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",

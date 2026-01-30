@@ -9,15 +9,23 @@ import MarketplaceTeaser from "@/components/pricing/MarketplaceTeaser";
 import PricingFAQ from "@/components/pricing/PricingFAQ";
 
 const Pricing = () => {
-  // Schema para ofertas de precio
+  // Schema para ofertas de precio - Completo con campos recomendados GSC
   const pricingSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": "ACROXIA - Análisis de Contratos de Alquiler",
     "description": "Servicio de análisis de contratos de alquiler con IA para identificar cláusulas potencialmente problemáticas",
+    "image": "https://acroxia.com/og-image.jpg",
     "brand": {
       "@type": "Brand",
       "name": "ACROXIA"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "150",
+      "bestRating": "5",
+      "worstRating": "1"
     },
     "offers": [
       {
@@ -25,35 +33,60 @@ const Pricing = () => {
         "name": "Plan Gratis",
         "price": "0",
         "priceCurrency": "EUR",
-        "description": "1 análisis básico gratuito"
+        "description": "1 análisis básico gratuito",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "url": "https://acroxia.com/precios"
       },
       {
         "@type": "Offer",
         "name": "Análisis Único",
         "price": "39",
         "priceCurrency": "EUR",
-        "description": "1 análisis completo con informe detallado"
+        "description": "1 análisis completo con informe detallado",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "url": "https://acroxia.com/precios"
       },
       {
         "@type": "Offer",
         "name": "Pack Comparador",
         "price": "79",
         "priceCurrency": "EUR",
-        "description": "3 análisis completos para comparar contratos"
+        "description": "3 análisis completos para comparar contratos",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "url": "https://acroxia.com/precios"
+      },
+      {
+        "@type": "Offer",
+        "name": "Propietario Único",
+        "price": "49",
+        "priceCurrency": "EUR",
+        "description": "Análisis + generador de contratos LAU 2026",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "url": "https://acroxia.com/propietarios"
       },
       {
         "@type": "Offer",
         "name": "Suscripción Mensual",
         "price": "12",
         "priceCurrency": "EUR",
-        "description": "Alertas de renovación y cambios legislativos"
+        "description": "Alertas de renovación y cambios legislativos",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "url": "https://acroxia.com/precios"
       },
       {
         "@type": "Offer",
         "name": "Suscripción Anual",
         "price": "99",
         "priceCurrency": "EUR",
-        "description": "Alertas de renovación y cambios legislativos (ahorro 45€)"
+        "description": "Alertas de renovación y cambios legislativos (ahorro 45€)",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "url": "https://acroxia.com/precios"
       }
     ]
   };

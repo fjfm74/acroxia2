@@ -16,10 +16,12 @@ const schemaService = {
   "@context": "https://schema.org",
   "@type": "Service",
   "name": "ACROXIA para Propietarios",
+  "image": "https://acroxia.com/og-image.jpg",
   "provider": {
     "@type": "Organization",
     "name": "ACROXIA",
-    "url": "https://acroxia.com"
+    "url": "https://acroxia.com",
+    "logo": "https://acroxia.com/acroxia-logo.png"
   },
   "serviceType": "Análisis de contratos de alquiler para propietarios",
   "areaServed": {
@@ -32,13 +34,21 @@ const schemaService = {
       "@type": "Offer",
       "name": "Propietario Único",
       "price": "49",
-      "priceCurrency": "EUR"
+      "priceCurrency": "EUR",
+      "description": "Análisis + generador de contratos LAU 2026",
+      "priceValidUntil": "2026-12-31",
+      "availability": "https://schema.org/InStock",
+      "url": "https://acroxia.com/propietarios"
     },
     {
       "@type": "Offer",
       "name": "Propietario Múltiple",
       "price": "99",
       "priceCurrency": "EUR",
+      "description": "Hasta 5 propiedades con alertas de renovación",
+      "priceValidUntil": "2026-12-31",
+      "availability": "https://schema.org/InStock",
+      "url": "https://acroxia.com/propietarios",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
         "price": "99",
@@ -51,6 +61,10 @@ const schemaService = {
       "name": "Cartera Premium",
       "price": "149",
       "priceCurrency": "EUR",
+      "description": "Contratos ilimitados para carteras de +5 viviendas",
+      "priceValidUntil": "2026-12-31",
+      "availability": "https://schema.org/InStock",
+      "url": "https://acroxia.com/propietarios",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
         "price": "149",
