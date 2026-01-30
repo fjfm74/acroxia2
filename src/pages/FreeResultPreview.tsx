@@ -45,21 +45,21 @@ const FreeResultPreview = () => {
       if (!id) return;
 
       try {
+        // Use secure RPC function that validates UUID-based access
         const { data, error: fetchError } = await supabase
-          .from("anonymous_analyses")
-          .select("*")
-          .eq("id", id)
-          .single();
+          .rpc("get_anonymous_analysis", { analysis_uuid: id });
 
         if (fetchError) throw fetchError;
         
-        // Check if analysis has expired
-        if (data.expires_at && new Date(data.expires_at) < new Date()) {
-          setError("Este análisis ha expirado. Puedes realizar uno nuevo.");
+        // RPC returns an array, get the first result
+        const analysisData = Array.isArray(data) ? data[0] : data;
+        
+        if (!analysisData) {
+          setError("Este análisis ha expirado o no existe.");
           return;
         }
 
-        setAnalysis(data);
+        setAnalysis(analysisData);
       } catch (err: any) {
         console.error("Error fetching analysis:", err);
         setError("No se pudo cargar el análisis.");

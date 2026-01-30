@@ -81,14 +81,12 @@ const LeadCaptureModal = ({
 
       if (leadError) throw leadError;
 
-      // Update anonymous_analyses with email
-      await supabase
-        .from("anonymous_analyses")
-        .update({ 
-          email,
-          contract_status: contractStatus,
-        })
-        .eq("id", analysisId);
+      // Update anonymous_analyses with email using secure RPC
+      await supabase.rpc("update_anonymous_analysis_email", {
+        analysis_uuid: analysisId,
+        new_email: email,
+        new_contract_status: contractStatus,
+      });
 
       // Send email with summary
       const { error: emailError } = await supabase.functions.invoke(

@@ -1215,7 +1215,28 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
-      decrement_credit: { Args: { user_id: string }; Returns: undefined }
+      decrement_credit: { Args: never; Returns: undefined }
+      get_anonymous_analysis: {
+        Args: { analysis_uuid: string }
+        Returns: {
+          analysis_result: Json | null
+          contract_status: string | null
+          converted_to_user_id: string | null
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          file_name: string
+          file_path: string | null
+          id: string
+          session_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "anonymous_analyses"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_user_organization: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -1308,6 +1329,14 @@ export type Database = {
           territorial_entity: string
           territorial_scope: string
         }[]
+      }
+      update_anonymous_analysis_email: {
+        Args: {
+          analysis_uuid: string
+          new_contract_status: string
+          new_email: string
+        }
+        Returns: boolean
       }
       user_belongs_to_org: {
         Args: { _org_id: string; _user_id: string }

@@ -908,8 +908,23 @@ ${sanitizedContractText.substring(0, 25000)}`
         if (isAdmin) {
           console.log(`Admin user ${user.id} - no credit deducted`);
         } else {
-          await supabase.rpc("decrement_credit", { user_id: user.id });
-          console.log(`Credit deducted for user ${user.id}`);
+          // Decrement credits directly using service_role (bypasses RLS)
+          // First get current credits, then decrement
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("credits")
+            .eq("id", user.id)
+            .single();
+          
+          if (profile && profile.credits > 0) {
+            await supabase
+              .from("profiles")
+              .update({ credits: profile.credits - 1 })
+              .eq("id", user.id);
+            console.log(`Credit deducted for user ${user.id}`);
+          } else {
+            console.log(`User ${user.id} has no credits to deduct`);
+          }
         }
       }
     }
