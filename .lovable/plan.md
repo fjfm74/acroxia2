@@ -1,269 +1,185 @@
 
-## Plan: Persistencia del Chat + Detección Inteligente de Perfil + Correcciones GSC
+## Plan: Auditoría y Optimización SEO Completa
 
-### Resumen de Problemas Detectados
+### Resumen de Hallazgos
 
-| Problema | Causa Raíz | Impacto |
-|----------|------------|---------|
-| Chat se pierde al navegar | Componente se desmonta/remonta en cada ruta | UX pobre, conversaciones perdidas |
-| Detección de perfil poco sutil | Solo quick replies sin preguntas inteligentes | Bot no sabe si es inquilino/propietario |
-| Info propietarios faltante | `site_config` solo tiene info de inquilinos | Bot da info incorrecta a propietarios |
-| Schemas incompletos (GSC) | Faltan campos requeridos en Product/Offer | Google no muestra rich snippets |
-| Errores 4xx en crawling | Google intenta rastrear rutas SPA sin contenido | Páginas no indexadas |
+Tras revisar todas las páginas públicas del sitio, he identificado **18 áreas de mejora** organizadas en 5 categorías de prioridad.
 
 ---
 
-### Parte 1: Persistencia del Chat entre Navegaciones
+### Hallazgos Críticos
 
-**Problema**: `ChatContainer` usa `useLocation()` que causa remount del componente cuando cambia la ruta.
+| Problema | Impacto SEO | Páginas Afectadas |
+|----------|-------------|-------------------|
+| Página 404 sin meta tags ni estructura | Alto | `/not-found` |
+| Páginas sin `canonical` | Alto | Login, Registro, Perfil, AnalyzePublic, Dashboard, etc. |
+| Falta `og:image` en mayoría de páginas | Medio | 25+ páginas |
+| Páginas legales con `noindex` incorrecto | Bajo | Aviso Legal, Privacidad, Términos, Cookies |
 
-**Solución**: Almacenar estado en `sessionStorage` y restaurarlo al abrir el chat.
+---
+
+### Parte 1: Página 404 Optimizada
+
+**Problema actual**: La página 404 es muy básica, en inglés y sin ningún meta tag.
+
+**Archivo**: `src/pages/NotFound.tsx`
+
+**Mejoras**:
+- Traducir a español
+- Añadir Helmet con título y meta description
+- Añadir `noindex, nofollow`
+- Incluir enlaces útiles (Home, Blog, FAQ, Contacto)
+- Mejorar diseño con el branding ACROXIA
+- Añadir schema WebPage
+
+---
+
+### Parte 2: Canonical Tags Faltantes
+
+**Problema**: 10+ páginas públicas no tienen `rel="canonical"`.
 
 **Archivos a modificar**:
-- `src/components/chat/ChatAssistant.tsx`
 
-**Cambios técnicos**:
-1. Guardar `messages` y `isOpen` en `sessionStorage` cada vez que cambien
-2. Restaurar estado desde `sessionStorage` al montar el componente
-3. Mantener la conversación mientras dure la sesión del navegador
-4. Solo limpiar al cerrar manualmente el chat con un botón explícito "Nueva conversación"
-
-```typescript
-// Constantes de storage
-const STORAGE_KEY_MESSAGES = "acroxia_chat_messages";
-const STORAGE_KEY_IS_OPEN = "acroxia_chat_is_open";
-
-// En useEffect inicial, restaurar estado
-useEffect(() => {
-  const savedMessages = sessionStorage.getItem(STORAGE_KEY_MESSAGES);
-  const savedIsOpen = sessionStorage.getItem(STORAGE_KEY_IS_OPEN);
-  if (savedMessages) {
-    setMessages(JSON.parse(savedMessages));
-  }
-  if (savedIsOpen === "true") {
-    setIsOpen(true);
-  }
-}, []);
-
-// Guardar al cambiar
-useEffect(() => {
-  sessionStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
-}, [messages]);
-
-useEffect(() => {
-  sessionStorage.setItem(STORAGE_KEY_IS_OPEN, isOpen ? "true" : "false");
-}, [isOpen]);
-```
+| Archivo | Canonical URL |
+|---------|---------------|
+| `Login.tsx` | `https://acroxia.com/login` |
+| `Register.tsx` | `https://acroxia.com/registro` |
+| `AnalyzePublic.tsx` | `https://acroxia.com/analizar-gratis` |
+| `Contacto.tsx` | Ya tiene (verificar) |
+| `Profile.tsx` | `noindex` (privada) |
+| `BlogPost.tsx` | Ya tiene (verificar) |
 
 ---
 
-### Parte 2: Detección Sutil de Perfil de Usuario
+### Parte 3: Open Graph Meta Tags
 
-**Problema**: El asistente actual no detecta si es inquilino o propietario de forma sutil.
+**Problema**: Solo `BlogPost.tsx` y algunas páginas tienen `og:image`. La mayoría carece de OG completo.
 
-**Solución**: Mejorar la lógica de detección y añadir "propietario" como perfil.
+**Páginas que necesitan og:image y og:type**:
+- `AnalyzePublic.tsx`
+- `Login.tsx`
+- `Register.tsx`
+- `FAQ.tsx`
+- `Contacto.tsx`
+- Todas las guías SEO de inquilinos
+- `Blog.tsx` (lista de blog)
 
-**Archivos a modificar**:
-- `supabase/functions/chat-assistant/index.ts`
-
-**Cambios técnicos**:
-
-1. **Ampliar la detección de perfil** para incluir "propietario":
-
-```typescript
-function detectUserProfile(messages: Message[]): "inquilino" | "propietario" | "profesional" | "unknown" {
-  const allText = messages.map(m => m.content.toLowerCase()).join(" ");
-  
-  const profesionalKeywords = [
-    "inmobiliaria", "gestoría", "gestoria", "administrador", "api", "integración",
-    "volumen", "empresa", "profesional", "múltiples", "clientes", "agencia", "despacho"
-  ];
-  
-  const propietarioKeywords = [
-    "soy propietario", "mi inquilino", "arrendador", "tengo una vivienda",
-    "quiero alquilar", "generar contrato", "mi piso en alquiler", "casero",
-    "zona tensionada", "impago", "desahucio", "no me paga"
-  ];
-  
-  const inquilinoKeywords = [
-    "soy inquilino", "mi contrato", "mi piso", "mi casero", "fianza",
-    "arrendador me", "renovar", "firmé", "me quieren subir", "cláusula abusiva"
-  ];
-  
-  const profesionalScore = profesionalKeywords.filter(k => allText.includes(k)).length;
-  const propietarioScore = propietarioKeywords.filter(k => allText.includes(k)).length;
-  const inquilinoScore = inquilinoKeywords.filter(k => allText.includes(k)).length;
-  
-  // Prioridad: profesional > propietario > inquilino
-  if (profesionalScore > propietarioScore && profesionalScore > inquilinoScore && profesionalScore >= 2) {
-    return "profesional";
-  }
-  if (propietarioScore > inquilinoScore && propietarioScore >= 1) {
-    return "propietario";
-  }
-  if (inquilinoScore >= 1) {
-    return "inquilino";
-  }
-  return "unknown";
-}
-```
-
-2. **Añadir instrucciones para preguntar sutilmente**:
-
-En el prompt del sistema, añadir:
-
-```
-DETECCIÓN DE PERFIL:
-Si tras 2-3 mensajes no tienes claro si el usuario es inquilino, propietario o profesional,
-haz una pregunta natural para averiguarlo. Por ejemplo:
-- "Por cierto, ¿estás buscando revisar un contrato como inquilino o como propietario?"
-- "¿Es un contrato que vas a firmar tú o uno que quieres ofrecer a un inquilino?"
-NO preguntes directamente "¿eres inquilino o propietario?" - intégralo de forma natural en la conversación.
-```
-
-3. **Añadir perfilNote para propietarios**:
-
-```typescript
-const profileNote = userProfile === "profesional"
-  ? "NOTA: Este usuario parece ser un PROFESIONAL (inmobiliaria, gestoría, etc). Enfócate en los planes B2B."
-  : userProfile === "propietario"
-  ? "NOTA: Este usuario parece ser un PROPIETARIO particular. Enfócate en los planes para propietarios (49€, 99€/año, 149€/año) y la página /propietarios."
-  : userProfile === "inquilino"
-  ? "NOTA: Este usuario parece ser un INQUILINO particular. Enfócate en los planes B2C y el análisis individual (39€)."
-  : "NOTA: No tenemos claro el perfil del usuario. Trata de averiguarlo sutilmente.";
-```
+**Valor por defecto**: `https://acroxia.com/og-image.jpg`
 
 ---
 
-### Parte 3: Actualizar site_config con Información de Propietarios
+### Parte 4: Páginas Legales - Revisar noindex
 
-**Problema**: `site_config` no tiene info de propietarios.
+**Estado actual**: Todas las páginas legales tienen `noindex, follow` a través de `LegalPageLayout.tsx`.
 
-**Acción**: Actualizar las siguientes claves en la BD:
+**Análisis**:
+- `Aviso Legal`: Debería ser indexable (requisito legal visible)
+- `Privacidad`: Debería ser indexable (transparencia)
+- `Términos`: Puede permanecer noindex
+- `Cookies`: Debería ser indexable
+- `Accesibilidad`: Debería ser indexable
 
-1. **`b2c_plans`**: Añadir planes de propietarios (Propietario Único 49€, Múltiple 99€/año, Cartera Premium 149€/año)
-2. **`platform_info`**: Añadir página /propietarios y SEO pages de propietarios
-3. **`faq_summary`**: Añadir FAQs para propietarios
-4. **`assistant_config`**: Añadir quick reply "🏠 Soy propietario"
-
----
-
-### Parte 4: Corregir Schemas de Productos (GSC)
-
-**Errores reportados**:
-
-| Schema | Campo Faltante | Tipo |
-|--------|---------------|------|
-| Product (offers) | priceValidUntil | Recomendado |
-| Product (offers) | availability | Recomendado |
-| Product (offers) | review | Recomendado |
-| Product | aggregateRating | Recomendado |
-| LocalBusiness | image | CRÍTICO |
-| LocalBusiness (offers) | hasMerchantReturnPolicy | Recomendado |
-| LocalBusiness (offers) | shippingDetails | Recomendado |
-
-**Archivos a modificar**:
-- `src/pages/Pricing.tsx` - Schema Product
-- `src/pages/Index.tsx` - Schema Organization/SoftwareApplication
-- `src/pages/Propietarios.tsx` - Schema Service
-
-**Cambios en Pricing.tsx**:
-
-```typescript
-const pricingSchema = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "ACROXIA - Análisis de Contratos de Alquiler",
-  "description": "Servicio de análisis de contratos de alquiler con IA...",
-  "image": "https://acroxia.com/og-image.jpg",
-  "brand": {
-    "@type": "Brand",
-    "name": "ACROXIA"
-  },
-  "offers": [
-    {
-      "@type": "Offer",
-      "name": "Análisis Único",
-      "price": "39",
-      "priceCurrency": "EUR",
-      "priceValidUntil": "2026-12-31",
-      "availability": "https://schema.org/InStock",
-      "url": "https://acroxia.com/precios"
-    },
-    // ... más offers
-  ]
-};
-```
-
-**Cambios en Index.tsx** (Organization):
-
-```typescript
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "ACROXIA",
-  "url": "https://acroxia.com",
-  "logo": "https://acroxia.com/acroxia-logo.png",
-  "image": "https://acroxia.com/og-image.jpg",  // AÑADIR
-  // ... resto
-};
-```
-
-**Nota sobre campos de comerciante**: `hasMerchantReturnPolicy` y `shippingDetails` son para productos físicos. ACROXIA es un servicio digital, por lo que estos campos no aplican. Podemos ignorar estas advertencias o cambiar el schema a `Service` en lugar de `Product`.
+**Solución**: Añadir prop opcional `allowIndex` a `LegalPageLayout` que cambie robots a `index, follow` para las páginas que lo requieran.
 
 ---
 
-### Parte 5: Investigar Errores 4xx en GSC
+### Parte 5: Mejoras Técnicas Avanzadas
 
-**URLs afectadas**:
-- /propietarios
-- /analizar-gratis
-- /blog
-- /precios
+#### 5.1 Schema JSON-LD faltantes
 
-**Posibles causas**:
-1. Googlebot rastreó antes de que existieran las rutas
-2. SPA no pre-renderiza contenido para bots
+| Página | Schema Recomendado |
+|--------|-------------------|
+| `Contacto.tsx` | Mejorar ContactPage con Organization completo |
+| `Blog.tsx` | Añadir ItemList para lista de artículos |
+| `Register.tsx` / `Login.tsx` | WebPage básico |
 
-**Acción**: Las rutas existen y funcionan. Google debe re-rastrear. No hay error real en el código.
+#### 5.2 llms.txt - Sincronización con precios reales
 
-**Recomendación**: Solicitar re-indexación manual en GSC para estas 4 URLs.
+**Problema**: Los precios en `llms-full.txt` no coinciden con los reales del sitio.
+
+**Discrepancias detectadas**:
+- llms.txt dice "Análisis completo: 9,90€" → Real: 39€
+- llms.txt dice "Pack 5 análisis: 39€" → No existe
+- Falta información de planes propietarios
+
+**Solución**: Actualizar `public/llms.txt` y `public/llms-full.txt` con precios correctos.
+
+#### 5.3 Sitemap - Verificar lastmod
+
+**Problema potencial**: El sitemap usa la fecha del día actual para todas las rutas estáticas en lugar de fechas reales de modificación.
+
+**Mejora**: Para guías SEO, usar fechas hardcodeadas de última modificación (enero 2026) en lugar de `today`.
 
 ---
 
-### Resumen de Archivos a Modificar
+### Parte 6: Mejoras Menores Adicionales
 
-| Archivo | Cambio |
-|---------|--------|
-| `src/components/chat/ChatAssistant.tsx` | Persistencia en sessionStorage |
-| `supabase/functions/chat-assistant/index.ts` | Detección de propietario + pregunta sutil |
-| `src/pages/Pricing.tsx` | Añadir campos schema (priceValidUntil, availability, image) |
-| `src/pages/Index.tsx` | Añadir campo image a Organization |
-| `src/pages/Propietarios.tsx` | Añadir campos schema a Service/Offers |
+| Mejora | Archivo | Descripción |
+|--------|---------|-------------|
+| hreflang en más páginas | Guías propietarios | Añadir `hreflang="es-ES"` y `x-default` |
+| Twitter Card meta tags | Páginas principales | Añadir `twitter:card`, `twitter:title`, `twitter:description` |
+| Meta author | Todas | Añadir `<meta name="author" content="ACROXIA">` |
+| Fechas actualizadas | Schemas | Asegurar `dateModified` refleja enero 2026 |
 
-**Migración SQL** (actualizar site_config):
-- Añadir planes propietarios a b2c_plans
-- Añadir página propietarios a platform_info
-- Añadir quick reply propietarios a assistant_config
+---
+
+### Archivos a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/pages/NotFound.tsx` | Rediseño completo con SEO |
+| `src/pages/Login.tsx` | Añadir canonical + og tags |
+| `src/pages/Register.tsx` | Añadir canonical + og tags + noindex |
+| `src/pages/AnalyzePublic.tsx` | Añadir canonical + og tags |
+| `src/pages/FAQ.tsx` | Añadir og:image + og:type |
+| `src/pages/Contacto.tsx` | Añadir og:image |
+| `src/pages/Blog.tsx` | Añadir og:image + ItemList schema |
+| `src/pages/Profile.tsx` | Añadir noindex |
+| `src/components/legal/LegalPageLayout.tsx` | Añadir prop `allowIndex` |
+| `src/pages/legal/AvisoLegal.tsx` | Usar `allowIndex={true}` |
+| `src/pages/legal/Privacidad.tsx` | Usar `allowIndex={true}` |
+| `src/pages/legal/Cookies.tsx` | Usar `allowIndex={true}` |
+| `src/pages/legal/Accesibilidad.tsx` | Usar `allowIndex={true}` |
+| `src/pages/seo/ImpagoAlquilerPropietarios.tsx` | Añadir hreflang |
+| `src/pages/seo/ZonasTensionadasPropietarios.tsx` | Añadir hreflang |
+| `src/pages/seo/DepositoFianzaPropietarios.tsx` | Añadir hreflang |
+| `src/pages/seo/FinContratoAlquilerPropietarios.tsx` | Añadir hreflang |
+| `src/pages/seo/ContratoAlquilerPropietarios.tsx` | Añadir hreflang |
+| `public/llms.txt` | Actualizar precios correctos |
+| `public/llms-full.txt` | Actualizar precios + info propietarios |
+| `supabase/functions/sitemap/index.ts` | Mejorar lastmod con fechas reales |
 
 ---
 
 ### Orden de Implementación
 
-1. **Persistencia del chat** (ChatAssistant.tsx)
-2. **Detección de perfil mejorada** (chat-assistant/index.ts)
-3. **Actualizar site_config** (migración SQL)
-4. **Corregir schemas SEO** (Pricing.tsx, Index.tsx, Propietarios.tsx)
-5. **Desplegar edge function** (chat-assistant)
+1. **Página 404** (impacto en UX y crawling)
+2. **Canonicals faltantes** (evitar duplicados en Google)
+3. **Open Graph tags** (compartir en redes sociales)
+4. **Páginas legales indexables** (E-E-A-T y transparencia)
+5. **llms.txt actualizado** (GEO - AI engines)
+6. **hreflang en guías propietarios** (internacionalización)
+7. **Sitemap mejorado** (crawling preciso)
 
 ---
 
 ### Resultado Esperado
 
-| Funcionalidad | Antes | Después |
-|---------------|-------|---------|
-| Chat entre páginas | Se pierde | Persiste en sessionStorage |
-| Detección de perfil | Solo inquilino/profesional | Inquilino/propietario/profesional |
-| Pregunta de perfil | No pregunta | Pregunta sutilmente si no lo sabe |
-| Info propietarios | No disponible | Completa en site_config |
-| Schemas GSC | Advertencias | Campos completos |
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| Páginas con canonical | ~17 | 27+ |
+| Páginas con og:image | ~5 | 27+ |
+| Páginas legales indexadas | 0 | 4 |
+| Página 404 optimizada | No | Sí |
+| llms.txt sincronizado | No | Sí |
+| hreflang en guías | 3 inquilinos | 8 (todas) |
+
+---
+
+### Notas Técnicas
+
+- Las páginas de dashboard/admin ya tienen `noindex, nofollow` correctamente
+- El `robots.txt` ya bloquea rutas privadas
+- El sitemap dinámico ya incluye todas las guías SEO
+- Los schemas Article con `speakable` ya están en las guías principales
+
