@@ -257,8 +257,18 @@ const AnalyzePublic = () => {
   return (
     <>
       <Helmet>
-        <title>Analiza tu Contrato Gratis | ACROXIA</title>
+        <title>Analiza tu Contrato de Alquiler Gratis | ACROXIA</title>
         <meta name="description" content="Sube tu contrato de alquiler y recibe un análisis gratuito de cláusulas potencialmente ilegales. Sin registro, en menos de 2 minutos." />
+        <meta name="keywords" content="analizar contrato alquiler gratis, revisar contrato alquiler, cláusulas abusivas, derechos inquilino" />
+        <link rel="canonical" href="https://acroxia.com/analizar-gratis" />
+        <meta property="og:title" content="Analiza tu Contrato de Alquiler Gratis | ACROXIA" />
+        <meta property="og:description" content="Sube tu contrato y detecta cláusulas abusivas en menos de 2 minutos. Sin registro." />
+        <meta property="og:url" content="https://acroxia.com/analizar-gratis" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Analiza tu Contrato de Alquiler Gratis | ACROXIA" />
+        <meta name="twitter:description" content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos." />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">

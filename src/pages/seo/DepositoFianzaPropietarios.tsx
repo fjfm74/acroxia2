@@ -188,6 +188,7 @@ const DepositoFianzaPropietarios = () => {
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>Depósito de Fianza de Alquiler: Guía para Propietarios 2026</title>
         <meta 
           name="description" 
@@ -198,10 +199,13 @@ const DepositoFianzaPropietarios = () => {
           content="depositar fianza alquiler, INCASOL, IVIMA, devolucion fianza propietario, organismo deposito fianza, descuentos fianza" 
         />
         <link rel="canonical" href="https://acroxia.com/deposito-fianza-propietarios" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/deposito-fianza-propietarios" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/deposito-fianza-propietarios" />
         <meta property="og:title" content="Depósito de Fianza de Alquiler: Guía para Propietarios 2026" />
         <meta property="og:description" content="Todo sobre la fianza para propietarios: dónde depositarla, plazos y descuentos permitidos." />
         <meta property="og:url" content="https://acroxia.com/deposito-fianza-propietarios" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>

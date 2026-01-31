@@ -195,6 +195,7 @@ const FinContratoAlquilerPropietarios = () => {
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>Fin de Contrato de Alquiler: Guía para Propietarios 2026</title>
         <meta 
           name="description" 
@@ -205,10 +206,13 @@ const FinContratoAlquilerPropietarios = () => {
           content="fin contrato alquiler, no renovar contrato, recuperar vivienda propietario, preaviso alquiler, prorroga obligatoria LAU, desahucio expiracion plazo" 
         />
         <link rel="canonical" href="https://acroxia.com/fin-contrato-alquiler-propietarios" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/fin-contrato-alquiler-propietarios" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/fin-contrato-alquiler-propietarios" />
         <meta property="og:title" content="Fin de Contrato de Alquiler: Guía para Propietarios 2026" />
         <meta property="og:description" content="Cómo finalizar el contrato de alquiler correctamente: prórrogas, preaviso y recuperación de vivienda." />
         <meta property="og:url" content="https://acroxia.com/fin-contrato-alquiler-propietarios" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>

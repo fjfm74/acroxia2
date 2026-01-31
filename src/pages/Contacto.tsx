@@ -33,6 +33,11 @@ const Contacto = () => {
           content="Contacta con el equipo de ACROXIA. Resolvemos tus dudas sobre análisis de contratos de alquiler. Respuesta en 24-48 horas." 
         />
         <link rel="canonical" href="https://acroxia.com/contacto" />
+        <meta property="og:title" content="Contacto - ACROXIA | Atención al Cliente" />
+        <meta property="og:description" content="Resolvemos tus dudas sobre análisis de contratos de alquiler. Respuesta en 24-48 horas." />
+        <meta property="og:url" content="https://acroxia.com/contacto" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
         <script type="application/ld+json">
           {JSON.stringify(contactSchema)}
         </script>

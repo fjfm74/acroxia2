@@ -177,6 +177,7 @@ const ImpagoAlquilerPropietarios = () => {
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>Impago de Alquiler: Qué Hacer como Propietario | Guía 2026</title>
         <meta 
           name="description" 
@@ -187,10 +188,13 @@ const ImpagoAlquilerPropietarios = () => {
           content="impago alquiler, desahucio express 2026, inquilino no paga, reclamar alquiler impagado, seguro impago alquiler, burofax impago" 
         />
         <link rel="canonical" href="https://acroxia.com/impago-alquiler-propietarios" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/impago-alquiler-propietarios" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/impago-alquiler-propietarios" />
         <meta property="og:title" content="Impago de Alquiler: Qué Hacer como Propietario | Guía 2026" />
         <meta property="og:description" content="Guía completa para propietarios sobre cómo actuar ante el impago del alquiler." />
         <meta property="og:url" content="https://acroxia.com/impago-alquiler-propietarios" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>

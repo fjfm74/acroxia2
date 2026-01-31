@@ -91,6 +91,11 @@ const Blog = () => {
         <meta name="description" content={currentSeo.description} />
         <meta name="keywords" content={currentSeo.keywords} />
         <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={currentSeo.title} />
+        <meta property="og:description" content={currentSeo.description} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

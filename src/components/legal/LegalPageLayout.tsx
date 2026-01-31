@@ -8,15 +8,16 @@ interface LegalPageLayoutProps {
   metaDescription: string;
   lastUpdated: string;
   children: React.ReactNode;
+  allowIndex?: boolean;
 }
 
-const LegalPageLayout = ({ title, metaDescription, lastUpdated, children }: LegalPageLayoutProps) => {
+const LegalPageLayout = ({ title, metaDescription, lastUpdated, children, allowIndex = false }: LegalPageLayoutProps) => {
   return (
     <>
       <Helmet>
         <title>{title} | ACROXIA</title>
         <meta name="description" content={metaDescription} />
-        <meta name="robots" content="noindex, follow" />
+        <meta name="robots" content={allowIndex ? "index, follow" : "noindex, follow"} />
       </Helmet>
       
       <Header />

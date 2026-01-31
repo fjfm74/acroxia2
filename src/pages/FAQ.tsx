@@ -107,6 +107,11 @@ const FAQ = () => {
           content="preguntas alquiler españa 2026, IRAV 2026, subida alquiler, gastos comunidad inquilino, penalización alquiler, derechos inquilino, cláusulas abusivas, fianza alquiler, LAU 2026" 
         />
         <link rel="canonical" href="https://acroxia.com/faq" />
+        <meta property="og:title" content="Preguntas Frecuentes sobre Alquiler en España 2026 | ACROXIA" />
+        <meta property="og:description" content="Resuelve tus dudas sobre alquiler: IRAV, derechos del inquilino, cláusulas abusivas y más." />
+        <meta property="og:url" content="https://acroxia.com/faq" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
         </script>

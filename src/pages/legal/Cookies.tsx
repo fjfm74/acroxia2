@@ -6,6 +6,7 @@ const Cookies = () => {
       title="Política de Cookies"
       metaDescription="Política de cookies de ACROXIA. Conoce qué cookies utilizamos y cómo gestionarlas."
       lastUpdated="8 de enero de 2026"
+      allowIndex={true}
     >
       <div className="space-y-8">
         <section>

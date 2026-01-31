@@ -175,6 +175,7 @@ const Profile = () => {
       <Helmet>
         <title>Mi Perfil - ACROXIA</title>
         <meta name="description" content="Gestiona tu perfil, suscripción y configuración de cuenta en ACROXIA." />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <Header />

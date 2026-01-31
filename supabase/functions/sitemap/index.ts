@@ -8,34 +8,34 @@ const corsHeaders = {
 
 const SITE_URL = "https://acroxia.com";
 
-// Rutas estáticas con prioridades (fallback si no hay caché)
+// Rutas estáticas con prioridades y fechas de última modificación
 const staticRoutes = [
-  { loc: "/", priority: "1.0", changefreq: "weekly" },
-  { loc: "/precios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/faq", priority: "0.7", changefreq: "monthly" },
-  { loc: "/blog", priority: "0.9", changefreq: "daily" },
-  { loc: "/contacto", priority: "0.7", changefreq: "monthly" },
-  { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly" },
-  { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly" },
-  { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly" },
-  { loc: "/propietarios", priority: "0.9", changefreq: "monthly" },
-  { loc: "/contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/impago-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/zonas-tensionadas-propietarios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/deposito-fianza-propietarios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/fin-contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
-  { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly" },
-  { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly" },
-  { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly" },
-  { loc: "/login", priority: "0.3", changefreq: "yearly" },
-  { loc: "/registro", priority: "0.3", changefreq: "yearly" },
-  { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
-  { loc: "/privacidad", priority: "0.2", changefreq: "yearly" },
-  { loc: "/terminos", priority: "0.2", changefreq: "yearly" },
-  { loc: "/cookies", priority: "0.2", changefreq: "yearly" },
-  { loc: "/accesibilidad", priority: "0.2", changefreq: "yearly" },
-  { loc: "/desistimiento", priority: "0.2", changefreq: "yearly" },
-  { loc: "/transparencia-ia", priority: "0.2", changefreq: "yearly" },
+  { loc: "/", priority: "1.0", changefreq: "weekly", lastmod: "2026-01-31" },
+  { loc: "/precios", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-15" },
+  { loc: "/faq", priority: "0.7", changefreq: "monthly", lastmod: "2026-01-20" },
+  { loc: "/blog", priority: "0.9", changefreq: "daily", lastmod: null }, // dynamic
+  { loc: "/contacto", priority: "0.7", changefreq: "monthly", lastmod: "2026-01-08" },
+  { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly", lastmod: "2026-01-25" },
+  { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly", lastmod: "2026-01-25" },
+  { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly", lastmod: "2026-01-25" },
+  { loc: "/propietarios", priority: "0.9", changefreq: "monthly", lastmod: "2026-01-20" },
+  { loc: "/contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-23" },
+  { loc: "/impago-alquiler-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-23" },
+  { loc: "/zonas-tensionadas-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-23" },
+  { loc: "/deposito-fianza-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-23" },
+  { loc: "/fin-contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-23" },
+  { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-15" },
+  { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-15" },
+  { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly", lastmod: "2026-01-30" },
+  { loc: "/login", priority: "0.3", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/registro", priority: "0.3", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/privacidad", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/terminos", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/cookies", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/accesibilidad", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/desistimiento", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/transparencia-ia", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
 ];
 
 Deno.serve(async (req) => {
@@ -80,13 +80,13 @@ Deno.serve(async (req) => {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Generar URLs estáticas
+    // Generar URLs estáticas con fechas de modificación reales
     let urlsXml = staticRoutes
       .map(
         (route) => `
   <url>
     <loc>${SITE_URL}${route.loc}</loc>
-    <lastmod>${today}</lastmod>
+    <lastmod>${route.lastmod || today}</lastmod>
     <changefreq>${route.changefreq}</changefreq>
     <priority>${route.priority}</priority>
   </url>`
