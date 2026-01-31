@@ -155,6 +155,7 @@ const ContratoAlquilerPropietarios = () => {
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>Contrato de Alquiler para Propietarios 2026 | Requisitos LAU y Fianzas</title>
         <meta 
           name="description" 
@@ -165,10 +166,13 @@ const ContratoAlquilerPropietarios = () => {
           content="contrato alquiler propietario 2026, fianza alquiler máxima, zonas tensionadas propietarios, LAU arrendadores, requisitos contrato alquiler, garantía adicional alquiler" 
         />
         <link rel="canonical" href="https://acroxia.com/contrato-alquiler-propietarios" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/contrato-alquiler-propietarios" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/contrato-alquiler-propietarios" />
         <meta property="og:title" content="Contrato de Alquiler para Propietarios 2026 | Guía LAU" />
         <meta property="og:description" content="Todo lo que necesitas saber para redactar un contrato de alquiler conforme a la LAU 2026. Fianzas, zonas tensionadas y requisitos obligatorios." />
         <meta property="og:url" content="https://acroxia.com/contrato-alquiler-propietarios" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
         <script type="application/ld+json">
           {JSON.stringify(schemaWebPage)}
         </script>

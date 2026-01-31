@@ -21,6 +21,12 @@ const Login = () => {
       <Helmet>
         <title>Iniciar Sesión | ACROXIA</title>
         <meta name="description" content="Accede a tu cuenta de ACROXIA para analizar tus contratos de alquiler." />
+        <link rel="canonical" href="https://acroxia.com/login" />
+        <meta property="og:title" content="Iniciar Sesión | ACROXIA" />
+        <meta property="og:description" content="Accede a tu cuenta para analizar contratos de alquiler con IA." />
+        <meta property="og:url" content="https://acroxia.com/login" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">

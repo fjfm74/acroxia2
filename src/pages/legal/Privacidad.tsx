@@ -6,6 +6,7 @@ const Privacidad = () => {
       title="Política de Privacidad"
       metaDescription="Política de privacidad de ACROXIA. Información sobre el tratamiento de datos personales conforme al RGPD y LOPDGDD."
       lastUpdated="8 de enero de 2026"
+      allowIndex={true}
     >
       <div className="space-y-10 text-foreground/80">
         {/* Introducción */}

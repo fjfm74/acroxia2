@@ -180,6 +180,7 @@ const ZonasTensionadasPropietarios = () => {
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>Zonas Tensionadas de Alquiler: Guía para Propietarios 2026</title>
         <meta 
           name="description" 
@@ -190,10 +191,13 @@ const ZonasTensionadasPropietarios = () => {
           content="zona tensionada alquiler, SERPAVI consulta, límite renta 2026, tope alquiler propietarios, índice referencia precios vivienda" 
         />
         <link rel="canonical" href="https://acroxia.com/zonas-tensionadas-propietarios" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/zonas-tensionadas-propietarios" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/zonas-tensionadas-propietarios" />
         <meta property="og:title" content="Zonas Tensionadas de Alquiler: Guía para Propietarios 2026" />
         <meta property="og:description" content="Todo sobre zonas tensionadas para propietarios: límites de renta, SERPAVI y obligaciones legales." />
         <meta property="og:url" content="https://acroxia.com/zonas-tensionadas-propietarios" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>

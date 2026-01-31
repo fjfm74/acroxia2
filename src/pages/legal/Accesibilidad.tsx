@@ -7,6 +7,7 @@ const Accesibilidad = () => {
       title="Declaración de Accesibilidad"
       metaDescription="Compromiso de accesibilidad web de ACROXIA. Objetivo WCAG 2.1 nivel AA."
       lastUpdated="8 de enero de 2026"
+      allowIndex={true}
     >
       <div className="space-y-8">
         {/* Introducción destacada */}

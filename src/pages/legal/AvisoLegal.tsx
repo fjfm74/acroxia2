@@ -6,6 +6,7 @@ const AvisoLegal = () => {
       title="Aviso Legal"
       metaDescription="Aviso legal de ACROXIA. Información sobre el titular del sitio web, condiciones de uso y propiedad intelectual."
       lastUpdated="8 de enero de 2026"
+      allowIndex={true}
     >
       <div className="space-y-10 text-foreground/80">
         {/* Identificación del titular */}
