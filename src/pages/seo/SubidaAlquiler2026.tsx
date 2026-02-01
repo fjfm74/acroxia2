@@ -165,6 +165,16 @@ const SubidaAlquiler2026 = () => {
         <meta property="og:description" content="¿Cuánto puede subir tu alquiler en 2026? Máximo el IRAV (2,2%)." />
         <meta property="og:url" content="https://acroxia.com/subida-alquiler-2026" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:locale" content="es_ES" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="Subida Alquiler 2026 | IRAV 2,2%" />
+        <meta name="twitter:description" content="Límite legal de subida anual. Qué hacer ante subidas abusivas." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>
@@ -218,7 +228,7 @@ const SubidaAlquiler2026 = () => {
               </FadeIn>
               <FadeIn delay={0.3}>
                 <Button asChild size="lg" className="rounded-full px-8">
-                  <Link to="/">
+                  <Link to="/analizar-gratis">
                     Analiza tu contrato gratis
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
@@ -348,7 +358,7 @@ const SubidaAlquiler2026 = () => {
               <FadeIn delay={0.2}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild size="lg" variant="secondary" className="rounded-full px-8 bg-background text-foreground hover:bg-background/90">
-                    <Link to="/">
+                    <Link to="/analizar-gratis">
                       Analizar mi contrato gratis
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>

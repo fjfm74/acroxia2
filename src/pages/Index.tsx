@@ -8,7 +8,7 @@ import FadeIn from "@/components/animations/FadeIn";
 
 
 const Index = () => {
-  // Schema Organization - Enriquecido para E-E-A-T con image
+  // Schema Organization - Enriquecido para E-E-A-T con image, address y sameAs
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -29,15 +29,39 @@ const Index = () => {
       "name": "España"
     },
     "knowsLanguage": "es",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Madrid",
+      "addressCountry": "ES"
+    },
     "sameAs": [
       "https://twitter.com/acroxia",
-      "https://linkedin.com/company/acroxia"
+      "https://linkedin.com/company/acroxia",
+      "https://www.instagram.com/acroxia"
     ],
     "contactPoint": {
       "@type": "ContactPoint",
       "contactType": "customer service",
       "email": "contacto@acroxia.com",
       "availableLanguage": "Spanish"
+    }
+  };
+
+  // Schema WebSite con SearchAction para sitelinks
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "ACROXIA",
+    "url": "https://acroxia.com",
+    "description": "Plataforma de análisis de contratos de alquiler con IA",
+    "inLanguage": "es-ES",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://acroxia.com/blog?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
     }
   };
 
@@ -49,11 +73,15 @@ const Index = () => {
     "applicationCategory": "LegalApplication",
     "operatingSystem": "Web",
     "description": "Analiza tu contrato de alquiler con IA y detecta cláusulas abusivas en menos de 2 minutos",
+    "image": "https://acroxia.com/og-image.jpg",
     "offers": {
       "@type": "Offer",
       "price": "39",
       "priceCurrency": "EUR",
-      "description": "Informe completo de análisis (preview gratuito disponible)"
+      "description": "Informe completo de análisis (preview gratuito disponible)",
+      "priceValidUntil": "2026-12-31",
+      "availability": "https://schema.org/InStock",
+      "url": "https://acroxia.com/precios"
     },
     "aggregateRating": {
       "@type": "AggregateRating",
@@ -62,7 +90,7 @@ const Index = () => {
     }
   };
 
-  // Schema HowTo
+  // Schema HowTo con speakable
   const howToSchema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
@@ -88,12 +116,17 @@ const Index = () => {
         "name": "Recibe tu informe",
         "text": "Obtén un informe detallado con cláusulas potencialmente problemáticas identificadas y orientaciones claras."
       }
-    ]
+    ],
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    }
   };
 
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>ACROXIA - Analiza tu Contrato de Alquiler con IA | Detecta Cláusulas Abusivas</title>
         <meta 
           name="description" 
@@ -104,15 +137,33 @@ const Index = () => {
           content="analizar contrato alquiler, cláusulas abusivas alquiler, derechos inquilino España, LAU 2026, IA legal, contrato arrendamiento" 
         />
         <link rel="canonical" href="https://acroxia.com/" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/" />
         
-        {/* Open Graph específico para homepage */}
-        <meta property="og:title" content="ACROXIA - Protege tus Derechos como Inquilino" />
+        {/* Open Graph completo */}
+        <meta property="og:title" content="ACROXIA - Protege tus Derechos como Inquilino con IA" />
         <meta property="og:description" content="Analiza tu contrato con IA y descubre cláusulas potencialmente ilegales. Preview gratuito." />
         <meta property="og:url" content="https://acroxia.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="es_ES" />
+        <meta property="og:site_name" content="ACROXIA" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="ACROXIA - Analiza tu Contrato de Alquiler con IA" />
+        <meta name="twitter:description" content="Detecta cláusulas abusivas en menos de 2 minutos. Preview gratuito." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
         
         {/* Schema markup */}
         <script type="application/ld+json">
           {JSON.stringify(organizationSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(websiteSchema)}
         </script>
         <script type="application/ld+json">
           {JSON.stringify(softwareAppSchema)}

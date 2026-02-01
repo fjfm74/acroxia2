@@ -166,6 +166,16 @@ const ClausulasAbusivas = () => {
         <meta property="og:description" content="Descubre qué cláusulas podrían ser ilegales en tu contrato de alquiler según la LAU." />
         <meta property="og:url" content="https://acroxia.com/clausulas-abusivas-alquiler" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:locale" content="es_ES" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="Cláusulas Abusivas Alquiler 2026" />
+        <meta name="twitter:description" content="Identifica cláusulas ilegales según la LAU." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>
@@ -219,7 +229,7 @@ const ClausulasAbusivas = () => {
               </FadeIn>
               <FadeIn delay={0.3}>
                 <Button asChild size="lg" className="rounded-full px-8">
-                  <Link to="/">
+                  <Link to="/analizar-gratis">
                     Analiza tu contrato gratis
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
@@ -312,7 +322,7 @@ const ClausulasAbusivas = () => {
               <FadeIn delay={0.2}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild size="lg" variant="secondary" className="rounded-full px-8 bg-background text-foreground hover:bg-background/90">
-                    <Link to="/">
+                    <Link to="/analizar-gratis">
                       Analizar mi contrato gratis
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>

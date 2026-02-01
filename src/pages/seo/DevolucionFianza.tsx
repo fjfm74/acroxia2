@@ -177,6 +177,16 @@ const DevolucionFianza = () => {
         <meta property="og:description" content="¿Cuánto tiempo tiene el casero para devolver la fianza? 30 días según la LAU." />
         <meta property="og:url" content="https://acroxia.com/devolucion-fianza-alquiler" />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:locale" content="es_ES" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="Devolución de Fianza Alquiler 2026" />
+        <meta name="twitter:description" content="30 días de plazo legal. Cómo recuperar tu fianza." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>
@@ -234,7 +244,7 @@ const DevolucionFianza = () => {
               <FadeIn delay={0.3}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild size="lg" className="rounded-full px-8">
-                    <Link to="/">
+                    <Link to="/analizar-gratis">
                       Analiza tu contrato gratis
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
@@ -358,7 +368,7 @@ const DevolucionFianza = () => {
               </FadeIn>
               <FadeIn delay={0.2}>
                 <Button asChild size="lg" variant="secondary" className="rounded-full px-8 bg-background text-foreground hover:bg-background/90">
-                  <Link to="/">
+                  <Link to="/analizar-gratis">
                     Analizar mi contrato gratis
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>

@@ -213,6 +213,15 @@ const FinContratoAlquilerPropietarios = () => {
         <meta property="og:url" content="https://acroxia.com/fin-contrato-alquiler-propietarios" />
         <meta property="og:type" content="article" />
         <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:locale" content="es_ES" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="Fin de Contrato | Guía Propietarios 2026" />
+        <meta name="twitter:description" content="Prórrogas, preaviso y recuperación de vivienda." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>
