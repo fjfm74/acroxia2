@@ -173,6 +173,15 @@ const ContratoAlquilerPropietarios = () => {
         <meta property="og:url" content="https://acroxia.com/contrato-alquiler-propietarios" />
         <meta property="og:type" content="article" />
         <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:locale" content="es_ES" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="Contrato Alquiler Propietarios 2026 | LAU" />
+        <meta name="twitter:description" content="Fianzas, zonas tensionadas y requisitos LAU." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        
         <script type="application/ld+json">
           {JSON.stringify(schemaWebPage)}
         </script>

@@ -198,6 +198,15 @@ const ZonasTensionadasPropietarios = () => {
         <meta property="og:url" content="https://acroxia.com/zonas-tensionadas-propietarios" />
         <meta property="og:type" content="article" />
         <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:locale" content="es_ES" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="Zonas Tensionadas | Guía Propietarios 2026" />
+        <meta name="twitter:description" content="Límites de renta, SERPAVI y obligaciones legales." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        
         <script type="application/ld+json">
           {JSON.stringify(pageSchema)}
         </script>

@@ -84,6 +84,7 @@ const Propietarios = () => {
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>ACROXIA para Propietarios | Contratos de Alquiler Conformes a la LAU 2026</title>
         <meta 
           name="description" 
@@ -94,10 +95,26 @@ const Propietarios = () => {
           content="contrato alquiler propietario, análisis contrato arrendador, zonas tensionadas 2026, LAU propietarios, generador contrato alquiler" 
         />
         <link rel="canonical" href="https://acroxia.com/propietarios" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/propietarios" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/propietarios" />
+        
+        {/* Open Graph completo */}
         <meta property="og:title" content="ACROXIA para Propietarios | Contratos de Alquiler Conformes" />
         <meta property="og:description" content="Analiza y genera contratos de alquiler conformes a la LAU 2026. Planes desde 49€." />
         <meta property="og:url" content="https://acroxia.com/propietarios" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="es_ES" />
+        
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@acroxia" />
+        <meta name="twitter:title" content="ACROXIA para Propietarios | LAU 2026" />
+        <meta name="twitter:description" content="Analiza y genera contratos conformes. Planes desde 49€." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        
         <script type="application/ld+json">
           {JSON.stringify(schemaService)}
         </script>
