@@ -356,8 +356,42 @@ Style requirements:
   return publicUrl.publicUrl;
 }
 
-async function sendApprovalEmail(post: any, approvalToken: string, siteUrl: string): Promise<void> {
-  const approveUrl = `${siteUrl}/aprobar-post/${approvalToken}`;
+// Send newsletter to subscribers
+async function sendNewsletterNotification(postId: string): Promise<{ sent: number; errors: number }> {
+  try {
+    console.log(`[schedule-daily-post] Triggering newsletter for post: ${postId}`);
+    
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/send-blog-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+      },
+      body: JSON.stringify({ postId })
+    });
+
+    if (!response.ok) {
+      console.error("[schedule-daily-post] Newsletter notification failed:", response.status);
+      return { sent: 0, errors: 1 };
+    }
+
+    const result = await response.json();
+    console.log("[schedule-daily-post] Newsletter result:", result);
+    return { sent: result.sent || 0, errors: result.errors || 0 };
+  } catch (error) {
+    console.error("[schedule-daily-post] Newsletter error:", error);
+    return { sent: 0, errors: 1 };
+  }
+}
+
+// Send confirmation email (post already published)
+async function sendConfirmationEmail(
+  post: { id: string; title: string; excerpt: string; category: string; image: string | null; slug: string },
+  newsletterStats: { sent: number; errors: number }
+): Promise<void> {
+  const siteUrl = "https://acroxia.com";
+  const postUrl = `${siteUrl}/blog/${post.slug}`;
+  const adminUrl = `${siteUrl}/admin/blog`;
   
   const emailHtml = `
 <!DOCTYPE html>
@@ -369,48 +403,49 @@ async function sendApprovalEmail(post: any, approvalToken: string, siteUrl: stri
     .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
     .header { background: #1F1D1B; color: #FAF8F5; padding: 32px; text-align: center; }
     .header h1 { margin: 0; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; }
+    .success-badge { display: inline-block; background: #22C55E; color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; margin-top: 12px; }
     .content { padding: 32px; }
     .featured-image { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 24px; }
     .post-title { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: #1F1D1B; margin: 0 0 16px; }
     .category { display: inline-block; background: #F5F3F0; color: #1F1D1B; padding: 6px 16px; border-radius: 20px; font-size: 14px; margin-bottom: 16px; }
-    .excerpt { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 24px; border-left: 3px solid #1F1D1B; padding-left: 16px; }
-    .preview-content { background: #F9F8F6; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; margin-bottom: 32px; }
-    .preview-content h2, .preview-content h3 { color: #1F1D1B; }
+    .excerpt { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 24px; border-left: 3px solid #22C55E; padding-left: 16px; }
+    .stats { background: #F0FDF4; border: 1px solid #BBF7D0; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; }
+    .stats-text { color: #166534; font-size: 15px; margin: 0; }
     .actions { text-align: center; padding: 24px 0; }
-    .btn { display: inline-block; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; margin: 0 8px; }
-    .btn-approve { background: #1F1D1B; color: #FAF8F5; }
-    .btn-edit { background: transparent; color: #1F1D1B; border: 2px solid #1F1D1B; }
+    .btn { display: inline-block; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; margin: 0 8px 12px; }
+    .btn-primary { background: #1F1D1B; color: #FAF8F5; }
+    .btn-secondary { background: transparent; color: #1F1D1B; border: 2px solid #1F1D1B; }
     .footer { background: #F5F3F0; padding: 24px 32px; text-align: center; color: #666; font-size: 14px; }
+    .footer a { color: #1F1D1B; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>ACROXIA</h1>
-      <p style="margin: 8px 0 0; opacity: 0.8;">Nuevo post pendiente de aprobación</p>
+      <span class="success-badge">✓ Post publicado automáticamente</span>
     </div>
     
     <div class="content">
       ${post.image ? `<img src="${post.image}" alt="Imagen destacada" class="featured-image">` : ''}
       
-      <span class="category">${post.category}</span>
+      <span class="category">${post.category} • Inquilinos</span>
       <h2 class="post-title">${post.title}</h2>
       <p class="excerpt">${post.excerpt}</p>
       
-      <div class="preview-content">
-        <h3>Vista previa del contenido:</h3>
-        <div>${post.content.substring(0, 1500)}${post.content.length > 1500 ? '...' : ''}</div>
+      <div class="stats">
+        <p class="stats-text">📧 Newsletter enviado a <strong>${newsletterStats.sent}</strong> suscriptor${newsletterStats.sent !== 1 ? 'es' : ''}</p>
       </div>
       
       <div class="actions">
-        <a href="${approveUrl}" class="btn btn-approve">✓ Aprobar y Publicar</a>
-        <a href="${siteUrl}/admin/blog" class="btn btn-edit">✎ Editar Borrador</a>
+        <a href="${postUrl}" class="btn btn-primary">Ver post publicado</a>
+        <a href="${adminUrl}" class="btn btn-secondary">Editar en admin</a>
       </div>
     </div>
     
     <div class="footer">
-      <p>Este post se generó automáticamente y está guardado como borrador.</p>
-      <p>Si no haces nada, el post permanecerá sin publicar.</p>
+      <p>Este post se generó y publicó automáticamente.</p>
+      <p>Si encuentras algún error, puedes <a href="${adminUrl}">editarlo desde el panel de admin</a>.</p>
     </div>
   </div>
 </body>
@@ -426,7 +461,7 @@ async function sendApprovalEmail(post: any, approvalToken: string, siteUrl: stri
       from: "ACROXIA <noreply@acroxia.com>",
       to: ["nuriafrancis@gmail.com"],
       reply_to: "contacto@acroxia.com",
-      subject: `📝 Nuevo post para aprobar: ${post.title}`,
+      subject: `✅ Post publicado: ${post.title}`,
       html: emailHtml,
     }),
   });
@@ -435,6 +470,8 @@ async function sendApprovalEmail(post: any, approvalToken: string, siteUrl: stri
     const error = await response.json();
     throw new Error(`Email error: ${JSON.stringify(error)}`);
   }
+  
+  console.log("[schedule-daily-post] Confirmation email sent");
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -464,9 +501,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-    
-    // Get site URL from request or default
-    const siteUrl = req.headers.get("origin") || "https://acroxia.com";
 
     console.log("Starting daily blog post generation...");
     
@@ -489,17 +523,21 @@ const handler = async (req: Request): Promise<Response> => {
     // Generate image
     const imageUrl = await generateImage(post.title, post.excerpt, post.category);
 
-    // Save as draft
+    // Generate slug
+    const slug = generateSlug(post.title);
+
+    // Save as PUBLISHED (not draft)
     const { data: blogPost, error: insertError } = await supabase
       .from("blog_posts")
       .insert({
         title: post.title,
-        slug: generateSlug(post.title),
+        slug: slug,
         content: post.content,
         excerpt: post.excerpt,
         category: post.category,
         image: imageUrl,
-        status: "draft",
+        status: "published",
+        published_at: new Date().toISOString(),
         audience: "inquilino",
         read_time: `${Math.ceil(post.content.split(/\s+/).length / 200)} min`,
       })
@@ -510,44 +548,58 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Failed to save post: ${insertError.message}`);
     }
 
-    console.log("Post saved as draft:", blogPost.id);
+    console.log("Post published:", blogPost.id);
 
-    // Create scheduled post record
+    // Create scheduled post record for audit
     const { data: scheduledPost, error: scheduleError } = await supabase
       .from("scheduled_posts")
       .insert({
         blog_post_id: blogPost.id,
-        status: "pending_approval",
+        status: "auto_published",
+        approved_at: new Date().toISOString(),
       })
       .select()
       .single();
 
     if (scheduleError) {
-      throw new Error(`Failed to create schedule: ${scheduleError.message}`);
+      console.error("Failed to create schedule record:", scheduleError.message);
+      // Don't throw - post is already published
     }
 
-    console.log("Scheduled post created with token:", scheduledPost.approval_token);
+    console.log("Scheduled post record created:", scheduledPost?.id);
 
-    // Send approval email
-    await sendApprovalEmail(
-      { ...post, id: blogPost.id, image: imageUrl },
-      scheduledPost.approval_token,
-      siteUrl
+    // Send newsletter to subscribers
+    const newsletterStats = await sendNewsletterNotification(blogPost.id);
+
+    // Send confirmation email
+    await sendConfirmationEmail(
+      { 
+        id: blogPost.id, 
+        title: post.title, 
+        excerpt: post.excerpt,
+        category: post.category,
+        image: imageUrl,
+        slug: slug
+      },
+      newsletterStats
     );
 
     // Update email sent timestamp
-    await supabase
-      .from("scheduled_posts")
-      .update({ email_sent_at: new Date().toISOString() })
-      .eq("id", scheduledPost.id);
+    if (scheduledPost) {
+      await supabase
+        .from("scheduled_posts")
+        .update({ email_sent_at: new Date().toISOString() })
+        .eq("id", scheduledPost.id);
+    }
 
-    console.log("Approval email sent to nuriafrancis@gmail.com");
+    console.log("Confirmation email sent to nuriafrancis@gmail.com");
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        post: { id: blogPost.id, title: post.title },
-        message: "Post generado y email de aprobación enviado" 
+        post: { id: blogPost.id, title: post.title, slug: slug },
+        newsletter: newsletterStats,
+        message: "Post publicado automáticamente y newsletter enviado" 
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );

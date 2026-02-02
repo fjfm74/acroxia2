@@ -224,17 +224,47 @@ Ultra high resolution.`;
   }
 }
 
-async function sendApprovalEmail(
-  post: { id: string; title: string; excerpt: string; category: string; content?: string; image?: string | null }, 
-  token: string
-) {
+// Send newsletter to subscribers
+async function sendNewsletterNotification(postId: string): Promise<{ sent: number; errors: number }> {
+  try {
+    console.log(`[schedule-daily-post-landlord] Triggering newsletter for post: ${postId}`);
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-blog-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`
+      },
+      body: JSON.stringify({ postId })
+    });
+
+    if (!response.ok) {
+      console.error("[schedule-daily-post-landlord] Newsletter notification failed:", response.status);
+      return { sent: 0, errors: 1 };
+    }
+
+    const result = await response.json();
+    console.log("[schedule-daily-post-landlord] Newsletter result:", result);
+    return { sent: result.sent || 0, errors: result.errors || 0 };
+  } catch (error) {
+    console.error("[schedule-daily-post-landlord] Newsletter error:", error);
+    return { sent: 0, errors: 1 };
+  }
+}
+
+// Send confirmation email (post already published)
+async function sendConfirmationEmail(
+  post: { id: string; title: string; excerpt: string; category: string; image: string | null; slug: string },
+  newsletterStats: { sent: number; errors: number }
+): Promise<void> {
   if (!resendApiKey) {
     console.log('RESEND_API_KEY not configured, skipping email');
     return;
   }
 
   const siteUrl = 'https://acroxia.com';
-  const approveUrl = `${siteUrl}/aprobar-post/${token}`;
+  const postUrl = `${siteUrl}/blog/${post.slug}`;
+  const adminUrl = `${siteUrl}/admin/blog`;
 
   const emailHtml = `
 <!DOCTYPE html>
@@ -246,51 +276,51 @@ async function sendApprovalEmail(
     .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
     .header { background: #1F1D1B; color: #FAF8F5; padding: 32px; text-align: center; }
     .header h1 { margin: 0; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; }
+    .success-badge { display: inline-block; background: #22C55E; color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; margin-top: 12px; }
+    .audience-badge { display: inline-block; background: #E8F5E9; color: #2E7D32; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-left: 8px; }
     .content { padding: 32px; }
     .featured-image { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 24px; }
     .post-title { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: #1F1D1B; margin: 0 0 16px; }
     .category { display: inline-block; background: #F5F3F0; color: #1F1D1B; padding: 6px 16px; border-radius: 20px; font-size: 14px; margin-bottom: 16px; }
-    .excerpt { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 24px; border-left: 3px solid #1F1D1B; padding-left: 16px; }
-    .preview-content { background: #F9F8F6; padding: 20px; border-radius: 12px; max-height: 300px; overflow-y: auto; margin-bottom: 32px; }
-    .preview-content h2, .preview-content h3 { color: #1F1D1B; }
+    .excerpt { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 24px; border-left: 3px solid #22C55E; padding-left: 16px; }
+    .stats { background: #F0FDF4; border: 1px solid #BBF7D0; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; }
+    .stats-text { color: #166534; font-size: 15px; margin: 0; }
     .actions { text-align: center; padding: 24px 0; }
-    .btn { display: inline-block; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; margin: 0 8px; }
-    .btn-approve { background: #1F1D1B; color: #FAF8F5; }
-    .btn-edit { background: transparent; color: #1F1D1B; border: 2px solid #1F1D1B; }
+    .btn { display: inline-block; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; margin: 0 8px 12px; }
+    .btn-primary { background: #1F1D1B; color: #FAF8F5; }
+    .btn-secondary { background: transparent; color: #1F1D1B; border: 2px solid #1F1D1B; }
     .footer { background: #F5F3F0; padding: 24px 32px; text-align: center; color: #666; font-size: 14px; }
-    .badge { display: inline-block; background: #E8F5E9; color: #2E7D32; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-left: 8px; }
+    .footer a { color: #1F1D1B; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>ACROXIA</h1>
-      <p style="margin: 8px 0 0; opacity: 0.8;">Nuevo post pendiente de aprobación <span class="badge">Propietarios</span></p>
+      <span class="success-badge">✓ Post publicado automáticamente</span>
+      <span class="audience-badge">Propietarios</span>
     </div>
     
     <div class="content">
       ${post.image ? `<img src="${post.image}" alt="Imagen destacada" class="featured-image">` : ''}
       
-      <span class="category">${post.category}</span>
+      <span class="category">${post.category} • Propietarios</span>
       <h2 class="post-title">${post.title}</h2>
       <p class="excerpt">${post.excerpt}</p>
       
-      ${post.content ? `
-      <div class="preview-content">
-        <h3>Vista previa del contenido:</h3>
-        <div>${post.content.substring(0, 1500)}${post.content.length > 1500 ? '...' : ''}</div>
+      <div class="stats">
+        <p class="stats-text">📧 Newsletter enviado a <strong>${newsletterStats.sent}</strong> suscriptor${newsletterStats.sent !== 1 ? 'es' : ''}</p>
       </div>
-      ` : ''}
       
       <div class="actions">
-        <a href="${approveUrl}" class="btn btn-approve">✓ Aprobar y Publicar</a>
-        <a href="${siteUrl}/admin/blog" class="btn btn-edit">✎ Editar Borrador</a>
+        <a href="${postUrl}" class="btn btn-primary">Ver post publicado</a>
+        <a href="${adminUrl}" class="btn btn-secondary">Editar en admin</a>
       </div>
     </div>
     
     <div class="footer">
-      <p>Este post se generó automáticamente y está guardado como borrador.</p>
-      <p>Si no haces nada, el post permanecerá sin publicar.</p>
+      <p>Este post se generó y publicó automáticamente.</p>
+      <p>Si encuentras algún error, puedes <a href="${adminUrl}">editarlo desde el panel de admin</a>.</p>
     </div>
   </div>
 </body>
@@ -307,16 +337,16 @@ async function sendApprovalEmail(
         from: 'ACROXIA <noreply@acroxia.com>',
         to: ['nuriafrancis@gmail.com'],
         reply_to: 'contacto@acroxia.com',
-        subject: `📝 Nuevo post para aprobar: ${post.title}`,
+        subject: `✅ Post publicado: ${post.title}`,
         html: emailHtml,
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Error sending approval email:', error);
+      console.error('Error sending confirmation email:', error);
     } else {
-      console.log('Approval email sent successfully to nuriafrancis@gmail.com');
+      console.log('[schedule-daily-post-landlord] Confirmation email sent');
     }
   } catch (error) {
     console.error('Error sending email:', error);
@@ -511,7 +541,7 @@ serve(async (req) => {
     console.log('Generating image for post...');
     const imageUrl = await generateImage(postData.title, postData.excerpt || postData.title, postData.category);
 
-    // Insert blog post as draft with audience = 'propietario'
+    // Insert blog post as PUBLISHED (not draft) with audience = 'propietario'
     const { data: newPost, error: insertError } = await supabase
       .from('blog_posts')
       .insert({
@@ -520,7 +550,8 @@ serve(async (req) => {
         excerpt: postData.excerpt || postData.title,
         content: postData.content,
         category: postData.category,
-        status: 'draft',
+        status: 'published',
+        published_at: new Date().toISOString(),
         read_time: `${Math.ceil(postData.content.split(/\s+/).length / 200)} min`,
         keywords: ['propietarios', 'arrendadores', 'alquiler', 'LAU', postData.category.toLowerCase()],
         meta_description: postData.excerpt?.substring(0, 160) || postData.title,
@@ -535,46 +566,52 @@ serve(async (req) => {
       throw insertError;
     }
 
-    console.log('Landlord blog post created:', newPost.id, 'with image:', imageUrl ? 'yes' : 'no');
+    console.log('Landlord blog post published:', newPost.id, 'with image:', imageUrl ? 'yes' : 'no');
 
-    // Create scheduled post entry for approval
+    // Create scheduled post entry for audit
     const { data: scheduledPost, error: scheduleError } = await supabase
       .from('scheduled_posts')
       .insert({
         blog_post_id: newPost.id,
-        status: 'pending_approval',
+        status: 'auto_published',
+        approved_at: new Date().toISOString(),
       })
       .select()
       .single();
 
     if (scheduleError) {
       console.error('Error creating scheduled post:', scheduleError);
-      throw scheduleError;
+      // Don't throw - post is already published
     }
 
-    // Send approval email
-    await sendApprovalEmail(
+    // Send newsletter to subscribers
+    const newsletterStats = await sendNewsletterNotification(newPost.id);
+
+    // Send confirmation email
+    await sendConfirmationEmail(
       { 
         id: newPost.id, 
         title: newPost.title, 
         excerpt: newPost.excerpt,
         category: newPost.category,
-        content: postData.content,
         image: imageUrl,
+        slug: slug,
       }, 
-      scheduledPost.approval_token
+      newsletterStats
     );
 
     // Update email sent timestamp
-    await supabase
-      .from('scheduled_posts')
-      .update({ email_sent_at: new Date().toISOString() })
-      .eq('id', scheduledPost.id);
+    if (scheduledPost) {
+      await supabase
+        .from('scheduled_posts')
+        .update({ email_sent_at: new Date().toISOString() })
+        .eq('id', scheduledPost.id);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Landlord blog post generated and pending approval',
+        message: 'Landlord blog post published automatically',
         post: {
           id: newPost.id,
           title: newPost.title,
@@ -582,6 +619,7 @@ serve(async (req) => {
           category: newPost.category,
           image: imageUrl,
         },
+        newsletter: newsletterStats,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
