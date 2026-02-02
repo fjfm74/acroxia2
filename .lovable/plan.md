@@ -1,185 +1,150 @@
 
-## Plan: Auditoría y Optimización SEO Completa
 
-### Resumen de Hallazgos
+## Plan: Publicación Automática de Posts del Blog
 
-Tras revisar todas las páginas públicas del sitio, he identificado **18 áreas de mejora** organizadas en 5 categorías de prioridad.
+### Resumen del Cambio
 
----
-
-### Hallazgos Críticos
-
-| Problema | Impacto SEO | Páginas Afectadas |
-|----------|-------------|-------------------|
-| Página 404 sin meta tags ni estructura | Alto | `/not-found` |
-| Páginas sin `canonical` | Alto | Login, Registro, Perfil, AnalyzePublic, Dashboard, etc. |
-| Falta `og:image` en mayoría de páginas | Medio | 25+ páginas |
-| Páginas legales con `noindex` incorrecto | Bajo | Aviso Legal, Privacidad, Términos, Cookies |
+Modificar las funciones de generación diaria de blog para que publiquen automáticamente los posts sin necesidad de aprobación manual, enviando un email de confirmación con el enlace al post publicado.
 
 ---
 
-### Parte 1: Página 404 Optimizada
+### Flujo Actual vs Nuevo Flujo
 
-**Problema actual**: La página 404 es muy básica, en inglés y sin ningún meta tag.
-
-**Archivo**: `src/pages/NotFound.tsx`
-
-**Mejoras**:
-- Traducir a español
-- Añadir Helmet con título y meta description
-- Añadir `noindex, nofollow`
-- Incluir enlaces útiles (Home, Blog, FAQ, Contacto)
-- Mejorar diseño con el branding ACROXIA
-- Añadir schema WebPage
-
----
-
-### Parte 2: Canonical Tags Faltantes
-
-**Problema**: 10+ páginas públicas no tienen `rel="canonical"`.
-
-**Archivos a modificar**:
-
-| Archivo | Canonical URL |
-|---------|---------------|
-| `Login.tsx` | `https://acroxia.com/login` |
-| `Register.tsx` | `https://acroxia.com/registro` |
-| `AnalyzePublic.tsx` | `https://acroxia.com/analizar-gratis` |
-| `Contacto.tsx` | Ya tiene (verificar) |
-| `Profile.tsx` | `noindex` (privada) |
-| `BlogPost.tsx` | Ya tiene (verificar) |
-
----
-
-### Parte 3: Open Graph Meta Tags
-
-**Problema**: Solo `BlogPost.tsx` y algunas páginas tienen `og:image`. La mayoría carece de OG completo.
-
-**Páginas que necesitan og:image y og:type**:
-- `AnalyzePublic.tsx`
-- `Login.tsx`
-- `Register.tsx`
-- `FAQ.tsx`
-- `Contacto.tsx`
-- Todas las guías SEO de inquilinos
-- `Blog.tsx` (lista de blog)
-
-**Valor por defecto**: `https://acroxia.com/og-image.jpg`
-
----
-
-### Parte 4: Páginas Legales - Revisar noindex
-
-**Estado actual**: Todas las páginas legales tienen `noindex, follow` a través de `LegalPageLayout.tsx`.
-
-**Análisis**:
-- `Aviso Legal`: Debería ser indexable (requisito legal visible)
-- `Privacidad`: Debería ser indexable (transparencia)
-- `Términos`: Puede permanecer noindex
-- `Cookies`: Debería ser indexable
-- `Accesibilidad`: Debería ser indexable
-
-**Solución**: Añadir prop opcional `allowIndex` a `LegalPageLayout` que cambie robots a `index, follow` para las páginas que lo requieran.
-
----
-
-### Parte 5: Mejoras Técnicas Avanzadas
-
-#### 5.1 Schema JSON-LD faltantes
-
-| Página | Schema Recomendado |
-|--------|-------------------|
-| `Contacto.tsx` | Mejorar ContactPage con Organization completo |
-| `Blog.tsx` | Añadir ItemList para lista de artículos |
-| `Register.tsx` / `Login.tsx` | WebPage básico |
-
-#### 5.2 llms.txt - Sincronización con precios reales
-
-**Problema**: Los precios en `llms-full.txt` no coinciden con los reales del sitio.
-
-**Discrepancias detectadas**:
-- llms.txt dice "Análisis completo: 9,90€" → Real: 39€
-- llms.txt dice "Pack 5 análisis: 39€" → No existe
-- Falta información de planes propietarios
-
-**Solución**: Actualizar `public/llms.txt` y `public/llms-full.txt` con precios correctos.
-
-#### 5.3 Sitemap - Verificar lastmod
-
-**Problema potencial**: El sitemap usa la fecha del día actual para todas las rutas estáticas en lugar de fechas reales de modificación.
-
-**Mejora**: Para guías SEO, usar fechas hardcodeadas de última modificación (enero 2026) en lugar de `today`.
-
----
-
-### Parte 6: Mejoras Menores Adicionales
-
-| Mejora | Archivo | Descripción |
-|--------|---------|-------------|
-| hreflang en más páginas | Guías propietarios | Añadir `hreflang="es-ES"` y `x-default` |
-| Twitter Card meta tags | Páginas principales | Añadir `twitter:card`, `twitter:title`, `twitter:description` |
-| Meta author | Todas | Añadir `<meta name="author" content="ACROXIA">` |
-| Fechas actualizadas | Schemas | Asegurar `dateModified` refleja enero 2026 |
+| Paso | Flujo Actual | Nuevo Flujo |
+|------|--------------|-------------|
+| 1 | Generar contenido con IA | Generar contenido con IA |
+| 2 | Guardar como `draft` | Guardar como `published` |
+| 3 | Crear registro `scheduled_posts` | (Opcional: mantener para registro) |
+| 4 | Enviar email de aprobación | Enviar email de **confirmación** |
+| 5 | Esperar clic del usuario | Enviar newsletter automáticamente |
+| 6 | Tras aprobación: publicar + newsletter | - |
 
 ---
 
 ### Archivos a Modificar
 
-| Archivo | Cambios |
-|---------|---------|
-| `src/pages/NotFound.tsx` | Rediseño completo con SEO |
-| `src/pages/Login.tsx` | Añadir canonical + og tags |
-| `src/pages/Register.tsx` | Añadir canonical + og tags + noindex |
-| `src/pages/AnalyzePublic.tsx` | Añadir canonical + og tags |
-| `src/pages/FAQ.tsx` | Añadir og:image + og:type |
-| `src/pages/Contacto.tsx` | Añadir og:image |
-| `src/pages/Blog.tsx` | Añadir og:image + ItemList schema |
-| `src/pages/Profile.tsx` | Añadir noindex |
-| `src/components/legal/LegalPageLayout.tsx` | Añadir prop `allowIndex` |
-| `src/pages/legal/AvisoLegal.tsx` | Usar `allowIndex={true}` |
-| `src/pages/legal/Privacidad.tsx` | Usar `allowIndex={true}` |
-| `src/pages/legal/Cookies.tsx` | Usar `allowIndex={true}` |
-| `src/pages/legal/Accesibilidad.tsx` | Usar `allowIndex={true}` |
-| `src/pages/seo/ImpagoAlquilerPropietarios.tsx` | Añadir hreflang |
-| `src/pages/seo/ZonasTensionadasPropietarios.tsx` | Añadir hreflang |
-| `src/pages/seo/DepositoFianzaPropietarios.tsx` | Añadir hreflang |
-| `src/pages/seo/FinContratoAlquilerPropietarios.tsx` | Añadir hreflang |
-| `src/pages/seo/ContratoAlquilerPropietarios.tsx` | Añadir hreflang |
-| `public/llms.txt` | Actualizar precios correctos |
-| `public/llms-full.txt` | Actualizar precios + info propietarios |
-| `supabase/functions/sitemap/index.ts` | Mejorar lastmod con fechas reales |
+#### 1. `supabase/functions/schedule-daily-post/index.ts` (Inquilinos)
+
+**Cambios:**
+- Cambiar `status: "draft"` → `status: "published"`
+- Añadir `published_at: new Date().toISOString()`
+- Reemplazar función `sendApprovalEmail` por `sendConfirmationEmail`
+- Llamar a `send-blog-notification` automáticamente tras publicar
+- Actualizar `scheduled_posts` con status `auto_published` en lugar de `pending_approval`
+
+#### 2. `supabase/functions/schedule-daily-post-landlord/index.ts` (Propietarios)
+
+**Cambios idénticos:**
+- Publicar directamente
+- Email de confirmación
+- Newsletter automático
 
 ---
 
-### Orden de Implementación
+### Nuevo Email de Confirmación
 
-1. **Página 404** (impacto en UX y crawling)
-2. **Canonicals faltantes** (evitar duplicados en Google)
-3. **Open Graph tags** (compartir en redes sociales)
-4. **Páginas legales indexables** (E-E-A-T y transparencia)
-5. **llms.txt actualizado** (GEO - AI engines)
-6. **hreflang en guías propietarios** (internacionalización)
-7. **Sitemap mejorado** (crawling preciso)
+El email cambiará de "aprobar/rechazar" a "confirmación de publicación":
+
+**Antes (Aprobación):**
+- Asunto: "📝 Nuevo post para aprobar: {título}"
+- Botones: "Aprobar y Publicar" + "Editar Borrador"
+- Mensaje: "Este post está guardado como borrador"
+
+**Después (Confirmación):**
+- Asunto: "✅ Post publicado: {título}"
+- Botón: "Ver post publicado"
+- Enlace secundario: "Editar en el panel de admin"
+- Mensaje: "Este post ya está publicado y visible en el blog"
+
+---
+
+### Estructura del Email de Confirmación
+
+```text
+┌─────────────────────────────────────────┐
+│             ACROXIA                      │
+│   ✅ Post publicado automáticamente     │
+├─────────────────────────────────────────┤
+│                                         │
+│  [Imagen destacada]                     │
+│                                         │
+│  Categoría: Legislación                 │
+│  Título del post publicado              │
+│  Extracto del contenido...              │
+│                                         │
+│  ┌─────────────────────────────────┐   │
+│  │     Ver post publicado          │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  Newsletter enviado a X suscriptores    │
+│                                         │
+│  [Editar en admin] (enlace secundario)  │
+│                                         │
+├─────────────────────────────────────────┤
+│  Si encuentras algún error, puedes      │
+│  editarlo desde el panel de admin.      │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### Secuencia de Operaciones
+
+```text
+1. Generar contenido con IA
+        ↓
+2. Generar imagen con IA
+        ↓
+3. Insertar en blog_posts con:
+   - status: "published"
+   - published_at: now()
+        ↓
+4. Crear scheduled_posts con:
+   - status: "auto_published"
+   - approved_at: now()
+        ↓
+5. Llamar send-blog-notification
+   → Envía newsletter a suscriptores
+        ↓
+6. Enviar email de confirmación
+   → Incluye enlace al post
+   → Incluye número de suscriptores notificados
+```
+
+---
+
+### Consideraciones Técnicas
+
+#### Tabla `scheduled_posts`
+- Mantenemos el registro para auditoría
+- Nuevo estado: `auto_published` (diferenciarlo de aprobación manual)
+- Registro de cuántos newsletters se enviaron
+
+#### Email de Confirmación
+- Incluir enlace directo al post: `https://acroxia.com/blog/{slug}`
+- Incluir estadísticas: "Newsletter enviado a X suscriptores"
+- Mantener opción de editar si hay errores
+
+#### Rollback (si lo necesitas)
+- Si en el futuro quieres volver a aprobación manual, bastará con cambiar `status: "published"` → `status: "draft"` y restaurar la lógica de aprobación
+
+---
+
+### Cambios en Funciones
+
+| Función | Modificación |
+|---------|--------------|
+| `schedule-daily-post/index.ts` | Publicar + confirmar + newsletter |
+| `schedule-daily-post-landlord/index.ts` | Publicar + confirmar + newsletter |
+| `approve-post/index.ts` | Sin cambios (para posts manuales) |
+| `send-blog-notification/index.ts` | Sin cambios |
 
 ---
 
 ### Resultado Esperado
 
-| Métrica | Antes | Después |
-|---------|-------|---------|
-| Páginas con canonical | ~17 | 27+ |
-| Páginas con og:image | ~5 | 27+ |
-| Páginas legales indexadas | 0 | 4 |
-| Página 404 optimizada | No | Sí |
-| llms.txt sincronizado | No | Sí |
-| hreflang en guías | 3 inquilinos | 8 (todas) |
-
----
-
-### Notas Técnicas
-
-- Las páginas de dashboard/admin ya tienen `noindex, nofollow` correctamente
-- El `robots.txt` ya bloquea rutas privadas
-- El sitemap dinámico ya incluye todas las guías SEO
-- Los schemas Article con `speakable` ya están en las guías principales
+- Los posts se publican automáticamente a las 09:00 (inquilinos) y 10:00 (propietarios)
+- Recibirás un email con el enlace al post ya publicado
+- La newsletter se envía automáticamente a los suscriptores correspondientes
+- Puedes revisar y editar el post a posteriori si es necesario
 
