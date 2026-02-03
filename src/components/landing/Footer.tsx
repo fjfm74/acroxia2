@@ -28,7 +28,7 @@ const Footer = ({ hideSubscription = false }: FooterProps) => {
           </FadeIn>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-12 mb-16">
           {/* Brand */}
           <div className="lg:col-span-2">
             <span className="font-serif text-2xl font-semibold text-foreground block mb-4">
@@ -85,15 +85,27 @@ const Footer = ({ hideSubscription = false }: FooterProps) => {
             </ul>
           </div>
 
-          {/* Recursos */}
+          {/* Guías para Inquilinos */}
           <div>
-            <h4 className="font-medium text-foreground mb-4">Recursos</h4>
+            <h4 className="font-medium text-foreground mb-4">Guías Inquilinos</h4>
             <ul className="space-y-3">
-              <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Preguntas frecuentes</Link></li>
-              <li><Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Blog</Link></li>
               <li><Link to="/clausulas-abusivas-alquiler" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cláusulas abusivas</Link></li>
               <li><Link to="/devolucion-fianza-alquiler" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Devolución de fianza</Link></li>
               <li><Link to="/subida-alquiler-2026" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Subida alquiler 2026</Link></li>
+              <li><Link to="/blog?audiencia=inquilino" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Blog Inquilinos →</Link></li>
+            </ul>
+          </div>
+
+          {/* Guías para Propietarios */}
+          <div>
+            <h4 className="font-medium text-foreground mb-4">Guías Propietarios</h4>
+            <ul className="space-y-3">
+              <li><Link to="/contrato-alquiler-propietarios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Contratos de alquiler</Link></li>
+              <li><Link to="/impago-alquiler-propietarios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Gestión de impagos</Link></li>
+              <li><Link to="/zonas-tensionadas-propietarios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Zonas tensionadas</Link></li>
+              <li><Link to="/deposito-fianza-propietarios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Depósito y fianza</Link></li>
+              <li><Link to="/fin-contrato-alquiler-propietarios" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Fin de contrato</Link></li>
+              <li><Link to="/blog?audiencia=propietario" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Blog Propietarios →</Link></li>
             </ul>
           </div>
 

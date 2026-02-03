@@ -3,6 +3,7 @@ import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
 import StatsSection from "@/components/landing/StatsSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import LatestArticlesSection from "@/components/landing/LatestArticlesSection";
 import Footer from "@/components/landing/Footer";
 import FadeIn from "@/components/animations/FadeIn";
 
@@ -179,6 +180,7 @@ const Index = () => {
           <HeroSection />
           <StatsSection />
           <HowItWorksSection />
+          <LatestArticlesSection />
         </main>
         <Footer />
       </div>
