@@ -17,7 +17,7 @@ const Blog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const audienceFromUrl = searchParams.get("audiencia") as Audience | null;
   
-  // null = no seleccionado aún, mostrará el selector
+  // null = no seleccionado aún, mostrará posts de ambas audiencias
   const [selectedAudience, setSelectedAudience] = useState<Audience | null>(
     audienceFromUrl && ["inquilino", "propietario"].includes(audienceFromUrl) 
       ? audienceFromUrl 
@@ -31,16 +31,15 @@ const Blog = () => {
     }
   }, [audienceFromUrl]);
 
-  const { data: posts = [], isLoading } = useQuery({
-    queryKey: ['blog-posts-public', selectedAudience],
+  // Query para posts filtrados por audiencia
+  const { data: filteredPosts = [], isLoading: isLoadingFiltered } = useQuery({
+    queryKey: ['blog-posts-filtered', selectedAudience],
     queryFn: async () => {
-      if (!selectedAudience) return [];
-      
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('status', 'published')
-        .eq('audience', selectedAudience)
+        .eq('audience', selectedAudience!)
         .order('published_at', { ascending: false });
 
       if (error) throw error;
@@ -49,7 +48,30 @@ const Blog = () => {
     enabled: !!selectedAudience,
   });
 
+  // Query para TODOS los posts recientes (para crawlers y vista por defecto)
+  const { data: recentPosts = [], isLoading: isLoadingRecent } = useQuery({
+    queryKey: ['blog-posts-all-recent'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !selectedAudience,
+  });
+
+  const posts = selectedAudience ? filteredPosts : recentPosts;
+  const isLoading = selectedAudience ? isLoadingFiltered : isLoadingRecent;
   const [featuredPost, ...otherPosts] = posts;
+
+  // Separar posts por audiencia para vista sin filtro
+  const inquilinoPosts = recentPosts.filter(p => p.audience === 'inquilino').slice(0, 3);
+  const propietarioPosts = recentPosts.filter(p => p.audience === 'propietario').slice(0, 3);
 
   const handleSelectAudience = (audience: Audience) => {
     setSelectedAudience(audience);
@@ -118,7 +140,7 @@ const Blog = () => {
             />
           )}
           
-          {/* Solo mostrar contenido si hay audiencia seleccionada */}
+          {/* Vista con audiencia seleccionada */}
           {selectedAudience && (
             <section className="py-8 bg-background">
               <div className="container mx-auto px-6">
@@ -193,6 +215,86 @@ const Blog = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </section>
+          )}
+
+          {/* Vista por defecto: Posts de AMBAS audiencias para crawlers */}
+          {!selectedAudience && (
+            <section className="py-12 bg-background">
+              <div className="container mx-auto px-6">
+                {isLoading ? (
+                  <div className="space-y-6">
+                    <Skeleton className="h-64 w-full rounded-2xl" />
+                    <Skeleton className="h-8 w-3/4" />
+                  </div>
+                ) : (
+                  <div className="space-y-16">
+                    {/* Artículos para Inquilinos */}
+                    {inquilinoPosts.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-8">
+                          <h2 className="font-serif text-2xl font-semibold text-foreground">
+                            Para Inquilinos
+                          </h2>
+                          <button
+                            onClick={() => handleSelectAudience('inquilino')}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            Ver todos →
+                          </button>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-6">
+                          {inquilinoPosts.map((post, index) => (
+                            <BlogCard
+                              key={post.slug}
+                              slug={post.slug}
+                              title={post.title}
+                              excerpt={post.excerpt}
+                              category={post.category}
+                              readTime={post.read_time}
+                              date={post.published_at ? new Date(post.published_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                              image={post.image || ''}
+                              index={index}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Artículos para Propietarios */}
+                    {propietarioPosts.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-8">
+                          <h2 className="font-serif text-2xl font-semibold text-foreground">
+                            Para Propietarios
+                          </h2>
+                          <button
+                            onClick={() => handleSelectAudience('propietario')}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            Ver todos →
+                          </button>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-6">
+                          {propietarioPosts.map((post, index) => (
+                            <BlogCard
+                              key={post.slug}
+                              slug={post.slug}
+                              title={post.title}
+                              excerpt={post.excerpt}
+                              category={post.category}
+                              readTime={post.read_time}
+                              date={post.published_at ? new Date(post.published_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                              image={post.image || ''}
+                              index={index}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </section>
           )}

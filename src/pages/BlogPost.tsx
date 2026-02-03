@@ -37,19 +37,39 @@ const BlogPost = () => {
   });
 
   const { data: relatedPosts = [] } = useQuery({
-    queryKey: ['related-posts', post?.category, slug],
+    queryKey: ['related-posts', post?.audience, post?.category, slug],
     queryFn: async () => {
+      // Filtrar por misma audiencia y categoría para coherencia SEO
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('status', 'published')
+        .eq('audience', post!.audience)
+        .eq('category', post!.category)
         .neq('slug', slug!)
+        .order('published_at', { ascending: false })
         .limit(2);
 
       if (error) throw error;
+      
+      // Si no hay suficientes posts de la misma categoría, buscar de la misma audiencia
+      if (data.length < 2) {
+        const { data: fallbackData } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('status', 'published')
+          .eq('audience', post!.audience)
+          .neq('slug', slug!)
+          .neq('category', post!.category)
+          .order('published_at', { ascending: false })
+          .limit(2 - data.length);
+        
+        return [...data, ...(fallbackData || [])];
+      }
+      
       return data;
     },
-    enabled: !!slug,
+    enabled: !!post?.audience && !!post?.category,
   });
 
   if (isLoading) {
@@ -311,7 +331,7 @@ const BlogPost = () => {
                         variant="secondary" 
                         className="rounded-full bg-background text-foreground hover:bg-background/90"
                       >
-                        <Link to="/">
+                        <Link to="/analizar-gratis">
                           Analizar mi contrato gratis
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Link>
