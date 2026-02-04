@@ -409,29 +409,38 @@ PRIORIZA la categoría "${leastUsedCategory}" que tiene menos contenido.
 
 FORMATOS DE TÍTULO SUGERIDOS: ${TITLE_FORMATS.join(' | ')}
 
-ESTILO DE TÍTULOS (OBLIGATORIO):
-- Usa SOLO mayúscula inicial (sentence case): "Cómo redactar un contrato seguro en 2026"
-- NO uses title case: "Cómo Redactar Un Contrato Seguro" ❌
+TÍTULO (OBLIGATORIO - CRÍTICO):
+- MÁXIMO 55 CARACTERES (Google trunca títulos largos en SERPs)
+- Usa SOLO mayúscula inicial (sentence case)
+- NO uses title case
 - Evita tono alarmista o clickbait
-- Prefiere tono informativo y profesional
-- Longitud ideal: 40-60 caracteres
 
-Ejemplos correctos:
-- "Cómo proteger tu contrato ante impagos"
-- "Qué dice la LAU sobre la fianza obligatoria"
-- "5 cláusulas imprescindibles en tu contrato de alquiler"
+Ejemplos correctos (dentro del límite):
+- "Cómo proteger tu contrato ante impagos" (39 chars) ✓
+- "5 cláusulas imprescindibles en contratos" (41 chars) ✓
+- "Qué dice la LAU sobre la fianza" (31 chars) ✓
 
-Ejemplos incorrectos:
-- "¿Pueden Los Inquilinos Dejar De Pagar?" ❌
-- "El Truco Para Echar A Un Moroso Rápido" ❌
+Ejemplos incorrectos (demasiado largos):
+- "Guía completa sobre cómo proteger tu contrato de alquiler ante inquilinos morosos" ❌
 ${existingTopicsContext}
+
+FAQs (OBLIGATORIO):
+- Incluye 3-5 preguntas frecuentes relacionadas con el tema
+- Las preguntas deben ser en primera persona: "¿Puedo...?", "¿Qué hago si...?", "¿Cuánto tiempo...?"
+- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
+- Deben ser preguntas que alguien haría a Google o a un asistente de IA
 
 Responde SOLO con un JSON válido:
 {
-  "title": "título informativo en sentence case",
-  "excerpt": "resumen de 2-3 frases del artículo",
+  "title": "título informativo en sentence case (máx 55 chars)",
+  "excerpt": "resumen de 2-3 frases del artículo (máx 160 chars)",
   "category": "una de las categorías válidas",
-  "content": "contenido completo en Markdown"
+  "content": "contenido completo en Markdown",
+  "faqs": [
+    {"question": "¿Pregunta frecuente 1?", "answer": "Respuesta concisa"},
+    {"question": "¿Pregunta frecuente 2?", "answer": "Respuesta concisa"},
+    {"question": "¿Pregunta frecuente 3?", "answer": "Respuesta concisa"}
+  ]
 }`;
 
   const userPrompt = `Genera un artículo de blog NUEVO y ÚNICO para PROPIETARIOS de viviendas en alquiler en España.
