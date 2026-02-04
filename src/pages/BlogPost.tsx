@@ -13,6 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import FadeIn from "@/components/animations/FadeIn";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+interface FAQ {
+  question: string;
+  answer: string;
+}
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -121,6 +132,11 @@ const BlogPost = () => {
     ? new Date(post.published_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     : '';
 
+  // Parse FAQs from post data
+  const faqs: FAQ[] = Array.isArray(post.faqs) 
+    ? (post.faqs as any[]).filter((faq: any) => faq?.question && faq?.answer)
+    : [];
+
   // Article schema with E-E-A-T author data
   const articleSchema = {
     "@context": "https://schema.org",
@@ -153,6 +169,20 @@ const BlogPost = () => {
     }
   };
 
+  // FAQ schema for AI Overviews and Featured Snippets
+  const faqSchema = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  } : null;
+
   // Determinar audiencia para breadcrumbs
   const audienceLabel = post.audience === "propietario" ? "Propietarios" : "Inquilinos";
   const audienceUrl = `/blog?audiencia=${post.audience || "inquilino"}`;
@@ -168,6 +198,11 @@ const BlogPost = () => {
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
+        {faqSchema && (
+          <script type="application/ld+json">
+            {JSON.stringify(faqSchema)}
+          </script>
+        )}
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -300,6 +335,29 @@ const BlogPost = () => {
                       </ReactMarkdown>
                     </div>
                   </FadeIn>
+
+                  {/* FAQ Section with Schema */}
+                  {faqs.length > 0 && (
+                    <FadeIn delay={0.45}>
+                      <div className="mt-12 bg-muted/50 rounded-2xl p-8">
+                        <h2 className="font-serif text-2xl font-semibold text-foreground mb-6">
+                          Preguntas frecuentes
+                        </h2>
+                        <Accordion type="single" collapsible className="w-full">
+                          {faqs.map((faq, index) => (
+                            <AccordionItem key={index} value={`faq-${index}`} className="border-border">
+                              <AccordionTrigger className="text-left text-foreground hover:text-foreground/80">
+                                {faq.question}
+                              </AccordionTrigger>
+                              <AccordionContent className="text-muted-foreground">
+                                {faq.answer}
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
+                    </FadeIn>
+                  )}
 
                   {/* Author Box */}
                   {post.author && <AuthorBox author={post.author} />}

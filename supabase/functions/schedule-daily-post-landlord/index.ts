@@ -53,11 +53,17 @@ function sanitizeJsonString(rawContent: string): string {
 }
 
 // Parse AI response with multiple fallback strategies
+interface FAQ {
+  question: string;
+  answer: string;
+}
+
 interface PostData {
   title: string;
   excerpt: string;
   category: string;
   content: string;
+  faqs: FAQ[];
 }
 
 function parseAiResponse(content: string, fallbackCategory: string): PostData {
@@ -67,11 +73,26 @@ function parseAiResponse(content: string, fallbackCategory: string): PostData {
     if (sanitized) {
       const parsed = JSON.parse(sanitized);
       if (parsed.title && parsed.content) {
+        // Truncate title to 60 chars if needed
+        const title = parsed.title.length > 60 
+          ? parsed.title.substring(0, 57) + '...' 
+          : parsed.title;
+        
+        // Extract and validate FAQs
+        const faqs: FAQ[] = (parsed.faqs || [])
+          .filter((faq: any) => faq?.question && faq?.answer)
+          .slice(0, 5)
+          .map((faq: any) => ({
+            question: String(faq.question).substring(0, 200),
+            answer: String(faq.answer).substring(0, 500),
+          }));
+        
         return {
-          title: parsed.title,
+          title,
           excerpt: parsed.excerpt || parsed.title,
           category: parsed.category || fallbackCategory,
           content: parsed.content,
+          faqs,
         };
       }
     }
@@ -91,11 +112,17 @@ function parseAiResponse(content: string, fallbackCategory: string): PostData {
     throw new Error('Could not extract title from AI response');
   }
   
+  // Truncate title to 60 chars
+  const title = titleMatch[1].length > 60 
+    ? titleMatch[1].substring(0, 57) + '...' 
+    : titleMatch[1];
+  
   return {
-    title: titleMatch[1],
+    title,
     excerpt: excerptMatch?.[1] || titleMatch[1],
     category: categoryMatch?.[1] || fallbackCategory,
     content: contentMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') || '',
+    faqs: [], // Regex fallback doesn't extract FAQs
   };
 }
 
@@ -557,6 +584,7 @@ serve(async (req) => {
         meta_description: postData.excerpt?.substring(0, 160) || postData.title,
         audience: 'propietario',
         image: imageUrl,
+        faqs: postData.faqs || [],
       })
       .select()
       .single();

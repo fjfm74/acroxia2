@@ -148,6 +148,7 @@ export type Database = {
           content: string
           created_at: string
           excerpt: string
+          faqs: Json | null
           id: string
           image: string | null
           keywords: string[] | null
@@ -167,6 +168,7 @@ export type Database = {
           content: string
           created_at?: string
           excerpt: string
+          faqs?: Json | null
           id?: string
           image?: string | null
           keywords?: string[] | null
@@ -186,6 +188,7 @@ export type Database = {
           content?: string
           created_at?: string
           excerpt?: string
+          faqs?: Json | null
           id?: string
           image?: string | null
           keywords?: string[] | null
