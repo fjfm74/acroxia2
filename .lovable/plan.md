@@ -1,215 +1,270 @@
 
 
-## Plan: Auditoría SEO/AEO/AI Overviews - Diagnóstico y Optimizaciones
+## Plan: FAQs con Schema FAQPage en Blog + Títulos Optimizados para SERP
 
-### Resumen Ejecutivo
+### Resumen
 
-Tras analizar el código, la estructura del sitio, el sitemap, los archivos LLM y el contenido del blog, he identificado **múltiples problemas críticos** que explican por qué el tráfico no está llegando a pesar de tener 50 posts publicados y 8 guías SEO.
+Implementar dos optimizaciones críticas para SEO y AEO:
+1. **FAQs en cada post del blog**: Generar automáticamente 3-5 preguntas frecuentes con schema FAQPage para capturar AI Overviews y Featured Snippets
+2. **Títulos más cortos**: Limitar los títulos generados a máximo 55-60 caracteres para evitar truncamiento en SERPs
 
 ---
 
-## Problemas Detectados
+## Cambios a Realizar
 
-### 1. CRÍTICO: Blog sin URLs Indexables por Defecto
+### 1. Modificar la Generación de Posts para Incluir FAQs
 
-**Problema**: La página `/blog` muestra un selector de audiencia que requiere interacción del usuario antes de mostrar cualquier contenido. Los crawlers de Google ven una página vacía.
+#### Archivos afectados:
+- `supabase/functions/generate-blog-post/index.ts`
+- `supabase/functions/schedule-daily-post/index.ts`
+- `supabase/functions/schedule-daily-post-landlord/index.ts`
+
+#### Cambios en el prompt del sistema:
+
+**Antes (formato JSON de respuesta):**
+```json
+{
+  "title": "título",
+  "excerpt": "resumen",
+  "content": "contenido",
+  "category": "categoría"
+}
+```
+
+**Después (formato JSON ampliado):**
+```json
+{
+  "title": "título (máx 55 caracteres)",
+  "excerpt": "resumen (máx 160 caracteres)",
+  "content": "contenido Markdown",
+  "category": "categoría",
+  "faqs": [
+    {
+      "question": "Pregunta frecuente 1",
+      "answer": "Respuesta concisa (2-3 frases)"
+    },
+    {
+      "question": "Pregunta frecuente 2",
+      "answer": "Respuesta concisa"
+    }
+  ]
+}
+```
+
+#### Instrucciones adicionales en el prompt:
+```text
+REGLAS DE TÍTULOS (OBLIGATORIO):
+- Longitud máxima: 55 caracteres
+- Si excede, acorta sin perder el significado
+
+FAQs (OBLIGATORIO):
+- Incluye 3-5 preguntas frecuentes relacionadas con el tema
+- Las preguntas deben ser en primera persona ("¿Puedo...?", "¿Qué hago si...?")
+- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
+- Deben ser preguntas que alguien haría a Google o a un asistente de IA
+```
+
+---
+
+### 2. Modificar la Base de Datos
+
+#### Nueva columna en `blog_posts`:
+```sql
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS faqs JSONB DEFAULT '[]'::jsonb;
+```
+
+Esta columna almacenará las FAQs en formato:
+```json
+[
+  {"question": "...", "answer": "..."},
+  {"question": "...", "answer": "..."}
+]
+```
+
+---
+
+### 3. Modificar BlogPost.tsx para Mostrar FAQs con Schema
+
+#### Ubicación en el artículo:
+```text
+[Contenido del artículo]
+        ↓
+[Sección FAQ con Accordion]
+        ↓
+[Disclaimer legal]
+        ↓
+[CTA "Analizar contrato"]
+```
+
+#### Componente visual:
+```jsx
+{/* Sección FAQ */}
+{post.faqs && post.faqs.length > 0 && (
+  <div className="mt-12 bg-muted/50 rounded-2xl p-8">
+    <h2 className="font-serif text-2xl font-semibold mb-6">
+      Preguntas frecuentes
+    </h2>
+    <Accordion type="single" collapsible>
+      {post.faqs.map((faq, index) => (
+        <AccordionItem key={index} value={`faq-${index}`}>
+          <AccordionTrigger>{faq.question}</AccordionTrigger>
+          <AccordionContent>{faq.answer}</AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  </div>
+)}
+```
+
+#### Schema JSON-LD adicional:
+```jsx
+const faqSchema = post.faqs && post.faqs.length > 0 ? {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": post.faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
+    }
+  }))
+} : null;
+
+// En <Helmet>:
+{faqSchema && (
+  <script type="application/ld+json">
+    {JSON.stringify(faqSchema)}
+  </script>
+)}
+```
+
+---
+
+### 4. Actualizar las Funciones de Generación
+
+#### `schedule-daily-post/index.ts` y `schedule-daily-post-landlord/index.ts`:
+
+**Cambios en el parsing:**
+```typescript
+interface PostData {
+  title: string;
+  excerpt: string;
+  category: string;
+  content: string;
+  faqs?: Array<{ question: string; answer: string }>;
+}
+
+function parseAiResponse(content: string, fallbackCategory: string): PostData {
+  // ... parsing existente ...
+  
+  // Extraer FAQs del JSON
+  const faqs = parsed.faqs || [];
+  
+  return {
+    title: parsed.title.substring(0, 60), // Truncar si excede
+    excerpt: parsed.excerpt,
+    category: parsed.category,
+    content: parsed.content,
+    faqs: faqs.slice(0, 5), // Máximo 5 FAQs
+  };
+}
+```
+
+**Cambios en el insert:**
+```typescript
+const { data: blogPost, error: insertError } = await supabase
+  .from("blog_posts")
+  .insert({
+    title: post.title,
+    slug: slug,
+    content: post.content,
+    excerpt: post.excerpt,
+    category: post.category,
+    image: imageUrl,
+    status: "published",
+    published_at: new Date().toISOString(),
+    audience: "inquilino",
+    read_time: `${Math.ceil(post.content.split(/\s+/).length / 200)} min`,
+    faqs: post.faqs || [],  // ← Nueva línea
+  })
+  .select()
+  .single();
+```
+
+---
+
+### 5. Actualizar el Prompt de Títulos
+
+**Cambios en las instrucciones de título:**
 
 ```text
-┌─────────────────────────────────────────┐
-│  Googlebot visita /blog                 │
-│  ↓                                      │
-│  Ve: "Selecciona tu perfil"             │
-│  (sin artículos, sin enlaces)           │
-│  ↓                                      │
-│  No indexa ningún post                  │
-└─────────────────────────────────────────┘
-```
-
-**Archivo afectado**: `src/pages/Blog.tsx` líneas 36-50
-- La query solo se ejecuta si `selectedAudience` está definido
-- Los bots no hacen clic, por lo que nunca ven contenido
-
-**Impacto**: Los 50 posts del blog NO son descubribles por Google desde `/blog`.
-
----
-
-### 2. CRÍTICO: Posts del Blog no están en el Sitemap
-
-**Problema**: El sitemap dinámico genera URLs de posts pero la caché puede estar vacía o desactualizada. Además, la función `regenerate-sitemap` puede no estar ejecutándose automáticamente.
-
-**Verificación**: El sitemap devuelve posts (confirmado), pero si la caché falla, el fallback dinámico podría tardar en actualizarse.
-
----
-
-### 3. CRÍTICO: CTAs del Blog apuntan a "/" en lugar de "/analizar-gratis"
-
-**Problema**: En `BlogPost.tsx` línea 314, el CTA "Analizar mi contrato gratis" enlaza a `/` (home) en lugar de `/analizar-gratis`.
-
-```tsx
-<Link to="/">
-  Analizar mi contrato gratis
-</Link>
-```
-
-**Impacto**: Los usuarios que leen el blog y quieren analizar su contrato llegan al home en lugar de la página de conversión directa.
-
----
-
-### 4. IMPORTANTE: Artículos Relacionados sin Filtro por Audiencia
-
-**Problema**: En `BlogPost.tsx` líneas 40-52, la query de posts relacionados NO filtra por audiencia ni categoría:
-
-```tsx
-const { data: relatedPosts = [] } = useQuery({
-  queryFn: async () => {
-    const { data } = await supabase
-      .from('blog_posts')
-      .eq('status', 'published')
-      .neq('slug', slug!)
-      .limit(2); // Sin filtro de audiencia ni categoría
-```
-
-**Impacto**: Un inquilino leyendo sobre fianzas puede ver artículos para propietarios, rompiendo la coherencia temática y la señal de autoridad tópica para Google.
-
----
-
-### 5. IMPORTANTE: Falta de Internal Linking desde Home hacia Blog
-
-**Problema**: La página principal (Index.tsx) no tiene ningún enlace visible al blog ni a las guías SEO. Las secciones HeroSection, StatsSection y HowItWorksSection no mencionan el contenido educativo.
-
-**Impacto**: El "link juice" de la home no fluye hacia el contenido del blog, debilitando su autoridad SEO.
-
----
-
-### 6. MODERADO: Títulos de Posts muy Largos para SERP
-
-**Problema**: Los títulos de blog generados por IA son demasiado largos:
-- "La comunicación de preaviso para finalizar el contrato: plazos y formas en 2026" (78 chars)
-- "La inscripción obligatoria de los contratos de alquiler en los registros autonómicos en 2026" (91 chars)
-
-**Límite recomendado**: 55-60 caracteres para evitar truncamiento en SERPs.
-
----
-
-### 7. MODERADO: Solo 1 Suscriptor Confirmado al Newsletter
-
-**Dato**: La tabla `blog_subscribers` tiene solo 1 suscriptor confirmado.
-
-**Impacto**: El sistema de newsletter está configurado pero sin audiencia. Los posts se publican pero nadie los recibe.
-
----
-
-### 8. MODERADO: Chat Assistant Limitado a Rutas Específicas
-
-**Problema**: En `ChatContainer.tsx`, el chat solo aparece en rutas hardcodeadas. Los posts del blog (`/blog/:slug`) están cubiertos, pero nuevas rutas podrían quedar excluidas.
-
----
-
-### 9. TÉCNICO: Blog sin Pre-renderizado para Crawlers
-
-**Problema**: Al ser una SPA, los crawlers que no ejecutan JavaScript (algunos bots de IA, DinoRank, etc.) no ven el contenido del blog.
-
----
-
-### 10. TÉCNICO: Falta BreadcrumbSchema con URL en Último Nivel
-
-**Verificado**: El componente Breadcrumbs genera esquema correcto. No hay problema aquí.
-
----
-
-## Plan de Corrección
-
-### Fase 1: Correcciones Críticas (Impacto Inmediato)
-
-#### 1.1 Hacer el Blog Indexable sin Interacción
-
-**Cambio**: Modificar `Blog.tsx` para mostrar una selección de posts recientes de AMBAS audiencias cuando no hay filtro, permitiendo que Googlebot descubra todos los posts.
-
-```text
-Estado actual:      → sin audiencia = página vacía
-Estado propuesto:   → sin audiencia = muestra 6 posts recientes (3 inquilino + 3 propietario)
-```
-
-#### 1.2 Corregir CTA del Blog a /analizar-gratis
-
-**Archivo**: `BlogPost.tsx` línea 314
-```tsx
-// Antes
-<Link to="/">
-// Después
-<Link to="/analizar-gratis">
-```
-
-#### 1.3 Filtrar Posts Relacionados por Audiencia
-
-**Archivo**: `BlogPost.tsx` líneas 40-52
-```tsx
-// Añadir filtro
-.eq('audience', post.audience)
-.eq('category', post.category)
+TÍTULO (OBLIGATORIO):
+- Máximo 55 caracteres (Google trunca a partir de ~60)
+- Usa sentence case (solo primera letra mayúscula)
+- Evita "Guía completa de..." - prefiere formatos concisos
+- Ejemplos correctos:
+  - "Cómo reclamar tu fianza paso a paso" (38 chars) ✓
+  - "5 cláusulas abusivas en contratos" (34 chars) ✓
+  - "Qué hacer si el casero no repara" (33 chars) ✓
+- Ejemplos incorrectos (demasiado largos):
+  - "La guía completa sobre cómo reclamar la fianza cuando el casero se niega a devolverla" (87 chars) ✗
 ```
 
 ---
 
-### Fase 2: Mejoras de Linking Interno
-
-#### 2.1 Añadir Sección "Últimos Artículos" en Home
-
-Crear una nueva sección en `Index.tsx` después de HowItWorksSection que muestre 4-6 posts recientes con enlaces al blog.
-
-#### 2.2 Añadir Enlaces a Guías SEO en Footer
-
-Incluir links a las 8 guías SEO principales en el footer para distribuir link equity.
-
----
-
-### Fase 3: Optimizaciones AEO/AI Overviews
-
-#### 3.1 Añadir Sección FAQ en Posts del Blog
-
-Cada post debería tener un bloque de FAQs al final con schema FAQPage para capturar AI Overviews.
-
-#### 3.2 Actualizar llms-full.txt con URLs Dinámicas
-
-El archivo estático no se actualiza con nuevos posts. Asegurar que la Edge Function `/llms-full` incluya los últimos 20 posts.
-
----
-
-### Fase 4: Pre-renderizado para Crawlers
-
-#### 4.1 Implementar Detección de Bot y SSR Condicional
-
-Configurar una Edge Function que detecte User-Agents de bots y sirva HTML pre-renderizado.
-
----
-
-## Métricas Objetivo Post-Implementación
-
-| Métrica | Actual | Objetivo (30 días) |
-|---------|--------|-------------------|
-| Posts indexados en GSC | ~0 | 50+ |
-| Impresiones en Search | ~0 | 500+ |
-| CTR en guías SEO | N/A | >2% |
-| Suscriptores newsletter | 1 | 50+ |
-
----
-
-## Archivos a Modificar
+## Resumen de Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/pages/Blog.tsx` | Mostrar posts sin selección de audiencia |
-| `src/pages/BlogPost.tsx` | CTA → /analizar-gratis, posts relacionados por audiencia |
-| `src/pages/Index.tsx` | Nueva sección "Últimos Artículos" |
-| `src/components/landing/Footer.tsx` | Enlaces a guías SEO |
-| `supabase/functions/schedule-daily-post/index.ts` | Títulos más cortos |
+| **Migración SQL** | Nueva columna `faqs JSONB` en `blog_posts` |
+| `supabase/functions/schedule-daily-post/index.ts` | Añadir FAQs al prompt y parsing, limitar títulos a 55 chars |
+| `supabase/functions/schedule-daily-post-landlord/index.ts` | Añadir FAQs al prompt y parsing, limitar títulos a 55 chars |
+| `supabase/functions/generate-blog-post/index.ts` | Añadir FAQs al prompt y respuesta |
+| `src/pages/BlogPost.tsx` | Renderizar FAQs con Accordion + Schema FAQPage |
 
 ---
 
-## Prioridad de Implementación
+## Impacto SEO/AEO Esperado
 
-1. **Urgente** (hoy): Corrección 1.1 + 1.2 + 1.3 → El blog debe ser indexable
-2. **Alta** (esta semana): Fase 2 → Linking interno
-3. **Media** (próxima semana): Fase 3 → AEO optimizations
-4. **Baja** (mes): Fase 4 → Pre-rendering
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| Títulos truncados en SERP | ~60% | ~5% |
+| Featured Snippets potenciales | 0 | 100% de posts |
+| AI Overviews eligibles | Bajo | Alto |
+| Schema FAQPage | Solo en guías SEO | Todos los posts |
+
+---
+
+## Secuencia de Implementación
+
+```text
+1. Crear migración SQL (nueva columna faqs)
+        ↓
+2. Modificar schedule-daily-post/index.ts
+   - Actualizar prompt con límite de título
+   - Añadir FAQs al formato JSON
+   - Parsear y guardar FAQs
+        ↓
+3. Modificar schedule-daily-post-landlord/index.ts
+   - Mismos cambios
+        ↓
+4. Modificar generate-blog-post/index.ts
+   - Añadir FAQs al formato de respuesta
+        ↓
+5. Modificar BlogPost.tsx
+   - Renderizar sección FAQ con Accordion
+   - Añadir schema FAQPage al <Helmet>
+        ↓
+6. Desplegar Edge Functions
+```
+
+---
+
+## Notas Técnicas
+
+- Los posts existentes tendrán `faqs: []` (array vacío) y no mostrarán la sección FAQ
+- El schema FAQPage solo se genera si hay al menos 1 FAQ
+- El límite de 55 caracteres se aplica en el parsing como fallback, pero el prompt instruye a la IA a respetar el límite
+- Se usa el mismo patrón de Accordion que ya existe en las guías SEO (e.g., ClausulasAbusivas.tsx)
 
