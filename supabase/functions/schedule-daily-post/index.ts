@@ -203,29 +203,38 @@ ${existingContext}
 
 FORMATOS DE TÍTULO SUGERIDOS: ${TITLE_FORMATS.join(' | ')}
 
-ESTILO DE TÍTULOS (OBLIGATORIO):
-- Usa SOLO mayúscula inicial (sentence case): "Cómo reclamar tu fianza en 2026"
-- NO uses title case: "Cómo Reclamar Tu Fianza en 2026" ❌
-- Evita tono alarmista o clickbait: "El truco secreto..." ❌
-- Prefiere tono informativo y profesional
+TÍTULO (OBLIGATORIO - CRÍTICO):
+- MÁXIMO 55 CARACTERES (Google trunca títulos largos en SERPs)
+- Usa SOLO mayúscula inicial (sentence case)
+- NO uses title case
+- Evita tono alarmista o clickbait
 - NO abuses de signos de interrogación
-- Longitud ideal: 40-60 caracteres
 
-Ejemplos correctos:
-- "Cómo reclamar tu fianza paso a paso"
-- "Qué dice la LAU sobre las subidas de renta"
-- "5 aspectos clave del contrato de alquiler"
+Ejemplos correctos (dentro del límite):
+- "Cómo reclamar tu fianza paso a paso" (38 chars) ✓
+- "5 cláusulas abusivas en contratos" (34 chars) ✓
+- "Qué hacer si el casero no repara" (33 chars) ✓
 
-Ejemplos incorrectos:
-- "¿Puede el Casero Retener Parte de tu Fianza?" ❌
-- "El Truco Legal Para Recuperar Tu Dinero" ❌
+Ejemplos incorrectos (demasiado largos):
+- "La guía completa sobre cómo reclamar la fianza cuando el casero se niega" ❌
+
+FAQs (OBLIGATORIO):
+- Incluye 3-5 preguntas frecuentes relacionadas con el tema
+- Las preguntas deben ser en primera persona: "¿Puedo...?", "¿Qué hago si...?", "¿Cuánto tiempo...?"
+- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
+- Deben ser preguntas que alguien haría a Google o a un asistente de IA
 
 Responde SOLO con un JSON válido:
 {
-  "title": "título informativo en sentence case",
-  "excerpt": "resumen de 2-3 frases del artículo",
+  "title": "título informativo en sentence case (máx 55 chars)",
+  "excerpt": "resumen de 2-3 frases del artículo (máx 160 chars)",
   "category": "una de las categorías válidas",
-  "content": "contenido completo en Markdown"
+  "content": "contenido completo en Markdown",
+  "faqs": [
+    {"question": "¿Pregunta frecuente 1?", "answer": "Respuesta concisa"},
+    {"question": "¿Pregunta frecuente 2?", "answer": "Respuesta concisa"},
+    {"question": "¿Pregunta frecuente 3?", "answer": "Respuesta concisa"}
+  ]
 }`;
 
   const userPrompt = `Escribe un artículo ORIGINAL sobre un tema actual y relevante del sector inmobiliario español de alquiler.

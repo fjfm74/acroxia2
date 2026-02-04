@@ -266,36 +266,44 @@ VARIEDAD EN TÍTULOS (OBLIGATORIO):
 NO uses siempre "Guía sobre..." o "Guía completa de...". Alterna entre estos formatos:
 ${TITLE_FORMATS.map(f => `- ${f}`).join('\n')}
 
-ESTILO DE TÍTULOS (OBLIGATORIO):
-- Usa SOLO mayúscula inicial (sentence case): "Cómo reclamar tu fianza en 2026"
-- NO uses title case: "Cómo Reclamar Tu Fianza en 2026" ❌
-- Evita tono alarmista o clickbait: "El truco secreto..." ❌
-- Prefiere tono informativo y profesional
+TÍTULO (OBLIGATORIO - CRÍTICO):
+- MÁXIMO 55 CARACTERES (Google trunca títulos largos en SERPs)
+- Usa SOLO mayúscula inicial (sentence case)
+- NO uses title case
+- Evita tono alarmista o clickbait
 - NO abuses de signos de interrogación
-- Longitud ideal: 40-60 caracteres
 
-Ejemplos correctos:
-- "Cómo reclamar tu fianza paso a paso"
-- "Qué dice la LAU sobre las subidas de renta"
-- "5 aspectos clave del contrato de alquiler"
-- "Tus derechos cuando el casero no repara"
+Ejemplos correctos (dentro del límite):
+- "Cómo reclamar tu fianza paso a paso" (38 chars) ✓
+- "5 cláusulas abusivas en contratos" (34 chars) ✓
+- "Qué dice la LAU sobre subidas de renta" (39 chars) ✓
 
-Ejemplos incorrectos:
-- "¿Puede el Casero Retener Parte de tu Fianza?" ❌
-- "El Truco Legal Para Recuperar Tu Dinero" ❌
-- "Lo Que Tu Casero No Quiere Que Sepas" ❌
+Ejemplos incorrectos (demasiado largos):
+- "¿Puede el Casero Retener Parte de tu Fianza Si Hay Daños?" ❌
+- "La guía completa sobre cómo reclamar tu fianza paso a paso" ❌
 ${existingPostsContext}
 ${categoryGuidance}
 
+FAQs (OBLIGATORIO):
+- Incluye 3-5 preguntas frecuentes relacionadas con el tema
+- Las preguntas deben ser en primera persona: "¿Puedo...?", "¿Qué hago si...?", "¿Cuánto tiempo...?"
+- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
+- Deben ser preguntas que alguien haría a Google o a un asistente de IA
+
 Formato de respuesta OBLIGATORIO (JSON válido):
 {
-  "title": "Título informativo en sentence case (máximo 60 caracteres)",
+  "title": "Título informativo en sentence case (máximo 55 caracteres)",
   "excerpt": "Resumen corto del artículo en 2-3 frases (máximo 160 caracteres)",
   "content": "Contenido completo en formato Markdown. Usa ## para subtítulos, listas con -, y **negrita** para énfasis. Mínimo 800 palabras.",
   "category": "Una de: ${ALL_CATEGORIES.join(', ')}",
   "read_time": "X min (estimación de lectura)",
   "meta_description": "Descripción SEO del artículo (máximo 160 caracteres)",
-  "keywords": ["array", "de", "palabras", "clave", "SEO"]
+  "keywords": ["array", "de", "palabras", "clave", "SEO"],
+  "faqs": [
+    {"question": "¿Pregunta frecuente 1?", "answer": "Respuesta concisa"},
+    {"question": "¿Pregunta frecuente 2?", "answer": "Respuesta concisa"},
+    {"question": "¿Pregunta frecuente 3?", "answer": "Respuesta concisa"}
+  ]
 }`;
 
     let userPrompt: string;
