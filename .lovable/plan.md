@@ -1,270 +1,332 @@
 
 
-## Plan: FAQs con Schema FAQPage en Blog + Títulos Optimizados para SERP
+# Auditoría SEO/AEO/AI Overviews - Consultor Senior IA
 
-### Resumen
+## Resumen Ejecutivo
 
-Implementar dos optimizaciones críticas para SEO y AEO:
-1. **FAQs en cada post del blog**: Generar automáticamente 3-5 preguntas frecuentes con schema FAQPage para capturar AI Overviews y Featured Snippets
-2. **Títulos más cortos**: Limitar los títulos generados a máximo 55-60 caracteres para evitar truncamiento en SERPs
+Tras analizar en profundidad el portal ACROXIA, he identificado **15 problemas críticos** y **23 oportunidades de optimización** que explican la falta de tráfico orgánico a pesar de tener 54 posts publicados y 8 guías SEO pilares. El análisis cubre SEO técnico, Core Web Vitals, estructuración de datos, optimización para AI Overviews (GEO) y estrategia de contenido.
 
 ---
 
-## Cambios a Realizar
+## PARTE 1: DIAGNÓSTICO CRÍTICO
 
-### 1. Modificar la Generación de Posts para Incluir FAQs
+### 1.1 Problemas de Datos Estructurados (Schema.org)
 
-#### Archivos afectados:
-- `supabase/functions/generate-blog-post/index.ts`
-- `supabase/functions/schedule-daily-post/index.ts`
-- `supabase/functions/schedule-daily-post-landlord/index.ts`
+| Problema | Impacto | Archivo |
+|----------|---------|---------|
+| **FAQs vacías en 96% de posts** | Solo 2 de 54 posts tienen FAQs. Sin schema FAQPage = 0 Featured Snippets | `blog_posts.faqs` |
+| **Títulos excesivamente largos** | Media de **76 caracteres** (límite óptimo: 55). Google trunca el 80%+ de títulos | Edge Functions |
+| **AggregateRating falso** | `ratingCount: 150` sin sistema de reseñas real = penalización potencial por spam | `Index.tsx` líneas 87-91 |
+| **Logo URL incorrecta** | `https://acroxia.com/logo.png` no existe (debería ser `/acroxia-logo.png`) | `BlogPost.tsx` línea 166 |
+| **Speakable sin contenido** | El selector `.speakable-summary` no existe en la Home | `Index.tsx` howToSchema |
 
-#### Cambios en el prompt del sistema:
+### 1.2 Problemas de Core Web Vitals
 
-**Antes (formato JSON de respuesta):**
-```json
-{
-  "title": "título",
-  "excerpt": "resumen",
-  "content": "contenido",
-  "category": "categoría"
-}
-```
+| Métrica | Problema | Causa |
+|---------|----------|-------|
+| **LCP** | Framer Motion en Header carga ~40KB innecesarios | `Header.tsx` líneas 3, 67-70 |
+| **CLS** | Imágenes sin dimensiones explícitas en blog posts relacionados | `BlogPost.tsx` líneas 414-422 |
+| **TBT** | Mega-menús con AnimatePresence bloquean main thread | `Header.tsx` líneas 101-136 |
 
-**Después (formato JSON ampliado):**
-```json
-{
-  "title": "título (máx 55 caracteres)",
-  "excerpt": "resumen (máx 160 caracteres)",
-  "content": "contenido Markdown",
-  "category": "categoría",
-  "faqs": [
+### 1.3 Problemas de Indexabilidad
+
+| Problema | Detalle | Impacto |
+|----------|---------|---------|
+| **Canonical con query strings** | `/blog?audiencia=inquilino` genera duplicados | Dilución de autoridad |
+| **Imágenes sin alt text descriptivo** | Solo `alt={post.title}` - no describe el contenido visual | Pérdida de tráfico de imágenes |
+| **Hreflang inconsistente** | Blog posts no tienen `hreflang` pero las guías SEO sí | Señales mixtas a Google |
+| **SearchAction rota** | `urlTemplate` apunta a `/blog?q={query}` pero no existe funcionalidad de búsqueda | Schema inválido |
+
+### 1.4 Problemas de Contenido para IA (GEO)
+
+| Problema | Impacto |
+|----------|---------|
+| **llms.txt estático** | Los LLMs no ven los 54 posts publicados |
+| **Sin Entity Stacking** | No hay schema Person para autores con credenciales legales |
+| **Falta de datos de frescura** | Los posts no muestran `dateModified` visible |
+| **Sin `isPartOf` en artículos** | Google no entiende la jerarquía Blog → Post → Categoría |
+
+---
+
+## PARTE 2: OPORTUNIDADES DE ALTO IMPACTO
+
+### 2.1 Quick Wins (Implementación inmediata)
+
+1. **Regenerar FAQs para los 52 posts existentes**
+   - Ejecutar batch de actualización con IA para generar 3-5 FAQs por post
+   - Impacto: +100% de candidatos para Featured Snippets
+
+2. **Eliminar AggregateRating falso**
+   - Quitar el schema de rating sin un sistema real de reseñas
+   - Evita penalización manual de Google por structured data spam
+
+3. **Corregir logo URL en ArticleSchema**
+   ```
+   Antes: https://acroxia.com/logo.png
+   Después: https://acroxia.com/acroxia-logo.png
+   ```
+
+4. **Añadir .speakable-summary a la Home**
+   - El HowTo schema referencia un selector que no existe
+   - Añadir clase al párrafo descriptivo del Hero
+
+5. **Dimensiones explícitas en imágenes lazy**
+   - Añadir `width` y `height` a todas las imágenes de posts relacionados
+   - Mejora CLS en ~0.15
+
+### 2.2 Optimizaciones de Media Prioridad
+
+6. **Migrar animaciones del Header a CSS**
+   - Reemplazar Framer Motion por CSS animations como en HeroSection
+   - Ahorro de ~40KB de JS + mejora de TBT
+
+7. **Implementar dateModified visible**
+   - Mostrar "Actualizado: 5 feb 2026" en cada post y guía
+   - Señal de frescura para Google y LLMs
+
+8. **Canonical sin query strings en Blog**
+   - `/blog` siempre como canonical, no `/blog?audiencia=X`
+   - Evita dilución de PageRank
+
+9. **Hreflang en todos los posts del blog**
+   - Añadir `es-ES` y `x-default` consistentemente
+   - Alineación con las guías SEO
+
+10. **Eliminar SearchAction rota**
+    - Quitar el schema de búsqueda hasta implementar funcionalidad real
+    - Evita errores en Search Console
+
+### 2.3 Optimizaciones de Alta Prioridad (1-2 semanas)
+
+11. **Entity Stacking para E-E-A-T**
+    - Crear schema Person para cada autor en `authors` table
+    - Incluir `sameAs` (LinkedIn, Twitter), `jobTitle`, `knowsAbout: ["LAU", "Derecho Inmobiliario"]`
+    - Vincular con ArticleSchema.author
+
+12. **Implementar isPartOf y mainEntityOfPage**
+    ```json
     {
-      "question": "Pregunta frecuente 1",
-      "answer": "Respuesta concisa (2-3 frases)"
-    },
-    {
-      "question": "Pregunta frecuente 2",
-      "answer": "Respuesta concisa"
+      "@type": "Article",
+      "isPartOf": {
+        "@type": "Blog",
+        "name": "Blog ACROXIA",
+        "url": "https://acroxia.com/blog"
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://acroxia.com/blog/[slug]"
+      }
     }
-  ]
-}
-```
+    ```
 
-#### Instrucciones adicionales en el prompt:
-```text
-REGLAS DE TÍTULOS (OBLIGATORIO):
-- Longitud máxima: 55 caracteres
-- Si excede, acorta sin perder el significado
+13. **Optimizar títulos existentes**
+    - Script de migración para acortar títulos > 60 chars
+    - Ejemplos:
+      - Antes: "La comunicación de preaviso para finalizar el contrato: plazos y formas en 2026" (79 chars)
+      - Después: "Preaviso fin de contrato: plazos y formas 2026" (46 chars)
 
-FAQs (OBLIGATORIO):
-- Incluye 3-5 preguntas frecuentes relacionadas con el tema
-- Las preguntas deben ser en primera persona ("¿Puedo...?", "¿Qué hago si...?")
-- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
-- Deben ser preguntas que alguien haría a Google o a un asistente de IA
-```
+14. **Alt text enriquecido para imágenes**
+    - Generar alt text descriptivo con IA al crear imágenes
+    - Ejemplo: "Ilustración de contrato de alquiler con lupa identificando cláusulas abusivas"
 
----
+15. **Breadcrumbs con itemListElement completo**
+    - Asegurar que todos los niveles tienen URL válida (`item`)
+    - El último elemento también debe tener URL, no solo nombre
 
-### 2. Modificar la Base de Datos
+### 2.4 Estrategia de Contenido para AI Overviews
 
-#### Nueva columna en `blog_posts`:
-```sql
-ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS faqs JSONB DEFAULT '[]'::jsonb;
-```
+16. **TL;DR en posts del blog**
+    - Añadir sección "Resumen rápido" al inicio de cada post
+    - Clase `.speakable-summary` para extracción por LLMs
 
-Esta columna almacenará las FAQs en formato:
-```json
-[
-  {"question": "...", "answer": "..."},
-  {"question": "...", "answer": "..."}
-]
-```
+17. **Preguntas en primera persona en FAQs**
+    - "¿Puedo reclamar si...?" en lugar de "Cómo reclamar..."
+    - Alinea con búsquedas conversacionales
 
----
+18. **Datos estructurados HowTo en guías**
+    - Convertir las listas de pasos en schema HowTo
+    - Ejemplo: "Cómo recuperar la fianza paso a paso"
 
-### 3. Modificar BlogPost.tsx para Mostrar FAQs con Schema
+19. **Actualizar llms.txt dinámico**
+    - Incluir los 20 posts más recientes con excerpts
+    - Regenerar automáticamente con trigger de DB
 
-#### Ubicación en el artículo:
-```text
-[Contenido del artículo]
-        ↓
-[Sección FAQ con Accordion]
-        ↓
-[Disclaimer legal]
-        ↓
-[CTA "Analizar contrato"]
-```
+20. **Interconexión semántica de contenidos**
+    - Cada post debe enlazar a 2-3 posts relacionados en el cuerpo
+    - No solo al final con "Artículos relacionados"
 
-#### Componente visual:
-```jsx
-{/* Sección FAQ */}
-{post.faqs && post.faqs.length > 0 && (
-  <div className="mt-12 bg-muted/50 rounded-2xl p-8">
-    <h2 className="font-serif text-2xl font-semibold mb-6">
-      Preguntas frecuentes
-    </h2>
-    <Accordion type="single" collapsible>
-      {post.faqs.map((faq, index) => (
-        <AccordionItem key={index} value={`faq-${index}`}>
-          <AccordionTrigger>{faq.question}</AccordionTrigger>
-          <AccordionContent>{faq.answer}</AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
-  </div>
-)}
-```
+### 2.5 Core Web Vitals Avanzado
 
-#### Schema JSON-LD adicional:
-```jsx
-const faqSchema = post.faqs && post.faqs.length > 0 ? {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": post.faqs.map(faq => ({
-    "@type": "Question",
-    "name": faq.question,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.answer
-    }
-  }))
-} : null;
+21. **Preload de fuentes críticas**
+    - Ya implementado pero verificar que no hay FOUT residual
+    - Auditar con Lighthouse
 
-// En <Helmet>:
-{faqSchema && (
-  <script type="application/ld+json">
-    {JSON.stringify(faqSchema)}
-  </script>
-)}
-```
+22. **Image priority en Above The Fold**
+    - Verificar que solo la imagen Hero tiene `fetchPriority="high"`
+    - Las demás deben ser `lazy`
+
+23. **Bundle splitting adicional**
+    - Separar Accordion y Chart components
+    - Solo cargar cuando se necesiten
 
 ---
 
-### 4. Actualizar las Funciones de Generación
+## PARTE 3: CHECKLIST GSC Y VALIDACIÓN
 
-#### `schedule-daily-post/index.ts` y `schedule-daily-post-landlord/index.ts`:
+### Errores esperados en Search Console a corregir:
 
-**Cambios en el parsing:**
+| Error GSC | Causa | Solución |
+|-----------|-------|----------|
+| "Campo logo: URL incorrecta" | `/logo.png` no existe | Cambiar a `/acroxia-logo.png` |
+| "Campo aggregateRating: ratingCount sin sistema" | Rating falso | Eliminar schema |
+| "Página alternativa con tag canonical" | `/blog?audiencia=X` | Canonical a `/blog` |
+| "Contenido duplicado" | Posts sin dateModified | Añadir fecha visible |
+| "Datos estructurados: SearchAction inválido" | No hay buscador | Eliminar schema |
+
+### Validación Rich Results
+
+Después de implementar, validar con:
+1. **Rich Results Test** para FAQPage
+2. **Schema Validator** para Article + Person
+3. **Mobile-Friendly Test** para CLS
+4. **PageSpeed Insights** para LCP < 2.5s
+
+---
+
+## PARTE 4: ARQUITECTURA DE ENLACES INTERNOS
+
+### Problema actual:
+La Home tiene pocas rutas de navegación hacia el contenido profundo.
+
+### Estructura propuesta:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      HOME (/)                               │
+│   ↓ Hero CTA         ↓ Stats         ↓ Latest Articles     │
+└───────┬───────────────────────────────────────┬─────────────┘
+        │                                       │
+        ▼                                       ▼
+┌───────────────────┐               ┌───────────────────────┐
+│  /analizar-gratis │               │       /blog           │
+│  (Inquilinos)     │               │  ↙         ↘         │
+└─────────┬─────────┘     ┌─────────┴────┐  ┌────┴─────────┐
+          │               │  Inquilinos  │  │ Propietarios │
+          ▼               │  3 guías SEO │  │  5 guías SEO │
+┌─────────────────────────┴──────────────┴──┴──────────────┐
+│                 GUÍAS SEO PILARES                        │
+│  Cada guía enlaza a las otras 2-4 relacionadas           │
+│  + enlaza a posts del blog de su categoría               │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Links adicionales recomendados:
+
+1. **En HeroSection**: Añadir link secundario a `/propietarios`
+2. **En StatsSection**: Cada stat puede enlazar a guía relacionada
+3. **En HowItWorksSection**: Enlace a `/faq` en el paso 3
+
+---
+
+## PARTE 5: MÉTRICAS OBJETIVO
+
+| Métrica | Actual | Objetivo 30 días | Objetivo 90 días |
+|---------|--------|------------------|------------------|
+| Posts indexados en GSC | ~10 | 54 (100%) | 54 + nuevos |
+| Posts con FAQs | 2 (4%) | 54 (100%) | 100% |
+| Título < 60 chars | ~20% | 100% | 100% |
+| Featured Snippets | 0 | 5-10 | 20+ |
+| AI Overviews citaciones | 0 | 3-5 | 10+ |
+| LCP móvil | ~2.8s | < 2.5s | < 2.0s |
+| CLS | ~0.15 | < 0.1 | < 0.05 |
+| Impresiones/semana | ~0 | 1,000+ | 10,000+ |
+
+---
+
+## PARTE 6: ARCHIVOS A MODIFICAR
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/pages/Index.tsx` | Eliminar aggregateRating, corregir SearchAction, añadir .speakable-summary |
+| `src/pages/BlogPost.tsx` | Corregir logo URL, añadir hreflang, isPartOf, dimensiones imágenes |
+| `src/pages/Blog.tsx` | Canonical sin query strings |
+| `src/components/landing/Header.tsx` | Migrar Framer Motion a CSS animations |
+| `supabase/functions/schedule-daily-post/` | Ya actualizado (límite 55 chars + FAQs) |
+| `supabase/functions/llms-full/` | Verificar regeneración automática |
+| **NUEVO**: Script de migración | Regenerar FAQs para 52 posts existentes |
+| **NUEVO**: Script de migración | Acortar títulos > 60 chars |
+
+---
+
+## DETALLES TÉCNICOS
+
+### Corrección de ArticleSchema en BlogPost.tsx
+
+El schema actual tiene un error en el logo URL:
+
 ```typescript
-interface PostData {
-  title: string;
-  excerpt: string;
-  category: string;
-  content: string;
-  faqs?: Array<{ question: string; answer: string }>;
+// Línea 166 actual
+"logo": {
+  "@type": "ImageObject",
+  "url": "https://acroxia.com/logo.png"  // ❌ No existe
 }
 
-function parseAiResponse(content: string, fallbackCategory: string): PostData {
-  // ... parsing existente ...
-  
-  // Extraer FAQs del JSON
-  const faqs = parsed.faqs || [];
-  
-  return {
-    title: parsed.title.substring(0, 60), // Truncar si excede
-    excerpt: parsed.excerpt,
-    category: parsed.category,
-    content: parsed.content,
-    faqs: faqs.slice(0, 5), // Máximo 5 FAQs
-  };
+// Corrección
+"logo": {
+  "@type": "ImageObject",
+  "url": "https://acroxia.com/acroxia-logo.png"  // ✓ Existe
 }
 ```
 
-**Cambios en el insert:**
+### Corrección de SoftwareApplication en Index.tsx
+
 ```typescript
-const { data: blogPost, error: insertError } = await supabase
-  .from("blog_posts")
-  .insert({
-    title: post.title,
-    slug: slug,
-    content: post.content,
-    excerpt: post.excerpt,
-    category: post.category,
-    image: imageUrl,
-    status: "published",
-    published_at: new Date().toISOString(),
-    audience: "inquilino",
-    read_time: `${Math.ceil(post.content.split(/\s+/).length / 200)} min`,
-    faqs: post.faqs || [],  // ← Nueva línea
-  })
-  .select()
-  .single();
+// Eliminar aggregateRating falso (líneas 87-91)
+"aggregateRating": {  // ❌ Eliminar todo este bloque
+  "@type": "AggregateRating",
+  "ratingValue": "4.8",
+  "ratingCount": "150"
+}
+```
+
+### Corrección de SearchAction en Index.tsx
+
+```typescript
+// Eliminar hasta tener buscador funcional (líneas 59-66)
+"potentialAction": {  // ❌ Eliminar hasta implementar búsqueda
+  "@type": "SearchAction",
+  ...
+}
+```
+
+### Añadir speakable-summary a HeroSection
+
+```tsx
+// En HeroSection.tsx línea 39
+<p className="hero-animate hero-animate-delay-2 speakable-summary text-lg text-muted-foreground...">
+  Sube tu contrato de alquiler y descubre en menos de 2 minutos...
+</p>
+```
+
+### Canonical sin query strings en Blog.tsx
+
+```typescript
+// Línea 105-107 actual
+const canonicalUrl = selectedAudience 
+  ? `https://acroxia.com/blog?audiencia=${selectedAudience}`  // ❌ Duplicados
+  : "https://acroxia.com/blog";
+
+// Corrección
+const canonicalUrl = "https://acroxia.com/blog";  // ✓ Siempre igual
 ```
 
 ---
 
-### 5. Actualizar el Prompt de Títulos
+## PRIORIDAD DE IMPLEMENTACIÓN
 
-**Cambios en las instrucciones de título:**
-
-```text
-TÍTULO (OBLIGATORIO):
-- Máximo 55 caracteres (Google trunca a partir de ~60)
-- Usa sentence case (solo primera letra mayúscula)
-- Evita "Guía completa de..." - prefiere formatos concisos
-- Ejemplos correctos:
-  - "Cómo reclamar tu fianza paso a paso" (38 chars) ✓
-  - "5 cláusulas abusivas en contratos" (34 chars) ✓
-  - "Qué hacer si el casero no repara" (33 chars) ✓
-- Ejemplos incorrectos (demasiado largos):
-  - "La guía completa sobre cómo reclamar la fianza cuando el casero se niega a devolverla" (87 chars) ✗
-```
-
----
-
-## Resumen de Archivos a Modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| **Migración SQL** | Nueva columna `faqs JSONB` en `blog_posts` |
-| `supabase/functions/schedule-daily-post/index.ts` | Añadir FAQs al prompt y parsing, limitar títulos a 55 chars |
-| `supabase/functions/schedule-daily-post-landlord/index.ts` | Añadir FAQs al prompt y parsing, limitar títulos a 55 chars |
-| `supabase/functions/generate-blog-post/index.ts` | Añadir FAQs al prompt y respuesta |
-| `src/pages/BlogPost.tsx` | Renderizar FAQs con Accordion + Schema FAQPage |
-
----
-
-## Impacto SEO/AEO Esperado
-
-| Métrica | Antes | Después |
-|---------|-------|---------|
-| Títulos truncados en SERP | ~60% | ~5% |
-| Featured Snippets potenciales | 0 | 100% de posts |
-| AI Overviews eligibles | Bajo | Alto |
-| Schema FAQPage | Solo en guías SEO | Todos los posts |
-
----
-
-## Secuencia de Implementación
-
-```text
-1. Crear migración SQL (nueva columna faqs)
-        ↓
-2. Modificar schedule-daily-post/index.ts
-   - Actualizar prompt con límite de título
-   - Añadir FAQs al formato JSON
-   - Parsear y guardar FAQs
-        ↓
-3. Modificar schedule-daily-post-landlord/index.ts
-   - Mismos cambios
-        ↓
-4. Modificar generate-blog-post/index.ts
-   - Añadir FAQs al formato de respuesta
-        ↓
-5. Modificar BlogPost.tsx
-   - Renderizar sección FAQ con Accordion
-   - Añadir schema FAQPage al <Helmet>
-        ↓
-6. Desplegar Edge Functions
-```
-
----
-
-## Notas Técnicas
-
-- Los posts existentes tendrán `faqs: []` (array vacío) y no mostrarán la sección FAQ
-- El schema FAQPage solo se genera si hay al menos 1 FAQ
-- El límite de 55 caracteres se aplica en el parsing como fallback, pero el prompt instruye a la IA a respetar el límite
-- Se usa el mismo patrón de Accordion que ya existe en las guías SEO (e.g., ClausulasAbusivas.tsx)
+1. **Inmediato (hoy)**: Corregir schemas rotos (logo, aggregateRating, SearchAction)
+2. **Esta semana**: Regenerar FAQs para posts existentes, acortar títulos
+3. **Próxima semana**: Migrar Header a CSS, añadir hreflang a posts
+4. **Mes 1**: Entity stacking, isPartOf, TL;DR en posts
+5. **Mes 2**: Monitorizar GSC y ajustar según errores
 
