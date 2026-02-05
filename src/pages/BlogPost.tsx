@@ -137,7 +137,7 @@ const BlogPost = () => {
     ? (post.faqs as any[]).filter((faq: any) => faq?.question && faq?.answer)
     : [];
 
-  // Article schema with E-E-A-T author data
+  // Article schema with E-E-A-T author data + isPartOf for hierarchy
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -164,8 +164,17 @@ const BlogPost = () => {
       "name": "ACROXIA",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/logo.png"
+        "url": "https://acroxia.com/acroxia-logo.png"
       }
+    },
+    "isPartOf": {
+      "@type": "Blog",
+      "name": "Blog ACROXIA",
+      "url": "https://acroxia.com/blog"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://acroxia.com/blog/${post.slug}`
     }
   };
 
@@ -190,11 +199,23 @@ const BlogPost = () => {
   return (
     <>
       <Helmet>
+        <html lang="es-ES" />
         <title>{post.title} | ACROXIA Blog</title>
         <meta name="description" content={post.meta_description || post.excerpt} />
         <meta name="keywords" content={post.keywords?.join(", ") || ""} />
         <link rel="canonical" href={`https://acroxia.com/blog/${post.slug}`} />
-        <meta property="og:image" content={post.image || ""} />
+        <link rel="alternate" hrefLang="es-ES" href={`https://acroxia.com/blog/${post.slug}`} />
+        <link rel="alternate" hrefLang="x-default" href={`https://acroxia.com/blog/${post.slug}`} />
+        <meta property="og:title" content={`${post.title} | ACROXIA Blog`} />
+        <meta property="og:description" content={post.meta_description || post.excerpt} />
+        <meta property="og:url" content={`https://acroxia.com/blog/${post.slug}`} />
+        <meta property="og:type" content="article" />
+        <meta property="og:image" content={post.image || "https://acroxia.com/og-image.jpg"} />
+        <meta property="og:locale" content="es_ES" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.meta_description || post.excerpt} />
+        <meta name="twitter:image" content={post.image || "https://acroxia.com/og-image.jpg"} />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -415,9 +436,11 @@ const BlogPost = () => {
                                 <div className="aspect-[16/9] overflow-hidden">
                                   <img 
                                     src={relatedPost.image} 
-                                    alt={relatedPost.title}
+                                    alt={`Ilustración sobre ${relatedPost.category.toLowerCase()}: ${relatedPost.title}`}
                                     loading="lazy"
                                     decoding="async"
+                                    width={400}
+                                    height={225}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                   />
                                 </div>

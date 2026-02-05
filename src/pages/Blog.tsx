@@ -102,9 +102,8 @@ const Blog = () => {
   };
 
   const currentSeo = selectedAudience ? seoData[selectedAudience] : seoData.default;
-  const canonicalUrl = selectedAudience 
-    ? `https://acroxia.com/blog?audiencia=${selectedAudience}`
-    : "https://acroxia.com/blog";
+  // Canonical siempre a /blog sin query strings para evitar duplicados
+  const canonicalUrl = "https://acroxia.com/blog";
 
   return (
     <>
