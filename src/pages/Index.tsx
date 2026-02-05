@@ -48,25 +48,17 @@ const Index = () => {
     }
   };
 
-  // Schema WebSite con SearchAction para sitelinks
+  // Schema WebSite (sin SearchAction hasta implementar buscador funcional)
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "ACROXIA",
     "url": "https://acroxia.com",
     "description": "Plataforma de análisis de contratos de alquiler con IA",
-    "inLanguage": "es-ES",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": "https://acroxia.com/blog?q={search_term_string}"
-      },
-      "query-input": "required name=search_term_string"
-    }
+    "inLanguage": "es-ES"
   };
 
-  // Schema SoftwareApplication
+  // Schema SoftwareApplication (sin aggregateRating falso)
   const softwareAppSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -83,11 +75,6 @@ const Index = () => {
       "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/InStock",
       "url": "https://acroxia.com/precios"
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "150"
     }
   };
 

@@ -36,7 +36,7 @@ const HeroSection = () => {
               Protege tus derechos como inquilino
             </h1>
             
-            <p className="hero-animate hero-animate-delay-2 text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
+            <p className="hero-animate hero-animate-delay-2 speakable-summary text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
               Sube tu contrato de alquiler y descubre en menos de 2 minutos si contiene cláusulas que podrían ser abusivas o contrarias a la legislación vigente.
             </p>
             
