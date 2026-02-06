@@ -1,332 +1,244 @@
 
 
-# Auditoría SEO/AEO/AI Overviews - Consultor Senior IA
+## Plan: Validar Schemas + Edge Function para Regenerar FAQs y Títulos
 
-## Resumen Ejecutivo
+### Parte 1: Validación de Schemas JSON-LD
 
-Tras analizar en profundidad el portal ACROXIA, he identificado **15 problemas críticos** y **23 oportunidades de optimización** que explican la falta de tráfico orgánico a pesar de tener 54 posts publicados y 8 guías SEO pilares. El análisis cubre SEO técnico, Core Web Vitals, estructuración de datos, optimización para AI Overviews (GEO) y estrategia de contenido.
+Para validar los schemas, utilizaré el **Rich Results Test de Google** con las URLs del proyecto:
 
----
+**URLs a validar:**
+- Home: `https://acroxia.com/` (4 schemas: Organization, WebSite, SoftwareApplication, HowTo)
+- Blog post con FAQs: `https://acroxia.com/blog/alquiler-en-2026-puedo-negociar-la-renta-inicial` (2 schemas: Article, FAQPage)
 
-## PARTE 1: DIAGNÓSTICO CRÍTICO
+Los schemas que he verificado en el código están correctos tras las correcciones anteriores:
+- Logo URL: `/acroxia-logo.png` ✓
+- No hay aggregateRating falso ✓
+- No hay SearchAction roto ✓
+- isPartOf y mainEntityOfPage en artículos ✓
+- hreflang configurado ✓
 
-### 1.1 Problemas de Datos Estructurados (Schema.org)
-
-| Problema | Impacto | Archivo |
-|----------|---------|---------|
-| **FAQs vacías en 96% de posts** | Solo 2 de 54 posts tienen FAQs. Sin schema FAQPage = 0 Featured Snippets | `blog_posts.faqs` |
-| **Títulos excesivamente largos** | Media de **76 caracteres** (límite óptimo: 55). Google trunca el 80%+ de títulos | Edge Functions |
-| **AggregateRating falso** | `ratingCount: 150` sin sistema de reseñas real = penalización potencial por spam | `Index.tsx` líneas 87-91 |
-| **Logo URL incorrecta** | `https://acroxia.com/logo.png` no existe (debería ser `/acroxia-logo.png`) | `BlogPost.tsx` línea 166 |
-| **Speakable sin contenido** | El selector `.speakable-summary` no existe en la Home | `Index.tsx` howToSchema |
-
-### 1.2 Problemas de Core Web Vitals
-
-| Métrica | Problema | Causa |
-|---------|----------|-------|
-| **LCP** | Framer Motion en Header carga ~40KB innecesarios | `Header.tsx` líneas 3, 67-70 |
-| **CLS** | Imágenes sin dimensiones explícitas en blog posts relacionados | `BlogPost.tsx` líneas 414-422 |
-| **TBT** | Mega-menús con AnimatePresence bloquean main thread | `Header.tsx` líneas 101-136 |
-
-### 1.3 Problemas de Indexabilidad
-
-| Problema | Detalle | Impacto |
-|----------|---------|---------|
-| **Canonical con query strings** | `/blog?audiencia=inquilino` genera duplicados | Dilución de autoridad |
-| **Imágenes sin alt text descriptivo** | Solo `alt={post.title}` - no describe el contenido visual | Pérdida de tráfico de imágenes |
-| **Hreflang inconsistente** | Blog posts no tienen `hreflang` pero las guías SEO sí | Señales mixtas a Google |
-| **SearchAction rota** | `urlTemplate` apunta a `/blog?q={query}` pero no existe funcionalidad de búsqueda | Schema inválido |
-
-### 1.4 Problemas de Contenido para IA (GEO)
-
-| Problema | Impacto |
-|----------|---------|
-| **llms.txt estático** | Los LLMs no ven los 54 posts publicados |
-| **Sin Entity Stacking** | No hay schema Person para autores con credenciales legales |
-| **Falta de datos de frescura** | Los posts no muestran `dateModified` visible |
-| **Sin `isPartOf` en artículos** | Google no entiende la jerarquía Blog → Post → Categoría |
+Sin embargo, la validación real debe hacerse en Google Rich Results Test (https://search.google.com/test/rich-results) - esta herramienta no está disponible mediante API, por lo que te recomiendo validar manualmente estas URLs.
 
 ---
 
-## PARTE 2: OPORTUNIDADES DE ALTO IMPACTO
+### Parte 2: Edge Function para Regenerar FAQs y Títulos
 
-### 2.1 Quick Wins (Implementación inmediata)
+#### Estadísticas actuales:
+| Métrica | Valor |
+|---------|-------|
+| Total posts publicados | 55 |
+| Posts sin FAQs | **52** (95%) |
+| Posts con título > 60 chars | **37** (67%) |
+| Media longitud título | 75 caracteres |
 
-1. **Regenerar FAQs para los 52 posts existentes**
-   - Ejecutar batch de actualización con IA para generar 3-5 FAQs por post
-   - Impacto: +100% de candidatos para Featured Snippets
+#### Nueva Edge Function: `batch-update-blog-posts`
 
-2. **Eliminar AggregateRating falso**
-   - Quitar el schema de rating sin un sistema real de reseñas
-   - Evita penalización manual de Google por structured data spam
+Esta función procesará los posts existentes para:
+1. Generar 3-5 FAQs por post usando IA
+2. Acortar títulos a máximo 55 caracteres
+3. Actualizar la base de datos
 
-3. **Corregir logo URL en ArticleSchema**
-   ```
-   Antes: https://acroxia.com/logo.png
-   Después: https://acroxia.com/acroxia-logo.png
-   ```
+---
 
-4. **Añadir .speakable-summary a la Home**
-   - El HowTo schema referencia un selector que no existe
-   - Añadir clase al párrafo descriptivo del Hero
+## Arquitectura de la Edge Function
 
-5. **Dimensiones explícitas en imágenes lazy**
-   - Añadir `width` y `height` a todas las imágenes de posts relacionados
-   - Mejora CLS en ~0.15
+```
+┌──────────────────────────────────────────────────────────────┐
+│                  batch-update-blog-posts                     │
+├──────────────────────────────────────────────────────────────┤
+│  1. Query posts sin FAQs o título > 60 chars                │
+│  2. Para cada post (batch de 5):                            │
+│     a. Enviar título + excerpt + content a IA               │
+│     b. Generar FAQs + título optimizado                     │
+│     c. Actualizar DB                                        │
+│  3. Retornar estadísticas                                   │
+└──────────────────────────────────────────────────────────────┘
+```
 
-### 2.2 Optimizaciones de Media Prioridad
+---
 
-6. **Migrar animaciones del Header a CSS**
-   - Reemplazar Framer Motion por CSS animations como en HeroSection
-   - Ahorro de ~40KB de JS + mejora de TBT
+## Detalles Técnicos
 
-7. **Implementar dateModified visible**
-   - Mostrar "Actualizado: 5 feb 2026" en cada post y guía
-   - Señal de frescura para Google y LLMs
+### Archivo: `supabase/functions/batch-update-blog-posts/index.ts`
 
-8. **Canonical sin query strings en Blog**
-   - `/blog` siempre como canonical, no `/blog?audiencia=X`
-   - Evita dilución de PageRank
+```typescript
+// Estructura de la función
+interface UpdateRequest {
+  dryRun?: boolean;       // Si true, no actualiza DB
+  limit?: number;         // Límite de posts a procesar (default: 10)
+  postIds?: string[];     // IDs específicos (opcional)
+}
 
-9. **Hreflang en todos los posts del blog**
-   - Añadir `es-ES` y `x-default` consistentemente
-   - Alineación con las guías SEO
+interface PostUpdate {
+  id: string;
+  originalTitle: string;
+  newTitle: string;
+  titleChanged: boolean;
+  faqsGenerated: number;
+  success: boolean;
+  error?: string;
+}
 
-10. **Eliminar SearchAction rota**
-    - Quitar el schema de búsqueda hasta implementar funcionalidad real
-    - Evita errores en Search Console
+interface UpdateResponse {
+  processed: number;
+  updated: number;
+  errors: number;
+  details: PostUpdate[];
+}
+```
 
-### 2.3 Optimizaciones de Alta Prioridad (1-2 semanas)
+### Prompt de IA para generar FAQs y optimizar títulos:
 
-11. **Entity Stacking para E-E-A-T**
-    - Crear schema Person para cada autor en `authors` table
-    - Incluir `sameAs` (LinkedIn, Twitter), `jobTitle`, `knowsAbout: ["LAU", "Derecho Inmobiliario"]`
-    - Vincular con ArticleSchema.author
+```
+TAREA: Optimizar título y generar FAQs para un artículo existente.
 
-12. **Implementar isPartOf y mainEntityOfPage**
-    ```json
+ARTÍCULO:
+Título actual: "${post.title}"
+Extracto: "${post.excerpt}"
+Contenido (primeros 2000 chars): "${post.content.substring(0, 2000)}"
+
+INSTRUCCIONES:
+
+1. TÍTULO OPTIMIZADO (OBLIGATORIO):
+   - Máximo 55 caracteres
+   - Mantén el significado original
+   - Usa sentence case
+   - Si el título actual ya cumple, devuelve el mismo
+   
+2. FAQs (OBLIGATORIO):
+   - Genera 3-5 preguntas frecuentes basadas en el contenido
+   - Preguntas en primera persona: "¿Puedo...?", "¿Qué hago si...?"
+   - Respuestas concisas (2-3 frases, máx 300 chars)
+
+Responde SOLO con JSON:
+{
+  "title": "título optimizado (máx 55 chars)",
+  "faqs": [
+    {"question": "...", "answer": "..."}
+  ]
+}
+```
+
+### Rate Limiting y Batching:
+
+- Procesar en batches de 5 posts
+- 2 segundos de delay entre llamadas a la IA
+- Timeout de 120 segundos para la función
+- Retry logic con MAX_RETRIES = 2
+
+### Endpoint y Seguridad:
+
+```typescript
+// Solo admins pueden ejecutar
+const authHeader = req.headers.get('Authorization');
+const { data: { user } } = await supabase.auth.getUser(token);
+const isAdmin = await checkIsAdmin(user.id);
+
+if (!isAdmin) {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
+}
+```
+
+---
+
+## Configuración en config.toml
+
+```toml
+[functions.batch-update-blog-posts]
+verify_jwt = false  # Validamos manualmente
+```
+
+---
+
+## Uso de la Edge Function
+
+### Dry Run (ver qué cambiaría sin modificar):
+```bash
+POST /functions/v1/batch-update-blog-posts
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "dryRun": true,
+  "limit": 5
+}
+```
+
+### Ejecución real (batches de 10):
+```bash
+POST /functions/v1/batch-update-blog-posts
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "dryRun": false,
+  "limit": 10
+}
+```
+
+### Respuesta esperada:
+```json
+{
+  "processed": 10,
+  "updated": 9,
+  "errors": 1,
+  "details": [
     {
-      "@type": "Article",
-      "isPartOf": {
-        "@type": "Blog",
-        "name": "Blog ACROXIA",
-        "url": "https://acroxia.com/blog"
-      },
-      "mainEntityOfPage": {
-        "@type": "WebPage",
-        "@id": "https://acroxia.com/blog/[slug]"
-      }
+      "id": "abc123",
+      "originalTitle": "La comunicación de preaviso para finalizar el contrato: plazos...",
+      "newTitle": "Preaviso de fin de contrato: plazos 2026",
+      "titleChanged": true,
+      "faqsGenerated": 4,
+      "success": true
     }
-    ```
-
-13. **Optimizar títulos existentes**
-    - Script de migración para acortar títulos > 60 chars
-    - Ejemplos:
-      - Antes: "La comunicación de preaviso para finalizar el contrato: plazos y formas en 2026" (79 chars)
-      - Después: "Preaviso fin de contrato: plazos y formas 2026" (46 chars)
-
-14. **Alt text enriquecido para imágenes**
-    - Generar alt text descriptivo con IA al crear imágenes
-    - Ejemplo: "Ilustración de contrato de alquiler con lupa identificando cláusulas abusivas"
-
-15. **Breadcrumbs con itemListElement completo**
-    - Asegurar que todos los niveles tienen URL válida (`item`)
-    - El último elemento también debe tener URL, no solo nombre
-
-### 2.4 Estrategia de Contenido para AI Overviews
-
-16. **TL;DR en posts del blog**
-    - Añadir sección "Resumen rápido" al inicio de cada post
-    - Clase `.speakable-summary` para extracción por LLMs
-
-17. **Preguntas en primera persona en FAQs**
-    - "¿Puedo reclamar si...?" en lugar de "Cómo reclamar..."
-    - Alinea con búsquedas conversacionales
-
-18. **Datos estructurados HowTo en guías**
-    - Convertir las listas de pasos en schema HowTo
-    - Ejemplo: "Cómo recuperar la fianza paso a paso"
-
-19. **Actualizar llms.txt dinámico**
-    - Incluir los 20 posts más recientes con excerpts
-    - Regenerar automáticamente con trigger de DB
-
-20. **Interconexión semántica de contenidos**
-    - Cada post debe enlazar a 2-3 posts relacionados en el cuerpo
-    - No solo al final con "Artículos relacionados"
-
-### 2.5 Core Web Vitals Avanzado
-
-21. **Preload de fuentes críticas**
-    - Ya implementado pero verificar que no hay FOUT residual
-    - Auditar con Lighthouse
-
-22. **Image priority en Above The Fold**
-    - Verificar que solo la imagen Hero tiene `fetchPriority="high"`
-    - Las demás deben ser `lazy`
-
-23. **Bundle splitting adicional**
-    - Separar Accordion y Chart components
-    - Solo cargar cuando se necesiten
-
----
-
-## PARTE 3: CHECKLIST GSC Y VALIDACIÓN
-
-### Errores esperados en Search Console a corregir:
-
-| Error GSC | Causa | Solución |
-|-----------|-------|----------|
-| "Campo logo: URL incorrecta" | `/logo.png` no existe | Cambiar a `/acroxia-logo.png` |
-| "Campo aggregateRating: ratingCount sin sistema" | Rating falso | Eliminar schema |
-| "Página alternativa con tag canonical" | `/blog?audiencia=X` | Canonical a `/blog` |
-| "Contenido duplicado" | Posts sin dateModified | Añadir fecha visible |
-| "Datos estructurados: SearchAction inválido" | No hay buscador | Eliminar schema |
-
-### Validación Rich Results
-
-Después de implementar, validar con:
-1. **Rich Results Test** para FAQPage
-2. **Schema Validator** para Article + Person
-3. **Mobile-Friendly Test** para CLS
-4. **PageSpeed Insights** para LCP < 2.5s
-
----
-
-## PARTE 4: ARQUITECTURA DE ENLACES INTERNOS
-
-### Problema actual:
-La Home tiene pocas rutas de navegación hacia el contenido profundo.
-
-### Estructura propuesta:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      HOME (/)                               │
-│   ↓ Hero CTA         ↓ Stats         ↓ Latest Articles     │
-└───────┬───────────────────────────────────────┬─────────────┘
-        │                                       │
-        ▼                                       ▼
-┌───────────────────┐               ┌───────────────────────┐
-│  /analizar-gratis │               │       /blog           │
-│  (Inquilinos)     │               │  ↙         ↘         │
-└─────────┬─────────┘     ┌─────────┴────┐  ┌────┴─────────┐
-          │               │  Inquilinos  │  │ Propietarios │
-          ▼               │  3 guías SEO │  │  5 guías SEO │
-┌─────────────────────────┴──────────────┴──┴──────────────┐
-│                 GUÍAS SEO PILARES                        │
-│  Cada guía enlaza a las otras 2-4 relacionadas           │
-│  + enlaza a posts del blog de su categoría               │
-└──────────────────────────────────────────────────────────┘
-```
-
-### Links adicionales recomendados:
-
-1. **En HeroSection**: Añadir link secundario a `/propietarios`
-2. **En StatsSection**: Cada stat puede enlazar a guía relacionada
-3. **En HowItWorksSection**: Enlace a `/faq` en el paso 3
-
----
-
-## PARTE 5: MÉTRICAS OBJETIVO
-
-| Métrica | Actual | Objetivo 30 días | Objetivo 90 días |
-|---------|--------|------------------|------------------|
-| Posts indexados en GSC | ~10 | 54 (100%) | 54 + nuevos |
-| Posts con FAQs | 2 (4%) | 54 (100%) | 100% |
-| Título < 60 chars | ~20% | 100% | 100% |
-| Featured Snippets | 0 | 5-10 | 20+ |
-| AI Overviews citaciones | 0 | 3-5 | 10+ |
-| LCP móvil | ~2.8s | < 2.5s | < 2.0s |
-| CLS | ~0.15 | < 0.1 | < 0.05 |
-| Impresiones/semana | ~0 | 1,000+ | 10,000+ |
-
----
-
-## PARTE 6: ARCHIVOS A MODIFICAR
-
-| Archivo | Cambios |
-|---------|---------|
-| `src/pages/Index.tsx` | Eliminar aggregateRating, corregir SearchAction, añadir .speakable-summary |
-| `src/pages/BlogPost.tsx` | Corregir logo URL, añadir hreflang, isPartOf, dimensiones imágenes |
-| `src/pages/Blog.tsx` | Canonical sin query strings |
-| `src/components/landing/Header.tsx` | Migrar Framer Motion a CSS animations |
-| `supabase/functions/schedule-daily-post/` | Ya actualizado (límite 55 chars + FAQs) |
-| `supabase/functions/llms-full/` | Verificar regeneración automática |
-| **NUEVO**: Script de migración | Regenerar FAQs para 52 posts existentes |
-| **NUEVO**: Script de migración | Acortar títulos > 60 chars |
-
----
-
-## DETALLES TÉCNICOS
-
-### Corrección de ArticleSchema en BlogPost.tsx
-
-El schema actual tiene un error en el logo URL:
-
-```typescript
-// Línea 166 actual
-"logo": {
-  "@type": "ImageObject",
-  "url": "https://acroxia.com/logo.png"  // ❌ No existe
-}
-
-// Corrección
-"logo": {
-  "@type": "ImageObject",
-  "url": "https://acroxia.com/acroxia-logo.png"  // ✓ Existe
+  ]
 }
 ```
 
-### Corrección de SoftwareApplication en Index.tsx
+---
 
-```typescript
-// Eliminar aggregateRating falso (líneas 87-91)
-"aggregateRating": {  // ❌ Eliminar todo este bloque
-  "@type": "AggregateRating",
-  "ratingValue": "4.8",
-  "ratingCount": "150"
-}
-```
+## Ejecución por Fases
 
-### Corrección de SearchAction en Index.tsx
+Para procesar los 52 posts, recomiendo ejecutar en fases:
 
-```typescript
-// Eliminar hasta tener buscador funcional (líneas 59-66)
-"potentialAction": {  // ❌ Eliminar hasta implementar búsqueda
-  "@type": "SearchAction",
-  ...
-}
-```
+| Fase | Posts | Tiempo estimado |
+|------|-------|-----------------|
+| 1 | 10 posts (dry run) | 2 min |
+| 2 | 10 posts (real) | 3 min |
+| 3 | 10 posts (real) | 3 min |
+| 4 | 10 posts (real) | 3 min |
+| 5 | 10 posts (real) | 3 min |
+| 6 | 12 posts (real) | 4 min |
 
-### Añadir speakable-summary a HeroSection
-
-```tsx
-// En HeroSection.tsx línea 39
-<p className="hero-animate hero-animate-delay-2 speakable-summary text-lg text-muted-foreground...">
-  Sube tu contrato de alquiler y descubre en menos de 2 minutos...
-</p>
-```
-
-### Canonical sin query strings en Blog.tsx
-
-```typescript
-// Línea 105-107 actual
-const canonicalUrl = selectedAudience 
-  ? `https://acroxia.com/blog?audiencia=${selectedAudience}`  // ❌ Duplicados
-  : "https://acroxia.com/blog";
-
-// Corrección
-const canonicalUrl = "https://acroxia.com/blog";  // ✓ Siempre igual
-```
+Total: ~18 minutos para procesar todos los posts.
 
 ---
 
-## PRIORIDAD DE IMPLEMENTACIÓN
+## Secuencia de Implementación
 
-1. **Inmediato (hoy)**: Corregir schemas rotos (logo, aggregateRating, SearchAction)
-2. **Esta semana**: Regenerar FAQs para posts existentes, acortar títulos
-3. **Próxima semana**: Migrar Header a CSS, añadir hreflang a posts
-4. **Mes 1**: Entity stacking, isPartOf, TL;DR en posts
-5. **Mes 2**: Monitorizar GSC y ajustar según errores
+1. Crear `supabase/functions/batch-update-blog-posts/index.ts`
+2. Añadir configuración en `supabase/config.toml`
+3. Desplegar la función
+4. Ejecutar dry run con limit=5 para verificar
+5. Ejecutar en batches de 10 hasta completar todos los posts
+6. Validar FAQs generadas en Rich Results Test
+
+---
+
+## Archivos a Crear/Modificar
+
+| Archivo | Acción |
+|---------|--------|
+| `supabase/functions/batch-update-blog-posts/index.ts` | **Crear** |
+| `supabase/config.toml` | Añadir configuración de la nueva función |
+
+---
+
+## Validación Post-Implementación
+
+Después de ejecutar el batch:
+1. Verificar en DB que todos los posts tienen FAQs
+2. Verificar que todos los títulos tienen ≤60 caracteres
+3. Probar un post con FAQs en Rich Results Test
+4. Confirmar que el schema FAQPage aparece correctamente
 
