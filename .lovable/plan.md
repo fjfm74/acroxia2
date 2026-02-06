@@ -1,244 +1,235 @@
 
 
-## Plan: Validar Schemas + Edge Function para Regenerar FAQs y Títulos
+## Plan: Migrar Animaciones del Header a CSS Puro
 
-### Parte 1: Validación de Schemas JSON-LD
-
-Para validar los schemas, utilizaré el **Rich Results Test de Google** con las URLs del proyecto:
-
-**URLs a validar:**
-- Home: `https://acroxia.com/` (4 schemas: Organization, WebSite, SoftwareApplication, HowTo)
-- Blog post con FAQs: `https://acroxia.com/blog/alquiler-en-2026-puedo-negociar-la-renta-inicial` (2 schemas: Article, FAQPage)
-
-Los schemas que he verificado en el código están correctos tras las correcciones anteriores:
-- Logo URL: `/acroxia-logo.png` ✓
-- No hay aggregateRating falso ✓
-- No hay SearchAction roto ✓
-- isPartOf y mainEntityOfPage en artículos ✓
-- hreflang configurado ✓
-
-Sin embargo, la validación real debe hacerse en Google Rich Results Test (https://search.google.com/test/rich-results) - esta herramienta no está disponible mediante API, por lo que te recomiendo validar manualmente estas URLs.
+### Objetivo
+Eliminar la dependencia de Framer Motion en el Header para reducir ~40KB de JavaScript y mejorar TBT (Total Blocking Time) y LCP (Largest Contentful Paint).
 
 ---
 
-### Parte 2: Edge Function para Regenerar FAQs y Títulos
+## Análisis del Estado Actual
 
-#### Estadísticas actuales:
-| Métrica | Valor |
-|---------|-------|
-| Total posts publicados | 55 |
-| Posts sin FAQs | **52** (95%) |
-| Posts con título > 60 chars | **37** (67%) |
-| Media longitud título | 75 caracteres |
+### Uso actual de Framer Motion en Header.tsx:
 
-#### Nueva Edge Function: `batch-update-blog-posts`
+| Línea | Uso | Propósito |
+|-------|-----|-----------|
+| 3 | `import { motion, AnimatePresence } from "framer-motion"` | Import de la librería |
+| 67-71 | `menuVariants` | Definición de variantes de animación |
+| 101-137 | Mega-menú "Particulares" | `AnimatePresence` + `motion.div` |
+| 157-201 | Mega-menú "Profesionales" | `AnimatePresence` + `motion.div` |
+| 218-335 | Mega-menú "Guías" | `AnimatePresence` + `motion.div` |
 
-Esta función procesará los posts existentes para:
-1. Generar 3-5 FAQs por post usando IA
-2. Acortar títulos a máximo 55 caracteres
-3. Actualizar la base de datos
+### Animación actual (menuVariants):
+```javascript
+hidden: { opacity: 0, y: 8, scale: 0.98 }
+visible: { opacity: 1, y: 0, scale: 1 }
+exit: { opacity: 0, y: 8, scale: 0.98 }
+```
 
 ---
 
-## Arquitectura de la Edge Function
+## Estrategia de Migración
 
+### 1. Crear animaciones CSS equivalentes
+
+Añadir al `src/index.css`:
+
+```css
+/* Mega-menu CSS animations (replacing Framer Motion) */
+@keyframes menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.menu-dropdown {
+  animation: menu-enter 0.2s ease-out forwards;
+}
+
+.menu-dropdown-exit {
+  animation: menu-exit 0.2s ease-out forwards;
+}
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                  batch-update-blog-posts                     │
-├──────────────────────────────────────────────────────────────┤
-│  1. Query posts sin FAQs o título > 60 chars                │
-│  2. Para cada post (batch de 5):                            │
-│     a. Enviar título + excerpt + content a IA               │
-│     b. Generar FAQs + título optimizado                     │
-│     c. Actualizar DB                                        │
-│  3. Retornar estadísticas                                   │
-└──────────────────────────────────────────────────────────────┘
+
+### 2. Modificar Header.tsx
+
+**Cambios principales:**
+
+1. **Eliminar import de Framer Motion** (línea 3)
+2. **Eliminar menuVariants** (líneas 67-71)
+3. **Reemplazar AnimatePresence + motion.div por renderizado condicional con clases CSS**
+
+**Ejemplo de transformación (mega-menú Particulares):**
+
+```tsx
+// ANTES (Framer Motion):
+<AnimatePresence>
+  {activeMenu === "particulares" && (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={menuVariants}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
+    >
+      {/* contenido */}
+    </motion.div>
+  )}
+</AnimatePresence>
+
+// DESPUÉS (CSS puro):
+{activeMenu === "particulares" && (
+  <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50">
+    {/* contenido */}
+  </div>
+)}
 ```
+
+---
+
+## Archivos a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/index.css` | Añadir keyframes `menu-enter` y clases `.menu-dropdown` |
+| `src/components/landing/Header.tsx` | Eliminar Framer Motion, usar clases CSS |
 
 ---
 
 ## Detalles Técnicos
 
-### Archivo: `supabase/functions/batch-update-blog-posts/index.ts`
+### Cambios en src/index.css
 
-```typescript
-// Estructura de la función
-interface UpdateRequest {
-  dryRun?: boolean;       // Si true, no actualiza DB
-  limit?: number;         // Límite de posts a procesar (default: 10)
-  postIds?: string[];     // IDs específicos (opcional)
+Añadir después de las animaciones del Hero (línea 183):
+
+```css
+/* Mega-menu CSS animations (replacing Framer Motion for Header) */
+@keyframes menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-interface PostUpdate {
-  id: string;
-  originalTitle: string;
-  newTitle: string;
-  titleChanged: boolean;
-  faqsGenerated: number;
-  success: boolean;
-  error?: string;
-}
-
-interface UpdateResponse {
-  processed: number;
-  updated: number;
-  errors: number;
-  details: PostUpdate[];
+.menu-dropdown {
+  animation: menu-enter 0.2s ease-out forwards;
 }
 ```
 
-### Prompt de IA para generar FAQs y optimizar títulos:
+**Nota**: No implementamos animación de salida (`exit`) porque requeriría lógica adicional de estado. El comportamiento actual con CSS será:
+- Entrada: animación suave de 0.2s
+- Salida: desaparición instantánea (aceptable para menús hover)
 
-```
-TAREA: Optimizar título y generar FAQs para un artículo existente.
-
-ARTÍCULO:
-Título actual: "${post.title}"
-Extracto: "${post.excerpt}"
-Contenido (primeros 2000 chars): "${post.content.substring(0, 2000)}"
-
-INSTRUCCIONES:
-
-1. TÍTULO OPTIMIZADO (OBLIGATORIO):
-   - Máximo 55 caracteres
-   - Mantén el significado original
-   - Usa sentence case
-   - Si el título actual ya cumple, devuelve el mismo
-   
-2. FAQs (OBLIGATORIO):
-   - Genera 3-5 preguntas frecuentes basadas en el contenido
-   - Preguntas en primera persona: "¿Puedo...?", "¿Qué hago si...?"
-   - Respuestas concisas (2-3 frases, máx 300 chars)
-
-Responde SOLO con JSON:
-{
-  "title": "título optimizado (máx 55 chars)",
-  "faqs": [
-    {"question": "...", "answer": "..."}
-  ]
-}
-```
-
-### Rate Limiting y Batching:
-
-- Procesar en batches de 5 posts
-- 2 segundos de delay entre llamadas a la IA
-- Timeout de 120 segundos para la función
-- Retry logic con MAX_RETRIES = 2
-
-### Endpoint y Seguridad:
-
-```typescript
-// Solo admins pueden ejecutar
-const authHeader = req.headers.get('Authorization');
-const { data: { user } } = await supabase.auth.getUser(token);
-const isAdmin = await checkIsAdmin(user.id);
-
-if (!isAdmin) {
-  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
-}
-```
+Si se desea animación de salida, requeriría un hook personalizado para retrasar el desmontaje, lo cual añade complejidad. Para Core Web Vitals, la prioridad es reducir JS, no replicar exactamente la animación de salida.
 
 ---
 
-## Configuración en config.toml
+### Cambios en src/components/landing/Header.tsx
 
-```toml
-[functions.batch-update-blog-posts]
-verify_jwt = false  # Validamos manualmente
+**Línea 3 - Eliminar import:**
+```tsx
+// ELIMINAR:
+import { motion, AnimatePresence } from "framer-motion";
 ```
+
+**Líneas 67-71 - Eliminar menuVariants:**
+```tsx
+// ELIMINAR TODO EL BLOQUE:
+const menuVariants = {
+  hidden: { opacity: 0, y: 8, scale: 0.98 },
+  visible: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: 8, scale: 0.98 }
+};
+```
+
+**Líneas 101-136 - Mega-menú Particulares:**
+```tsx
+// ANTES:
+<AnimatePresence>
+  {activeMenu === "particulares" && (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={menuVariants}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
+    >
+      {/* contenido */}
+    </motion.div>
+  )}
+</AnimatePresence>
+
+// DESPUÉS:
+{activeMenu === "particulares" && (
+  <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50">
+    {/* contenido sin cambios */}
+  </div>
+)}
+```
+
+**Líneas 157-200 - Mega-menú Profesionales:**
+Mismo patrón de transformación.
+
+**Líneas 218-334 - Mega-menú Guías:**
+Mismo patrón de transformación.
 
 ---
 
-## Uso de la Edge Function
+## Impacto Esperado
 
-### Dry Run (ver qué cambiaría sin modificar):
-```bash
-POST /functions/v1/batch-update-blog-posts
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "dryRun": true,
-  "limit": 5
-}
-```
-
-### Ejecución real (batches de 10):
-```bash
-POST /functions/v1/batch-update-blog-posts
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "dryRun": false,
-  "limit": 10
-}
-```
-
-### Respuesta esperada:
-```json
-{
-  "processed": 10,
-  "updated": 9,
-  "errors": 1,
-  "details": [
-    {
-      "id": "abc123",
-      "originalTitle": "La comunicación de preaviso para finalizar el contrato: plazos...",
-      "newTitle": "Preaviso de fin de contrato: plazos 2026",
-      "titleChanged": true,
-      "faqsGenerated": 4,
-      "success": true
-    }
-  ]
-}
-```
-
----
-
-## Ejecución por Fases
-
-Para procesar los 52 posts, recomiendo ejecutar en fases:
-
-| Fase | Posts | Tiempo estimado |
-|------|-------|-----------------|
-| 1 | 10 posts (dry run) | 2 min |
-| 2 | 10 posts (real) | 3 min |
-| 3 | 10 posts (real) | 3 min |
-| 4 | 10 posts (real) | 3 min |
-| 5 | 10 posts (real) | 3 min |
-| 6 | 12 posts (real) | 4 min |
-
-Total: ~18 minutos para procesar todos los posts.
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| Bundle size (Header) | ~45KB (con FM) | ~5KB |
+| TBT móvil | Alto | Reducido ~30% |
+| LCP | Afectado por JS | Mejorado |
+| Animación entrada | 0.2s suave | 0.2s suave (igual) |
+| Animación salida | 0.2s fade-out | Instantánea |
 
 ---
 
 ## Secuencia de Implementación
 
-1. Crear `supabase/functions/batch-update-blog-posts/index.ts`
-2. Añadir configuración en `supabase/config.toml`
-3. Desplegar la función
-4. Ejecutar dry run con limit=5 para verificar
-5. Ejecutar en batches de 10 hasta completar todos los posts
-6. Validar FAQs generadas en Rich Results Test
+```
+1. Añadir CSS animations en index.css
+        ↓
+2. Modificar Header.tsx:
+   a. Eliminar import de framer-motion
+   b. Eliminar menuVariants
+   c. Reemplazar AnimatePresence + motion.div (3 mega-menús)
+        ↓
+3. Verificar que el Header funciona correctamente
+        ↓
+4. Ejecutar PageSpeed Insights para confirmar mejora
+```
 
 ---
 
-## Archivos a Crear/Modificar
+## Verificación Post-Implementación
 
-| Archivo | Acción |
-|---------|--------|
-| `supabase/functions/batch-update-blog-posts/index.ts` | **Crear** |
-| `supabase/config.toml` | Añadir configuración de la nueva función |
-
----
-
-## Validación Post-Implementación
-
-Después de ejecutar el batch:
-1. Verificar en DB que todos los posts tienen FAQs
-2. Verificar que todos los títulos tienen ≤60 caracteres
-3. Probar un post con FAQs en Rich Results Test
-4. Confirmar que el schema FAQPage aparece correctamente
+1. **Funcionalidad**: Los 3 mega-menús deben aparecer al hover
+2. **Animación**: Debe verse una animación suave de entrada
+3. **Performance**: Ejecutar Lighthouse/PageSpeed para confirmar reducción de TBT
+4. **Bundle**: Verificar que framer-motion ya no se importa en Header (aunque puede seguir usándose en otros componentes como FadeIn)
 
