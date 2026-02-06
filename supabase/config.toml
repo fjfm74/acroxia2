@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.regenerate-llm-files]
 verify_jwt = false
+
+[functions.batch-update-blog-posts]
+verify_jwt = false
