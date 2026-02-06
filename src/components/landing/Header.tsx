@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -64,12 +63,6 @@ const Header = () => {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
-  const menuVariants = {
-    hidden: { opacity: 0, y: 8, scale: 0.98 },
-    visible: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: 8, scale: 0.98 }
-  };
-
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled ? "bg-cream/95 backdrop-blur-sm border-b border-charcoal/5 py-0" : "py-0"
@@ -98,43 +91,34 @@ const Header = () => {
             {/* Puente invisible */}
             <div className="absolute top-full left-0 right-0 h-3" />
             
-            <AnimatePresence>
-              {activeMenu === "particulares" && (
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  variants={menuVariants}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
+            {activeMenu === "particulares" && (
+              <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50">
+                <Link 
+                  to="/analizar-gratis" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                 >
-                  <Link 
-                    to="/analizar-gratis" 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <Home className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground text-sm">Inquilinos</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Analiza tu contrato de alquiler</p>
-                    </div>
-                  </Link>
-                  <Link 
-                    to="/propietarios" 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                      <Key className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground text-sm">Propietarios</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Contratos conformes a la LAU</p>
-                    </div>
-                  </Link>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Home className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Inquilinos</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Analiza tu contrato de alquiler</p>
+                  </div>
+                </Link>
+                <Link 
+                  to="/propietarios" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <Key className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Propietarios</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Contratos conformes a la LAU</p>
+                  </div>
+                </Link>
+              </div>
+            )}
           </div>
           
           <Link to="/precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
@@ -154,51 +138,42 @@ const Header = () => {
             {/* Puente invisible */}
             <div className="absolute top-full left-0 right-0 h-3" />
             
-            <AnimatePresence>
-              {activeMenu === "profesionales" && (
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  variants={menuVariants}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50"
+            {activeMenu === "profesionales" && (
+              <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50">
+                <Link 
+                  to="/profesionales/inmobiliarias" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                 >
-                  <Link 
-                    to="/profesionales/inmobiliarias" 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-5 h-5 text-charcoal/70" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground text-sm">Inmobiliarias y APIs</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Integra análisis en tu plataforma</p>
-                    </div>
-                  </Link>
-                  <Link 
-                    to="/profesionales/gestorias" 
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
-                      <Briefcase className="w-5 h-5 text-charcoal/70" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground text-sm">Gestorías y Administradores</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Optimiza la revisión de contratos</p>
-                    </div>
-                  </Link>
-                  <div className="border-t border-charcoal/10 my-2" />
-                  <Link 
-                    to="/precios#b2b" 
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                    Ver planes empresariales
-                  </Link>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 text-charcoal/70" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Inmobiliarias y APIs</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Integra análisis en tu plataforma</p>
+                  </div>
+                </Link>
+                <Link 
+                  to="/profesionales/gestorias" 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-5 h-5 text-charcoal/70" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Gestorías y Administradores</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Optimiza la revisión de contratos</p>
+                  </div>
+                </Link>
+                <div className="border-t border-charcoal/10 my-2" />
+                <Link 
+                  to="/precios#b2b" 
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  Ver planes empresariales
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mega menú Guías */}
@@ -215,124 +190,115 @@ const Header = () => {
             {/* Puente invisible */}
             <div className="absolute top-full left-0 right-0 h-3" />
             
-            <AnimatePresence>
-              {activeMenu === "guias" && (
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  variants={menuVariants}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[520px] bg-cream rounded-xl shadow-lg border border-charcoal/5 p-4 z-50"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Columna Inquilinos */}
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Inquilinos</p>
-                      <Link 
-                        to="/clausulas-abusivas-alquiler" 
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                          <AlertTriangle className="w-4 h-4 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">Cláusulas abusivas</p>
-                          <p className="text-xs text-muted-foreground">Identifica cláusulas ilegales</p>
-                        </div>
-                      </Link>
-                      <Link 
-                        to="/devolucion-fianza-alquiler" 
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                          <Wallet className="w-4 h-4 text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">Devolución de fianza</p>
-                          <p className="text-xs text-muted-foreground">Recupera tu depósito</p>
-                        </div>
-                      </Link>
-                      <Link 
-                        to="/subida-alquiler-2026" 
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <TrendingUp className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
-                          <p className="text-xs text-muted-foreground">Límites IRAV y normativa</p>
-                        </div>
-                      </Link>
-                    </div>
-                    
-                    {/* Columna Propietarios */}
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Propietarios</p>
-                      <Link 
-                        to="/impago-alquiler-propietarios" 
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-                          <AlertTriangle className="w-4 h-4 text-red-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">Impago de alquiler</p>
-                          <p className="text-xs text-muted-foreground">Pasos ante morosos</p>
-                        </div>
-                      </Link>
-                      <Link 
-                        to="/zonas-tensionadas-propietarios" 
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">Zonas tensionadas</p>
-                          <p className="text-xs text-muted-foreground">SERPAVI y límites</p>
-                        </div>
-                      </Link>
-                      <Link 
-                        to="/deposito-fianza-propietarios" 
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                          <Wallet className="w-4 h-4 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">Depósito de fianza</p>
-                          <p className="text-xs text-muted-foreground">INCASOL, IVIMA...</p>
-                        </div>
-                      </Link>
-                      <Link 
-                        to="/fin-contrato-alquiler-propietarios" 
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                          <Clock className="w-4 h-4 text-slate-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">Fin de contrato</p>
-                          <p className="text-xs text-muted-foreground">Prórrogas y recuperación</p>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t border-charcoal/10 mt-3 pt-2">
+            {activeMenu === "guias" && (
+              <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[520px] bg-cream rounded-xl shadow-lg border border-charcoal/5 p-4 z-50">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Columna Inquilinos */}
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Inquilinos</p>
                     <Link 
-                      to="/faq" 
-                      className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                      to="/clausulas-abusivas-alquiler" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
-                      <HelpCircle className="w-4 h-4" />
-                      Todas las preguntas frecuentes
+                      <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Cláusulas abusivas</p>
+                        <p className="text-xs text-muted-foreground">Identifica cláusulas ilegales</p>
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/devolucion-fianza-alquiler" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <Wallet className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Devolución de fianza</p>
+                        <p className="text-xs text-muted-foreground">Recupera tu depósito</p>
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/subida-alquiler-2026" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <TrendingUp className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
+                        <p className="text-xs text-muted-foreground">Límites IRAV y normativa</p>
+                      </div>
                     </Link>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  
+                  {/* Columna Propietarios */}
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Propietarios</p>
+                    <Link 
+                      to="/impago-alquiler-propietarios" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Impago de alquiler</p>
+                        <p className="text-xs text-muted-foreground">Pasos ante morosos</p>
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/zonas-tensionadas-propietarios" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Zonas tensionadas</p>
+                        <p className="text-xs text-muted-foreground">SERPAVI y límites</p>
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/deposito-fianza-propietarios" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <Wallet className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Depósito de fianza</p>
+                        <p className="text-xs text-muted-foreground">INCASOL, IVIMA...</p>
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/fin-contrato-alquiler-propietarios" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-4 h-4 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Fin de contrato</p>
+                        <p className="text-xs text-muted-foreground">Prórrogas y recuperación</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+                
+                <div className="border-t border-charcoal/10 mt-3 pt-2">
+                  <Link 
+                    to="/faq" 
+                    className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    Todas las preguntas frecuentes
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
           <Link to="/blog" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Blog
