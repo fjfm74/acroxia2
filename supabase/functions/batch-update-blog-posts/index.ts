@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-key",
 };
 
 interface UpdateRequest {
@@ -183,39 +183,61 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Authenticate user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Authorization header required" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const supabaseAuth = createClient(SUPABASE_URL, token);
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid authentication" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Check admin role using service role client
+    // Create service role client for DB operations
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const isAdmin = await checkIsAdmin(supabase, user.id);
 
-    if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ error: "Admin access required" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Parse request first to check for internal key in body
+    let body: UpdateRequest & { internalKey?: string } = {};
+    try {
+      body = await req.json();
+    } catch (e) {
+      body = {};
     }
+    
+    const { dryRun = false, limit = 10, postIds, internalKey } = body;
 
-    // Parse request
-    const { dryRun = false, limit = 10, postIds }: UpdateRequest = await req.json();
+    console.log("Request received, internalKey present:", !!internalKey);
+
+    // Check for internal key authentication (for automated maintenance tasks)
+    const headerInternalKey = req.headers.get("x-internal-key") || req.headers.get("X-Internal-Key");
+    const expectedInternalKey = SUPABASE_SERVICE_ROLE_KEY;
+
+    const hasValidInternalKey = (internalKey && internalKey === expectedInternalKey) || 
+                                 (headerInternalKey && headerInternalKey === expectedInternalKey);
+
+    if (hasValidInternalKey) {
+      // Internal authentication accepted for maintenance
+      console.log("Internal authentication accepted");
+    } else {
+      // Standard admin authentication for user requests
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Authorization header required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const token = authHeader.replace("Bearer ", "");
+      const supabaseAuth = createClient(SUPABASE_URL, token);
+      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Invalid authentication" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const isAdmin = await checkIsAdmin(supabase, user.id);
+
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Admin access required" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     console.log(`Starting batch update: dryRun=${dryRun}, limit=${limit}, postIds=${postIds?.length || 'all'}`);
 
