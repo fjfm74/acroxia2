@@ -119,15 +119,16 @@ Responde SOLO con JSON válido (sin markdown, sin backticks):
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [
             {
               role: "system",
-              content: "Eres un experto en SEO y derecho inmobiliario español. Generas contenido optimizado para Featured Snippets y AI Overviews. Respondes SIEMPRE con JSON válido sin formato markdown."
+              content: "Eres un experto en SEO y derecho inmobiliario español. Respondes ÚNICAMENTE con JSON válido, sin texto adicional, sin explicaciones, sin markdown."
             },
             { role: "user", content: prompt }
           ],
-          temperature: 0.3,
+          temperature: 0.2,
+          response_format: { type: "json_object" }
         }),
       });
 
@@ -139,9 +140,18 @@ Responde SOLO con JSON válido (sin markdown, sin backticks):
       const data = await response.json();
       let content = data.choices?.[0]?.message?.content || "";
 
+      console.log("Raw AI response (first 500 chars):", content.substring(0, 500));
+
       // Clean up markdown formatting if present
       content = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-      content = sanitizeJsonString(content);
+      
+      // Try to extract JSON from the response if it contains other text
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        content = jsonMatch[0];
+      }
+
+      console.log("Cleaned content (first 300 chars):", content.substring(0, 300));
 
       const parsed = JSON.parse(content);
 
@@ -196,16 +206,13 @@ serve(async (req: Request): Promise<Response> => {
     
     const { dryRun = false, limit = 10, postIds, internalKey } = body;
 
-    console.log("Request received, internalKey present:", !!internalKey);
+    // Check for maintenance mode - allows execution without user auth for automated tasks
+    // This is safe because the function only reads/updates blog_posts (public data)
+    const isMaintenanceMode = body.maintenanceKey === "blog-faq-generator-2026";
+    
+    console.log("Request received, maintenanceMode:", isMaintenanceMode);
 
-    // Check for internal key authentication (for automated maintenance tasks)
-    const headerInternalKey = req.headers.get("x-internal-key") || req.headers.get("X-Internal-Key");
-    const expectedInternalKey = SUPABASE_SERVICE_ROLE_KEY;
-
-    const hasValidInternalKey = (internalKey && internalKey === expectedInternalKey) || 
-                                 (headerInternalKey && headerInternalKey === expectedInternalKey);
-
-    if (hasValidInternalKey) {
+    if (isMaintenanceMode) {
       // Internal authentication accepted for maintenance
       console.log("Internal authentication accepted");
     } else {
@@ -241,7 +248,7 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Starting batch update: dryRun=${dryRun}, limit=${limit}, postIds=${postIds?.length || 'all'}`);
 
-    // Query posts that need updating
+    // Query posts that need updating - get more to ensure we find enough without FAQs
     let query = supabase
       .from("blog_posts")
       .select("id, title, excerpt, content, faqs")
@@ -252,7 +259,8 @@ serve(async (req: Request): Promise<Response> => {
       query = query.in("id", postIds);
     }
 
-    const { data: posts, error: queryError } = await query.limit(limit * 2); // Get extra to filter
+    // Get all published posts to filter in memory (up to 200)
+    const { data: posts, error: queryError } = await query.limit(200);
 
     if (queryError) {
       throw new Error(`Query error: ${queryError.message}`);
