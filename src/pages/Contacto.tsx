@@ -15,10 +15,9 @@ const Contacto = () => {
       "@type": "Organization",
       "name": "ACROXIA TECH S.L.",
       "email": "contacto@acroxia.com",
-      "telephone": "+34 900 000 000",
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": "Barcelona",
+        "addressLocality": "Madrid",
         "addressCountry": "ES"
       }
     }

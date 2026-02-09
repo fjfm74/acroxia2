@@ -10,6 +10,7 @@ interface UpdateRequest {
   dryRun?: boolean;
   limit?: number;
   postIds?: string[];
+  mode?: "faqs" | "meta_descriptions" | "all";
 }
 
 interface FAQ {
@@ -23,6 +24,7 @@ interface PostUpdate {
   newTitle: string;
   titleChanged: boolean;
   faqsGenerated: number;
+  metaDescriptionGenerated: boolean;
   success: boolean;
   error?: string;
 }
@@ -67,14 +69,24 @@ function sanitizeJsonString(str: string): string {
     });
 }
 
-async function generateFAQsAndTitle(post: { title: string; excerpt: string; content: string }): Promise<{ title: string; faqs: FAQ[] }> {
+async function generateFAQsAndTitle(post: { title: string; excerpt: string; content: string }, needsMetaDescription: boolean): Promise<{ title: string; faqs: FAQ[]; meta_description?: string }> {
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY not configured");
   }
 
   const contentPreview = post.content.substring(0, 2000);
 
-  const prompt = `TAREA: Optimizar título y generar FAQs para un artículo existente sobre alquiler en España.
+  const metaDescInstruction = needsMetaDescription ? `
+3. META DESCRIPTION (OBLIGATORIO):
+   - Máximo 155 caracteres
+   - Incluye la keyword principal del artículo
+   - Debe motivar el clic desde Google (usa beneficio o dato concreto)
+   - NO uses comillas dobles dentro del texto
+` : "";
+
+  const metaDescJson = needsMetaDescription ? `"meta_description": "descripción SEO (máx 155 chars)",` : "";
+
+  const prompt = `TAREA: Optimizar título${needsMetaDescription ? ", meta description" : ""} y generar FAQs para un artículo existente sobre alquiler en España.
 
 ARTÍCULO:
 Título actual: "${post.title}"
@@ -96,10 +108,11 @@ INSTRUCCIONES:
    - Respuestas concisas y útiles (2-3 frases, máximo 300 caracteres cada una)
    - Las preguntas deben reflejar dudas reales de inquilinos o propietarios
    - Las respuestas deben incluir información práctica y actualizada
-
+${metaDescInstruction}
 Responde SOLO con JSON válido (sin markdown, sin backticks):
 {
   "title": "título optimizado (máx 55 chars)",
+  ${metaDescJson}
   "faqs": [
     {"question": "pregunta 1", "answer": "respuesta 1"},
     {"question": "pregunta 2", "answer": "respuesta 2"},
@@ -204,7 +217,7 @@ serve(async (req: Request): Promise<Response> => {
       body = {};
     }
     
-    const { dryRun = false, limit = 10, postIds, internalKey } = body;
+    const { dryRun = false, limit = 10, postIds, internalKey, mode = "all" } = body;
 
     // Check for maintenance mode - allows execution without user auth for automated tasks
     // This is safe because the function only reads/updates blog_posts (public data)
@@ -251,7 +264,7 @@ serve(async (req: Request): Promise<Response> => {
     // Query posts that need updating - get more to ensure we find enough without FAQs
     let query = supabase
       .from("blog_posts")
-      .select("id, title, excerpt, content, faqs")
+      .select("id, title, excerpt, content, faqs, meta_description")
       .eq("status", "published")
       .order("published_at", { ascending: false });
 
@@ -266,11 +279,15 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error(`Query error: ${queryError.message}`);
     }
 
-    // Filter posts that need updating (no FAQs or title > 60 chars)
+    // Filter posts that need updating based on mode
     const postsToUpdate = (posts || []).filter(post => {
       const hasFaqs = post.faqs && Array.isArray(post.faqs) && post.faqs.length > 0;
       const titleTooLong = post.title.length > 60;
-      return !hasFaqs || titleTooLong;
+      const hasMetaDesc = !!post.meta_description;
+      
+      if (mode === "meta_descriptions") return !hasMetaDesc;
+      if (mode === "faqs") return !hasFaqs || titleTooLong;
+      return !hasFaqs || titleTooLong || !hasMetaDesc;
     }).slice(0, limit);
 
     console.log(`Found ${postsToUpdate.length} posts to update`);
@@ -283,11 +300,12 @@ serve(async (req: Request): Promise<Response> => {
       try {
         console.log(`Processing: "${post.title.substring(0, 50)}..."`);
 
+        const needsMetaDesc = !post.meta_description;
         const generated = await generateFAQsAndTitle({
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
-        });
+        }, needsMetaDesc);
 
         const titleChanged = generated.title !== post.title;
 
@@ -299,6 +317,12 @@ serve(async (req: Request): Promise<Response> => {
           // Only update title if it changed
           if (titleChanged) {
             updateData.title = generated.title;
+          }
+
+          // Update meta_description if generated
+          if (generated.meta_description && needsMetaDesc) {
+            // Ensure max 155 chars
+            updateData.meta_description = generated.meta_description.substring(0, 155);
           }
 
           const { error: updateError } = await supabase
@@ -317,11 +341,12 @@ serve(async (req: Request): Promise<Response> => {
           newTitle: generated.title,
           titleChanged,
           faqsGenerated: generated.faqs.length,
+          metaDescriptionGenerated: !!generated.meta_description && needsMetaDesc,
           success: true,
         });
 
         updated++;
-        console.log(`✓ Updated: ${generated.title} (${generated.faqs.length} FAQs)`);
+        console.log(`✓ Updated: ${generated.title} (${generated.faqs.length} FAQs${needsMetaDesc ? ', +meta' : ''})`);
 
         // Delay between posts to avoid rate limiting
         if (postsToUpdate.indexOf(post) < postsToUpdate.length - 1) {
@@ -338,6 +363,7 @@ serve(async (req: Request): Promise<Response> => {
           newTitle: post.title,
           titleChanged: false,
           faqsGenerated: 0,
+          metaDescriptionGenerated: false,
           success: false,
           error: errorMessage,
         });

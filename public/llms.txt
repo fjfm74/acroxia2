@@ -1,6 +1,6 @@
 # ACROXIA - Análisis de Contratos de Alquiler con IA
 
-> Última actualización: Enero 2026
+> Última actualización: Febrero 2026
 > Versión dinámica con blog actualizado: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
 
 ## Qué es ACROXIA

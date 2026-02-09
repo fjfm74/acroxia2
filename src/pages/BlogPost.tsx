@@ -233,7 +233,6 @@ const BlogPost = () => {
             items={[
               { label: "Blog", href: "/blog" },
               { label: audienceLabel, href: audienceUrl },
-              { label: post.category },
               { label: post.title }
             ]} 
             truncateLength={40}
@@ -259,6 +258,12 @@ const BlogPost = () => {
                       <Calendar className="w-4 h-4" />
                       {formattedDate}
                     </span>
+                    {post.updated_at && post.published_at && 
+                      new Date(post.updated_at).getTime() - new Date(post.published_at).getTime() > 86400000 && (
+                      <span className="flex items-center gap-2 text-sm">
+                        Actualizado: {new Date(post.updated_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </span>
+                    )}
                     <span className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
                       {post.read_time} de lectura
