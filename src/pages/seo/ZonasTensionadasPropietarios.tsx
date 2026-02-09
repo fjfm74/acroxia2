@@ -127,14 +127,26 @@ const ZonasTensionadasPropietarios = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": "https://acroxia.com/zonas-tensionadas-propietarios",
     "name": "Zonas Tensionadas: Guía para Propietarios | Límites de Renta 2026",
     "description": "Todo sobre las zonas tensionadas de alquiler para propietarios: cómo consultar SERPAVI, límites de renta, obligaciones legales y excepciones permitidas.",
     "url": "https://acroxia.com/zonas-tensionadas-propietarios",
     "inLanguage": "es-ES",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
     "isPartOf": {
       "@type": "WebSite",
       "name": "ACROXIA",
       "url": "https://acroxia.com"
+    },
+    "datePublished": "2026-01-22",
+    "dateModified": "2026-02-09",
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://acroxia.com/zonas-tensionadas-propietarios#article"
     }
   };
 
@@ -154,6 +166,7 @@ const ZonasTensionadasPropietarios = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": "https://acroxia.com/zonas-tensionadas-propietarios#article",
     "headline": "Zonas Tensionadas: Guía para Propietarios | Límites de Renta 2026",
     "description": "Cómo consultar SERPAVI, límites de renta, obligaciones legales y excepciones permitidas en zonas tensionadas.",
     "author": {
@@ -170,7 +183,11 @@ const ZonasTensionadasPropietarios = () => {
       }
     },
     "datePublished": "2026-01-22",
-    "dateModified": "2026-01-23",
+    "dateModified": "2026-02-09",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://acroxia.com/zonas-tensionadas-propietarios"
+    },
     "speakable": {
       "@type": "SpeakableSpecification",
       "cssSelector": ["h1", ".speakable-summary"]

@@ -84,10 +84,12 @@ const ClausulasAbusivas = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": "https://acroxia.com/clausulas-abusivas-alquiler",
     "name": "Cláusulas Abusivas en Contratos de Alquiler - Guía 2026",
     "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler. Guía completa sobre qué cláusulas podrían ser nulas según la LAU y cómo reclamar.",
     "url": "https://acroxia.com/clausulas-abusivas-alquiler",
-    "dateModified": "2026-01-25",
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-02-09",
     "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
@@ -98,6 +100,10 @@ const ClausulasAbusivas = () => {
       "@type": "WebSite",
       "name": "ACROXIA",
       "url": "https://acroxia.com"
+    },
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://acroxia.com/clausulas-abusivas-alquiler#article"
     }
   };
 
@@ -117,10 +123,11 @@ const ClausulasAbusivas = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": "https://acroxia.com/clausulas-abusivas-alquiler#article",
     "headline": "Cláusulas Abusivas en Contratos de Alquiler 2026",
     "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler según la LAU.",
     "datePublished": "2026-01-01",
-    "dateModified": "2026-01-25",
+    "dateModified": "2026-02-09",
     "author": {
       "@type": "Organization",
       "name": "ACROXIA",

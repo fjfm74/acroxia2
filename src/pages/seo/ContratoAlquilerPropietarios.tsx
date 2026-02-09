@@ -17,6 +17,7 @@ import {
 const schemaWebPage = {
   "@context": "https://schema.org",
   "@type": "WebPage",
+  "@id": "https://acroxia.com/contrato-alquiler-propietarios",
   "name": "Contrato de Alquiler para Propietarios 2026",
   "description": "Guía completa para propietarios sobre contratos de alquiler en 2026. Requisitos LAU, fianzas permitidas (máximo 3 meses), zonas tensionadas y gastos del arrendador.",
   "url": "https://acroxia.com/contrato-alquiler-propietarios",
@@ -26,13 +27,23 @@ const schemaWebPage = {
     "name": "ACROXIA",
     "url": "https://acroxia.com"
   },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "ACROXIA",
+    "url": "https://acroxia.com"
+  },
   "datePublished": "2026-01-14",
-  "dateModified": "2026-01-23"
+  "dateModified": "2026-02-09",
+  "mainEntity": {
+    "@type": "Article",
+    "@id": "https://acroxia.com/contrato-alquiler-propietarios#article"
+  }
 };
 
 const schemaArticle = {
   "@context": "https://schema.org",
   "@type": "Article",
+  "@id": "https://acroxia.com/contrato-alquiler-propietarios#article",
   "headline": "Contrato de Alquiler para Propietarios 2026: Guía LAU Completa",
   "description": "Requisitos legales, fianzas permitidas y limitaciones en zonas tensionadas para redactar un contrato conforme a la LAU.",
   "author": {
@@ -49,7 +60,11 @@ const schemaArticle = {
     }
   },
   "datePublished": "2026-01-14",
-  "dateModified": "2026-01-23",
+  "dateModified": "2026-02-09",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://acroxia.com/contrato-alquiler-propietarios"
+  },
   "speakable": {
     "@type": "SpeakableSpecification",
     "cssSelector": ["h1", ".speakable-summary"]

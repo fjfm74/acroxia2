@@ -135,14 +135,26 @@ const DepositoFianzaPropietarios = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": "https://acroxia.com/deposito-fianza-propietarios",
     "name": "Depósito de Fianza: Guía Completa para Propietarios 2026",
     "description": "Todo sobre el depósito de fianza para propietarios: dónde depositarla, plazos por comunidad autónoma, devolución al inquilino y descuentos permitidos.",
     "url": "https://acroxia.com/deposito-fianza-propietarios",
     "inLanguage": "es-ES",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
     "isPartOf": {
       "@type": "WebSite",
       "name": "ACROXIA",
       "url": "https://acroxia.com"
+    },
+    "datePublished": "2026-01-22",
+    "dateModified": "2026-02-09",
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://acroxia.com/deposito-fianza-propietarios#article"
     }
   };
 
@@ -162,6 +174,7 @@ const DepositoFianzaPropietarios = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": "https://acroxia.com/deposito-fianza-propietarios#article",
     "headline": "Depósito de Fianza: Guía Completa para Propietarios 2026",
     "description": "Dónde depositar la fianza, plazos por CCAA, devolución al inquilino y descuentos permitidos.",
     "author": {
@@ -178,7 +191,11 @@ const DepositoFianzaPropietarios = () => {
       }
     },
     "datePublished": "2026-01-22",
-    "dateModified": "2026-01-23",
+    "dateModified": "2026-02-09",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://acroxia.com/deposito-fianza-propietarios"
+    },
     "speakable": {
       "@type": "SpeakableSpecification",
       "cssSelector": ["h1", ".speakable-summary"]

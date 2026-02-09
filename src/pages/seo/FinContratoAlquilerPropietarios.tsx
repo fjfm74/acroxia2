@@ -142,14 +142,26 @@ const FinContratoAlquilerPropietarios = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": "https://acroxia.com/fin-contrato-alquiler-propietarios",
     "name": "Fin de Contrato de Alquiler: Guía para Propietarios 2026",
     "description": "Cómo finalizar correctamente un contrato de alquiler: prórrogas obligatorias, preaviso, recuperar vivienda por necesidad y desahucio por expiración de plazo.",
     "url": "https://acroxia.com/fin-contrato-alquiler-propietarios",
     "inLanguage": "es-ES",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
+    },
     "isPartOf": {
       "@type": "WebSite",
       "name": "ACROXIA",
       "url": "https://acroxia.com"
+    },
+    "datePublished": "2026-01-22",
+    "dateModified": "2026-02-09",
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://acroxia.com/fin-contrato-alquiler-propietarios#article"
     }
   };
 
@@ -169,6 +181,7 @@ const FinContratoAlquilerPropietarios = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": "https://acroxia.com/fin-contrato-alquiler-propietarios#article",
     "headline": "Fin de Contrato de Alquiler: Guía para Propietarios 2026",
     "description": "Prórrogas obligatorias, preaviso, recuperar vivienda por necesidad y desahucio por expiración de plazo.",
     "author": {
@@ -185,7 +198,11 @@ const FinContratoAlquilerPropietarios = () => {
       }
     },
     "datePublished": "2026-01-22",
-    "dateModified": "2026-01-23",
+    "dateModified": "2026-02-09",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://acroxia.com/fin-contrato-alquiler-propietarios"
+    },
     "speakable": {
       "@type": "SpeakableSpecification",
       "cssSelector": ["h1", ".speakable-summary"]
