@@ -81,10 +81,12 @@ const DevolucionFianza = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": "https://acroxia.com/devolucion-fianza-alquiler",
     "name": "Devolución de Fianza de Alquiler - Guía 2026",
     "description": "Guía completa sobre cómo recuperar la fianza de tu alquiler. Plazos legales, motivos de retención ilegales y cómo reclamar paso a paso.",
     "url": "https://acroxia.com/devolucion-fianza-alquiler",
-    "dateModified": "2026-01-25",
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-02-09",
     "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
@@ -95,6 +97,10 @@ const DevolucionFianza = () => {
       "@type": "WebSite",
       "name": "ACROXIA",
       "url": "https://acroxia.com"
+    },
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://acroxia.com/devolucion-fianza-alquiler#article"
     }
   };
 
@@ -128,10 +134,11 @@ const DevolucionFianza = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": "https://acroxia.com/devolucion-fianza-alquiler#article",
     "headline": "Devolución de Fianza de Alquiler 2026: Cómo Recuperarla",
     "description": "Guía completa sobre cómo recuperar la fianza de tu alquiler. Plazos legales, motivos de retención ilegales y cómo reclamar.",
     "datePublished": "2026-01-01",
-    "dateModified": "2026-01-25",
+    "dateModified": "2026-02-09",
     "author": {
       "@type": "Organization",
       "name": "ACROXIA",

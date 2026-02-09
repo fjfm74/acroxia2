@@ -83,10 +83,12 @@ const SubidaAlquiler2026 = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": "https://acroxia.com/subida-alquiler-2026",
     "name": "Subida de Alquiler 2026 - IRAV y Límites Legales",
     "description": "Guía completa sobre la subida de alquiler en 2026. IRAV actual, límites legales, cómo calcular la subida y qué hacer si es abusiva.",
     "url": "https://acroxia.com/subida-alquiler-2026",
-    "dateModified": "2026-01-25",
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-02-09",
     "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
@@ -97,6 +99,10 @@ const SubidaAlquiler2026 = () => {
       "@type": "WebSite",
       "name": "ACROXIA",
       "url": "https://acroxia.com"
+    },
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://acroxia.com/subida-alquiler-2026#article"
     }
   };
 
@@ -116,10 +122,11 @@ const SubidaAlquiler2026 = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": "https://acroxia.com/subida-alquiler-2026#article",
     "headline": "Subida de Alquiler 2026: IRAV, Límites Legales y Cómo Calcularla",
     "description": "¿Cuánto puede subir tu alquiler en 2026? El IRAV limita la subida al 2,2%. Guía completa sobre límites legales y cómo reclamar subidas abusivas.",
     "datePublished": "2026-01-01",
-    "dateModified": "2026-01-25",
+    "dateModified": "2026-02-09",
     "author": {
       "@type": "Organization",
       "name": "ACROXIA",
