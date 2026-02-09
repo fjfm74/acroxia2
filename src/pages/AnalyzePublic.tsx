@@ -269,6 +269,30 @@ const AnalyzePublic = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Analiza tu Contrato de Alquiler Gratis | ACROXIA" />
         <meta name="twitter:description" content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos." />
+        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/analizar-gratis" />
+        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/analizar-gratis" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "ACROXIA - Analizador de Contratos de Alquiler",
+            "applicationCategory": "LegalApplication",
+            "operatingSystem": "Web",
+            "description": "Sube tu contrato de alquiler y recibe un análisis gratuito de cláusulas potencialmente ilegales con IA",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "EUR",
+              "description": "Análisis preview gratuito sin registro"
+            },
+            "potentialAction": {
+              "@type": "UseAction",
+              "target": "https://acroxia.com/analizar-gratis",
+              "name": "Analizar contrato de alquiler gratis"
+            }
+          })}
+        </script>
       </Helmet>
 
       <div className="min-h-screen flex flex-col">

@@ -20,13 +20,6 @@ const Pricing = () => {
       "@type": "Brand",
       "name": "ACROXIA"
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "150",
-      "bestRating": "5",
-      "worstRating": "1"
-    },
     "offers": [
       {
         "@type": "Offer",
@@ -106,7 +99,7 @@ const Pricing = () => {
         <link rel="canonical" href="https://acroxia.com/precios" />
         
         <meta property="og:title" content="Precios ACROXIA - Análisis de Contratos desde 0€" />
-        <meta property="og:description" content="Primer análisis de contrato gratis. Packs desde 9.99€." />
+        <meta property="og:description" content="Primer análisis de contrato gratis. Análisis completo desde 39€." />
         <meta property="og:url" content="https://acroxia.com/precios" />
         
         <script type="application/ld+json">
