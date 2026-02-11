@@ -520,6 +520,14 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Read resume info BEFORE clearing it
+    const { data: resumeInfo } = await supabase
+      .from("legal_documents")
+      .select("processing_error")
+      .eq("id", documentId)
+      .single();
+    const savedResumeBlock = resumeInfo?.processing_error?.match(/bloque (\d+)\/(\d+)/);
+
     // Set processing status
     await supabase
       .from("legal_documents")
@@ -655,23 +663,9 @@ serve(async (req) => {
       // Determine which block to start from based on existing chunks
       // We track progress via processing_status which contains "bloque X/Y"
       let startBlock = 0;
-      if (isResume) {
-        // Parse the last processed block from processing_error (e.g., "bloque 5/47")
-        const { data: docStatus } = await supabase
-          .from("legal_documents")
-          .select("processing_status, processing_error")
-          .eq("id", documentId)
-          .single();
-        const errorMatch = docStatus?.processing_error?.match(/bloque (\d+)\/(\d+)/);
-        const statusMatch = docStatus?.processing_status?.match(/bloque (\d+)\/(\d+)/);
-        const match = errorMatch || statusMatch;
-        if (match) {
-          startBlock = parseInt(match[1]); // This is the block that failed, so retry from here
-          // But if errorMatch says "bloque 5", it means block 5 failed, so we start from block 5 (0-indexed = match[1]-1)
-          // The error message uses 1-indexed block numbers
-          startBlock = parseInt(match[1]) - 1; // Convert to 0-indexed
-          console.log(`Resuming from block ${startBlock + 1}/${blocks.length}`);
-        }
+      if (isResume && savedResumeBlock) {
+        startBlock = parseInt(savedResumeBlock[1]) - 1; // Convert 1-indexed to 0-indexed
+        console.log(`Resuming from block ${startBlock + 1}/${blocks.length} (had ${existingChunkCount} existing chunks)`);
       }
 
       let globalChunkIndex = existingChunkCount; // Continue indexing from existing chunks
@@ -682,11 +676,11 @@ serve(async (req) => {
         // CHECK TIME LIMIT before starting a new block
         const elapsedMs = Date.now() - FUNCTION_START_TIME;
         if (elapsedMs > MAX_EXECUTION_MS) {
-          console.log(`Time limit reached (${Math.round(elapsedMs / 1000)}s). Stopping at block ${i}/${blocks.length} to allow resume.`);
+          console.log(`Time limit reached (${Math.round(elapsedMs / 1000)}s). Stopping before block ${i + 1}/${blocks.length} to allow resume.`);
           await supabase.from("legal_documents")
             .update({
               processing_status: "error",
-              processing_error: `Tiempo límite alcanzado en bloque ${i}/${blocks.length}. Pulsa "Reprocesar" para continuar desde aquí.`,
+              processing_error: `Tiempo límite alcanzado en bloque ${i + 1}/${blocks.length}. Pulsa "Reprocesar" para continuar desde aquí.`,
             })
             .eq("id", documentId);
           stoppedEarly = true;
