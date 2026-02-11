@@ -371,20 +371,32 @@ const AdminDocuments = () => {
     try {
       const { data: docData } = await supabase
         .from("legal_documents")
-        .select("file_path, source_type, source_url")
+        .select("file_path, source_type, source_url, processing_error")
         .eq("id", doc.id)
         .single();
 
       if (!docData) throw new Error("Documento no encontrado");
       if (docData.source_type !== "url" && !docData.file_path) throw new Error("No se encontró el archivo");
 
-      await supabase.from("document_relations").delete().eq("source_document_id", doc.id);
-      await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
-      await supabase.from("legal_documents")
-        .update({ processing_status: "pending", processing_error: null })
-        .eq("id", doc.id);
+      // Check if this is a RESUME (timeout) vs full reprocess
+      const isTimeoutResume = docData.processing_error?.includes("Tiempo límite alcanzado");
 
-      toast({ title: "Reprocesando...", description: "El procesamiento puede tardar entre 1 y 3 minutos..." });
+      if (isTimeoutResume) {
+        // RESUME: Do NOT delete chunks or processing_error - the edge function needs them
+        await supabase.from("legal_documents")
+          .update({ processing_status: "pending" })
+          .eq("id", doc.id);
+        toast({ title: "Reanudando procesamiento...", description: "Continuando desde donde se quedó..." });
+      } else {
+        // FULL REPROCESS: Delete everything and start fresh
+        await supabase.from("document_relations").delete().eq("source_document_id", doc.id);
+        await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
+        await supabase.from("legal_documents")
+          .update({ processing_status: "pending", processing_error: null })
+          .eq("id", doc.id);
+        toast({ title: "Reprocesando...", description: "El procesamiento puede tardar entre 1 y 3 minutos..." });
+      }
+
       fetchDocuments();
 
       supabase.functions.invoke("process-legal-document", {
