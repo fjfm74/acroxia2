@@ -454,6 +454,54 @@ export type Database = {
           },
         ]
       }
+      document_relations: {
+        Row: {
+          affected_articles: string[] | null
+          created_at: string | null
+          description: string | null
+          detected_by: string | null
+          id: string
+          relation_type: string
+          source_document_id: string
+          target_document_id: string
+        }
+        Insert: {
+          affected_articles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          detected_by?: string | null
+          id?: string
+          relation_type: string
+          source_document_id: string
+          target_document_id: string
+        }
+        Update: {
+          affected_articles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          detected_by?: string | null
+          id?: string
+          relation_type?: string
+          source_document_id?: string
+          target_document_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_relations_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_relations_target_document_id_fkey"
+            columns: ["target_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landlord_contracts: {
         Row: {
           analysis_result: Json | null
@@ -692,6 +740,8 @@ export type Database = {
           processing_started_at: string | null
           processing_status: string | null
           source: string | null
+          source_type: string | null
+          source_url: string | null
           superseded_by_id: string | null
           supersedes_ids: string[] | null
           territorial_entity: string | null
@@ -717,6 +767,8 @@ export type Database = {
           processing_started_at?: string | null
           processing_status?: string | null
           source?: string | null
+          source_type?: string | null
+          source_url?: string | null
           superseded_by_id?: string | null
           supersedes_ids?: string[] | null
           territorial_entity?: string | null
@@ -742,6 +794,8 @@ export type Database = {
           processing_started_at?: string | null
           processing_status?: string | null
           source?: string | null
+          source_type?: string | null
+          source_url?: string | null
           superseded_by_id?: string | null
           supersedes_ids?: string[] | null
           territorial_entity?: string | null
