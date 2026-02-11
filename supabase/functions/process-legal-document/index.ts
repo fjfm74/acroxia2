@@ -770,9 +770,9 @@ serve(async (req) => {
         chunks_new_in_this_run: chunksInsertedInThisRun,
         chunks_from_previous_run: existingChunkCount,
         key_entities_count: allEntities.size,
-        superseded_chunks: supersededChunksCount,
-        relations_detected: relations.length,
-        document_summary: documentAnalysis.ai_summary || null,
+        superseded_chunks: 0,
+        relations_detected: 0,
+        document_summary: null,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
