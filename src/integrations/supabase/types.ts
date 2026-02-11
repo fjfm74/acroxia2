@@ -687,6 +687,10 @@ export type Database = {
           is_active: boolean
           jurisdiction: Database["public"]["Enums"]["legal_jurisdiction"] | null
           keywords: string[] | null
+          processing_completed_at: string | null
+          processing_error: string | null
+          processing_started_at: string | null
+          processing_status: string | null
           source: string | null
           superseded_by_id: string | null
           supersedes_ids: string[] | null
@@ -708,6 +712,10 @@ export type Database = {
             | Database["public"]["Enums"]["legal_jurisdiction"]
             | null
           keywords?: string[] | null
+          processing_completed_at?: string | null
+          processing_error?: string | null
+          processing_started_at?: string | null
+          processing_status?: string | null
           source?: string | null
           superseded_by_id?: string | null
           supersedes_ids?: string[] | null
@@ -729,6 +737,10 @@ export type Database = {
             | Database["public"]["Enums"]["legal_jurisdiction"]
             | null
           keywords?: string[] | null
+          processing_completed_at?: string | null
+          processing_error?: string | null
+          processing_started_at?: string | null
+          processing_status?: string | null
           source?: string | null
           superseded_by_id?: string | null
           supersedes_ids?: string[] | null

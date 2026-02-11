@@ -56,8 +56,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let documentId: string | null = null;
   try {
-    const { documentId, filePath } = await req.json();
+    const body = await req.json();
+    documentId = body.documentId;
+    const filePath = body.filePath;
 
     if (!documentId || !filePath) {
       throw new Error("documentId and filePath are required");
@@ -66,6 +69,16 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Set processing status to 'processing'
+    await supabase
+      .from("legal_documents")
+      .update({
+        processing_status: "processing",
+        processing_started_at: new Date().toISOString(),
+        processing_error: null,
+      })
+      .eq("id", documentId);
 
     // Download the PDF from storage
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -261,6 +274,16 @@ IMPORTANTE:
       if (insertError) {
         throw new Error(`Error inserting chunk: ${insertError.message}`);
       }
+
+      // Mark as completed even with fallback
+      await supabase
+        .from("legal_documents")
+        .update({
+          processing_status: "completed",
+          processing_completed_at: new Date().toISOString(),
+          processing_error: "Procesamiento con IA falló. Se creó un fragmento placeholder.",
+        })
+        .eq("id", documentId);
 
       return new Response(
         JSON.stringify({
@@ -494,6 +517,16 @@ IMPORTANTE:
       (chunk.key_entities || []).forEach((e: string) => allEntities.add(e));
     });
 
+    // Mark processing as completed
+    await supabase
+      .from("legal_documents")
+      .update({
+        processing_status: "completed",
+        processing_completed_at: new Date().toISOString(),
+        processing_error: null,
+      })
+      .eq("id", documentId);
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -514,6 +547,26 @@ IMPORTANTE:
     );
   } catch (error) {
     console.error("Error processing document:", error);
+
+    // Try to mark document as error in DB
+    if (documentId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const errorClient = createClient(supabaseUrl, supabaseServiceKey);
+        await errorClient
+          .from("legal_documents")
+          .update({
+            processing_status: "error",
+            processing_error: error instanceof Error ? error.message : "Error desconocido",
+            processing_completed_at: new Date().toISOString(),
+          })
+          .eq("id", documentId);
+      } catch (updateError) {
+        console.error("Failed to update error status:", updateError);
+      }
+    }
+
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
