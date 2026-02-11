@@ -1,116 +1,166 @@
 
 
-## Mejora del Panel de Documentos Legales: Estado de Procesamiento en Tiempo Real
+## Optimizacion Integral del Sistema RAG Legal
 
-### Problema actual
+### Problemas Identificados
 
-El panel de documentos legales no proporciona feedback visual sobre el estado de procesamiento de los documentos. Cuando subes un PDF:
-- No sabes si se esta procesando o ha terminado
-- Si la funcion tarda mucho (PDFs grandes), el timeout genera "Failed to send a request to the Edge Function" sin mas informacion
-- No hay indicador de progreso ni estado visible por documento
-- El boton "Reprocesar" solo aparece si hay 0 fragmentos, pero no si hubo error parcial
+**1. PDFs extensos fallan**: El sistema actual envia el PDF completo como base64 en una sola llamada a la IA. Para leyes extensas (LAU tiene ~100 paginas), esto causa timeouts o excede los limites de tokens.
+
+**2. Solo soporta "reemplazar"**: La unica relacion entre documentos es `supersedes` (deroga/reemplaza). No hay soporte para: complementa, amplia, prorroga, modifica parcialmente, desarrolla reglamentariamente.
+
+**3. Reprocesado costoso y en cascada**: Cuando un documento nuevo afecta a otros, hay que reprocesar todos. Sin un sistema inteligente, esto crece exponencialmente con el tamano del RAG.
+
+**4. Solo acepta PDF**: No hay soporte para cargar contenido desde URL web ni EPUB, que son formatos mas limpios para texto legal.
+
+**5. Modelo de IA**: Se usa `google/gemini-2.5-flash` (rapido pero menos preciso). Para procesamiento legal complejo, modelos mas avanzados como `google/gemini-2.5-pro` o `openai/gpt-5` ofrecen mejor comprension juridica.
 
 ---
 
-### Solucion propuesta
+### Solucion Propuesta
 
-Implementar un sistema de estado de procesamiento con feedback visual claro en 3 partes:
+#### Parte 1: Soporte Multi-formato (URL + EPUB + PDF mejorado)
 
-#### 1. Nuevo campo `processing_status` en la tabla `legal_documents`
+**Cambio en el formulario de subida (`AdminDocuments.tsx`)**:
+- Anadir selector de tipo de fuente: "Archivo PDF", "Archivo EPUB", "URL web"
+- Si es URL: campo de texto para pegar el enlace. El edge function descargara y extraera el texto.
+- Si es EPUB: aceptar archivo `.epub` ademas de `.pdf`
+- El formulario enviara un campo `source_type` al edge function
 
-Anadir una columna para rastrear el estado de procesamiento de cada documento:
+**Cambio en el Edge Function (`process-legal-document`)**:
+- Nuevo parametro `source_type`: "pdf" | "epub" | "url"
+- Para URL: usar `fetch()` para descargar el HTML y extraer el texto con regex/parsing
+- Para EPUB: descomprimir (es un ZIP con HTML dentro) y extraer texto
+- Para PDF: mantener el flujo actual pero con procesamiento por partes (ver Parte 2)
 
-```
-processing_status: 'pending' | 'processing' | 'completed' | 'error'
-processing_error: text (mensaje de error si fallo)
-processing_started_at: timestamp
-processing_completed_at: timestamp
-```
+#### Parte 2: Procesamiento por Partes para Documentos Extensos
 
-#### 2. Flujo de procesamiento asincrono mejorado
+**Problema**: Un PDF de 100 paginas no cabe en una sola llamada a la IA.
 
-Cambiar el flujo actual (sincrono, espera respuesta) a un flujo con estado:
+**Solucion**: Procesamiento en dos fases:
 
 ```text
-Subir documento
-    |
-    v
-Crear registro en BD con status='pending'
-    |
-    v
-Llamar Edge Function (fire-and-forget, sin esperar)
-    |
-    v
-Edge Function actualiza status='processing' al inicio
-    |
-    v
-Edge Function actualiza status='completed' o 'error' al final
-    |
-    v
-Frontend hace polling cada 3s para ver el estado actualizado
+Fase 1 - Extraccion de texto
+    PDF -> extractPdfText() (ya existe, mejorar)
+    URL -> fetch + parse HTML
+    EPUB -> unzip + parse HTML
+
+Fase 2 - Chunking inteligente por la IA
+    Dividir el texto en bloques de ~15.000 caracteres
+    Enviar cada bloque a la IA por separado
+    Fusionar los resultados (chunks + metadata)
+    Una llamada final para el analisis global del documento
 ```
 
-#### 3. Mejoras visuales en el panel
+**Cambio en el Edge Function**:
+- Extraer texto primero (sin IA) usando las funciones existentes mejoradas
+- Dividir el texto en segmentos de ~15.000 caracteres respetando limites de articulos/secciones
+- Enviar cada segmento a la IA para extraer chunks
+- Llamada final con resumen de todos los chunks para generar `document_analysis` (supersedes, keywords, etc.)
+- Actualizar `processing_status` con progreso: "processing (3/7 bloques)"
 
-- **Badge de estado** junto a cada documento: "Procesando..." (con spinner), "Completado", "Error"
-- **Barra de progreso o indicador pulsante** mientras el estado es 'processing'
-- **Mensaje de error visible** si el procesamiento fallo, con boton de reintentar
-- **Boton Reprocesar siempre visible** (no solo cuando chunks=0)
-- **Toast mejorado** al subir: "Documento subido. El procesamiento puede tardar 1-2 minutos..."
+**Modelo de IA**: Cambiar de `google/gemini-2.5-flash` a `google/gemini-2.5-pro` para el procesamiento legal. Es mas lento pero significativamente mejor en comprension juridica, interpretacion de relaciones entre normas y extraccion precisa de entidades. El modelo flash se mantiene como fallback si pro falla.
 
----
+#### Parte 3: Sistema de Relaciones entre Documentos
 
-### Detalle tecnico de cambios
+**Migracion SQL - Nueva tabla `document_relations`**:
 
-#### Migracion SQL
 ```sql
-ALTER TABLE legal_documents 
-ADD COLUMN processing_status text DEFAULT 'completed',
-ADD COLUMN processing_error text,
-ADD COLUMN processing_started_at timestamptz,
-ADD COLUMN processing_completed_at timestamptz;
-
--- Marcar documentos existentes como completados
-UPDATE legal_documents SET processing_status = 'completed' WHERE processing_status IS NULL;
+CREATE TABLE document_relations (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  source_document_id uuid REFERENCES legal_documents(id) ON DELETE CASCADE,
+  target_document_id uuid REFERENCES legal_documents(id) ON DELETE CASCADE,
+  relation_type text NOT NULL,
+  -- 'deroga', 'modifica', 'complementa', 'amplia', 
+  -- 'prorroga', 'desarrolla', 'interpreta'
+  affected_articles text[],  -- articulos especificos afectados
+  description text,          -- descripcion de la relacion
+  detected_by text DEFAULT 'ai',  -- 'ai' o 'manual'
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(source_document_id, target_document_id, relation_type)
+);
 ```
 
-#### `supabase/functions/process-legal-document/index.ts`
-- Al inicio del procesamiento: actualizar `processing_status = 'processing'`, `processing_started_at = now()`
-- Al completar con exito: actualizar `processing_status = 'completed'`, `processing_completed_at = now()`
-- En caso de error: actualizar `processing_status = 'error'`, `processing_error = mensaje`
-- Esto permite que aunque el cliente pierda la conexion (timeout), el estado se actualiza correctamente en BD
+**Tipos de relacion soportados**:
 
-#### `src/pages/admin/AdminDocuments.tsx`
-- **Badge de estado por documento**: Mostrar "Procesando..." con icono animado, "Error" con mensaje, "Listo" con checkmark
-- **Polling automatico**: Mientras haya algun documento con status 'pending' o 'processing', hacer polling cada 3 segundos (`setInterval` con `fetchDocuments`)
-- **Subida mejorada**: No esperar la respuesta de la edge function; usar `.invoke()` sin await en el resultado, solo verificar que el request se envio
-- **Boton Reprocesar**: Visible siempre (no solo cuando chunks=0), con confirmacion
-- **Toast informativo**: "Documento subido correctamente. El procesamiento tardara entre 30 segundos y 2 minutos..."
-- **Mostrar error**: Si `processing_status === 'error'`, mostrar el `processing_error` en texto rojo debajo del titulo del documento
+| Tipo | Significado | Efecto en RAG |
+|------|------------|---------------|
+| deroga | Reemplaza completamente | Marcar chunks como `is_superseded` |
+| modifica | Cambia articulos especificos | Marcar solo chunks afectados como `is_superseded` |
+| complementa | Anade informacion nueva | Vincular chunks con referencia cruzada |
+| amplia | Extiende el alcance | Vincular chunks, anadir scope ampliado |
+| prorroga | Extiende vigencia temporal | Actualizar `expiration_date` del documento original |
+| desarrolla | Reglamento que desarrolla una ley | Vincular como detalle de implementacion |
+| interpreta | Jurisprudencia que interpreta | Vincular como interpretacion autoritativa |
 
-#### Interfaz del documento mejorada (por documento):
+**Cambio en el prompt de la IA (process-legal-document)**:
+- Ampliar la seccion de "DOCUMENTOS DEROGADOS/MODIFICADOS" para detectar todos los tipos de relacion
+- El prompt pedira un array de relaciones con tipo, no solo `supersedes`
+- Formato de respuesta ampliado:
 
-| Estado | Visual |
-|--------|--------|
-| pending | Badge gris "Pendiente" |
-| processing | Badge azul con spinner "Procesando..." + tiempo transcurrido |
-| completed | Badge verde "Procesado" + N fragmentos |
-| error | Badge rojo "Error" + mensaje + boton Reintentar |
+```json
+{
+  "document_analysis": {
+    "ai_summary": "...",
+    "keywords": [],
+    "relations": [
+      {
+        "type": "modifica",
+        "target_title": "Ley 29/1994",
+        "affected_articles": ["Art. 36", "Art. 20"],
+        "description": "Modifica los limites de garantias adicionales"
+      },
+      {
+        "type": "complementa",
+        "target_title": "Real Decreto 7/2019",
+        "description": "Desarrolla las zonas de mercado tensionado"
+      }
+    ],
+    "expiration_date": null
+  }
+}
+```
+
+**Logica de procesamiento de relaciones**:
+- `deroga`: Marcar documento/chunks como superseded (logica actual)
+- `modifica`: Marcar solo los chunks con `article_reference` coincidente como superseded
+- `complementa/amplia/desarrolla/interpreta`: Crear la relacion en `document_relations` sin marcar nada como obsoleto. Esto permite que el RAG devuelva ambos documentos cuando se busca un tema.
+- `prorroga`: Actualizar `expiration_date` del documento target
+
+#### Parte 4: Reprocesado Inteligente (No Reprocesar Todo)
+
+**Problema**: Si subo un documento que "complementa" la LAU, no necesito reprocesar la LAU entera.
+
+**Solucion**: Solo reprocesar cuando la relacion es `deroga` o `modifica`. Para el resto, basta con crear la relacion y los nuevos chunks.
+
+**Logica**:
+1. Al procesar un documento nuevo, la IA detecta relaciones
+2. Para cada relacion detectada:
+   - `deroga/modifica` -> marcar chunks afectados como superseded (sin reprocesar el documento)
+   - `complementa/amplia/prorroga/desarrolla/interpreta` -> solo crear la relacion en `document_relations`
+3. El motor de busqueda RAG (`search_legal_chunks`) ya filtra chunks superseded, asi que los cambios son automaticos
+
+**Cambio en las funciones de busqueda RAG**: Modificar `search_legal_chunks_semantic` para que tambien devuelva chunks de documentos relacionados (complementarios, que desarrollan, etc.) cuando son relevantes.
+
+#### Parte 5: Mejoras Visuales en AdminDocuments
+
+- Mostrar relaciones entre documentos en la interfaz (icono de enlace)
+- Al ver un documento, mostrar "Relacionado con: LAU (complementa), RD 7/2019 (modifica)"
+- Progreso de procesamiento mas detallado: "Procesando bloque 3 de 7..."
+- Indicador de formato de origen (PDF/URL/EPUB)
 
 ---
 
-### Archivos a modificar
+### Detalle tecnico de archivos a modificar
 
-| Archivo | Cambio |
-|---------|--------|
-| Migracion SQL | Nuevas columnas en `legal_documents` |
-| `supabase/functions/process-legal-document/index.ts` | Actualizar estado al inicio/fin/error |
-| `src/pages/admin/AdminDocuments.tsx` | Badges de estado, polling, UX mejorada |
+| Archivo | Cambios |
+|---------|---------|
+| Migracion SQL | Crear tabla `document_relations` con RLS |
+| `supabase/functions/process-legal-document/index.ts` | Multi-formato, chunking por bloques, relaciones ampliadas, modelo gemini-2.5-pro |
+| `src/pages/admin/AdminDocuments.tsx` | Selector de formato (PDF/EPUB/URL), visualizacion de relaciones, progreso detallado |
 
-### Resultado esperado
+### Orden de implementacion
 
-- Al subir un documento, se vera inmediatamente con estado "Procesando..." y un spinner
-- Si el procesamiento tarda, el usuario ve que sigue trabajando (polling actualiza el estado)
-- Si hay error, se muestra claramente con opcion de reintentar
-- Nunca mas se queda el usuario sin saber que esta pasando
+1. Migracion SQL (tabla `document_relations`)
+2. Edge Function: soporte URL + EPUB + procesamiento por bloques + relaciones
+3. Frontend: formulario multi-formato + visualizacion de relaciones
 
