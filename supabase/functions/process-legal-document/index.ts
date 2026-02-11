@@ -49,14 +49,43 @@ async function extractTextFromUrl(url: string): Promise<string> {
   // BOE-specific: extract the main legal text container
   let text = html;
   
-  // Try BOE-specific selectors first
-  const boeContentMatch = text.match(/<div[^>]*id="textoxslt"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i) ||
-                          text.match(/<div[^>]*class="[^"]*texto[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<div[^>]*class="[^"]*(?:pie|footer))/i);
+  // Try BOE-specific extraction using start/end markers (greedy, captures full content)
+  const boeStartIdx = text.indexOf('id="textoxslt"');
+  let boeExtracted = false;
   
-  if (boeContentMatch) {
-    text = boeContentMatch[0];
-    console.log("BOE content container found, using targeted extraction");
-  } else {
+  if (boeStartIdx !== -1) {
+    // Find the opening tag start
+    let tagStart = text.lastIndexOf('<div', boeStartIdx);
+    if (tagStart !== -1) {
+      // Find the content after the opening tag
+      const afterTag = text.indexOf('>', boeStartIdx);
+      if (afterTag !== -1) {
+        // Find closing: look for the pattern where the textoxslt div ends
+        // We count nested divs to find the correct closing tag
+        let depth = 1;
+        let pos = afterTag + 1;
+        while (pos < text.length && depth > 0) {
+          const nextOpen = text.indexOf('<div', pos);
+          const nextClose = text.indexOf('</div>', pos);
+          if (nextClose === -1) break;
+          if (nextOpen !== -1 && nextOpen < nextClose) {
+            depth++;
+            pos = nextOpen + 4;
+          } else {
+            depth--;
+            if (depth === 0) {
+              text = text.substring(afterTag + 1, nextClose);
+              boeExtracted = true;
+              console.log(`BOE content container found, extracted ${text.length} chars`);
+            }
+            pos = nextClose + 6;
+          }
+        }
+      }
+    }
+  }
+  
+  if (!boeExtracted) {
     // Generic: remove noise
     text = text
       .replace(/<script[\s\S]*?<\/script>/gi, "")
@@ -230,10 +259,10 @@ function buildChunkExtractionPrompt(docTitle: string, docType: string, docJurisd
 CONTEXTO: Estás procesando el documento "${docTitle}" (Tipo="${docType}", Jurisdicción="${docJurisdiction}", Entidad="${docEntity || 'No especificada'}").
 Este documento se usa en un sistema RAG para analizar contratos de alquiler de vivienda.
 
-FILTRO DE RELEVANCIA CRÍTICO:
-- SOLO extrae fragmentos que sean DIRECTAMENTE relevantes para: arrendamientos urbanos, contratos de alquiler, fianzas, depósitos, desahucios, lanzamientos, procedimientos de reclamación de rentas, ejecuciones hipotecarias sobre viviendas arrendadas, derechos y obligaciones de arrendadores/arrendatarios, plazos contractuales, actualizaciones de renta, zonas tensionadas, vivienda habitual.
-- IGNORA completamente artículos sobre: procedimientos civiles genéricos no relacionados con arrendamientos, derecho mercantil, derecho de familia (salvo vivienda), sucesiones, derecho marítimo, propiedad intelectual, etc.
-- Si un bloque NO tiene NADA relevante para alquiler/vivienda, responde con {"chunks": []}
+CRITERIO DE EXTRACCIÓN:
+- Extrae fragmentos que puedan ser ÚTILES para un análisis legal de contratos de alquiler. Esto incluye normativa directa (LAU, fianzas, plazos) Y normativa INDIRECTA aplicable: procedimientos judiciales (desahucios, reclamaciones, ejecuciones), plazos procesales, competencia territorial, costas, medidas cautelares sobre inmuebles, embargos de rentas, juicio verbal, monitorio, obligaciones contractuales, resolución de contratos, etc.
+- Para leyes procesales (LEC, etc.): extrae los procedimientos aplicables a conflictos arrendaticios y de vivienda.
+- Si un bloque NO tiene NADA remotamente aplicable, responde con {"chunks": []}
 
 Para CADA fragmento relevante, extrae:
 {
