@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 
-const categories = [
+export const faqCategories = [
   {
     id: "derechos",
     title: "Derechos del Inquilino",
@@ -245,7 +245,7 @@ const FAQCategories = () => {
     <section className="py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto">
-          {categories.map((category, categoryIndex) => (
+          {faqCategories.map((category, categoryIndex) => (
             <FadeIn key={category.id} delay={categoryIndex * 0.1}>
               <div className="mb-24 last:mb-0">
                 {/* Category Header */}
