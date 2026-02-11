@@ -1,119 +1,116 @@
 
 
-## Fase 3: Entity Stacking y Mejoras Menores en Guias SEO
+## Mejora del Panel de Documentos Legales: Estado de Procesamiento en Tiempo Real
 
-### Objetivo
-Reforzar la jerarquia de entidades (Entity Stacking) en las 8 guias SEO pilares mediante vinculacion bidireccional WebPage-Article, y aplicar mejoras menores pendientes.
+### Problema actual
+
+El panel de documentos legales no proporciona feedback visual sobre el estado de procesamiento de los documentos. Cuando subes un PDF:
+- No sabes si se esta procesando o ha terminado
+- Si la funcion tarda mucho (PDFs grandes), el timeout genera "Failed to send a request to the Edge Function" sin mas informacion
+- No hay indicador de progreso ni estado visible por documento
+- El boton "Reprocesar" solo aparece si hay 0 fragmentos, pero no si hubo error parcial
 
 ---
 
-### 1. Entity Stacking: Vinculacion bidireccional WebPage - Article
+### Solucion propuesta
 
-**Problema actual**: Los schemas `WebPage` y `Article` existen por separado sin vincularse mutuamente. Google no entiende que el Article es el contenido principal del WebPage.
+Implementar un sistema de estado de procesamiento con feedback visual claro en 3 partes:
 
-**Solucion**: Anadir `mainEntity` al schema WebPage apuntando al Article, y asegurar que el Article tiene `mainEntityOfPage` apuntando al WebPage. Esto crea un grafo de entidades conectado.
+#### 1. Nuevo campo `processing_status` en la tabla `legal_documents`
 
-**Cambio en cada WebPage schema**:
-```typescript
-// Anadir al schema WebPage existente:
-"mainEntity": {
-  "@type": "Article",
-  "@id": "https://acroxia.com/[slug]#article"
-}
+Anadir una columna para rastrear el estado de procesamiento de cada documento:
+
+```
+processing_status: 'pending' | 'processing' | 'completed' | 'error'
+processing_error: text (mensaje de error si fallo)
+processing_started_at: timestamp
+processing_completed_at: timestamp
 ```
 
-**Cambio en cada Article schema**:
-```typescript
-// Anadir @id al Article y mainEntityOfPage si falta:
-"@id": "https://acroxia.com/[slug]#article",
-"mainEntityOfPage": {
-  "@type": "WebPage",
-  "@id": "https://acroxia.com/[slug]"
-}
+#### 2. Flujo de procesamiento asincrono mejorado
+
+Cambiar el flujo actual (sincrono, espera respuesta) a un flujo con estado:
+
+```text
+Subir documento
+    |
+    v
+Crear registro en BD con status='pending'
+    |
+    v
+Llamar Edge Function (fire-and-forget, sin esperar)
+    |
+    v
+Edge Function actualiza status='processing' al inicio
+    |
+    v
+Edge Function actualiza status='completed' o 'error' al final
+    |
+    v
+Frontend hace polling cada 3s para ver el estado actualizado
 ```
 
----
+#### 3. Mejoras visuales en el panel
 
-### 2. Actualizar dateModified a febrero 2026
-
-Todas las guias tienen `dateModified: "2026-01-23"` o `"2026-01-25"`. Al hacer cambios en los schemas, actualizar a `"2026-02-09"` para reflejar la fecha real de modificacion.
-
----
-
-### 3. Paginas afectadas (8 archivos)
-
-| Archivo | WebPage mainEntity | Article @id + mainEntityOfPage | dateModified |
-|---------|-------------------|-------------------------------|--------------|
-| `ClausulasAbusivas.tsx` | Anadir | Existe parcial, completar @id | Actualizar |
-| `DevolucionFianza.tsx` | Anadir | Existe parcial, completar @id | Actualizar |
-| `SubidaAlquiler2026.tsx` | Anadir | Existe parcial, completar @id | Actualizar |
-| `ContratoAlquilerPropietarios.tsx` | Anadir | Falta mainEntityOfPage, anadir @id | Actualizar |
-| `ImpagoAlquilerPropietarios.tsx` | Anadir | Falta mainEntityOfPage, anadir @id | Actualizar |
-| `ZonasTensionadasPropietarios.tsx` | Anadir | Falta mainEntityOfPage, anadir @id | Actualizar |
-| `DepositoFianzaPropietarios.tsx` | Anadir | Falta mainEntityOfPage, anadir @id | Actualizar |
-| `FinContratoAlquilerPropietarios.tsx` | Anadir | Falta mainEntityOfPage, anadir @id | Actualizar |
+- **Badge de estado** junto a cada documento: "Procesando..." (con spinner), "Completado", "Error"
+- **Barra de progreso o indicador pulsante** mientras el estado es 'processing'
+- **Mensaje de error visible** si el procesamiento fallo, con boton de reintentar
+- **Boton Reprocesar siempre visible** (no solo cuando chunks=0)
+- **Toast mejorado** al subir: "Documento subido. El procesamiento puede tardar 1-2 minutos..."
 
 ---
 
-### 4. Mejoras menores adicionales
+### Detalle tecnico de cambios
 
-**4a. Anadir `publisher` faltante en WebPage schemas de propietarios**
-Las 5 guias de propietarios no tienen `publisher` en el WebPage schema (las de inquilinos si lo tienen). Unificar anadiendo:
-```typescript
-"publisher": {
-  "@type": "Organization",
-  "name": "ACROXIA",
-  "url": "https://acroxia.com"
-}
+#### Migracion SQL
+```sql
+ALTER TABLE legal_documents 
+ADD COLUMN processing_status text DEFAULT 'completed',
+ADD COLUMN processing_error text,
+ADD COLUMN processing_started_at timestamptz,
+ADD COLUMN processing_completed_at timestamptz;
+
+-- Marcar documentos existentes como completados
+UPDATE legal_documents SET processing_status = 'completed' WHERE processing_status IS NULL;
 ```
 
-**4b. Anadir `datePublished` faltante en WebPage schemas de propietarios**
-Las guias de propietarios no incluyen `datePublished` en el WebPage. Anadir para consistencia.
+#### `supabase/functions/process-legal-document/index.ts`
+- Al inicio del procesamiento: actualizar `processing_status = 'processing'`, `processing_started_at = now()`
+- Al completar con exito: actualizar `processing_status = 'completed'`, `processing_completed_at = now()`
+- En caso de error: actualizar `processing_status = 'error'`, `processing_error = mensaje`
+- Esto permite que aunque el cliente pierda la conexion (timeout), el estado se actualiza correctamente en BD
 
-**4c. Actualizar `public/llms.txt`**
-Cambiar "Enero 2026" a "Febrero 2026" si no se actualizo ya.
+#### `src/pages/admin/AdminDocuments.tsx`
+- **Badge de estado por documento**: Mostrar "Procesando..." con icono animado, "Error" con mensaje, "Listo" con checkmark
+- **Polling automatico**: Mientras haya algun documento con status 'pending' o 'processing', hacer polling cada 3 segundos (`setInterval` con `fetchDocuments`)
+- **Subida mejorada**: No esperar la respuesta de la edge function; usar `.invoke()` sin await en el resultado, solo verificar que el request se envio
+- **Boton Reprocesar**: Visible siempre (no solo cuando chunks=0), con confirmacion
+- **Toast informativo**: "Documento subido correctamente. El procesamiento tardara entre 30 segundos y 2 minutos..."
+- **Mostrar error**: Si `processing_status === 'error'`, mostrar el `processing_error` en texto rojo debajo del titulo del documento
 
----
+#### Interfaz del documento mejorada (por documento):
 
-### Seccion tecnica: Ejemplo de schema final (Entity Stacking completo)
-
-```typescript
-// WebPage schema (con Entity Stacking)
-const pageSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "@id": "https://acroxia.com/clausulas-abusivas-alquiler",
-  "name": "Clausulas Abusivas en Contratos de Alquiler - Guia 2026",
-  "description": "...",
-  "url": "https://acroxia.com/clausulas-abusivas-alquiler",
-  "datePublished": "2026-01-01",
-  "dateModified": "2026-02-09",
-  "inLanguage": "es-ES",
-  "publisher": { "@type": "Organization", "name": "ACROXIA", "url": "https://acroxia.com" },
-  "isPartOf": { "@type": "WebSite", "name": "ACROXIA", "url": "https://acroxia.com" },
-  "mainEntity": { "@type": "Article", "@id": "https://acroxia.com/clausulas-abusivas-alquiler#article" }
-};
-
-// Article schema (con vinculacion inversa)
-const articleSchema = {
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "@id": "https://acroxia.com/clausulas-abusivas-alquiler#article",
-  "headline": "...",
-  "datePublished": "2026-01-01",
-  "dateModified": "2026-02-09",
-  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://acroxia.com/clausulas-abusivas-alquiler" },
-  "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".speakable-summary"] },
-  // ... resto
-};
-```
+| Estado | Visual |
+|--------|--------|
+| pending | Badge gris "Pendiente" |
+| processing | Badge azul con spinner "Procesando..." + tiempo transcurrido |
+| completed | Badge verde "Procesado" + N fragmentos |
+| error | Badge rojo "Error" + mensaje + boton Reintentar |
 
 ---
+
+### Archivos a modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| Migracion SQL | Nuevas columnas en `legal_documents` |
+| `supabase/functions/process-legal-document/index.ts` | Actualizar estado al inicio/fin/error |
+| `src/pages/admin/AdminDocuments.tsx` | Badges de estado, polling, UX mejorada |
 
 ### Resultado esperado
 
-- Google Knowledge Graph entiende la relacion jerarquica WebPage - Article
-- Mejora la elegibilidad para AI Overviews al tener entidades interconectadas
-- Schemas consistentes en las 8 guias con fechas actualizadas
-- Mayor probabilidad de rich snippets al tener publisher uniforme
+- Al subir un documento, se vera inmediatamente con estado "Procesando..." y un spinner
+- Si el procesamiento tarda, el usuario ve que sigue trabajando (polling actualiza el estado)
+- Si hay error, se muestra claramente con opcion de reintentar
+- Nunca mas se queda el usuario sin saber que esta pasando
 
