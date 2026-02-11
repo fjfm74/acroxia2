@@ -577,60 +577,98 @@ serve(async (req) => {
 
     // ============ PHASE 2: CHUNK EXTRACTION ============
     let allChunks: any[] = [];
+    let chunksInsertedInThisRun = 0;
+
+    // Check for existing chunks from a previous partial run (resume support)
+    const { data: existingChunks } = await supabase
+      .from("legal_chunks")
+      .select("id, chunk_index")
+      .eq("document_id", documentId);
+    
+    const existingChunkCount = existingChunks?.length || 0;
+    const isResume = existingChunkCount > 0;
+    if (isResume) {
+      console.log(`Resuming: found ${existingChunkCount} existing chunks from previous run`);
+    }
 
     if (usePdfVision) {
-      // PDF vision mode - send base64 to AI
-      const { data: fileData } = await supabase.storage.from("legal-docs").download(filePath);
-      const arrayBuffer = await fileData!.arrayBuffer();
-      const base64 = arrayBufferToBase64(arrayBuffer);
+      // Only process if no existing chunks (PDF vision is all-or-nothing)
+      if (!isResume) {
+        const { data: fileData } = await supabase.storage.from("legal-docs").download(filePath);
+        const arrayBuffer = await fileData!.arrayBuffer();
+        const base64 = arrayBufferToBase64(arrayBuffer);
 
-      const systemPrompt = buildChunkExtractionPrompt(docInfo.title, docInfo.type, docInfo.jurisdiction, docInfo.territorial_entity);
+        const systemPrompt = buildChunkExtractionPrompt(docInfo.title, docInfo.type, docInfo.jurisdiction, docInfo.territorial_entity);
 
-      await supabase.from("legal_documents")
-        .update({ processing_status: "processing (extrayendo texto del PDF...)" })
-        .eq("id", documentId);
+        await supabase.from("legal_documents")
+          .update({ processing_status: "processing (extrayendo texto del PDF...)" })
+          .eq("id", documentId);
 
-      try {
-        const aiContent = await callAI([
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: `Procesa este documento legal: "${docInfo.title}". Extrae los fragmentos relevantes.` },
-              { type: "image_url", image_url: { url: `data:application/pdf;base64,${base64}` } },
-            ],
-          },
-        ]);
+        try {
+          const aiContent = await callAI([
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: `Procesa este documento legal: "${docInfo.title}". Extrae los fragmentos relevantes.` },
+                { type: "image_url", image_url: { url: `data:application/pdf;base64,${base64}` } },
+              ],
+            },
+          ]);
 
-        const parsed = parseJsonResponse(aiContent);
-        allChunks = parsed.chunks || parsed || [];
-      } catch (visionError) {
-        console.error("PDF vision failed:", visionError);
-        // Create placeholder chunk
-        allChunks = [{
-          content: `Documento: ${docInfo.title}. Pendiente de procesamiento manual. Error: ${visionError instanceof Error ? visionError.message : 'unknown'}`,
-          article_reference: null,
-          section_title: docInfo.title,
-          semantic_category: "otro",
-          key_entities: [],
-          applies_when: {},
-          territorial_scope: docInfo.jurisdiction === 'estatal' ? 'estatal' : 'autonomica',
-          affected_municipalities: [],
-          affected_provinces: [],
-        }];
+          const parsed = parseJsonResponse(aiContent);
+          allChunks = parsed.chunks || parsed || [];
+        } catch (visionError) {
+          console.error("PDF vision failed:", visionError);
+          allChunks = [{
+            content: `Documento: ${docInfo.title}. Pendiente de procesamiento manual. Error: ${visionError instanceof Error ? visionError.message : 'unknown'}`,
+            article_reference: null,
+            section_title: docInfo.title,
+            semantic_category: "otro",
+            key_entities: [],
+            applies_when: {},
+            territorial_scope: docInfo.jurisdiction === 'estatal' ? 'estatal' : 'autonomica',
+            affected_municipalities: [],
+            affected_provinces: [],
+          }];
+        }
+
+        // Insert chunks immediately for PDF vision
+        const chunksToInsert = allChunks.map((chunk: any, index: number) =>
+          validateAndNormalizeChunk(chunk, index, documentId!, docInfo.jurisdiction)
+        );
+        const { error: insertError } = await supabase.from("legal_chunks").insert(chunksToInsert);
+        if (insertError) throw new Error(`Error inserting chunks: ${insertError.message}`);
+        chunksInsertedInThisRun = chunksToInsert.length;
       }
     } else if (extractedText) {
-      // Text mode - split into blocks and process each
-      // Use 80K char blocks (gemini supports 1M+ tokens context)
+      // Text mode - split into blocks and process each WITH INCREMENTAL SAVES
       const blocks = splitTextIntoBlocks(extractedText, 80000);
       console.log(`Split text into ${blocks.length} blocks (from ${extractedText.length} chars)`);
 
       const systemPrompt = buildChunkExtractionPrompt(docInfo.title, docInfo.type, docInfo.jurisdiction, docInfo.territorial_entity);
-
-      // Use flash for chunk extraction (fast), pro only for final analysis
       const EXTRACTION_MODEL = "google/gemini-2.5-flash";
-      
-      for (let i = 0; i < blocks.length; i++) {
+
+      // Determine which block to start from based on existing chunks
+      // We track progress via processing_status which contains "bloque X/Y"
+      let startBlock = 0;
+      if (isResume) {
+        // Parse the last processed block from status
+        const { data: docStatus } = await supabase
+          .from("legal_documents")
+          .select("processing_status")
+          .eq("id", documentId)
+          .single();
+        const statusMatch = docStatus?.processing_status?.match(/bloque (\d+)\/(\d+)/);
+        if (statusMatch) {
+          startBlock = parseInt(statusMatch[1]); // Start from the NEXT block (this one was the last attempted)
+          console.log(`Resuming from block ${startBlock + 1}/${blocks.length}`);
+        }
+      }
+
+      let globalChunkIndex = existingChunkCount; // Continue indexing from existing chunks
+
+      for (let i = startBlock; i < blocks.length; i++) {
         await supabase.from("legal_documents")
           .update({ processing_status: `processing (bloque ${i + 1}/${blocks.length})` })
           .eq("id", documentId);
@@ -645,88 +683,41 @@ serve(async (req) => {
 
           const parsed = parseJsonResponse(aiContent);
           const blockChunks = parsed.chunks || parsed || [];
-          if (Array.isArray(blockChunks)) {
+          if (Array.isArray(blockChunks) && blockChunks.length > 0) {
+            // INCREMENTAL SAVE: insert chunks immediately after each block
+            const chunksToInsert = blockChunks.map((chunk: any, index: number) =>
+              validateAndNormalizeChunk(chunk, globalChunkIndex + index, documentId!, docInfo.jurisdiction)
+            );
+            const { error: insertError } = await supabase.from("legal_chunks").insert(chunksToInsert);
+            if (insertError) {
+              console.error(`Error inserting chunks for block ${i + 1}:`, insertError);
+            } else {
+              globalChunkIndex += blockChunks.length;
+              chunksInsertedInThisRun += blockChunks.length;
+              console.log(`Block ${i + 1}: saved ${blockChunks.length} chunks (total: ${globalChunkIndex})`);
+            }
             allChunks.push(...blockChunks);
-            console.log(`Block ${i + 1}: extracted ${blockChunks.length} relevant chunks`);
+          } else {
+            console.log(`Block ${i + 1}: no relevant chunks`);
           }
         } catch (blockError) {
           console.error(`Error processing block ${i + 1}:`, blockError);
+          // Save progress status so we can resume from here
+          await supabase.from("legal_documents")
+            .update({ processing_status: `processing (bloque ${i}/${blocks.length})`, processing_error: `Timeout/error en bloque ${i + 1}. Reprocesar para continuar.` })
+            .eq("id", documentId);
         }
       }
     }
 
-    if (allChunks.length === 0) {
+    const totalChunks = existingChunkCount + chunksInsertedInThisRun;
+    if (totalChunks === 0 && allChunks.length === 0) {
       throw new Error("No se pudieron extraer fragmentos del documento");
     }
 
-    // ============ PHASE 3: GLOBAL ANALYSIS ============
-    await supabase.from("legal_documents")
-      .update({ processing_status: "processing (análisis global...)" })
-      .eq("id", documentId);
-
-    const chunksSummary = allChunks.slice(0, 20).map((c: any, i: number) =>
-      `[${i + 1}] ${c.article_reference || ''} ${c.section_title || ''}: ${(c.content || '').substring(0, 200)}...`
-    ).join("\n");
-
-    let documentAnalysis: any = {};
-    try {
-      const analysisContent = await callAI([
-        { role: "system", content: buildAnalysisPrompt(docInfo.title, chunksSummary) },
-        { role: "user", content: "Genera el análisis global del documento basándote en los fragmentos proporcionados." },
-      ]);
-      const parsed = parseJsonResponse(analysisContent);
-      documentAnalysis = parsed.document_analysis || parsed || {};
-    } catch (analysisError) {
-      console.error("Global analysis failed:", analysisError);
-      documentAnalysis = { ai_summary: null, keywords: [], relations: [], expiration_date: null };
-    }
-
-    // ============ PHASE 4: SAVE METADATA ============
-    const updateData: any = {};
-    if (documentAnalysis.ai_summary) updateData.ai_summary = documentAnalysis.ai_summary;
-    if (documentAnalysis.keywords && Array.isArray(documentAnalysis.keywords)) updateData.keywords = documentAnalysis.keywords;
-    if (documentAnalysis.expiration_date) updateData.expiration_date = documentAnalysis.expiration_date;
-
-    if (Object.keys(updateData).length > 0) {
-      await supabase.from("legal_documents").update(updateData).eq("id", documentId);
-    }
-
-    // ============ PHASE 5: PROCESS RELATIONS ============
-    await supabase.from("legal_documents")
-      .update({ processing_status: "processing (procesando relaciones...)" })
-      .eq("id", documentId);
-
-    const relations = documentAnalysis.relations || [];
-    // Also handle legacy 'supersedes' field
-    const legacySupersedes = documentAnalysis.supersedes || [];
-    if (legacySupersedes.length > 0 && relations.length === 0) {
-      for (const title of legacySupersedes) {
-        relations.push({ type: "modifica", target_title: title, affected_articles: [], description: "Detectado como documento derogado/modificado" });
-      }
-    }
-
-    let supersededChunksCount = 0;
-    if (relations.length > 0) {
-      supersededChunksCount = await processRelations(supabase, documentId, relations, allChunks);
-    }
-
-    // ============ PHASE 6: INSERT CHUNKS ============
-    await supabase.from("legal_documents")
-      .update({ processing_status: "processing (guardando fragmentos...)" })
-      .eq("id", documentId);
-
-    const chunksToInsert = allChunks.map((chunk: any, index: number) =>
-      validateAndNormalizeChunk(chunk, index, documentId!, docInfo.jurisdiction)
-    );
-
-    const { error: insertError } = await supabase.from("legal_chunks").insert(chunksToInsert);
-    if (insertError) throw new Error(`Error inserting chunks: ${insertError.message}`);
-
     // Statistics
-    const totalMunicipalities = chunksToInsert.reduce((acc: number, c: any) => acc + (c.affected_municipalities?.length || 0), 0);
-    const totalProvinces = chunksToInsert.reduce((acc: number, c: any) => acc + (c.affected_provinces?.length || 0), 0);
     const allEntities = new Set<string>();
-    chunksToInsert.forEach((c: any) => (c.key_entities || []).forEach((e: string) => allEntities.add(e)));
+    allChunks.forEach((c: any) => (c.key_entities || []).forEach((e: string) => allEntities.add(e)));
 
     // Mark as completed
     await supabase.from("legal_documents")
@@ -740,9 +731,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        chunks_created: allChunks.length,
-        municipalities_extracted: totalMunicipalities,
-        provinces_extracted: totalProvinces,
+        chunks_created: totalChunks,
+        chunks_new_in_this_run: chunksInsertedInThisRun,
+        chunks_from_previous_run: existingChunkCount,
         key_entities_count: allEntities.size,
         superseded_chunks: supersededChunksCount,
         relations_detected: relations.length,
