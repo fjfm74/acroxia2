@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
-import { Upload, FileText, Trash2, Filter, CheckCircle, XCircle, RefreshCw, Eye, AlertTriangle, LinkIcon, MoreVertical } from "lucide-react";
+import { Upload, FileText, Trash2, Filter, CheckCircle, XCircle, RefreshCw, Eye, AlertTriangle, LinkIcon, MoreVertical, Loader2, Clock } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,6 +69,10 @@ interface LegalDocument {
   superseded_by_id?: string | null;
   supersedes_ids?: string[] | null;
   expiration_date?: string | null;
+  processing_status?: string | null;
+  processing_error?: string | null;
+  processing_started_at?: string | null;
+  processing_completed_at?: string | null;
 }
 
 const documentTypes = [
@@ -129,11 +133,13 @@ const AdminDocuments = () => {
     file: null as File | null,
   });
 
-  const fetchDocuments = async () => {
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchDocuments = useCallback(async () => {
     try {
       let query = supabase
         .from("legal_documents")
-        .select("*, superseded_by_id, supersedes_ids, ai_summary, keywords, expiration_date")
+        .select("*, superseded_by_id, supersedes_ids, ai_summary, keywords, expiration_date, processing_status, processing_error, processing_started_at, processing_completed_at")
         .order("created_at", { ascending: false });
 
       if (selectedJurisdiction !== "all") {
@@ -165,7 +171,27 @@ const AdminDocuments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedJurisdiction]);
+
+  // Polling: refresh every 3s if any document is pending/processing
+  useEffect(() => {
+    const hasProcessing = documents.some(
+      (d) => d.processing_status === "pending" || d.processing_status === "processing"
+    );
+
+    if (hasProcessing) {
+      pollingRef.current = setInterval(() => {
+        fetchDocuments();
+      }, 3000);
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [documents, fetchDocuments]);
 
   useEffect(() => {
     fetchDocuments();
@@ -204,7 +230,7 @@ const AdminDocuments = () => {
 
       if (uploadError) throw uploadError;
 
-      // Create document record
+      // Create document record with pending status
       const { data: docData, error: docError } = await supabase
         .from("legal_documents")
         .insert({
@@ -216,35 +242,17 @@ const AdminDocuments = () => {
           source: newDoc.source || null,
           effective_date: newDoc.effective_date || null,
           file_path: fileName,
+          processing_status: "pending",
         })
         .select()
         .single();
 
       if (docError) throw docError;
 
-      // Process document with edge function
-      const { error: processError } = await supabase.functions.invoke(
-        "process-legal-document",
-        {
-          body: {
-            documentId: docData.id,
-            filePath: fileName,
-          },
-        }
-      );
-
-      if (processError) {
-        console.error("Error processing document:", processError);
-        toast({
-          title: "Documento subido",
-          description: "El archivo se subió pero hubo un error al procesarlo. Puede reintentarse.",
-        });
-      } else {
-        toast({
-          title: "Documento procesado",
-          description: "El documento se ha indexado correctamente",
-        });
-      }
+      toast({
+        title: "Documento subido",
+        description: "El procesamiento puede tardar entre 30 segundos y 2 minutos...",
+      });
 
       setDialogOpen(false);
       setNewDoc({
@@ -258,6 +266,16 @@ const AdminDocuments = () => {
         file: null,
       });
       fetchDocuments();
+
+      // Fire-and-forget: call edge function without awaiting
+      supabase.functions.invoke("process-legal-document", {
+        body: {
+          documentId: docData.id,
+          filePath: fileName,
+        },
+      }).catch((err) => {
+        console.error("Edge function invocation error (fire-and-forget):", err);
+      });
     } catch (error: any) {
       console.error("Error uploading document:", error);
       toast({
@@ -340,32 +358,28 @@ const AdminDocuments = () => {
       // Delete existing chunks first
       await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
 
+      // Set status to pending
+      await supabase
+        .from("legal_documents")
+        .update({ processing_status: "pending", processing_error: null })
+        .eq("id", doc.id);
+
       toast({
         title: "Reprocesando...",
-        description: "El documento se está procesando",
-      });
-
-      // Process document with edge function
-      const { error: processError } = await supabase.functions.invoke(
-        "process-legal-document",
-        {
-          body: {
-            documentId: doc.id,
-            filePath: docData.file_path,
-          },
-        }
-      );
-
-      if (processError) {
-        throw processError;
-      }
-
-      toast({
-        title: "Documento reprocesado",
-        description: "Los fragmentos se han indexado correctamente",
+        description: "El procesamiento puede tardar entre 30 segundos y 2 minutos...",
       });
 
       fetchDocuments();
+
+      // Fire-and-forget
+      supabase.functions.invoke("process-legal-document", {
+        body: {
+          documentId: doc.id,
+          filePath: docData.file_path,
+        },
+      }).catch((err) => {
+        console.error("Reprocess invocation error:", err);
+      });
     } catch (error: any) {
       console.error("Error reprocessing document:", error);
       toast({
@@ -665,6 +679,38 @@ const AdminDocuments = () => {
                         <Badge variant={doc.is_active ? "default" : "secondary"} className="text-xs">
                           {doc.is_active ? "Activo" : "Inactivo"}
                         </Badge>
+                        {/* Processing status badge */}
+                        {doc.processing_status === "pending" && (
+                          <Badge variant="outline" className="bg-muted text-muted-foreground text-xs">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Pendiente
+                          </Badge>
+                        )}
+                        {doc.processing_status === "processing" && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Procesando...
+                          </Badge>
+                        )}
+                        {doc.processing_status === "error" && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Error
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>{doc.processing_error || "Error desconocido"}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {doc.processing_status === "completed" && doc.chunks_count && doc.chunks_count > 0 && (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Procesado
+                          </Badge>
+                        )}
                         {doc.superseded_by_id && (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -706,6 +752,11 @@ const AdminDocuments = () => {
                           </>
                         )}
                       </div>
+                      {doc.processing_status === "error" && doc.processing_error && (
+                        <p className="text-xs text-destructive mt-1">
+                          {doc.processing_error}
+                        </p>
+                      )}
                       {doc.ai_summary && (
                         <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2 italic">
                           {doc.ai_summary}
@@ -729,12 +780,13 @@ const AdminDocuments = () => {
                             <Eye className="h-4 w-4 mr-2" />
                             Ver chunks
                           </DropdownMenuItem>
-                          {doc.chunks_count === 0 && (
-                            <DropdownMenuItem onClick={() => reprocessDocument(doc)}>
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              Reprocesar
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem 
+                            onClick={() => reprocessDocument(doc)}
+                            disabled={doc.processing_status === "processing" || doc.processing_status === "pending"}
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Reprocesar
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleDocumentStatus(doc)}>
                             {doc.is_active ? (
                               <>
@@ -787,16 +839,15 @@ const AdminDocuments = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {doc.chunks_count === 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => reprocessDocument(doc)}
-                          title="Reprocesar documento"
-                        >
-                          <RefreshCw className="h-4 w-4 text-amber-600" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => reprocessDocument(doc)}
+                        title="Reprocesar documento"
+                        disabled={doc.processing_status === "processing" || doc.processing_status === "pending"}
+                      >
+                        <RefreshCw className={`h-4 w-4 ${doc.processing_status === "error" ? "text-destructive" : "text-muted-foreground"}`} />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
