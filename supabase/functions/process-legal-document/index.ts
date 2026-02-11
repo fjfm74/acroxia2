@@ -41,23 +41,37 @@ const VALID_RELATION_TYPES = [
 
 async function extractTextFromUrl(url: string): Promise<string> {
   const response = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; AcroxiaBot/1.0)" }
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
   });
   if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status}`);
   const html = await response.text();
 
-  // Remove scripts, styles, nav, footer, header
-  let text = html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<nav[\s\S]*?<\/nav>/gi, "")
-    .replace(/<footer[\s\S]*?<\/footer>/gi, "")
-    .replace(/<header[\s\S]*?<\/header>/gi, "");
+  // BOE-specific: extract the main legal text container
+  let text = html;
+  
+  // Try BOE-specific selectors first
+  const boeContentMatch = text.match(/<div[^>]*id="textoxslt"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i) ||
+                          text.match(/<div[^>]*class="[^"]*texto[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<div[^>]*class="[^"]*(?:pie|footer))/i);
+  
+  if (boeContentMatch) {
+    text = boeContentMatch[0];
+    console.log("BOE content container found, using targeted extraction");
+  } else {
+    // Generic: remove noise
+    text = text
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
+      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
+      .replace(/<header[\s\S]*?<\/header>/gi, "")
+      .replace(/<aside[\s\S]*?<\/aside>/gi, "")
+      .replace(/<!--[\s\S]*?-->/g, "");
 
-  // Extract text from article/main if available
-  const articleMatch = text.match(/<article[\s\S]*?<\/article>/i) ||
-                       text.match(/<main[\s\S]*?<\/main>/i);
-  if (articleMatch) text = articleMatch[0];
+    // Extract text from article/main if available
+    const articleMatch = text.match(/<article[\s\S]*?<\/article>/i) ||
+                         text.match(/<main[\s\S]*?<\/main>/i);
+    if (articleMatch) text = articleMatch[0];
+  }
 
   // Remove all HTML tags, decode entities
   text = text
@@ -65,6 +79,7 @@ async function extractTextFromUrl(url: string): Promise<string> {
     .replace(/<\/p>/gi, "\n\n")
     .replace(/<\/div>/gi, "\n")
     .replace(/<\/li>/gi, "\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -72,6 +87,18 @@ async function extractTextFromUrl(url: string): Promise<string> {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&aacute;/gi, "á")
+    .replace(/&eacute;/gi, "é")
+    .replace(/&iacute;/gi, "í")
+    .replace(/&oacute;/gi, "ó")
+    .replace(/&uacute;/gi, "ú")
+    .replace(/&ntilde;/gi, "ñ")
+    .replace(/&ordm;/gi, "º")
+    .replace(/&ordf;/gi, "ª")
+    .replace(/&laquo;/gi, "«")
+    .replace(/&raquo;/gi, "»")
+    .replace(/&#\d+;/g, "")
+    .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
@@ -131,7 +158,7 @@ async function extractTextFromEpub(arrayBuffer: ArrayBuffer): Promise<string> {
 
 // ============ TEXT SPLITTING ============
 
-function splitTextIntoBlocks(text: string, maxChars: number = 15000): string[] {
+function splitTextIntoBlocks(text: string, maxChars: number = 80000): string[] {
   if (text.length <= maxChars) return [text];
 
   const blocks: string[] = [];
@@ -139,10 +166,14 @@ function splitTextIntoBlocks(text: string, maxChars: number = 15000): string[] {
   let currentBlock = "";
 
   for (const line of lines) {
-    // Try to split at article/section boundaries
-    const isArticleBoundary = /^(Art[íi]culo\s+\d|TÍTULO|CAPÍTULO|Sección|Disposición)/i.test(line.trim());
+    // Try to split at major section boundaries (TÍTULO, LIBRO, CAPÍTULO)
+    const isMajorBoundary = /^(TÍTULO|LIBRO|CAPÍTULO|Disposición|DISPOSICIÓN)/i.test(line.trim());
+    const isArticleBoundary = /^(Art[íi]culo\s+\d|Sección)/i.test(line.trim());
 
-    if (isArticleBoundary && currentBlock.length > maxChars * 0.5) {
+    if (isMajorBoundary && currentBlock.length > maxChars * 0.3) {
+      blocks.push(currentBlock.trim());
+      currentBlock = line + "\n";
+    } else if (isArticleBoundary && currentBlock.length > maxChars * 0.7) {
       blocks.push(currentBlock.trim());
       currentBlock = line + "\n";
     } else if (currentBlock.length + line.length > maxChars) {
@@ -194,12 +225,19 @@ function parseJsonResponse(content: string): any {
 // ============ CHUNK PROCESSING PROMPT ============
 
 function buildChunkExtractionPrompt(docTitle: string, docType: string, docJurisdiction: string, docEntity: string): string {
-  return `Eres un asistente legal experto en normativa española.
-Extrae fragmentos legales relevantes del siguiente texto.
+  return `Eres un asistente legal experto en normativa española especializado en derecho inmobiliario y arrendamientos.
+
+CONTEXTO: Estás procesando el documento "${docTitle}" (Tipo="${docType}", Jurisdicción="${docJurisdiction}", Entidad="${docEntity || 'No especificada'}").
+Este documento se usa en un sistema RAG para analizar contratos de alquiler de vivienda.
+
+FILTRO DE RELEVANCIA CRÍTICO:
+- SOLO extrae fragmentos que sean DIRECTAMENTE relevantes para: arrendamientos urbanos, contratos de alquiler, fianzas, depósitos, desahucios, lanzamientos, procedimientos de reclamación de rentas, ejecuciones hipotecarias sobre viviendas arrendadas, derechos y obligaciones de arrendadores/arrendatarios, plazos contractuales, actualizaciones de renta, zonas tensionadas, vivienda habitual.
+- IGNORA completamente artículos sobre: procedimientos civiles genéricos no relacionados con arrendamientos, derecho mercantil, derecho de familia (salvo vivienda), sucesiones, derecho marítimo, propiedad intelectual, etc.
+- Si un bloque NO tiene NADA relevante para alquiler/vivienda, responde con {"chunks": []}
 
 Para CADA fragmento relevante, extrae:
 {
-  "content": "Texto del fragmento (máx 1500 caracteres)",
+  "content": "Texto literal del fragmento (máx 2000 caracteres)",
   "article_reference": "Artículo X" o null,
   "section_title": "Título de la sección" o null,
   "semantic_category": uno de: definicion, obligacion, prohibicion, limite_precio, plazo, sancion, excepcion, procedimiento, lista_entidades, requisito, derecho, actualizacion, garantia, otro,
@@ -218,13 +256,11 @@ Para CADA fragmento relevante, extrae:
 
 INSTRUCCIONES:
 - Si hay listas de municipios, extrae TODOS los nombres.
-- Prioriza fragmentos relevantes para contratos de alquiler.
-- Máximo 30 fragmentos por bloque.
+- Máximo 50 fragmentos por bloque.
+- Si el bloque no tiene contenido relevante para alquiler/vivienda, devuelve {"chunks": []}
 
-Documento: "${docTitle}", Tipo="${docType}", Jurisdicción="${docJurisdiction}", Entidad="${docEntity || 'No especificada'}"
+Responde SOLO con JSON válido: { "chunks": [ ... ] }`;}
 
-Responde SOLO con JSON válido: { "chunks": [ ... ] }`;
-}
 
 function buildAnalysisPrompt(docTitle: string, allChunksSummary: string): string {
   return `Eres un asistente legal experto en normativa española.
@@ -556,28 +592,33 @@ serve(async (req) => {
       }
     } else if (extractedText) {
       // Text mode - split into blocks and process each
-      const blocks = splitTextIntoBlocks(extractedText, 15000);
-      console.log(`Split text into ${blocks.length} blocks`);
+      // Use 80K char blocks (gemini supports 1M+ tokens context)
+      const blocks = splitTextIntoBlocks(extractedText, 80000);
+      console.log(`Split text into ${blocks.length} blocks (from ${extractedText.length} chars)`);
 
       const systemPrompt = buildChunkExtractionPrompt(docInfo.title, docInfo.type, docInfo.jurisdiction, docInfo.territorial_entity);
 
+      // Use flash for chunk extraction (fast), pro only for final analysis
+      const EXTRACTION_MODEL = "google/gemini-2.5-flash";
+      
       for (let i = 0; i < blocks.length; i++) {
         await supabase.from("legal_documents")
           .update({ processing_status: `processing (bloque ${i + 1}/${blocks.length})` })
           .eq("id", documentId);
 
-        console.log(`Processing block ${i + 1}/${blocks.length} (${blocks[i].length} chars)`);
+        console.log(`Processing block ${i + 1}/${blocks.length} (${blocks[i].length} chars) with flash`);
 
         try {
           const aiContent = await callAI([
             { role: "system", content: systemPrompt },
             { role: "user", content: `Procesa este bloque (${i + 1} de ${blocks.length}) del documento "${docInfo.title}":\n\n${blocks[i]}` },
-          ]);
+          ], EXTRACTION_MODEL);
 
           const parsed = parseJsonResponse(aiContent);
           const blockChunks = parsed.chunks || parsed || [];
           if (Array.isArray(blockChunks)) {
             allChunks.push(...blockChunks);
+            console.log(`Block ${i + 1}: extracted ${blockChunks.length} relevant chunks`);
           }
         } catch (blockError) {
           console.error(`Error processing block ${i + 1}:`, blockError);
