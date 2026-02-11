@@ -414,30 +414,23 @@ const AdminDocuments = () => {
 
   const [reprocessingAll, setReprocessingAll] = useState(false);
 
-  const reprocessAllDocuments = async () => {
+  const reconcileRelations = async () => {
     setReprocessingAll(true);
-    let success = 0, failed = 0;
-    for (const doc of documents) {
-      try {
-        const { data: docData } = await supabase
-          .from("legal_documents")
-          .select("file_path, source_type, source_url")
-          .eq("id", doc.id)
-          .single();
-
-        if (docData) {
-          await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
-          await supabase.from("document_relations").delete().eq("source_document_id", doc.id);
-          await supabase.functions.invoke("process-legal-document", {
-            body: { documentId: doc.id, filePath: docData.file_path, sourceType: docData.source_type || "pdf", sourceUrl: docData.source_url },
-          });
-          success++;
-        }
-      } catch { failed++; }
+    try {
+      const { data, error } = await supabase.functions.invoke("reconcile-relations", {
+        body: {},
+      });
+      if (error) throw error;
+      toast({
+        title: "Reconciliación completada",
+        description: data?.message || `${data?.new_relations_found || 0} nuevas relaciones detectadas. ${data?.chunks_marked_superseded || 0} chunks obsoletos.`,
+      });
+      fetchDocuments();
+    } catch (err) {
+      console.error("Error reconciling:", err);
+      toast({ title: "Error", description: "No se pudieron reconciliar las relaciones", variant: "destructive" });
     }
-    toast({ title: "Reprocesamiento completado", description: `${success} procesados, ${failed} errores` });
     setReprocessingAll(false);
-    fetchDocuments();
   };
 
   const getJurisdictionLabel = (value: string | null) =>
@@ -504,12 +497,12 @@ const AdminDocuments = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
-              onClick={reprocessAllDocuments}
-              disabled={reprocessingAll || documents.length === 0}
+              onClick={reconcileRelations}
+              disabled={reprocessingAll || documents.length < 2}
               className="rounded-full w-full sm:w-auto"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${reprocessingAll ? "animate-spin" : ""}`} />
-              {reprocessingAll ? "Reprocesando..." : "Reprocesar todos"}
+              {reprocessingAll ? "Reconciliando..." : "Reconciliar relaciones"}
             </Button>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.batch-update-blog-posts]
 verify_jwt = false
+
+[functions.reconcile-relations]
+verify_jwt = false
