@@ -502,6 +502,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const FUNCTION_START_TIME = Date.now();
+  const MAX_EXECUTION_MS = 120_000; // 120s - leave 30s margin before Deno kills us at ~150s
+
   let documentId: string | null = null;
   try {
     const body = await req.json();
@@ -653,27 +656,48 @@ serve(async (req) => {
       // We track progress via processing_status which contains "bloque X/Y"
       let startBlock = 0;
       if (isResume) {
-        // Parse the last processed block from status
+        // Parse the last processed block from processing_error (e.g., "bloque 5/47")
         const { data: docStatus } = await supabase
           .from("legal_documents")
-          .select("processing_status")
+          .select("processing_status, processing_error")
           .eq("id", documentId)
           .single();
+        const errorMatch = docStatus?.processing_error?.match(/bloque (\d+)\/(\d+)/);
         const statusMatch = docStatus?.processing_status?.match(/bloque (\d+)\/(\d+)/);
-        if (statusMatch) {
-          startBlock = parseInt(statusMatch[1]); // Start from the NEXT block (this one was the last attempted)
+        const match = errorMatch || statusMatch;
+        if (match) {
+          startBlock = parseInt(match[1]); // This is the block that failed, so retry from here
+          // But if errorMatch says "bloque 5", it means block 5 failed, so we start from block 5 (0-indexed = match[1]-1)
+          // The error message uses 1-indexed block numbers
+          startBlock = parseInt(match[1]) - 1; // Convert to 0-indexed
           console.log(`Resuming from block ${startBlock + 1}/${blocks.length}`);
         }
       }
 
       let globalChunkIndex = existingChunkCount; // Continue indexing from existing chunks
 
+      let stoppedEarly = false;
+
       for (let i = startBlock; i < blocks.length; i++) {
+        // CHECK TIME LIMIT before starting a new block
+        const elapsedMs = Date.now() - FUNCTION_START_TIME;
+        if (elapsedMs > MAX_EXECUTION_MS) {
+          console.log(`Time limit reached (${Math.round(elapsedMs / 1000)}s). Stopping at block ${i}/${blocks.length} to allow resume.`);
+          await supabase.from("legal_documents")
+            .update({
+              processing_status: "error",
+              processing_error: `Tiempo límite alcanzado en bloque ${i}/${blocks.length}. Pulsa "Reprocesar" para continuar desde aquí.`,
+            })
+            .eq("id", documentId);
+          stoppedEarly = true;
+          break;
+        }
+
         await supabase.from("legal_documents")
           .update({ processing_status: `processing (bloque ${i + 1}/${blocks.length})` })
           .eq("id", documentId);
 
-        console.log(`Processing block ${i + 1}/${blocks.length} (${blocks[i].length} chars) with flash`);
+        console.log(`Processing block ${i + 1}/${blocks.length} (${blocks[i].length} chars) with flash [${Math.round(elapsedMs / 1000)}s elapsed]`);
 
         try {
           const aiContent = await callAI([
@@ -684,7 +708,6 @@ serve(async (req) => {
           const parsed = parseJsonResponse(aiContent);
           const blockChunks = parsed.chunks || parsed || [];
           if (Array.isArray(blockChunks) && blockChunks.length > 0) {
-            // INCREMENTAL SAVE: insert chunks immediately after each block
             const chunksToInsert = blockChunks.map((chunk: any, index: number) =>
               validateAndNormalizeChunk(chunk, globalChunkIndex + index, documentId!, docInfo.jurisdiction)
             );
@@ -702,11 +725,29 @@ serve(async (req) => {
           }
         } catch (blockError) {
           console.error(`Error processing block ${i + 1}:`, blockError);
-          // Save progress status so we can resume from here
           await supabase.from("legal_documents")
-            .update({ processing_status: `processing (bloque ${i}/${blocks.length})`, processing_error: `Timeout/error en bloque ${i + 1}. Reprocesar para continuar.` })
+            .update({
+              processing_status: "error",
+              processing_error: `Error en bloque ${i + 1}/${blocks.length}. Pulsa "Reprocesar" para continuar.`,
+            })
             .eq("id", documentId);
+          stoppedEarly = true;
+          break;
         }
+      }
+
+      // If stopped early, return partial result without proceeding to analysis phase
+      if (stoppedEarly) {
+        const totalChunks = existingChunkCount + chunksInsertedInThisRun;
+        return new Response(
+          JSON.stringify({
+            success: false,
+            partial: true,
+            chunks_saved_so_far: totalChunks,
+            message: "Procesamiento parcial. Reprocesar para continuar.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
     }
 
