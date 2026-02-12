@@ -1,73 +1,83 @@
 
+# Plan: Deteccion de Duplicados + Optimizacion RAG
 
-## Correccion SEO: Meta Descriptions y FAQPage Schema Completo
+## 1. Deteccion de documentos duplicados
 
-### Diagnostico
+### Problema actual
+El sistema permite subir documentos con el mismo titulo o la misma URL sin ninguna verificacion. Esto podria generar chunks duplicados en la base de conocimiento, degradando la calidad del RAG.
 
-#### 1. Crawlers recibiendo 403
-Esto NO es un problema del codigo. El `robots.txt` y los headers estan correctos. El 403 viene de la configuracion del CDN/hosting de Lovable, que puede estar bloqueando ciertos User-Agents. **Esto requiere configuracion en Lovable Cloud / dominio, no cambios de codigo.**
+### Solucion
+Agregar validacion de duplicados en dos puntos:
 
-Lo que SI podemos hacer desde el codigo: nada directamente. Pero se recomienda verificar la configuracion del dominio en Lovable Settings > Domains.
+**A. Frontend (AdminDocuments.tsx)** - Antes de insertar en `legal_documents`:
+- Consultar si ya existe un documento con el mismo titulo (coincidencia exacta o muy similar)
+- Si `source_type === "url"`, verificar si ya existe un documento con la misma `source_url`
+- Si se detecta duplicado, mostrar un dialogo de confirmacion preguntando al usuario si quiere continuar o cancelar
 
-#### 2. Meta descriptions "duplicadas" para crawlers sin JS
-**Estado actual**: Cada pagina tiene su meta description unica via React Helmet. PERO los crawlers que no ejecutan JavaScript (DinoRank, SEMrush, algunos bots) solo ven la meta description del `index.html`:
+**B. Edge Function (process-legal-document)** - Como segunda linea de defensa:
+- Al inicio del procesamiento, verificar si ya existen chunks con contenido muy similar para ese documento
+- Si el documento ya tiene chunks y NO es un resume, advertir en logs
 
-```
-"Detecta clausulas abusivas en tu contrato de alquiler en menos de 2 minutos con IA."
-```
+### Cambios tecnicos
 
-Esto NO se puede resolver con React Helmet en una SPA pura sin SSR/pre-rendering. Google si ejecuta JS y ve las metas correctas. Las herramientas SEO de terceros no.
-
-**Accion**: No hay cambio de codigo necesario para este punto. Las meta descriptions ya son unicas para Google. Si herramientas como DinoRank las ven duplicadas, es porque no ejecutan JS.
-
-#### 3. FAQPage schema incompleto en /faq
-**Problema real**: El schema JSON-LD en `FAQ.tsx` solo incluye 10 de las 43 preguntas que hay en `FAQCategories.tsx`. Google no ve las 33 preguntas restantes en el structured data.
-
-**Solucion**: Generar el schema FAQPage directamente desde el array `categories` de `FAQCategories.tsx`, exportandolo para que `FAQ.tsx` lo use al construir el JSON-LD con las 43 preguntas completas.
-
----
-
-### Cambios a implementar
-
-#### Archivo 1: `src/components/faq/FAQCategories.tsx`
-- Exportar el array `categories` (actualmente es `const` local)
-- Esto permite que `FAQ.tsx` lo importe para generar el schema
-
-#### Archivo 2: `src/pages/FAQ.tsx`
-- Importar `categories` desde `FAQCategories`
-- Reemplazar el schema hardcodeado de 10 preguntas por uno generado dinamicamente con las 43 preguntas extraidas del array de categorias
-- Formato:
-
-```typescript
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": categories.flatMap(cat => 
-    cat.faqs.map(faq => ({
-      "@type": "Question",
-      "name": faq.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": faq.answer
-      }
-    }))
-  )
-};
-```
-
-Esto genera automaticamente el schema con las 43 preguntas sin duplicar datos.
+**`src/pages/admin/AdminDocuments.tsx`**:
+- En `uploadDocument()`, antes del `insert`, ejecutar dos queries:
+  1. `SELECT id, title FROM legal_documents WHERE LOWER(title) = LOWER(newDoc.title)`
+  2. Si es URL: `SELECT id, title FROM legal_documents WHERE source_url = newDoc.source_url`
+- Si hay resultado, mostrar toast de advertencia con opcion de cancelar
 
 ---
 
-### Resumen de impacto
+## 2. Optimizacion del RAG
 
-| Punto | Estado | Accion |
-|-------|--------|--------|
-| 403 crawlers | Problema de hosting, no de codigo | Revisar config dominio en Lovable Settings |
-| Meta descriptions | Ya son unicas (React Helmet). Solo duplicadas para bots sin JS | Sin cambio de codigo necesario |
-| FAQPage schema | Solo 10 de 43 preguntas | Generar schema completo desde el array de categorias |
+### Problemas detectados
 
-### Archivos a modificar
-- `src/components/faq/FAQCategories.tsx` (exportar array)
-- `src/pages/FAQ.tsx` (generar schema dinamico con 43 preguntas)
+1. **Fase de analisis global eliminada**: El procesamiento actual extrae chunks pero ya no ejecuta la fase de analisis global (`buildAnalysisPrompt`). Esto significa que `ai_summary`, `keywords` y las relaciones entre documentos no se detectan durante el procesamiento individual. Solo se detectan via "Reconciliar relaciones".
 
+2. **Busqueda RAG usa solo full-text search (tsvector)**: No hay busqueda semantica/vectorial. Para consultas complejas, el ranking por `ts_rank` puede no capturar bien la relevancia.
+
+3. **No hay cache de busquedas frecuentes**: Cada analisis ejecuta las mismas queries RAG desde cero.
+
+### Optimizaciones propuestas
+
+**A. Restaurar fase de analisis global al finalizar el procesamiento**
+- Cuando todos los bloques se procesan exitosamente (no `stoppedEarly`), ejecutar `buildAnalysisPrompt` con un resumen de los chunks extraidos
+- Guardar `ai_summary` y `keywords` en `legal_documents`
+- Detectar relaciones automaticamente y aplicar los efectos (deroga/modifica)
+- Esto hace que el boton "Reconciliar relaciones" sea complementario, no el unico metodo
+
+**B. Mejorar la funcion de busqueda SQL para mayor precision**
+- Agregar busqueda por `semantic_category` cuando el tipo de clausula es conocido (ej: si se analiza una clausula de fianza, buscar chunks con `semantic_category = 'garantia'`)
+- Pasar categorias semanticas relevantes desde `analyze-contract` a `search_legal_chunks_semantic`
+
+**C. Optimizar el contexto enviado a la IA en el analisis**
+- Limitar el texto de cada chunk a 1500 caracteres en el contexto RAG (actualmente puede ser hasta 2000)
+- Priorizar chunks no superseded (ya se hace) y con match territorial
+
+### Cambios tecnicos
+
+**`supabase/functions/process-legal-document/index.ts`**:
+- Restaurar bloque de analisis global despues del loop de bloques (lineas 747+)
+- Usar modelo flash para el analisis global (rapido y barato)
+- Llamar a `processRelations()` con las relaciones detectadas
+- Guardar `ai_summary` y `keywords` en la tabla `legal_documents`
+
+**`supabase/functions/analyze-contract/index.ts`**:
+- En la busqueda RAG, pasar categorias semanticas relevantes basadas en los terminos clave del contrato
+- Mapear terminos como "fianza" a categorias `["garantia", "obligacion"]`, "duracion" a `["plazo", "derecho"]`, etc.
+
+---
+
+## Resumen de archivos a modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/pages/admin/AdminDocuments.tsx` | Validacion de duplicados antes de subir |
+| `supabase/functions/process-legal-document/index.ts` | Restaurar analisis global + relaciones al completar |
+| `supabase/functions/analyze-contract/index.ts` | Busqueda RAG con categorias semanticas |
+
+## Orden de implementacion
+
+1. Deteccion de duplicados en el frontend (rapido, sin riesgo)
+2. Restaurar analisis global en process-legal-document
+3. Optimizar busqueda RAG en analyze-contract con categorias semanticas
