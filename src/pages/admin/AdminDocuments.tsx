@@ -255,7 +255,40 @@ const AdminDocuments = () => {
     }
   };
 
-  const uploadDocument = async () => {
+  const [duplicateWarning, setDuplicateWarning] = useState<{ type: 'title' | 'url'; existingTitle: string; existingId: string } | null>(null);
+  const [pendingUpload, setPendingUpload] = useState(false);
+
+  const checkDuplicates = async (): Promise<boolean> => {
+    // Check by title
+    const { data: titleMatch } = await supabase
+      .from("legal_documents")
+      .select("id, title")
+      .ilike("title", newDoc.title)
+      .limit(1);
+
+    if (titleMatch && titleMatch.length > 0) {
+      setDuplicateWarning({ type: 'title', existingTitle: titleMatch[0].title, existingId: titleMatch[0].id });
+      return true;
+    }
+
+    // Check by URL
+    if (newDoc.source_type === "url" && newDoc.source_url) {
+      const { data: urlMatch } = await supabase
+        .from("legal_documents")
+        .select("id, title")
+        .eq("source_url", newDoc.source_url)
+        .limit(1);
+
+      if (urlMatch && urlMatch.length > 0) {
+        setDuplicateWarning({ type: 'url', existingTitle: urlMatch[0].title, existingId: urlMatch[0].id });
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const uploadDocument = async (skipDuplicateCheck = false) => {
     if (!newDoc.title) {
       toast({ title: "Campos requeridos", description: "El título es obligatorio", variant: "destructive" });
       return;
@@ -271,7 +304,14 @@ const AdminDocuments = () => {
       return;
     }
 
+    // Check duplicates unless skipped
+    if (!skipDuplicateCheck) {
+      const hasDuplicate = await checkDuplicates();
+      if (hasDuplicate) return;
+    }
+
     setUploading(true);
+    setDuplicateWarning(null);
     try {
       let fileName: string | null = null;
 
@@ -650,11 +690,35 @@ const AdminDocuments = () => {
                   )}
                 </div>
 
+                {duplicateWarning && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium text-amber-800">Posible duplicado detectado</p>
+                        <p className="text-amber-700">
+                          {duplicateWarning.type === 'title'
+                            ? `Ya existe un documento con título similar: "${duplicateWarning.existingTitle}"`
+                            : `Ya existe un documento con la misma URL: "${duplicateWarning.existingTitle}"`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" size="sm" onClick={() => setDuplicateWarning(null)} className="rounded-full text-xs">
+                        Cancelar
+                      </Button>
+                      <Button size="sm" onClick={() => uploadDocument(true)} disabled={uploading} className="rounded-full text-xs">
+                        Subir de todos modos
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setDialogOpen(false)} className="rounded-full">
+                  <Button variant="outline" onClick={() => { setDialogOpen(false); setDuplicateWarning(null); }} className="rounded-full">
                     Cancelar
                   </Button>
-                  <Button onClick={uploadDocument} disabled={uploading} className="rounded-full">
+                  <Button onClick={() => uploadDocument()} disabled={uploading} className="rounded-full">
                     {uploading ? "Subiendo..." : "Subir y procesar"}
                   </Button>
                 </DialogFooter>

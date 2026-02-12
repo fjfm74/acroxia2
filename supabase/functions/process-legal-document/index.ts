@@ -754,6 +754,56 @@ serve(async (req) => {
     const allEntities = new Set<string>();
     allChunks.forEach((c: any) => (c.key_entities || []).forEach((e: string) => allEntities.add(e)));
 
+    // ============ PHASE 3: GLOBAL ANALYSIS (ai_summary, keywords, relations) ============
+    let documentSummary: string | null = null;
+    let documentKeywords: string[] = [];
+    let relationsDetected = 0;
+    let supersededChunks = 0;
+
+    try {
+      await supabase.from("legal_documents")
+        .update({ processing_status: "processing (análisis global...)" })
+        .eq("id", documentId);
+
+      // Build a summary of chunks for the global analysis
+      const chunksSummary = allChunks.slice(0, 40).map((c: any, i: number) =>
+        `[${i + 1}] ${c.article_reference || ''} ${c.section_title || ''}: ${(c.content || '').substring(0, 300)}...`
+      ).join("\n");
+
+      const analysisPrompt = buildAnalysisPrompt(docInfo.title, chunksSummary);
+      const analysisContent = await callAI([
+        { role: "user", content: analysisPrompt },
+      ], "google/gemini-2.5-flash");
+
+      const analysisResult = parseJsonResponse(analysisContent);
+      const docAnalysis = analysisResult.document_analysis || analysisResult;
+
+      documentSummary = docAnalysis.ai_summary || null;
+      documentKeywords = docAnalysis.keywords || [];
+
+      // Save ai_summary and keywords
+      const updateData: any = {};
+      if (documentSummary) updateData.ai_summary = documentSummary;
+      if (documentKeywords.length > 0) updateData.keywords = documentKeywords;
+      if (docAnalysis.expiration_date) updateData.expiration_date = docAnalysis.expiration_date;
+
+      if (Object.keys(updateData).length > 0) {
+        await supabase.from("legal_documents").update(updateData).eq("id", documentId);
+        console.log(`Global analysis saved: summary=${!!documentSummary}, keywords=${documentKeywords.length}, expiration=${docAnalysis.expiration_date || 'none'}`);
+      }
+
+      // Process detected relations
+      const detectedRelations = docAnalysis.relations || [];
+      if (detectedRelations.length > 0) {
+        console.log(`Global analysis detected ${detectedRelations.length} relations`);
+        supersededChunks = await processRelations(supabase, documentId!, detectedRelations, allChunks);
+        relationsDetected = detectedRelations.length;
+      }
+    } catch (analysisError) {
+      console.error("Global analysis failed (non-fatal):", analysisError);
+      // Non-fatal: chunks are already saved, just skip the global analysis
+    }
+
     // Mark as completed
     await supabase.from("legal_documents")
       .update({
@@ -770,9 +820,9 @@ serve(async (req) => {
         chunks_new_in_this_run: chunksInsertedInThisRun,
         chunks_from_previous_run: existingChunkCount,
         key_entities_count: allEntities.size,
-        superseded_chunks: 0,
-        relations_detected: 0,
-        document_summary: null,
+        superseded_chunks: supersededChunks,
+        relations_detected: relationsDetected,
+        document_summary: documentSummary,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
