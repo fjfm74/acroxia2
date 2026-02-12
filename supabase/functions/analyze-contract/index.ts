@@ -33,7 +33,12 @@ function extractKeyTerms(text: string): string {
   if (/mascota|animal|perro|gato/.test(lowerText)) terms.push("mascotas prohibicion");
   if (/seguro|responsabilidad/.test(lowerText)) terms.push("seguro responsabilidad");
   
-  return terms.length > 0 ? terms.join(" ") : "arrendamiento vivienda clausula";
+  // Siempre incluir términos de habitabilidad y certificado energético (obligatorios en todo contrato)
+  terms.push("habitabilidad cédula certificado energético vivienda habitual");
+  // Siempre incluir términos base de arrendamiento
+  terms.push("arrendamiento vivienda habitual clausula ilegal abusiva LAU");
+  
+  return terms.join(" ");
 }
 
 // Map contract terms to semantic categories for enhanced RAG search
@@ -78,6 +83,10 @@ function mapTermsToSemanticCategories(text: string): string[] {
   if (/procedimiento|demanda|desahucio|juicio/.test(lowerText)) {
     categories.add("procedimiento");
   }
+
+  // Siempre incluir categorías de requisitos documentales (habitabilidad, certificado energético)
+  categories.add("requisito");
+  categories.add("obligacion");
 
   return Array.from(categories);
 }
