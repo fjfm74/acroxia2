@@ -45,7 +45,7 @@ serve(async (req) => {
     // 1. Get all active documents with their chunks summary
     const { data: documents, error: docError } = await supabase
       .from("legal_documents")
-      .select("id, title, type, jurisdiction, territorial_entity, ai_summary, keywords, superseded_by_id, supersedes_ids")
+      .select("id, title, type, jurisdiction, territorial_entity, ai_summary, keywords, superseded_by_id, supersedes_ids, effective_date")
       .eq("is_active", true)
       .eq("processing_status", "completed");
 
@@ -68,12 +68,13 @@ serve(async (req) => {
       (existingRelations || []).map(r => `${r.source_document_id}::${r.target_document_id}::${r.relation_type}`)
     );
 
-    // 3. Build a compact catalog of all documents for the AI
+    // 3. Build a compact catalog of all documents for the AI (include effective_date for temporal ordering)
     const catalog = documents.map(d => ({
       id: d.id,
       title: d.title,
       type: d.type,
       jurisdiction: d.jurisdiction,
+      effective_date: d.effective_date || "desconocida",
       summary: d.ai_summary?.substring(0, 200) || "",
       keywords: (d.keywords || []).slice(0, 10),
     }));
@@ -82,31 +83,34 @@ serve(async (req) => {
     const prompt = `Eres un experto en derecho español. Analiza esta lista de documentos legales y detecta TODAS las relaciones entre ellos.
 
 CATÁLOGO DE DOCUMENTOS:
-${catalog.map(d => `- [${d.id}] "${d.title}" (${d.type}, ${d.jurisdiction}) - ${d.summary}`).join("\n")}
+${catalog.map(d => `- [${d.id}] "${d.title}" (${d.type}, ${d.jurisdiction}, fecha entrada en vigor: ${d.effective_date}) - ${d.summary}`).join("\n")}
 
 Para cada relación detectada, indica:
 {
-  "source_id": "UUID del documento que actúa sobre otro",
-  "target_id": "UUID del documento afectado",
+  "source_id": "UUID del documento MÁS RECIENTE que actúa sobre otro anterior",
+  "target_id": "UUID del documento MÁS ANTIGUO que es afectado",
   "type": "deroga|modifica|complementa|amplia|prorroga|desarrolla|interpreta",
   "affected_articles": ["Art. X"] (solo para modifica/deroga parcial, vacío si no aplica),
+  "temporal_note": "Si el documento antiguo sigue siendo aplicable a ciertos contratos, indicar aquí (ej: 'vigente para contratos anteriores a 1995')",
   "description": "Breve descripción"
 }
 
 TIPOS:
-- deroga: Reemplaza completamente otro documento
-- modifica: Cambia artículos específicos de otro
+- deroga: Reemplaza COMPLETAMENTE otro documento sin excepciones temporales. NO usar si el documento antiguo sigue vigente para ciertos contratos.
+- modifica: Cambia artículos específicos de otro. Usar cuando una ley nueva modifica parcialmente una anterior.
 - complementa: Añade información nueva sin invalidar
 - amplia: Extiende el alcance de otro
 - prorroga: Extiende la vigencia temporal
 - desarrolla: Reglamento que desarrolla una ley
 - interpreta: Jurisprudencia que interpreta
 
-REGLAS:
-- Solo incluye relaciones que puedas inferir con alta confianza basándote en los títulos y resúmenes.
+REGLAS CRÍTICAS DE DIRECCIÓN TEMPORAL:
+- El source SIEMPRE es el documento MÁS RECIENTE (fecha posterior). El target es el documento MÁS ANTIGUO (fecha anterior).
+- Una ley nueva NUNCA puede ser derogada por una ley más antigua. Si un decreto de 1964 es mencionado como "derogado por la Ley 29/1994", la relación es: source=Ley 29/1994 --modifica/deroga--> target=Decreto 1964. NUNCA al revés.
+- Si un documento antiguo sigue vigente para contratos anteriores a cierta fecha, usa "modifica" en vez de "deroga", porque no es una derogación total.
+- Ejemplo: La Ley 29/1994 derogó parcialmente el Decreto 4104/1964 (LAU 1964), pero este sigue vigente para contratos anteriores al 9 de mayo de 1985. Relación correcta: source=Ley 29/1994 --modifica--> target=Decreto 4104/1964, con temporal_note="El Decreto sigue vigente para contratos anteriores al 9/5/1985".
 - La Ley 12/2023 (Ley de Vivienda) modifica la LAU (Ley 29/1994) y el RD-Ley 7/2019.
 - Los decretos autonómicos que declaran zonas tensionadas desarrollan la Ley 12/2023.
-- Normativa BOE posterior puede modificar leyes anteriores.
 
 Responde SOLO con JSON: { "relations": [ ... ] }`;
 
@@ -138,6 +142,16 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
       if (!VALID_RELATION_TYPES.includes(relType)) continue;
       if (!docMap.has(relation.source_id) || !docMap.has(relation.target_id)) continue;
 
+      // TEMPORAL VALIDATION: source must be newer than target for deroga/modifica
+      const sourceDoc = docMap.get(relation.source_id);
+      const targetDoc = docMap.get(relation.target_id);
+      if ((relType === "deroga" || relType === "modifica") && sourceDoc?.effective_date && targetDoc?.effective_date) {
+        if (new Date(sourceDoc.effective_date) < new Date(targetDoc.effective_date)) {
+          console.warn(`REJECTED: "${sourceDoc.title}" (${sourceDoc.effective_date}) cannot ${relType} "${targetDoc.title}" (${targetDoc.effective_date}) - source is OLDER than target. Skipping.`);
+          continue;
+        }
+      }
+
       // Skip if already exists
       const key = `${relation.source_id}::${relation.target_id}::${relType}`;
       if (existingRelationKeys.has(key)) {
@@ -151,7 +165,9 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
         target_document_id: relation.target_id,
         relation_type: relType,
         affected_articles: relation.affected_articles || [],
-        description: relation.description || null,
+        description: relation.temporal_note
+          ? `${relation.description || ''}. Nota temporal: ${relation.temporal_note}`
+          : (relation.description || null),
         detected_by: "ai_reconcile",
       });
 
@@ -163,31 +179,36 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
       newRelations++;
       existingRelationKeys.add(key);
 
-      const targetDoc = docMap.get(relation.target_id);
-      console.log(`New relation: "${docMap.get(relation.source_id)?.title}" --${relType}--> "${targetDoc?.title}"`);
+      console.log(`New relation: "${sourceDoc?.title}" --${relType}--> "${targetDoc?.title}"`);
 
       // Apply effects based on type
       if (relType === "deroga") {
-        // Full supersede
-        const { data: oldChunks } = await supabase
-          .from("legal_chunks")
-          .select("id")
-          .eq("document_id", relation.target_id)
-          .or("is_superseded.is.null,is_superseded.eq.false");
-
-        if (oldChunks && oldChunks.length > 0) {
-          await supabase
+        // If there's a temporal_note, the old doc still applies to some contracts - DON'T deactivate
+        if (relation.temporal_note) {
+          console.log(`Deroga with temporal applicability: "${targetDoc?.title}" stays active. Note: ${relation.temporal_note}`);
+          // Just record the relation, don't deactivate chunks or document
+        } else {
+          // Full supersede - only when truly fully derogated
+          const { data: oldChunks } = await supabase
             .from("legal_chunks")
-            .update({ is_superseded: true, superseded_at: new Date().toISOString() })
-            .in("id", oldChunks.map((c: any) => c.id));
-          supersededChunks += oldChunks.length;
+            .select("id")
+            .eq("document_id", relation.target_id)
+            .or("is_superseded.is.null,is_superseded.eq.false");
 
-          await supabase
-            .from("legal_documents")
-            .update({ superseded_by_id: relation.source_id, is_active: false })
-            .eq("id", relation.target_id);
+          if (oldChunks && oldChunks.length > 0) {
+            await supabase
+              .from("legal_chunks")
+              .update({ is_superseded: true, superseded_at: new Date().toISOString() })
+              .in("id", oldChunks.map((c: any) => c.id));
+            supersededChunks += oldChunks.length;
 
-          console.log(`Deroga: marked ${oldChunks.length} chunks as superseded`);
+            await supabase
+              .from("legal_documents")
+              .update({ superseded_by_id: relation.source_id, is_active: false })
+              .eq("id", relation.target_id);
+
+            console.log(`Deroga: marked ${oldChunks.length} chunks as superseded`);
+          }
         }
       } else if (relType === "modifica") {
         // Partial supersede by article
