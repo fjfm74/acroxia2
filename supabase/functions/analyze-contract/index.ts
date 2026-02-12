@@ -888,21 +888,35 @@ ${sanitizedContractText.substring(0, 25000)}`
     
     let analysis;
     try {
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-      analysis = JSON.parse(jsonMatch ? jsonMatch[0] : analysisText);
-    } catch {
-      console.error("Failed to parse AI response:", analysisText);
-      analysis = { 
-        clauses: [], 
-        summary: { 
-          overall_risk: "desconocido",
-          executive_summary: analysisText,
-          recommendation: "consultar_abogado"
-        },
-        contract_metadata: {
-          legal_context_available: hasLegalContext
-        }
-      };
+      // Remove markdown code block wrappers if present
+      let cleanedText = analysisText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : cleanedText;
+      analysis = JSON.parse(jsonStr);
+    } catch (parseError1) {
+      // Second attempt: fix common JSON issues (invalid escape sequences)
+      try {
+        let cleanedText = analysisText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+        let jsonStr = jsonMatch ? jsonMatch[0] : cleanedText;
+        // Fix invalid escape sequences like \" inside already-quoted strings
+        jsonStr = jsonStr.replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
+        analysis = JSON.parse(jsonStr);
+        console.log("Parsed AI response on second attempt after fixing escape sequences");
+      } catch (parseError2) {
+        console.error("Failed to parse AI response after 2 attempts:", analysisText.substring(0, 500));
+        analysis = { 
+          clauses: [], 
+          summary: { 
+            overall_risk: "desconocido",
+            executive_summary: analysisText,
+            recommendation: "consultar_abogado"
+          },
+          contract_metadata: {
+            legal_context_available: hasLegalContext
+          }
+        };
+      }
     }
 
     // Extract counts from new format or fallback to old format
