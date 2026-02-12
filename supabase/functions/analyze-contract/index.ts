@@ -36,6 +36,52 @@ function extractKeyTerms(text: string): string {
   return terms.length > 0 ? terms.join(" ") : "arrendamiento vivienda clausula";
 }
 
+// Map contract terms to semantic categories for enhanced RAG search
+function mapTermsToSemanticCategories(text: string): string[] {
+  const categories: Set<string> = new Set();
+  const lowerText = text.toLowerCase();
+
+  if (/fianza|deposito|garantia|aval/.test(lowerText)) {
+    categories.add("garantia");
+    categories.add("obligacion");
+  }
+  if (/mensualidad|renta|euros|€|precio|pago/.test(lowerText)) {
+    categories.add("limite_precio");
+    categories.add("actualizacion");
+  }
+  if (/año|años|meses|duracion|prorroga|renovacion|plazo/.test(lowerText)) {
+    categories.add("plazo");
+    categories.add("derecho");
+  }
+  if (/obra|reforma|reparacion|mantenimiento|conservacion/.test(lowerText)) {
+    categories.add("obligacion");
+  }
+  if (/penalizacion|indemnizacion|resolucion|desistimiento/.test(lowerText)) {
+    categories.add("sancion");
+    categories.add("prohibicion");
+  }
+  if (/subarr|cesion|tercero/.test(lowerText)) {
+    categories.add("prohibicion");
+    categories.add("requisito");
+  }
+  if (/ibi|impuesto|comunidad|gastos/.test(lowerText)) {
+    categories.add("obligacion");
+  }
+  if (/mascota|animal/.test(lowerText)) {
+    categories.add("prohibicion");
+    categories.add("excepcion");
+  }
+  if (/zona\s+tensionada|mercado\s+tensionado/.test(lowerText)) {
+    categories.add("limite_precio");
+    categories.add("lista_entidades");
+  }
+  if (/procedimiento|demanda|desahucio|juicio/.test(lowerText)) {
+    categories.add("procedimiento");
+  }
+
+  return Array.from(categories);
+}
+
 // Extraer el municipio del contrato
 function extractMunicipality(text: string): string | null {
   // Patrones comunes en contratos para detectar ubicación
@@ -643,10 +689,14 @@ serve(async (req) => {
     const detectedProvince = extractProvince(contractText);
     const searchQuery = `${keyTerms} arrendamiento vivienda habitual clausula ilegal abusiva LAU`;
 
+    // Map key terms to semantic categories for enhanced search
+    const semanticCategories = mapTermsToSemanticCategories(contractText);
+
     console.log(`RAG search query: ${searchQuery}`);
     console.log(`Detected territory: ${territorialFilter || "none"}`);
     console.log(`Detected municipality: ${detectedMunicipality || "none"}`);
     console.log(`Detected province: ${detectedProvince || "none"}`);
+    console.log(`Semantic categories: ${semanticCategories.join(", ") || "none"}`);
 
     // Sanitize sensitive data (DNI, IBAN, phone) before sending to AI
     const sanitizedContractText = sanitizeSensitiveData(contractText);
@@ -658,6 +708,20 @@ serve(async (req) => {
       match_count: 20,
       territorial_filter: territorialFilter,
     });
+
+    // Semantic search with categories
+    let semanticChunks: any[] = [];
+    if (semanticCategories.length > 0) {
+      const { data: semChunks } = await supabase.rpc("search_legal_chunks_semantic", {
+        search_query: searchQuery,
+        semantic_categories: semanticCategories,
+        municipality_name: detectedMunicipality,
+        province_name: detectedProvince,
+        match_count: 15,
+      });
+      semanticChunks = semChunks || [];
+      console.log(`Semantic search found ${semanticChunks.length} chunks for categories [${semanticCategories.join(", ")}]`);
+    }
 
     // Búsqueda específica por ubicación (municipio/provincia)
     let locationChunks: any[] = [];
@@ -679,6 +743,12 @@ serve(async (req) => {
     (generalChunks || []).forEach((chunk: any) => {
       allChunksMap.set(chunk.id, chunk);
     });
+
+    // Add semantic chunks
+    semanticChunks.forEach((chunk: any) => {
+      chunk.is_semantic_match = true;
+      allChunksMap.set(chunk.id, chunk);
+    });
     
     // Add location-specific chunks (may override with higher priority)
     locationChunks.forEach((chunk: any) => {
@@ -689,10 +759,12 @@ serve(async (req) => {
 
     const combinedChunks = Array.from(allChunksMap.values());
     
-    // Sort: location matches first, then by rank
+    // Sort: location matches first, then semantic, then by rank
     combinedChunks.sort((a, b) => {
       if (a.is_location_match && !b.is_location_match) return -1;
       if (!a.is_location_match && b.is_location_match) return 1;
+      if (a.is_semantic_match && !b.is_semantic_match) return -1;
+      if (!a.is_semantic_match && b.is_semantic_match) return 1;
       return (b.rank || 0) - (a.rank || 0);
     });
 
