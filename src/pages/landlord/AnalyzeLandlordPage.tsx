@@ -42,6 +42,24 @@ const AnalyzeLandlordPage = () => {
     }
   }, []);
 
+  const ACCEPTED_TYPES = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+  const validateFile = (f: File): string | null => {
+    if (!ACCEPTED_TYPES.includes(f.type)) {
+      return "Formato no soportado. Usa PDF, DOCX, JPG, PNG o WEBP";
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      return "El archivo no puede superar los 10MB";
+    }
+    return null;
+  };
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -49,22 +67,24 @@ const AnalyzeLandlordPage = () => {
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type === "application/pdf") {
-        setFile(droppedFile);
-      } else {
-        toast.error("Solo se permiten archivos PDF");
+      const error = validateFile(droppedFile);
+      if (error) {
+        toast.error(error);
+        return;
       }
+      setFile(droppedFile);
     }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (selectedFile.type === "application/pdf") {
-        setFile(selectedFile);
-      } else {
-        toast.error("Solo se permiten archivos PDF");
+      const error = validateFile(selectedFile);
+      if (error) {
+        toast.error(error);
+        return;
       }
+      setFile(selectedFile);
     }
   };
 
@@ -109,6 +129,7 @@ const AnalyzeLandlordPage = () => {
           body: {
             contractId: contract.id,
             filePath: filePath,
+            fileType: file.type,
             perspective: "landlord", // Perspectiva de propietario
           },
         }
@@ -182,7 +203,7 @@ const AnalyzeLandlordPage = () => {
                   Subir contrato
                 </CardTitle>
                 <CardDescription>
-                  Sube tu contrato en formato PDF para analizarlo
+                  Formatos aceptados: PDF, DOCX, JPG, PNG (máx. 10MB)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -235,11 +256,11 @@ const AnalyzeLandlordPage = () => {
                       <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
                       <p className="font-medium">Arrastra tu contrato aquí</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        o haz clic para seleccionar (PDF)
+                        o haz clic para seleccionar (PDF, DOCX, JPG, PNG)
                       </p>
                       <input
                         type="file"
-                        accept=".pdf"
+                        accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.webp"
                         onChange={handleFileChange}
                         className="hidden"
                         disabled={!hasCredits}
