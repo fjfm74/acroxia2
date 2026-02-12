@@ -291,33 +291,39 @@ INSTRUCCIONES:
 Responde SOLO con JSON válido: { "chunks": [ ... ] }`;}
 
 
-function buildAnalysisPrompt(docTitle: string, allChunksSummary: string): string {
+function buildAnalysisPrompt(docTitle: string, allChunksSummary: string, effectiveDate?: string | null): string {
   return `Eres un asistente legal experto en normativa española.
-Analiza globalmente el documento "${docTitle}" basándote en los fragmentos extraídos.
+Analiza globalmente el documento "${docTitle}" (fecha de entrada en vigor: ${effectiveDate || 'desconocida'}) basándote en los fragmentos extraídos.
 
 Fragmentos del documento:
 ${allChunksSummary}
 
 Genera un análisis global con:
 
-1. **ai_summary**: 2-3 frases explicando qué regula.
+1. **ai_summary**: 2-3 frases explicando qué regula. Si el documento ha sido parcialmente derogado o modificado por leyes posteriores, menciónalo indicando para qué contratos sigue vigente.
 2. **keywords**: Términos legales relevantes.
-3. **relations**: Array de relaciones con otros documentos legales. Para CADA documento mencionado que este modifique, derogue, complemente, amplíe, prorrogue, desarrolle o interprete, incluye:
+3. **relations**: Array de relaciones CON OTROS documentos legales que ESTE DOCUMENTO modifique, derogue, complemente, etc. Para CADA uno:
    {
      "type": "deroga|modifica|complementa|amplia|prorroga|desarrolla|interpreta",
      "target_title": "Nombre exacto del documento afectado (ej: Ley 29/1994)",
      "affected_articles": ["Art. X", "Art. Y"] (solo para modifica/deroga parcial),
+     "temporal_note": "Si el documento antiguo sigue vigente para ciertos contratos, indicar aquí",
      "description": "Breve descripción de la relación"
    }
    
    Tipos:
-   - deroga: Reemplaza completamente otro documento
-   - modifica: Cambia artículos específicos de otro
+   - deroga: Reemplaza COMPLETAMENTE otro documento sin excepciones temporales
+   - modifica: Cambia artículos específicos de otro. Usar también cuando la derogación es parcial (el documento antiguo sigue vigente para ciertos contratos)
    - complementa: Añade información nueva sin invalidar
    - amplia: Extiende el alcance de otro
    - prorroga: Extiende la vigencia temporal de otro
    - desarrolla: Reglamento que desarrolla una ley
    - interpreta: Jurisprudencia que interpreta
+
+   REGLAS CRÍTICAS DE DIRECCIÓN:
+   - Este documento ("${docTitle}") es SIEMPRE el source. Solo incluye relaciones donde ESTE documento actúe sobre otros MÁS ANTIGUOS.
+   - Si este documento es más antiguo que otro y fue derogado por él, NO incluyas esa relación aquí.
+   - Si este documento sigue siendo aplicable a contratos antiguos aunque haya sido parcialmente derogado, NO te relaciones a ti mismo como derogado.
 
 4. **expiration_date**: "YYYY-MM-DD" si tiene vigencia limitada, o null.
 
@@ -415,39 +421,46 @@ async function processRelations(
 
     const targetDoc = matchingDocs[0];
 
-    // Insert relation record
+    // Insert relation record (include temporal_note in description)
     await supabase.from("document_relations").upsert({
       source_document_id: documentId,
       target_document_id: targetDoc.id,
       relation_type: relType,
       affected_articles: relation.affected_articles || [],
-      description: relation.description || null,
+      description: relation.temporal_note
+        ? `${relation.description || ''}. Nota temporal: ${relation.temporal_note}`
+        : (relation.description || null),
       detected_by: 'ai',
     }, { onConflict: 'source_document_id,target_document_id,relation_type' });
 
     // Process effects based on relation type
     if (relType === "deroga") {
-      // Full supersede - mark all chunks as superseded
-      const { data: oldChunks } = await supabase
-        .from("legal_chunks")
-        .select("id")
-        .eq("document_id", targetDoc.id)
-        .or("is_superseded.is.null,is_superseded.eq.false");
-
-      if (oldChunks && oldChunks.length > 0) {
-        await supabase
+      // If there's a temporal_note, the old doc still applies to some contracts - DON'T deactivate
+      if (relation.temporal_note) {
+        console.log(`Deroga with temporal applicability: "${targetDoc.title}" stays active. Note: ${relation.temporal_note}`);
+      } else {
+        // Full supersede - mark all chunks as superseded
+        const { data: oldChunks } = await supabase
           .from("legal_chunks")
-          .update({ is_superseded: true, superseded_at: new Date().toISOString() })
-          .in("id", oldChunks.map((c: any) => c.id));
-        supersededChunksCount += oldChunks.length;
+          .select("id")
+          .eq("document_id", targetDoc.id)
+          .or("is_superseded.is.null,is_superseded.eq.false");
 
-        // Mark document as superseded
-        await supabase
-          .from("legal_documents")
-          .update({ superseded_by_id: documentId, is_active: false })
-          .eq("id", targetDoc.id);
+        if (oldChunks && oldChunks.length > 0) {
+          await supabase
+            .from("legal_chunks")
+            .update({ is_superseded: true, superseded_at: new Date().toISOString() })
+            .in("id", oldChunks.map((c: any) => c.id));
+          supersededChunksCount += oldChunks.length;
 
-        console.log(`Deroga: marked ${oldChunks.length} chunks and document "${targetDoc.title}" as superseded`);
+          // Mark document as superseded
+          await supabase
+            .from("legal_documents")
+            .update({ superseded_by_id: documentId, is_active: false })
+            .eq("id", targetDoc.id);
+
+          console.log(`Deroga: marked ${oldChunks.length} chunks and document "${targetDoc.title}" as superseded`);
+        }
       }
     } else if (relType === "modifica") {
       // Partial supersede - only matching articles
@@ -541,7 +554,7 @@ serve(async (req) => {
     // Get document info
     const { data: docInfo, error: docError } = await supabase
       .from("legal_documents")
-      .select("title, type, jurisdiction, territorial_entity")
+      .select("title, type, jurisdiction, territorial_entity, effective_date")
       .eq("id", documentId)
       .single();
     if (docError) throw new Error(`Error getting document info: ${docError.message}`);
@@ -770,7 +783,7 @@ serve(async (req) => {
         `[${i + 1}] ${c.article_reference || ''} ${c.section_title || ''}: ${(c.content || '').substring(0, 300)}...`
       ).join("\n");
 
-      const analysisPrompt = buildAnalysisPrompt(docInfo.title, chunksSummary);
+      const analysisPrompt = buildAnalysisPrompt(docInfo.title, chunksSummary, docInfo.effective_date);
       const analysisContent = await callAI([
         { role: "user", content: analysisPrompt },
       ], "google/gemini-2.5-flash");
