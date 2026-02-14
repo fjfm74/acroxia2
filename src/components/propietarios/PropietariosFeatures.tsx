@@ -34,10 +34,10 @@ const PropietariosFeatures = () => {
         <FadeIn>
           <div className="text-center mb-16">
             <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">
-              Herramientas para propietarios
+              Herramientas diseñadas para el arrendador
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Todo lo que necesitas para gestionar tus contratos con tranquilidad jurídica
+              Análisis con IA, verificación de zonas tensionadas y generación de contratos conformes a la LAU 2026
             </p>
           </div>
         </FadeIn>

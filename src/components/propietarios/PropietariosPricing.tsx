@@ -61,7 +61,7 @@ const PropietariosPricing = () => {
               Planes para propietarios
             </p>
             <h2 className="font-serif text-4xl md:text-5xl font-medium text-background">
-              Tranquilidad jurídica para tu alquiler
+              Elige el plan que se adapta a tu cartera
             </h2>
           </div>
         </FadeIn>

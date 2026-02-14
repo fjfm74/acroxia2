@@ -15,13 +15,13 @@ const PropietariosHero = () => {
           
           <FadeIn delay={0.1}>
             <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-medium text-foreground leading-tight mb-6">
-              Contratos de alquiler conformes a la ley
+              Tu contrato de alquiler, revisado desde la perspectiva del propietario
             </h1>
           </FadeIn>
           
           <FadeIn delay={0.2}>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              Analiza tus contratos desde la perspectiva del arrendador. Asegúrate de que cumplen con la LAU 2026 y evita problemas legales futuros.
+              Sube tu contrato y descubre en menos de 2 minutos si cumple con la LAU 2026, los límites de zona tensionada y los requisitos documentales obligatorios.
             </p>
           </FadeIn>
           

@@ -26,10 +26,10 @@ const PropietariosPainPoints = () => {
         <FadeIn>
           <div className="text-center mb-16">
             <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">
-              ¿Te resulta familiar?
+              Por qué es importante revisar tu contrato como propietario
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Problemas comunes que enfrentan los propietarios con sus contratos de alquiler
+              Un contrato desactualizado o no conforme puede costarte más que una consulta jurídica
             </p>
           </div>
         </FadeIn>
