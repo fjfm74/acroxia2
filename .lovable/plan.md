@@ -1,39 +1,65 @@
 
 
-## Plan: Alertar siempre sobre requisitos documentales obligatorios
+## Plan: Optimizar textos de la Home para precision, credibilidad y audiencia completa
 
-### Problema
-El prompt del motor de analisis ya menciona la cedula de habitabilidad y el certificado energetico en la seccion 13, pero no tiene una instruccion explicita que obligue a la IA a generar una clausula/alerta cuando estos documentos **no se mencionan** en el contrato. La IA lo trata como informacion de contexto, no como un check obligatorio.
+### Problema identificado
+Los textos actuales de la homepage tienen tres problemas principales:
+1. **Sesgo de audiencia**: Todo el messaging habla exclusivamente a inquilinos, cuando ACROXIA tambien sirve a propietarios y profesionales
+2. **Datos sin respaldo**: Las estadisticas (632.369 contratos, 73%, 850 EUR abogado) no tienen fuente verificable y el coste del abogado parece exagerado
+3. **Formatos desactualizados**: Se menciona "PDF o imagen" pero se aceptan tambien DOCX, WEBP
 
-### Solucion
-Modificar el prompt del sistema en `supabase/functions/analyze-contract/index.ts` para incluir una regla de oro adicional que fuerce a la IA a verificar siempre la presencia de estos requisitos documentales y generar alertas si faltan.
+---
 
-### Cambios
+### Cambios propuestos
 
-**Archivo:** `supabase/functions/analyze-contract/index.ts`
+#### 1. HeroSection.tsx - Ampliar audiencia y precisar
 
-1. **Agregar regla 10 en "REGLAS DE ORO"** (tras la linea 545):
-   - Nueva regla que instruya a la IA a verificar SIEMPRE si el contrato menciona la cedula de habitabilidad y el certificado energetico.
-   - Si el contrato NO los menciona, debe generar una clausula de tipo `suspicious` o `illegal` con categoria "ESTADO DE LA VIVIENDA E INVENTARIO", explicando que son requisitos legales obligatorios y que su ausencia es un riesgo.
-   - Referencia legal: Art. 25.2 LAU y normativa autonomica aplicable para la cedula; RD 235/2013 para el certificado energetico.
+**Etiqueta superior**: Sin cambios ("Analisis de contratos con inteligencia artificial" es correcto)
 
-2. **Reforzar la seccion 13 del prompt** (lineas 460-464):
-   - Hacer mas explicita la obligatoriedad, indicando que la ausencia de mencion a estos documentos debe generar alerta automatica.
+**H1**: Cambiar de "Protege tus derechos como inquilino" a:
+> "Tu contrato de alquiler, analizado por IA"
 
-### Detalle tecnico del texto a insertar
+Razon: Neutro respecto a inquilino/propietario, enfocado en el producto, incluye keyword "contrato de alquiler" + "IA".
 
-En las REGLAS DE ORO (linea 544-545), se anadira:
+**Subtitulo**: Cambiar a:
+> "Sube tu contrato y descubre en menos de 2 minutos si contiene clausulas que podrian ser abusivas o no conformes con la legislacion vigente. Para inquilinos y propietarios."
 
-```
-10. VERIFICACION OBLIGATORIA DE REQUISITOS DOCUMENTALES: Comprueba SIEMPRE si el contrato 
-    menciona la cedula de habitabilidad (o licencia de primera/segunda ocupacion segun CCAA) 
-    y el certificado de eficiencia energetica. Si NO aparecen mencionados en el contrato, 
-    DEBES generar una clausula con category "ESTADO DE LA VIVIENDA E INVENTARIO", 
-    type "suspicious", risk_level 7, explicando que son documentos legalmente obligatorios 
-    que el arrendador debe entregar antes de la firma. Referencias: Art. 25.2 LAU (cedula), 
-    RD 235/2013 (certificado energetico).
-```
+**Trust signals**: Cambiar "Sin registro inicial" a "Preview gratuito sin registro"
 
-### Impacto
-- Todos los analisis (inquilino, propietario y publico) usaran esta regla, ya que comparten el mismo prompt base.
-- No requiere cambios en frontend ni en base de datos.
+#### 2. StatsSection.tsx - Datos verificables y audiencia ampliada
+
+**H2**: Cambiar de "El problema es mas grande de lo que piensas" a:
+> "Por que analizar tu contrato es importante"
+
+**Subtitulo**: Cambiar a:
+> "Tanto inquilinos como propietarios se enfrentan a contratos con clausulas que podrian no ajustarse a la normativa. Los datos lo confirman."
+
+**Estadisticas revisadas** (datos mas conservadores y verificables):
+
+| Actual | Propuesto | Razon |
+|--------|-----------|-------|
+| 632.369 contratos venceran | 1,9M de contratos de alquiler activos en Espana | Dato INE verificable |
+| 73% desconocen derechos | 7 de cada 10 inquilinos no revisan su contrato antes de firmar | Mas creible, formulacion menos absoluta |
+| 850 EUR abogado | 150-300 EUR es el coste medio de una consulta juridica especializada | Rango realista segun colegios de abogados |
+| <2 min ACROXIA | <2 min es el tiempo de analisis con ACROXIA | Sin cambios, es preciso |
+
+#### 3. HowItWorksSection.tsx - Actualizar formatos
+
+**Paso 1 descripcion**: Cambiar de "Arrastra tu PDF o imagen del contrato. Aceptamos cualquier formato legible." a:
+> "Arrastra tu PDF, DOCX o imagen del contrato. Aceptamos los formatos mas comunes."
+
+---
+
+### Seccion tecnica
+
+**Archivos a modificar:**
+- `src/components/landing/HeroSection.tsx` (lineas 31-32, 35-36, 39-40, 53)
+- `src/components/landing/StatsSection.tsx` (lineas 3-19, 28-33)
+- `src/components/landing/HowItWorksSection.tsx` (linea 7)
+
+**Sin impacto en:**
+- SEO schemas (se actualizaran automaticamente al cambiar el H1)
+- Speakable (la clase `.speakable-summary` se mantiene en el subtitulo)
+- Animaciones (todas las clases CSS de animacion se preservan)
+- Estructura visual (no hay cambios de layout ni componentes)
+
