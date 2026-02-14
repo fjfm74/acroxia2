@@ -460,7 +460,8 @@ CATEGORÍAS DE CLÁUSULAS A ANALIZAR (analiza TODAS)
 13. ESTADO DE LA VIVIENDA E INVENTARIO
     - Entrega en condiciones de habitabilidad
     - Inventario y estado inicial documentado
-    - Cédula de habitabilidad/certificado energético obligatorios
+    - Cédula de habitabilidad (o licencia de primera/segunda ocupación según CCAA): OBLIGATORIA (Art. 25.2 LAU y normativa autonómica). Si el contrato NO la menciona, DEBES generar alerta.
+    - Certificado de eficiencia energética: OBLIGATORIO (RD 235/2013). Si el contrato NO lo menciona, DEBES generar alerta.
     - Responsabilidad por vicios ocultos
 
 14. SEGUROS Y RESPONSABILIDAD
@@ -542,7 +543,8 @@ REGLAS DE ORO (OBLIGATORIAS)
 6. Sé CONSERVADOR: ante la duda, "suspicious" es mejor que "valid"
 7. Si detectas contrato temporal/de temporada, indica que aplican reglas diferentes
 8. Identifica un MÍNIMO de 8-10 cláusulas relevantes del contrato
-9. Incluye SIEMPRE un legal_disclaimer en el summary indicando el estado de la base de datos`;
+9. Incluye SIEMPRE un legal_disclaimer en el summary indicando el estado de la base de datos
+10. VERIFICACIÓN OBLIGATORIA DE REQUISITOS DOCUMENTALES: Comprueba SIEMPRE si el contrato menciona la cédula de habitabilidad (o licencia de primera/segunda ocupación según CCAA) y el certificado de eficiencia energética. Si NO aparecen mencionados en el contrato, DEBES generar una cláusula por cada documento ausente con category "ESTADO DE LA VIVIENDA E INVENTARIO", type "suspicious", risk_level 7, explicando que son documentos legalmente obligatorios que el arrendador debe entregar antes de la firma. Referencias: Art. 25.2 LAU y normativa autonómica (cédula de habitabilidad), RD 235/2013 (certificado energético). Esta verificación es OBLIGATORIA en TODOS los análisis.`;
 }
 
 // Construir prompt para guía de negociación amigable (documento para el usuario)
