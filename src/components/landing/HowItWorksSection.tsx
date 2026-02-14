@@ -4,7 +4,7 @@ const steps = [
   {
     number: "01",
     title: "Sube tu contrato",
-    description: "Arrastra tu PDF o imagen del contrato. Aceptamos cualquier formato legible.",
+    description: "Arrastra tu PDF, DOCX o imagen del contrato. Aceptamos los formatos más comunes.",
     image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=800&auto=format&fit=crop",
   },
   {

@@ -19,7 +19,7 @@ const Index = () => {
     "logo": "https://acroxia.com/acroxia-logo.png",
     "image": "https://acroxia.com/og-image.jpg",
     "description": "Plataforma de IA para análisis de contratos de alquiler y protección de derechos del inquilino en España. Detecta cláusulas abusivas en menos de 2 minutos.",
-    "slogan": "Protege tus derechos como inquilino con IA",
+    "slogan": "Tu contrato de alquiler, analizado por IA",
     "foundingDate": "2025",
     "foundingLocation": {
       "@type": "Place",
@@ -90,7 +90,7 @@ const Index = () => {
         "@type": "HowToStep",
         "position": 1,
         "name": "Sube tu contrato",
-        "text": "Arrastra tu PDF o imagen del contrato. Aceptamos cualquier formato legible."
+        "text": "Arrastra tu PDF, DOCX o imagen del contrato. Aceptamos los formatos más comunes."
       },
       {
         "@type": "HowToStep",
@@ -129,7 +129,7 @@ const Index = () => {
         <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/" />
         
         {/* Open Graph completo */}
-        <meta property="og:title" content="ACROXIA - Protege tus Derechos como Inquilino con IA" />
+        <meta property="og:title" content="ACROXIA - Tu Contrato de Alquiler, Analizado por IA" />
         <meta property="og:description" content="Analiza tu contrato con IA y descubre cláusulas potencialmente ilegales. Preview gratuito." />
         <meta property="og:url" content="https://acroxia.com/" />
         <meta property="og:type" content="website" />
