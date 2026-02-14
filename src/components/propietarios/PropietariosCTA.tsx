@@ -10,11 +10,11 @@ const PropietariosCTA = () => {
         <FadeIn>
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-6">
-              Asegura que tu contrato cumple la ley
+              Analiza tu contrato en menos de 2 minutos
             </h2>
             <p className="text-muted-foreground text-lg mb-10">
-              Analiza tu contrato de alquiler y evita sorpresas legales. 
-              Tu primera revisión es gratuita.
+              Sube tu contrato y descubre si cumple con la normativa vigente. 
+              Preview gratuito sin registro.
             </p>
             <Button 
               asChild 
