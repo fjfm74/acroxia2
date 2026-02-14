@@ -2,16 +2,16 @@ import FadeIn from "@/components/animations/FadeIn";
 
 const stats = [
   {
-    value: "632.369",
-    context: "contratos de alquiler vencerán en España en 2026",
+    value: "1,9M",
+    context: "de contratos de alquiler activos en España según el INE",
   },
   {
-    value: "73%",
-    context: "de inquilinos desconocen sus derechos según la LAU",
+    value: "7 de 10",
+    context: "inquilinos no revisan su contrato antes de firmar",
   },
   {
-    value: "€850",
-    context: "es el coste medio de una consulta con abogado especializado",
+    value: "150‑300€",
+    context: "es el coste medio de una consulta jurídica especializada",
   },
   {
     value: "<2 min",
@@ -26,10 +26,10 @@ const StatsSection = () => {
         <FadeIn>
           <div className="max-w-3xl mb-20">
             <h2 className="font-serif text-4xl md:text-5xl font-medium text-foreground leading-tight mb-6">
-              El problema es más grande de lo que piensas
+              Por qué analizar tu contrato es importante
             </h2>
             <p className="text-lg text-muted-foreground">
-              Miles de inquilinos en España firman contratos con cláusulas abusivas sin saberlo. Los datos hablan por sí solos.
+              Tanto inquilinos como propietarios se enfrentan a contratos con cláusulas que podrían no ajustarse a la normativa. Los datos lo confirman.
             </p>
           </div>
         </FadeIn>

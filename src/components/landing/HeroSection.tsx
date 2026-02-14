@@ -33,11 +33,11 @@ const HeroSection = () => {
             </p>
             
             <h1 className="hero-animate hero-animate-delay-1 font-serif text-5xl md:text-6xl lg:text-7xl font-medium text-foreground leading-[1.1] mb-8">
-              Protege tus derechos como inquilino
+              Tu contrato de alquiler, analizado por IA
             </h1>
             
             <p className="hero-animate hero-animate-delay-2 speakable-summary text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
-              Sube tu contrato de alquiler y descubre en menos de 2 minutos si contiene cláusulas que podrían ser abusivas o contrarias a la legislación vigente.
+              Sube tu contrato y descubre en menos de 2 minutos si contiene cláusulas que podrían ser abusivas o no conformes con la legislación vigente. Para inquilinos y propietarios.
             </p>
             
             <div className="hero-animate hero-animate-delay-3 flex flex-col sm:flex-row gap-4 mb-12">
@@ -50,7 +50,7 @@ const HeroSection = () => {
             </div>
             
             <div className="hero-animate hero-animate-delay-4 flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted-foreground">
-              <span>Sin registro inicial</span>
+              <span>Preview gratuito sin registro</span>
               <span>Resultado en 2 minutos</span>
               <span>100% confidencial</span>
             </div>
