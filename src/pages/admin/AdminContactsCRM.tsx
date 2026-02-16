@@ -136,6 +136,8 @@ const SOURCES_FILTER = [
   { value: "lead", label: "Leads" },
 ];
 
+const CONTACTS_PER_PAGE = 50;
+
 const AdminContactsCRM = () => {
   const [contacts, setContacts] = useState<UnifiedContact[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, clients: 0, newsletter: 0, b2b: 0, leads: 0 });
@@ -146,8 +148,10 @@ const AdminContactsCRM = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<string>("");
   const [adding, setAdding] = useState(false);
   const [selectedContact, setSelectedContact] = useState<UnifiedContact | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -172,19 +176,34 @@ const AdminContactsCRM = () => {
   const fetchAllContacts = async () => {
     setLoading(true);
     try {
-      // Fetch all 4 tables in parallel
-      const [profilesRes, subscribersRes, marketingRes, leadsRes] = await Promise.all([
-        supabase.from("profiles").select("*"),
-        supabase.from("blog_subscribers").select("*"),
-        supabase.from("marketing_contacts").select("*"),
-        supabase.from("leads").select("*"),
+      // Fetch all 4 tables in parallel - use range to avoid 1000-row limit
+      const fetchAll = async (table: string) => {
+        const allData: any[] = [];
+        let from = 0;
+        const PAGE = 1000;
+        while (true) {
+          const { data, error } = await supabase.from(table as any).select("*").range(from, from + PAGE - 1);
+          if (error) { console.error(`Error fetching ${table}:`, error); break; }
+          if (!data || data.length === 0) break;
+          allData.push(...data);
+          if (data.length < PAGE) break;
+          from += PAGE;
+        }
+        return allData;
+      };
+
+      const [profilesData, subscribersData, marketingData, leadsData] = await Promise.all([
+        fetchAll("profiles"),
+        fetchAll("blog_subscribers"),
+        fetchAll("marketing_contacts"),
+        fetchAll("leads"),
       ]);
 
       // Build contact map by email
       const contactMap = new Map<string, UnifiedContact>();
 
       // Process profiles (clients)
-      profilesRes.data?.forEach((profile) => {
+      profilesData.forEach((profile: any) => {
         const email = profile.email.toLowerCase();
         const existing = contactMap.get(email) || createEmptyContact(email);
         existing.sources.push("cliente");
@@ -204,7 +223,7 @@ const AdminContactsCRM = () => {
       });
 
       // Process newsletter subscribers
-      subscribersRes.data?.forEach((sub) => {
+      subscribersData.forEach((sub: any) => {
         const email = sub.email.toLowerCase();
         const existing = contactMap.get(email) || createEmptyContact(email);
         existing.sources.push("newsletter");
@@ -222,7 +241,7 @@ const AdminContactsCRM = () => {
       });
 
       // Process B2B marketing contacts
-      marketingRes.data?.forEach((contact) => {
+      marketingData.forEach((contact: any) => {
         const email = contact.email.toLowerCase();
         const existing = contactMap.get(email) || createEmptyContact(email);
         existing.sources.push("b2b");
@@ -245,7 +264,7 @@ const AdminContactsCRM = () => {
       });
 
       // Process leads
-      leadsRes.data?.forEach((lead) => {
+      leadsData.forEach((lead: any) => {
         const email = lead.email.toLowerCase();
         const existing = contactMap.get(email) || createEmptyContact(email);
         existing.sources.push("lead");
@@ -276,10 +295,10 @@ const AdminContactsCRM = () => {
       // Calculate stats
       setStats({
         total: allContacts.length,
-        clients: profilesRes.data?.length || 0,
-        newsletter: subscribersRes.data?.filter(s => s.confirmed && !s.unsubscribed)?.length || 0,
-        b2b: marketingRes.data?.filter(m => !m.unsubscribed)?.length || 0,
-        leads: leadsRes.data?.filter(l => !l.converted_to_user_id)?.length || 0,
+        clients: profilesData.length,
+        newsletter: subscribersData.filter((s: any) => s.confirmed && !s.unsubscribed).length,
+        b2b: marketingData.filter((m: any) => !m.unsubscribed).length,
+        leads: leadsData.filter((l: any) => !l.converted_to_user_id).length,
       });
     } catch (error) {
       console.error("Error fetching contacts:", error);
@@ -337,7 +356,14 @@ const AdminContactsCRM = () => {
     return true;
   });
 
-  // Add B2B contact
+  // Pagination
+  const totalPages = Math.ceil(filteredContacts.length / CONTACTS_PER_PAGE);
+  const paginatedContacts = filteredContacts.slice(
+    (currentPage - 1) * CONTACTS_PER_PAGE,
+    currentPage * CONTACTS_PER_PAGE
+  );
+
+
   const addContact = async () => {
     if (!newContact.email.trim()) {
       toast({
@@ -435,36 +461,45 @@ const AdminContactsCRM = () => {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split("\n").filter((line) => line.trim());
+      try {
+        const text = e.target?.result as string;
+        const lines = text.split("\n").filter((line) => line.trim());
 
-      if (lines.length < 2) {
+        if (lines.length < 2) {
+          toast({
+            title: "Archivo vacío",
+            description: "El archivo no contiene datos",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const headers = lines[0].split(/[,;]/).map((h) => h.trim().toLowerCase().replace(/^["']|["']$/g, ""));
+        const data = lines.slice(1).map((line) => {
+          const values = line.split(/[,;]/).map((v) => v.trim().replace(/^["']|["']$/g, ""));
+          const row: Record<string, string> = {};
+          headers.forEach((h, i) => {
+            row[h] = values[i] || "";
+          });
+          return row;
+        });
+
+        const mapping: Record<string, string> = {
+          email: headers.find((h) => h.includes("email") || h.includes("correo")) || "",
+          company_name: headers.find((h) => h.includes("empresa") || h.includes("company")) || "",
+          contact_name: headers.find((h) => h.includes("nombre") || h.includes("name")) || "",
+          phone: headers.find((h) => h.includes("telefono") || h.includes("phone")) || "",
+        };
+
+        setImportPreview({ data, headers, mapping });
+      } catch (err) {
+        console.error("CSV parse error:", err);
         toast({
-          title: "Archivo vacío",
-          description: "El archivo no contiene datos",
+          title: "Error al procesar CSV",
+          description: "El archivo no se pudo leer correctamente",
           variant: "destructive",
         });
-        return;
       }
-
-      const headers = lines[0].split(/[,;]/).map((h) => h.trim().toLowerCase());
-      const data = lines.slice(1).map((line) => {
-        const values = line.split(/[,;]/).map((v) => v.trim());
-        const row: Record<string, string> = {};
-        headers.forEach((h, i) => {
-          row[h] = values[i] || "";
-        });
-        return row;
-      });
-
-      const mapping: Record<string, string> = {
-        email: headers.find((h) => h.includes("email") || h.includes("correo")) || "",
-        company_name: headers.find((h) => h.includes("empresa") || h.includes("company")) || "",
-        contact_name: headers.find((h) => h.includes("nombre") || h.includes("name")) || "",
-        phone: headers.find((h) => h.includes("telefono") || h.includes("phone")) || "",
-      };
-
-      setImportPreview({ data, headers, mapping });
     };
 
     reader.readAsText(file);
@@ -490,33 +525,53 @@ const AdminContactsCRM = () => {
     let errorCount = 0;
 
     try {
-      for (const row of data) {
-        const email = row[mapping.email]?.trim().toLowerCase();
-        if (!email || !email.includes("@")) {
-          errorCount++;
-          continue;
-        }
+      // Filter and prepare valid rows
+      const validRows = data
+        .map((row) => {
+          const email = row[mapping.email]?.trim().toLowerCase();
+          if (!email || !email.includes("@")) return null;
+          return {
+            email,
+            company_name: (mapping.company_name && row[mapping.company_name]) || null,
+            contact_name: (mapping.contact_name && row[mapping.contact_name]) || null,
+            phone: (mapping.phone && row[mapping.phone]) || null,
+            segment: "gestoria" as const,
+            source: "purchased_db" as const,
+            consent_type: "legitimate_interest" as const,
+          };
+        })
+        .filter(Boolean) as Array<{
+          email: string;
+          company_name: string | null;
+          contact_name: string | null;
+          phone: string | null;
+          segment: string;
+          source: string;
+          consent_type: string;
+        }>;
 
-        const { error } = await supabase.from("marketing_contacts").insert({
-          email,
-          company_name: row[mapping.company_name] || null,
-          contact_name: row[mapping.contact_name] || null,
-          phone: row[mapping.phone] || null,
-          segment: "gestoria",
-          source: "purchased_db",
-          consent_type: "legitimate_interest",
-        });
+      // Batch insert in groups of 200
+      const BATCH_SIZE = 200;
+      for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
+        const batch = validRows.slice(i, i + BATCH_SIZE);
+        setImportProgress(`Importando ${Math.min(i + BATCH_SIZE, validRows.length)} de ${validRows.length}...`);
+        const { error } = await supabase
+          .from("marketing_contacts")
+          .upsert(batch, { onConflict: "email", ignoreDuplicates: true });
 
         if (error) {
-          errorCount++;
+          console.error(`Batch ${i / BATCH_SIZE} error:`, error);
+          errorCount += batch.length;
         } else {
-          successCount++;
+          successCount += batch.length;
         }
       }
 
+      errorCount = validRows.length - successCount + (data.length - validRows.length);
+
       toast({
         title: "Importación completada",
-        description: `${successCount} contactos importados, ${errorCount} errores/duplicados`,
+        description: `${successCount} contactos procesados de ${data.length} registros`,
       });
 
       setImportDialogOpen(false);
@@ -531,6 +586,7 @@ const AdminContactsCRM = () => {
       });
     } finally {
       setImporting(false);
+      setImportProgress("");
     }
   };
 
@@ -736,7 +792,7 @@ const AdminContactsCRM = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredContacts.map((contact) => (
+                      {paginatedContacts.map((contact) => (
                         <TableRow
                           key={contact.email}
                           className="cursor-pointer hover:bg-muted/50"
@@ -821,7 +877,7 @@ const AdminContactsCRM = () => {
 
                 {/* Mobile Cards */}
                 <div className="lg:hidden divide-y divide-border">
-                  {filteredContacts.map((contact) => (
+                  {paginatedContacts.map((contact) => (
                     <div
                       key={contact.email}
                       className="p-4 cursor-pointer hover:bg-muted/50"
@@ -858,10 +914,36 @@ const AdminContactsCRM = () => {
           </CardContent>
         </Card>
 
-        {/* Results count */}
-        <p className="text-sm text-muted-foreground mt-4">
-          Mostrando {filteredContacts.length} de {contacts.length} contactos únicos
-        </p>
+        {/* Results count + Pagination */}
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {paginatedContacts.length} de {filteredContacts.length} contactos
+            {filteredContacts.length !== contacts.length && ` (${contacts.length} total)`}
+          </p>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+              </Button>
+            </div>
+          )}
+        </div>
       </AdminLayout>
 
       {/* Add B2B Contact Dialog */}
@@ -990,11 +1072,11 @@ const AdminContactsCRM = () => {
                       {field === "email" && " *"}
                     </Label>
                     <Select
-                      value={importPreview.mapping[field] || ""}
+                      value={importPreview.mapping[field] || "__none__"}
                       onValueChange={(v) =>
                         setImportPreview({
                           ...importPreview,
-                          mapping: { ...importPreview.mapping, [field]: v },
+                          mapping: { ...importPreview.mapping, [field]: v === "__none__" ? "" : v },
                         })
                       }
                     >
@@ -1002,7 +1084,7 @@ const AdminContactsCRM = () => {
                         <SelectValue placeholder="Seleccionar columna" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">-- No mapear --</SelectItem>
+                        <SelectItem value="__none__">-- No mapear --</SelectItem>
                         {importPreview.headers.map((h) => (
                           <SelectItem key={h} value={h}>
                             {h}
@@ -1023,7 +1105,7 @@ const AdminContactsCRM = () => {
                   Cancelar
                 </Button>
                 <Button onClick={executeImport} disabled={importing} className="flex-1">
-                  {importing ? "Importando..." : "Importar contactos"}
+                  {importing ? (importProgress || "Preparando...") : "Importar contactos"}
                 </Button>
               </div>
             </div>
