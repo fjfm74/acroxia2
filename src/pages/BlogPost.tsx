@@ -6,6 +6,8 @@ import Footer from "@/components/landing/Footer";
 import BlogSidebar from "@/components/blog/BlogSidebar";
 import TableOfContents from "@/components/blog/TableOfContents";
 import AuthorBox from "@/components/blog/AuthorBox";
+import BlogContextualCTA from "@/components/blog/BlogContextualCTA";
+import BlogRelatedGuides from "@/components/blog/BlogRelatedGuides";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import SEOHead from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
@@ -352,6 +354,13 @@ const BlogPost = () => {
                     <TableOfContents content={post.content || ""} className="mb-10" />
                   </FadeIn>
 
+                  {/* Inline CTA after table of contents */}
+                  <FadeIn delay={0.37}>
+                    <div className="mb-10">
+                      <BlogContextualCTA audience={post.audience} variant="inline" />
+                    </div>
+                  </FadeIn>
+
                   <FadeIn delay={0.4}>
                     <div className="prose prose-lg max-w-none 
                       prose-headings:font-serif prose-headings:text-foreground prose-headings:font-semibold
@@ -404,6 +413,22 @@ const BlogPost = () => {
                       >
                         {post.content}
                       </ReactMarkdown>
+                    </div>
+                  </FadeIn>
+
+                  {/* Related Guides based on content */}
+                  <FadeIn delay={0.43}>
+                    <BlogRelatedGuides
+                      title={post.title}
+                      content={post.content || ""}
+                      category={post.category}
+                    />
+                  </FadeIn>
+
+                  {/* Prominent CTA before FAQs */}
+                  <FadeIn delay={0.44}>
+                    <div className="mt-10">
+                      <BlogContextualCTA audience={post.audience} variant="prominent" />
                     </div>
                   </FadeIn>
 
