@@ -32,7 +32,8 @@ import {
   Home,
   Key,
   MapPin,
-  Clock
+  Clock,
+  BookOpen
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsProfessional } from "@/hooks/useIsProfessional";
@@ -288,7 +289,14 @@ const Header = () => {
                   </div>
                 </div>
                 
-                <div className="border-t border-charcoal/10 mt-3 pt-2">
+                <div className="border-t border-charcoal/10 mt-3 pt-2 flex flex-col">
+                  <Link 
+                    to="/glosario" 
+                    className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    Glosario legal de alquiler
+                  </Link>
                   <Link 
                     to="/faq" 
                     className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
