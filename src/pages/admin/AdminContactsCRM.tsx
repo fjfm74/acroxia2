@@ -16,6 +16,7 @@ import {
   Plus,
   X,
   Eye,
+  Megaphone,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -68,8 +69,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ContactSourceIcon, ContactSource } from "@/components/admin/ContactSourceBadge";
 import ContactDetailPanel from "@/components/admin/ContactDetailPanel";
+import AdminCampaignsList from "@/components/admin/campaigns/AdminCampaignsList";
+import AdminCampaignEdit from "@/components/admin/campaigns/AdminCampaignEdit";
 
 interface UnifiedContact {
   email: string;
@@ -612,17 +616,35 @@ const AdminContactsCRM = () => {
     link.click();
   };
 
+  // Campaign tab state
+  const [activeTab, setActiveTab] = useState("contacts");
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
+
   return (
     <>
       <Helmet>
-        <title>CRM Contactos | ACROXIA Admin</title>
+        <title>Marketing | ACROXIA Admin</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <AdminLayout
-        title="CRM de Contactos"
-        description="Gestiona todos tus contactos desde un solo lugar"
+        title="Marketing"
+        description="CRM de contactos y campañas de email"
       >
+        <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setEditingCampaignId(null); setCreatingCampaign(false); }}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="contacts" className="gap-2">
+              <Users className="h-4 w-4" />
+              Contactos
+            </TabsTrigger>
+            <TabsTrigger value="campaigns" className="gap-2">
+              <Megaphone className="h-4 w-4" />
+              Campañas
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="contacts">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <Card className="border-border">
@@ -944,6 +966,26 @@ const AdminContactsCRM = () => {
             </div>
           )}
         </div>
+          </TabsContent>
+
+          <TabsContent value="campaigns">
+            {editingCampaignId ? (
+              <AdminCampaignEdit
+                campaignId={editingCampaignId}
+                onBack={() => setEditingCampaignId(null)}
+              />
+            ) : creatingCampaign ? (
+              <AdminCampaignEdit
+                onBack={() => setCreatingCampaign(false)}
+              />
+            ) : (
+              <AdminCampaignsList
+                onEdit={(id) => setEditingCampaignId(id)}
+                onNew={() => setCreatingCampaign(true)}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </AdminLayout>
 
       {/* Add B2B Contact Dialog */}
