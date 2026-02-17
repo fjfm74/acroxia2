@@ -264,9 +264,9 @@ const BlogPost = () => {
                   </span>
                 </FadeIn>
                 <FadeIn delay={0.1}>
-                  <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6 leading-tight">
+                  <p className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6 leading-tight" role="doc-subtitle">
                     {post.title}
-                  </h1>
+                  </p>
                 </FadeIn>
                 <FadeIn delay={0.2}>
                   <div className="flex flex-wrap items-center justify-center gap-6 text-muted-foreground">
