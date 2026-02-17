@@ -216,11 +216,41 @@ const AdminCampaignEdit = ({ campaignId, onBack }: AdminCampaignEditProps) => {
   };
 
   const sendCampaign = async () => {
-    if (!campaign.id) {
-      await saveCampaign();
+    let currentId = campaign.id;
+
+    if (!currentId) {
+      // Save first and get the ID directly
+      if (!campaign.name || !campaign.subject) {
+        toast({ title: "Campos requeridos", description: "Nombre y asunto son obligatorios", variant: "destructive" });
+        return;
+      }
+
+      const payload = {
+        name: campaign.name,
+        subject: campaign.subject,
+        html_content: campaign.html_content,
+        target_audience: campaign.target_audience,
+        target_segment: campaign.target_segment === "__none__" ? null : campaign.target_segment,
+        status: "draft",
+        scheduled_for: campaign.scheduled_for || null,
+      };
+
+      const { data, error } = await supabase
+        .from("email_campaigns")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error || !data) {
+        toast({ title: "Error al guardar", description: error?.message, variant: "destructive" });
+        return;
+      }
+
+      currentId = data.id;
+      setCampaign((prev) => ({ ...prev, id: data.id }));
     }
 
-    if (!campaign.id) return;
+    if (!currentId) return;
 
     const confirmed = window.confirm(
       `¿Enviar esta campaña a ${estimatedRecipients ?? "?"} destinatarios? Esta acción no se puede deshacer.`
@@ -238,7 +268,7 @@ const AdminCampaignEdit = ({ campaignId, onBack }: AdminCampaignEditProps) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
-          body: JSON.stringify({ campaign_id: campaign.id }),
+          body: JSON.stringify({ campaign_id: currentId }),
         }
       );
 
@@ -250,7 +280,7 @@ const AdminCampaignEdit = ({ campaignId, onBack }: AdminCampaignEditProps) => {
         description: `${result.sent} de ${result.total} emails enviados`,
       });
 
-      if (campaign.id) loadCampaign(campaign.id);
+      if (currentId) loadCampaign(currentId);
     } catch (error: any) {
       toast({ title: "Error al enviar", description: error.message, variant: "destructive" });
     } finally {
