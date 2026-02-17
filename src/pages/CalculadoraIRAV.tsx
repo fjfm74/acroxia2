@@ -454,8 +454,25 @@ const CalculadoraIRAV = () => {
                 </div>
               </FadeIn>
 
-              {/* CTA */}
+              {/* Related guide */}
               <FadeIn delay={0.4}>
+                <div className="bg-background border border-border rounded-2xl p-6 mb-8">
+                  <h3 className="font-semibold text-foreground mb-2">📖 Guía completa sobre la subida del alquiler</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Consulta nuestra guía detallada con la comparativa de índices, qué hacer ante subidas abusivas y todas las preguntas frecuentes sobre el IRAV 2026.
+                  </p>
+                  <Link
+                    to="/subida-alquiler-2026"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:underline"
+                  >
+                    Leer: Subida de Alquiler 2026 — IRAV, límites y derechos
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </FadeIn>
+
+              {/* CTA */}
+              <FadeIn delay={0.5}>
                 <div className="text-center bg-muted rounded-2xl p-10">
                   <h2 className="font-serif text-2xl font-medium text-foreground mb-4">
                     ¿Quieres verificar si tu contrato cumple los límites?
