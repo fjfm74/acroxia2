@@ -33,7 +33,8 @@ import {
   Key,
   MapPin,
   Clock,
-  BookOpen
+  BookOpen,
+  Calculator
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsProfessional } from "@/hooks/useIsProfessional";
@@ -231,6 +232,18 @@ const Header = () => {
                       <div>
                         <p className="font-medium text-foreground text-sm">Subida alquiler 2026</p>
                         <p className="text-xs text-muted-foreground">Límites IRAV y normativa</p>
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/calculadora-irav" 
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <Calculator className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">Calculadora IRAV</p>
+                        <p className="text-xs text-muted-foreground">¿Cuánto sube tu alquiler?</p>
                       </div>
                     </Link>
                   </div>

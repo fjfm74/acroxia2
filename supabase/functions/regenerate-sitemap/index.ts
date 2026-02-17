@@ -27,6 +27,7 @@ const staticRoutes = [
   { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly" },
   { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly" },
   { loc: "/glosario", priority: "0.8", changefreq: "monthly" },
+  { loc: "/calculadora-irav", priority: "0.8", changefreq: "monthly" },
   { loc: "/login", priority: "0.3", changefreq: "yearly" },
   { loc: "/registro", priority: "0.3", changefreq: "yearly" },
   { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
