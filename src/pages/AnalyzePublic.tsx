@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -256,44 +256,31 @@ const AnalyzePublic = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Analiza tu Contrato de Alquiler Gratis | ACROXIA</title>
-        <meta name="description" content="Sube tu contrato de alquiler y recibe un análisis gratuito de cláusulas potencialmente ilegales. Sin registro, en menos de 2 minutos." />
-        <meta name="keywords" content="analizar contrato alquiler gratis, revisar contrato alquiler, cláusulas abusivas, derechos inquilino" />
-        <link rel="canonical" href="https://acroxia.com/analizar-gratis" />
-        <meta property="og:title" content="Analiza tu Contrato de Alquiler Gratis | ACROXIA" />
-        <meta property="og:description" content="Sube tu contrato y detecta cláusulas abusivas en menos de 2 minutos. Sin registro." />
-        <meta property="og:url" content="https://acroxia.com/analizar-gratis" />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Analiza tu Contrato de Alquiler Gratis | ACROXIA" />
-        <meta name="twitter:description" content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/analizar-gratis" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/analizar-gratis" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            "name": "ACROXIA - Analizador de Contratos de Alquiler",
-            "applicationCategory": "LegalApplication",
-            "operatingSystem": "Web",
-            "description": "Sube tu contrato de alquiler y recibe un análisis gratuito de cláusulas potencialmente ilegales con IA",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "EUR",
-              "description": "Análisis preview gratuito sin registro"
-            },
-            "potentialAction": {
-              "@type": "UseAction",
-              "target": "https://acroxia.com/analizar-gratis",
-              "name": "Analizar contrato de alquiler gratis"
-            }
-          })}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Analiza tu Contrato de Alquiler Gratis con IA | ACROXIA"
+        description="Sube tu contrato en PDF o imagen y obtén un análisis gratuito en menos de 2 minutos. Detecta cláusulas abusivas según la LAU 2026. Sin registro."
+        canonical="https://acroxia.com/analizar-gratis"
+        keywords="analizar contrato alquiler gratis, revisar contrato alquiler, cláusulas abusivas, derechos inquilino"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "ACROXIA - Analizador de Contratos de Alquiler",
+          "applicationCategory": "LegalApplication",
+          "operatingSystem": "Web",
+          "description": "Sube tu contrato de alquiler y recibe un análisis gratuito de cláusulas potencialmente ilegales con IA",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR",
+            "description": "Análisis preview gratuito sin registro"
+          },
+          "potentialAction": {
+            "@type": "UseAction",
+            "target": "https://acroxia.com/analizar-gratis",
+            "name": "Analizar contrato de alquiler gratis"
+          }
+        }}
+      />
 
       <div className="min-h-screen flex flex-col">
         <Header />

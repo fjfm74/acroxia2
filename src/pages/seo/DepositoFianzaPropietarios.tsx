@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { 
   Building2, 
@@ -204,44 +204,15 @@ const DepositoFianzaPropietarios = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Depósito de Fianza de Alquiler: Guía para Propietarios 2026</title>
-        <meta 
-          name="description" 
-          content="Guía completa sobre la fianza de alquiler para propietarios: dónde depositarla (INCASOL, IVIMA), plazos por comunidad, devolución y descuentos permitidos." 
-        />
-        <meta 
-          name="keywords" 
-          content="depositar fianza alquiler, INCASOL, IVIMA, devolucion fianza propietario, organismo deposito fianza, descuentos fianza" 
-        />
-        <link rel="canonical" href="https://acroxia.com/deposito-fianza-propietarios" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/deposito-fianza-propietarios" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/deposito-fianza-propietarios" />
-        <meta property="og:title" content="Depósito de Fianza de Alquiler: Guía para Propietarios 2026" />
-        <meta property="og:description" content="Todo sobre la fianza para propietarios: dónde depositarla, plazos y descuentos permitidos." />
-        <meta property="og:url" content="https://acroxia.com/deposito-fianza-propietarios" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Depósito Fianza | Guía Propietarios 2026" />
-        <meta name="twitter:description" content="Dónde depositar, plazos CCAA y descuentos permitidos." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(pageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Depósito de Fianza por CCAA: INCASOL, IVIMA y Plazos | Guía para Propietarios 2026 | ACROXIA"
+        description="Dónde depositar la fianza según tu CCAA, plazos legales, devolución al inquilino y descuentos permitidos. Guía completa para propietarios 2026."
+        canonical="https://acroxia.com/deposito-fianza-propietarios"
+        ogType="article"
+        keywords="depositar fianza alquiler, INCASOL, IVIMA, devolucion fianza propietario, organismo deposito fianza, descuentos fianza"
+        articleMeta={{ datePublished: "2026-01-22", dateModified: "2026-02-09" }}
+        jsonLd={[pageSchema, faqSchema, articleSchema]}
+      />
 
       <Header />
       <Breadcrumbs items={breadcrumbItems} />

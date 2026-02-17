@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { Wallet, Clock, CheckCircle2, AlertTriangle, ArrowRight, FileText, Calculator, Calendar } from "lucide-react";
 import Header from "@/components/landing/Header";
@@ -166,47 +166,15 @@ const DevolucionFianza = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Devolución de Fianza de Alquiler 2026 | Cómo Recuperarla</title>
-        <meta 
-          name="description" 
-          content="¿Cuánto tiempo tiene el casero para devolver la fianza? 30 días. Guía completa para recuperar tu fianza de alquiler, motivos de retención ilegales y cómo reclamar." 
-        />
-        <meta 
-          name="keywords" 
-          content="devolución fianza alquiler, recuperar fianza, fianza no devuelta, plazo devolución fianza, reclamar fianza alquiler" 
-        />
-        <link rel="canonical" href="https://acroxia.com/devolucion-fianza-alquiler" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/devolucion-fianza-alquiler" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/devolucion-fianza-alquiler" />
-        <meta property="og:title" content="Devolución de Fianza de Alquiler 2026: Cómo Recuperarla" />
-        <meta property="og:description" content="¿Cuánto tiempo tiene el casero para devolver la fianza? 30 días según la LAU." />
-        <meta property="og:url" content="https://acroxia.com/devolucion-fianza-alquiler" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Devolución de Fianza Alquiler 2026" />
-        <meta name="twitter:description" content="30 días de plazo legal. Cómo recuperar tu fianza." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(pageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(howToSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Cómo Recuperar la Fianza del Alquiler | Guía Legal 2026"
+        description="Plazo de 30 días, descuentos permitidos y cómo reclamar si no te devuelven la fianza. Guía completa con modelo de burofax según la LAU 2026."
+        canonical="https://acroxia.com/devolucion-fianza-alquiler"
+        ogType="article"
+        keywords="devolución fianza alquiler, recuperar fianza, fianza no devuelta, plazo devolución fianza, reclamar fianza alquiler"
+        articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-02-09" }}
+        jsonLd={[pageSchema, faqSchema, howToSchema, articleSchema]}
+      />
 
       <div className="min-h-screen bg-background">
         <Header />
