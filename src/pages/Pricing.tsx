@@ -9,21 +9,49 @@ import MarketplaceTeaser from "@/components/pricing/MarketplaceTeaser";
 import PricingFAQ from "@/components/pricing/PricingFAQ";
 
 const Pricing = () => {
+  const offer = (name: string, price: string, description: string, url = "https://acroxia.com/precios") => ({
+    "@type": "Offer",
+    name,
+    price,
+    priceCurrency: "EUR",
+    description,
+    availability: "https://schema.org/InStock",
+    validFrom: "2026-01-01",
+    priceValidUntil: "2026-12-31",
+    url,
+  });
+
   const pricingSchema = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "ACROXIA - Análisis de Contratos de Alquiler",
-    "description": "Servicio de análisis de contratos de alquiler con IA para identificar cláusulas potencialmente problemáticas",
+    "@type": "SoftwareApplication",
+    "name": "ACROXIA",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Servicio de análisis de contratos de alquiler con IA para identificar cláusulas potencialmente problemáticas según la LAU 2026.",
     "image": "https://acroxia.com/og-image.jpg",
-    "brand": { "@type": "Brand", "name": "ACROXIA" },
-    "offers": [
-      { "@type": "Offer", "name": "Plan Gratis", "price": "0", "priceCurrency": "EUR", "description": "1 análisis básico gratuito", "priceValidUntil": "2026-12-31", "availability": "https://schema.org/InStock", "url": "https://acroxia.com/precios" },
-      { "@type": "Offer", "name": "Análisis Único", "price": "39", "priceCurrency": "EUR", "description": "1 análisis completo con informe detallado", "priceValidUntil": "2026-12-31", "availability": "https://schema.org/InStock", "url": "https://acroxia.com/precios" },
-      { "@type": "Offer", "name": "Pack Comparador", "price": "79", "priceCurrency": "EUR", "description": "3 análisis completos para comparar contratos", "priceValidUntil": "2026-12-31", "availability": "https://schema.org/InStock", "url": "https://acroxia.com/precios" },
-      { "@type": "Offer", "name": "Propietario Único", "price": "49", "priceCurrency": "EUR", "description": "Análisis + generador de contratos LAU 2026", "priceValidUntil": "2026-12-31", "availability": "https://schema.org/InStock", "url": "https://acroxia.com/propietarios" },
-      { "@type": "Offer", "name": "Suscripción Mensual", "price": "12", "priceCurrency": "EUR", "description": "Alertas de renovación y cambios legislativos", "priceValidUntil": "2026-12-31", "availability": "https://schema.org/InStock", "url": "https://acroxia.com/precios" },
-      { "@type": "Offer", "name": "Suscripción Anual", "price": "99", "priceCurrency": "EUR", "description": "Alertas de renovación y cambios legislativos (ahorro 45€)", "priceValidUntil": "2026-12-31", "availability": "https://schema.org/InStock", "url": "https://acroxia.com/precios" }
-    ]
+    "url": "https://acroxia.com",
+    "offers": {
+      "@type": "AggregateOffer",
+      "lowPrice": "0",
+      "highPrice": "149",
+      "priceCurrency": "EUR",
+      "offerCount": 10,
+      "offers": [
+        // Inquilinos (B2C)
+        offer("Preview Gratuito", "0", "Score de riesgo, conteo de cláusulas y 3 ejemplos bloqueados. Sin registro."),
+        offer("Análisis Completo", "39", "1 análisis completo con informe detallado de todas las cláusulas."),
+        offer("Pack Comparador", "79", "3 análisis completos para comparar contratos antes de firmar."),
+        offer("Suscripción Mensual", "12", "Análisis ilimitados, alertas de renovación y cambios legislativos."),
+        offer("Suscripción Anual", "99", "Análisis ilimitados durante 12 meses. Ahorro de 45€ vs mensual."),
+        // Propietarios (B2C)
+        offer("Propietario Único", "49", "Análisis de contrato + generador de contratos conformes a la LAU 2026.", "https://acroxia.com/propietarios"),
+        offer("Propietario Múltiple", "99", "Hasta 5 propiedades, alertas de renovación y verificador de zona tensionada.", "https://acroxia.com/propietarios"),
+        offer("Cartera Premium", "149", "Propiedades ilimitadas, generador de contratos y soporte prioritario.", "https://acroxia.com/propietarios"),
+        // Profesionales (B2B)
+        offer("Profesional", "99", "10 análisis/mes con informes con marca propia para gestorías e inmobiliarias."),
+        offer("Profesional Plus", "149", "Análisis ilimitados, API de integración e informes personalizados."),
+      ]
+    }
   };
 
   return (
