@@ -234,7 +234,11 @@ const ContratoAlquilerPropietarios = () => {
                   de garantía adicional (total 3 meses). Si tu vivienda está en{" "}
                   <Link to="/zonas-tensionadas-propietarios" className="underline hover:text-foreground">zona tensionada</Link>, 
                   la renta está limitada. Consulta también las obligaciones sobre{" "}
-                  <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">depósito de fianza</Link>.
+                  <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">depósito de fianza</Link>, 
+                  cómo actuar ante{" "}
+                  <Link to="/impago-alquiler-propietarios" className="underline hover:text-foreground">impago del alquiler</Link> y 
+                  las reglas del{" "}
+                  <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link>.
                 </p>
                 <p className="text-xs text-muted-foreground mt-3">
                   Última actualización: enero 2026 | Normativa vigente: LAU y Ley de Vivienda

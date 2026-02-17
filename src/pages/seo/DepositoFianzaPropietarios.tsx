@@ -259,7 +259,9 @@ const DepositoFianzaPropietarios = () => {
                   para devolverla al inquilino. Recuerda que el{" "}
                   <Link to="/contrato-alquiler-propietarios" className="underline hover:text-foreground">contrato debe cumplir la LAU</Link> y 
                   conoce las reglas de{" "}
-                  <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link>.
+                  <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link>. 
+                  Si el inquilino deja de pagar, consulta cómo actuar ante{" "}
+                  <Link to="/impago-alquiler-propietarios" className="underline hover:text-foreground">impago del alquiler</Link>.
                 </p>
                 <p className="text-xs text-muted-foreground mt-3">
                   Última actualización: enero 2026 | Normativa vigente: LAU y legislación autonómica

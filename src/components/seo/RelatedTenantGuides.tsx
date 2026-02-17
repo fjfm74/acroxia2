@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { AlertTriangle, Wallet, TrendingUp, Scale } from "lucide-react";
+import { AlertTriangle, Wallet, TrendingUp, Calculator } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 
 interface TenantGuide {
@@ -35,6 +35,14 @@ const allGuides: TenantGuide[] = [
     description: "IRAV, límites legales y qué hacer ante subidas abusivas.",
     icon: TrendingUp,
     iconColor: "text-blue-600"
+  },
+  {
+    slug: "/calculadora-irav",
+    title: "Calculadora IRAV 2026",
+    shortTitle: "Calculadora IRAV",
+    description: "Descubre qué índice aplica a tu revisión de renta: IRAV o IPC.",
+    icon: Calculator,
+    iconColor: "text-emerald-600"
   }
 ];
 

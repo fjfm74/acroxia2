@@ -318,7 +318,11 @@ const DevolucionFianza = () => {
                     <Link to="/clausulas-abusivas-alquiler" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
                       cláusulas abusivas en contratos de alquiler
                     </Link>
-                    para saber cómo reclamar.
+                    para saber cómo reclamar. También te interesará conocer los
+                    <Link to="/subida-alquiler-2026" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
+                      límites de subida del alquiler en 2026
+                    </Link>
+                    con el nuevo IRAV.
                   </p>
                 </div>
               </FadeIn>

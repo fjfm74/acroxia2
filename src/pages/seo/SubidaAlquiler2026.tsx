@@ -317,7 +317,11 @@ const SubidaAlquiler2026 = () => {
                     <Link to="/clausulas-abusivas-alquiler" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
                       cláusulas abusivas en contratos de alquiler
                     </Link>
-                    para conocer todos tus derechos.
+                    para conocer todos tus derechos. Si tu contrato está por terminar, revisa también la guía sobre
+                    <Link to="/devolucion-fianza-alquiler" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
+                      devolución de fianza
+                    </Link>
+                    y los plazos legales para recuperarla.
                   </p>
                 </div>
               </FadeIn>
