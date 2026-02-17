@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import ContactForm from "@/components/ContactForm";
@@ -25,22 +25,12 @@ const Contacto = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Contacto - ACROXIA | Atención al Cliente</title>
-        <meta 
-          name="description" 
-          content="Contacta con el equipo de ACROXIA. Resolvemos tus dudas sobre análisis de contratos de alquiler. Respuesta en 24-48 horas." 
-        />
-        <link rel="canonical" href="https://acroxia.com/contacto" />
-        <meta property="og:title" content="Contacto - ACROXIA | Atención al Cliente" />
-        <meta property="og:description" content="Resolvemos tus dudas sobre análisis de contratos de alquiler. Respuesta en 24-48 horas." />
-        <meta property="og:url" content="https://acroxia.com/contacto" />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <script type="application/ld+json">
-          {JSON.stringify(contactSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Contacto | ACROXIA - Análisis de Contratos de Alquiler"
+        description="Contacta con el equipo de ACROXIA para consultas sobre análisis de contratos, planes empresariales o colaboraciones. Respuesta en menos de 24 horas."
+        canonical="https://acroxia.com/contacto"
+        jsonLd={contactSchema}
+      />
 
       <div className="min-h-screen bg-background">
         <Header />

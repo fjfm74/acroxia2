@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import FadeIn from "@/components/animations/FadeIn";
@@ -14,11 +14,12 @@ interface LegalPageLayoutProps {
 const LegalPageLayout = ({ title, metaDescription, lastUpdated, children, allowIndex = false }: LegalPageLayoutProps) => {
   return (
     <>
-      <Helmet>
-        <title>{title} | ACROXIA</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="robots" content={allowIndex ? "index, follow" : "noindex, follow"} />
-      </Helmet>
+      <SEOHead
+        title={`${title} | ACROXIA`}
+        description={metaDescription}
+        canonical={`https://acroxia.com/${title.toLowerCase().replace(/\s+/g, '-')}`}
+        noindex={!allowIndex}
+      />
       
       <Header />
       

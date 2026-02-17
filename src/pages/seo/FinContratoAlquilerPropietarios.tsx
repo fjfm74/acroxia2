@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { 
   CalendarX, 
@@ -211,44 +211,15 @@ const FinContratoAlquilerPropietarios = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Fin de Contrato de Alquiler: Guía para Propietarios 2026</title>
-        <meta 
-          name="description" 
-          content="¿Quieres recuperar tu vivienda? Guía 2026 sobre fin de contrato: prórrogas obligatorias, preaviso de 4 meses, causas de recuperación y desahucio por expiración." 
-        />
-        <meta 
-          name="keywords" 
-          content="fin contrato alquiler, no renovar contrato, recuperar vivienda propietario, preaviso alquiler, prorroga obligatoria LAU, desahucio expiracion plazo" 
-        />
-        <link rel="canonical" href="https://acroxia.com/fin-contrato-alquiler-propietarios" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/fin-contrato-alquiler-propietarios" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/fin-contrato-alquiler-propietarios" />
-        <meta property="og:title" content="Fin de Contrato de Alquiler: Guía para Propietarios 2026" />
-        <meta property="og:description" content="Cómo finalizar el contrato de alquiler correctamente: prórrogas, preaviso y recuperación de vivienda." />
-        <meta property="og:url" content="https://acroxia.com/fin-contrato-alquiler-propietarios" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Fin de Contrato | Guía Propietarios 2026" />
-        <meta name="twitter:description" content="Prórrogas, preaviso y recuperación de vivienda." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(pageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Fin de Contrato: Prórrogas y Recuperación de Vivienda | Guía para Propietarios 2026 | ACROXIA"
+        description="Prórrogas obligatorias, preaviso de 4 meses, causas de recuperación por necesidad y desahucio por expiración. Guía LAU para propietarios 2026."
+        canonical="https://acroxia.com/fin-contrato-alquiler-propietarios"
+        ogType="article"
+        keywords="fin contrato alquiler, no renovar contrato, recuperar vivienda propietario, preaviso alquiler, prorroga obligatoria LAU"
+        articleMeta={{ datePublished: "2026-01-22", dateModified: "2026-02-09" }}
+        jsonLd={[pageSchema, faqSchema, articleSchema]}
+      />
 
       <Header />
       <Breadcrumbs items={breadcrumbItems} />

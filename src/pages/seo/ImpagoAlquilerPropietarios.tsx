@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { 
   AlertTriangle, 
@@ -193,47 +193,15 @@ const ImpagoAlquilerPropietarios = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Impago de Alquiler: Qué Hacer como Propietario | Guía 2026</title>
-        <meta 
-          name="description" 
-          content="¿Tu inquilino no paga el alquiler? Guía completa 2026 para propietarios: pasos legales, burofax, desahucio express, seguros de impago y cómo protegerte." 
-        />
-        <meta 
-          name="keywords" 
-          content="impago alquiler, desahucio express 2026, inquilino no paga, reclamar alquiler impagado, seguro impago alquiler, burofax impago" 
-        />
-        <link rel="canonical" href="https://acroxia.com/impago-alquiler-propietarios" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/impago-alquiler-propietarios" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/impago-alquiler-propietarios" />
-        <meta property="og:title" content="Impago de Alquiler: Qué Hacer como Propietario | Guía 2026" />
-        <meta property="og:description" content="Guía completa para propietarios sobre cómo actuar ante el impago del alquiler." />
-        <meta property="og:url" content="https://acroxia.com/impago-alquiler-propietarios" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Impago de Alquiler | Guía Propietarios 2026" />
-        <meta name="twitter:description" content="Pasos legales, desahucio express y seguros de impago." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(pageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(howToSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Impago de Alquiler: Pasos Legales y Desahucio | Guía para Propietarios 2026 | ACROXIA"
+        description="¿Tu inquilino no paga? Burofax, desahucio express, seguros de impago y protección preventiva. Guía completa para propietarios actualizada 2026."
+        canonical="https://acroxia.com/impago-alquiler-propietarios"
+        ogType="article"
+        keywords="impago alquiler, desahucio express 2026, inquilino no paga, reclamar alquiler impagado, seguro impago alquiler"
+        articleMeta={{ datePublished: "2026-01-22", dateModified: "2026-02-09" }}
+        jsonLd={[pageSchema, faqSchema, howToSchema, articleSchema]}
+      />
 
       <Header />
       <Breadcrumbs items={breadcrumbItems} />

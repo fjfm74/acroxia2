@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { TrendingUp, Calendar, Calculator, AlertTriangle, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 import Header from "@/components/landing/Header";
@@ -154,44 +154,15 @@ const SubidaAlquiler2026 = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Subida de Alquiler 2026 | IRAV, Límites y Cómo Calcularla</title>
-        <meta 
-          name="description" 
-          content="¿Cuánto puede subir tu alquiler en 2026? Máximo el IRAV (2,2%). Guía completa sobre límites legales, cálculo y cómo reclamar subidas abusivas." 
-        />
-        <meta 
-          name="keywords" 
-          content="subida alquiler 2026, IRAV 2026, límite subida alquiler, actualización renta, cuánto puede subir alquiler, IPC alquiler 2026" 
-        />
-        <link rel="canonical" href="https://acroxia.com/subida-alquiler-2026" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/subida-alquiler-2026" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/subida-alquiler-2026" />
-        <meta property="og:title" content="Subida de Alquiler 2026: IRAV, Límites y Cómo Calcularla" />
-        <meta property="og:description" content="¿Cuánto puede subir tu alquiler en 2026? Máximo el IRAV (2,2%)." />
-        <meta property="og:url" content="https://acroxia.com/subida-alquiler-2026" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Subida Alquiler 2026 | IRAV 2,2%" />
-        <meta name="twitter:description" content="Límite legal de subida anual. Qué hacer ante subidas abusivas." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(pageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Subida Alquiler 2026: Límites IRAV y Zonas Tensionadas | ACROXIA"
+        description="¿Cuánto puede subir tu alquiler en 2026? Guía completa sobre el IRAV, límites en zonas tensionadas y tus derechos como inquilino ante una subida de renta."
+        canonical="https://acroxia.com/subida-alquiler-2026"
+        ogType="article"
+        keywords="subida alquiler 2026, IRAV 2026, límite subida alquiler, actualización renta, cuánto puede subir alquiler, IPC alquiler 2026"
+        articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-02-09" }}
+        jsonLd={[pageSchema, faqSchema, articleSchema]}
+      />
 
       <div className="min-h-screen bg-background">
         <Header />

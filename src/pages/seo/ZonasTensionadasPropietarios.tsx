@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { 
   MapPin, 
@@ -196,44 +196,15 @@ const ZonasTensionadasPropietarios = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Zonas Tensionadas de Alquiler: Guía para Propietarios 2026</title>
-        <meta 
-          name="description" 
-          content="¿Tu vivienda está en zona tensionada? Guía completa para propietarios: cómo consultar SERPAVI, límites de renta, obligaciones legales y excepciones." 
-        />
-        <meta 
-          name="keywords" 
-          content="zona tensionada alquiler, SERPAVI consulta, límite renta 2026, tope alquiler propietarios, índice referencia precios vivienda" 
-        />
-        <link rel="canonical" href="https://acroxia.com/zonas-tensionadas-propietarios" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/zonas-tensionadas-propietarios" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/zonas-tensionadas-propietarios" />
-        <meta property="og:title" content="Zonas Tensionadas de Alquiler: Guía para Propietarios 2026" />
-        <meta property="og:description" content="Todo sobre zonas tensionadas para propietarios: límites de renta, SERPAVI y obligaciones legales." />
-        <meta property="og:url" content="https://acroxia.com/zonas-tensionadas-propietarios" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Zonas Tensionadas | Guía Propietarios 2026" />
-        <meta name="twitter:description" content="Límites de renta, SERPAVI y obligaciones legales." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(pageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Zonas Tensionadas y Límites de Renta SERPAVI | Guía para Propietarios 2026 | ACROXIA"
+        description="Consulta SERPAVI, conoce los límites de renta en zonas tensionadas y cumple tus obligaciones legales como propietario. Guía actualizada 2026."
+        canonical="https://acroxia.com/zonas-tensionadas-propietarios"
+        ogType="article"
+        keywords="zona tensionada alquiler, SERPAVI consulta, límite renta 2026, tope alquiler propietarios, índice referencia precios vivienda"
+        articleMeta={{ datePublished: "2026-01-22", dateModified: "2026-02-09" }}
+        jsonLd={[pageSchema, faqSchema, articleSchema]}
+      />
 
       <Header />
       <Breadcrumbs items={breadcrumbItems} />

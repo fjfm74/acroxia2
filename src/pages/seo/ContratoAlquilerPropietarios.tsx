@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { Key, FileText, Shield, Euro, MapPin, Home, Clock, AlertTriangle, CheckCircle2, XCircle, ExternalLink, Users, Scale, Building2 } from "lucide-react";
 import Header from "@/components/landing/Header";
@@ -169,44 +169,15 @@ const ContratoAlquilerPropietarios = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Contrato de Alquiler para Propietarios 2026 | Requisitos LAU y Fianzas</title>
-        <meta 
-          name="description" 
-          content="Guía completa para propietarios sobre contratos de alquiler en 2026. Requisitos LAU, fianzas permitidas (máximo 3 meses), zonas tensionadas y gastos del arrendador." 
-        />
-        <meta 
-          name="keywords" 
-          content="contrato alquiler propietario 2026, fianza alquiler máxima, zonas tensionadas propietarios, LAU arrendadores, requisitos contrato alquiler, garantía adicional alquiler" 
-        />
-        <link rel="canonical" href="https://acroxia.com/contrato-alquiler-propietarios" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/contrato-alquiler-propietarios" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/contrato-alquiler-propietarios" />
-        <meta property="og:title" content="Contrato de Alquiler para Propietarios 2026 | Guía LAU" />
-        <meta property="og:description" content="Todo lo que necesitas saber para redactar un contrato de alquiler conforme a la LAU 2026. Fianzas, zonas tensionadas y requisitos obligatorios." />
-        <meta property="og:url" content="https://acroxia.com/contrato-alquiler-propietarios" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Contrato Alquiler Propietarios 2026 | LAU" />
-        <meta name="twitter:description" content="Fianzas, zonas tensionadas y requisitos LAU." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(schemaWebPage)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(schemaFAQ)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(schemaArticle)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Contrato de Alquiler: Requisitos LAU 2026 | Guía para Propietarios 2026 | ACROXIA"
+        description="Guía para propietarios: fianzas (máx 3 meses), zonas tensionadas, elementos obligatorios y requisitos LAU 2026 para tu contrato de alquiler."
+        canonical="https://acroxia.com/contrato-alquiler-propietarios"
+        ogType="article"
+        keywords="contrato alquiler propietario 2026, fianza alquiler máxima, zonas tensionadas propietarios, LAU arrendadores, requisitos contrato alquiler"
+        articleMeta={{ datePublished: "2026-01-14", dateModified: "2026-02-09" }}
+        jsonLd={[schemaWebPage, schemaFAQ, schemaArticle]}
+      />
 
       <Header />
       

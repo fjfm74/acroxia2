@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import Header from "@/components/landing/Header";
@@ -107,44 +107,30 @@ const Blog = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>{currentSeo.title}</title>
-        <meta name="description" content={currentSeo.description} />
-        <meta name="keywords" content={currentSeo.keywords} />
-        <link rel="canonical" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/blog" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/blog" />
-        <meta property="og:title" content={currentSeo.title} />
-        <meta property="og:description" content={currentSeo.description} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": currentSeo.title,
-            "description": currentSeo.description,
-            "url": canonicalUrl,
-            "mainEntity": {
-              "@type": "Blog",
-              "name": "Blog ACROXIA",
-              "url": "https://acroxia.com/blog",
-              "description": "Guías prácticas sobre alquiler en España para inquilinos y propietarios",
-              "publisher": {
-                "@type": "Organization",
-                "name": "ACROXIA",
-                "logo": {
-                  "@type": "ImageObject",
-                  "url": "https://acroxia.com/acroxia-logo.png"
-                }
-              }
+      <SEOHead
+        title={selectedAudience ? currentSeo.title : "Blog sobre Alquiler en España | Guías Legales 2026 | ACROXIA"}
+        description={selectedAudience ? currentSeo.description : "Artículos y guías prácticas sobre derechos del inquilino, cláusulas abusivas, fianzas, IRAV 2026 y normativa de alquiler en España. Actualizado semanalmente."}
+        canonical={canonicalUrl}
+        keywords={currentSeo.keywords}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": currentSeo.title,
+          "description": currentSeo.description,
+          "url": canonicalUrl,
+          "mainEntity": {
+            "@type": "Blog",
+            "name": "Blog ACROXIA",
+            "url": "https://acroxia.com/blog",
+            "description": "Guías prácticas sobre alquiler en España para inquilinos y propietarios",
+            "publisher": {
+              "@type": "Organization",
+              "name": "ACROXIA",
+              "logo": { "@type": "ImageObject", "url": "https://acroxia.com/acroxia-logo.png" }
             }
-          })}
-        </script>
-      </Helmet>
+          }
+        }}
+      />
 
       <div className="min-h-screen bg-background">
         <Header />

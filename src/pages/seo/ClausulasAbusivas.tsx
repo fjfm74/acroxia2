@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, XCircle, ArrowRight, FileText, Shield, Scale, Calendar } from "lucide-react";
 import Header from "@/components/landing/Header";
@@ -155,44 +155,15 @@ const ClausulasAbusivas = () => {
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>Cláusulas Abusivas en Contratos de Alquiler 2026 | Guía Completa</title>
-        <meta 
-          name="description" 
-          content="Descubre qué cláusulas podrían ser ilegales en tu contrato de alquiler. Lista de cláusulas abusivas según la LAU, cómo identificarlas y cómo reclamar. Actualizado 2026." 
-        />
-        <meta 
-          name="keywords" 
-          content="cláusulas abusivas alquiler, cláusulas ilegales contrato, LAU cláusulas nulas, contrato alquiler ilegal, detectar cláusulas abusivas" 
-        />
-        <link rel="canonical" href="https://acroxia.com/clausulas-abusivas-alquiler" />
-        <link rel="alternate" hrefLang="es-ES" href="https://acroxia.com/clausulas-abusivas-alquiler" />
-        <link rel="alternate" hrefLang="x-default" href="https://acroxia.com/clausulas-abusivas-alquiler" />
-        <meta property="og:title" content="Cláusulas Abusivas en Contratos de Alquiler 2026" />
-        <meta property="og:description" content="Descubre qué cláusulas podrían ser ilegales en tu contrato de alquiler según la LAU." />
-        <meta property="og:url" content="https://acroxia.com/clausulas-abusivas-alquiler" />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-        <meta property="og:locale" content="es_ES" />
-        
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@acroxia" />
-        <meta name="twitter:title" content="Cláusulas Abusivas Alquiler 2026" />
-        <meta name="twitter:description" content="Identifica cláusulas ilegales según la LAU." />
-        <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(pageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="Las 8 Cláusulas Abusivas Más Comunes en Contratos de Alquiler 2026"
+        description="Descubre las cláusulas ilegales más frecuentes en contratos de alquiler en España: fianza excesiva, gastos de inmobiliaria, penalizaciones... Guía actualizada a la LAU 2026."
+        canonical="https://acroxia.com/clausulas-abusivas-alquiler"
+        ogType="article"
+        keywords="cláusulas abusivas alquiler, cláusulas ilegales contrato, LAU cláusulas nulas, contrato alquiler ilegal, detectar cláusulas abusivas"
+        articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-02-09" }}
+        jsonLd={[pageSchema, faqSchema, articleSchema]}
+      />
 
       <div className="min-h-screen bg-background">
         <Header />
