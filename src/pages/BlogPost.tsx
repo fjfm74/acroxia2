@@ -269,22 +269,51 @@ const BlogPost = () => {
                   </p>
                 </FadeIn>
                 <FadeIn delay={0.2}>
-                  <div className="flex flex-wrap items-center justify-center gap-6 text-muted-foreground">
+                  <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+                    {/* Fecha de publicación semántica */}
                     <span className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      {formattedDate}
+                      <time dateTime={post.published_at ? new Date(post.published_at).toISOString() : ''}>
+                        {formattedDate}
+                      </time>
                     </span>
+
+                    {/* Fecha de actualización semántica */}
                     {post.updated_at && post.published_at && 
                       new Date(post.updated_at).getTime() - new Date(post.published_at).getTime() > 86400000 && (
-                      <span className="flex items-center gap-2 text-sm">
-                        Actualizado: {new Date(post.updated_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      <span className="flex items-center gap-2">
+                        Actualizado:&nbsp;
+                        <time dateTime={new Date(post.updated_at).toISOString()}>
+                          {new Date(post.updated_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </time>
                       </span>
                     )}
+
+                    <span className="text-border">|</span>
+
+                    {/* Tiempo de lectura */}
                     <span className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
                       {post.read_time} de lectura
                     </span>
+
+                    <span className="text-border">|</span>
+
+                    {/* Autor inline */}
+                    <span className="flex items-center gap-2">
+                      <img 
+                        src="/acroxia-logo.png" 
+                        alt="ACROXIA" 
+                        className="w-5 h-5 rounded-full object-contain bg-foreground p-0.5" 
+                      />
+                      Por equipo ACROXIA
+                    </span>
                   </div>
+                </FadeIn>
+                <FadeIn delay={0.25}>
+                  <p className="text-xs text-muted-foreground/70 mt-3">
+                    Contenido revisado por profesionales de ACROXIA
+                  </p>
                 </FadeIn>
               </div>
             </div>
