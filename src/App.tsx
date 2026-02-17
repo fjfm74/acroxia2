@@ -68,6 +68,7 @@ const Accesibilidad = lazy(() => import("./pages/legal/Accesibilidad"));
 
 // SEO pages
 const Glosario = lazy(() => import("./pages/Glosario"));
+const CalculadoraIRAV = lazy(() => import("./pages/CalculadoraIRAV"));
 const ClausulasAbusivas = lazy(() => import("./pages/seo/ClausulasAbusivas"));
 const DevolucionFianza = lazy(() => import("./pages/seo/DevolucionFianza"));
 const SubidaAlquiler2026 = lazy(() => import("./pages/seo/SubidaAlquiler2026"));
@@ -186,6 +187,7 @@ const App = () => (
               
               {/* SEO pages */}
               <Route path="/glosario" element={<Suspense fallback={<PageLoader />}><Glosario /></Suspense>} />
+              <Route path="/calculadora-irav" element={<Suspense fallback={<PageLoader />}><CalculadoraIRAV /></Suspense>} />
               <Route path="/clausulas-abusivas-alquiler" element={<Suspense fallback={<PageLoader />}><ClausulasAbusivas /></Suspense>} />
               <Route path="/devolucion-fianza-alquiler" element={<Suspense fallback={<PageLoader />}><DevolucionFianza /></Suspense>} />
               <Route path="/subida-alquiler-2026" element={<Suspense fallback={<PageLoader />}><SubidaAlquiler2026 /></Suspense>} />
