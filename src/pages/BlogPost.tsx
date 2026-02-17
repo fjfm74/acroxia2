@@ -228,11 +228,21 @@ const BlogPost = () => {
   const audienceLabel = post.audience === "propietario" ? "Propietarios" : "Inquilinos";
   const audienceUrl = `/blog?audiencia=${post.audience || "inquilino"}`;
 
+  // Truncar título a 60 caracteres para SEO
+  const suffix = " | ACROXIA";
+  const maxTitleLength = 60;
+  const availableLength = maxTitleLength - suffix.length;
+  const seoTitle = post.title.length > availableLength
+    ? `${post.title.slice(0, availableLength - 3).trimEnd()}...${suffix}`
+    : `${post.title}${suffix}`;
+
+  const seoDescription = post.meta_description || post.excerpt || "";
+
   return (
     <>
       <SEOHead
-        title={`${post.title} | ACROXIA Blog`}
-        description={post.meta_description || post.excerpt}
+        title={seoTitle}
+        description={seoDescription.slice(0, 155)}
         canonical={`https://acroxia.com/blog/${post.slug}`}
         ogImage={post.image || "https://acroxia.com/og-image.jpg"}
         ogType="article"
@@ -242,6 +252,8 @@ const BlogPost = () => {
           author: post.author?.name || "ACROXIA",
           datePublished: post.published_at || undefined,
           dateModified: post.updated_at || undefined,
+          section: post.category,
+          tags: post.keywords || undefined,
         }}
       />
       <div className="min-h-screen bg-background">
