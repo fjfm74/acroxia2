@@ -193,7 +193,7 @@ serve(async (req: Request) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "ACROXIA <noreply@acroxia.com>",
+              from: "ACROXIA News <noreply@acroxia.com>",
               to: [email],
               reply_to: "contacto@acroxia.com",
               subject: campaign.subject,

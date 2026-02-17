@@ -15,7 +15,8 @@ const baseStyles = `
   .header { background-color: #1F1D1B; padding: 32px; text-align: center; }
   .logo { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 600; color: #FAF8F5; letter-spacing: 2px; margin: 0; }
   .content { padding: 48px 40px; }
-  .title { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 600; color: #1F1D1B; margin: 0 0 24px 0; text-align: center; }
+  .title { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; color: #1F1D1B; margin: 0 0 24px 0; text-align: center; }
+  @media screen and (min-width: 480px) { .title { font-size: 28px; } }
   .text { font-size: 16px; color: #4A4745; margin: 0 0 16px 0; }
   .button-container { text-align: center; margin: 32px 0; }
   .button { display: inline-block; background-color: #1F1D1B; color: #FAF8F5 !important; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px; letter-spacing: 0.5px; }
