@@ -149,6 +149,9 @@ export type Database = {
           created_at: string
           excerpt: string
           faqs: Json | null
+          howto_name: string | null
+          howto_steps: Json | null
+          howto_total_time: string | null
           id: string
           image: string | null
           keywords: string[] | null
@@ -169,6 +172,9 @@ export type Database = {
           created_at?: string
           excerpt: string
           faqs?: Json | null
+          howto_name?: string | null
+          howto_steps?: Json | null
+          howto_total_time?: string | null
           id?: string
           image?: string | null
           keywords?: string[] | null
@@ -189,6 +195,9 @@ export type Database = {
           created_at?: string
           excerpt?: string
           faqs?: Json | null
+          howto_name?: string | null
+          howto_steps?: Json | null
+          howto_total_time?: string | null
           id?: string
           image?: string | null
           keywords?: string[] | null
