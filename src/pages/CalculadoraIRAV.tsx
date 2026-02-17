@@ -55,7 +55,7 @@ function getResult(
         "Desde enero de 2026, la actualización de la renta se rige por el IRAV (Índice de Referencia de Arrendamientos de Vivienda) publicado por el INE, que sustituye al IPC como referencia para todos los contratos de vivienda habitual.",
       legalRef: "Disposición final 6ª de la Ley 12/2023 de Vivienda",
       formula: "Nueva renta = Renta actual × (1 + IRAV / 100)",
-      officialLink: "https://www.ine.es/jaxiT3/Tabla.htm?t=63089",
+      officialLink: "https://www.ine.es/buscar/searchResults.do?searchString=%C3%8Dndice+de+Precios+de+Vivienda+en+Alquiler&Menu_botonBuscador=&searchType=DEF_SEARCH&startat=0&L=0",
       officialLinkLabel: "Consultar IRAV actual en el INE",
     };
 
