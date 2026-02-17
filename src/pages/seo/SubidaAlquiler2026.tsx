@@ -205,12 +205,20 @@ const SubidaAlquiler2026 = () => {
                 </div>
               </FadeIn>
               <FadeIn delay={0.3}>
-                <Button asChild size="lg" className="rounded-full px-8">
-                  <Link to="/analizar-gratis">
-                    Analiza tu contrato gratis
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button asChild size="lg" className="rounded-full px-8">
+                    <Link to="/analizar-gratis">
+                      Analiza tu contrato gratis
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="rounded-full px-8 border-foreground/20">
+                    <Link to="/calculadora-irav">
+                      <Calculator className="w-4 h-4 mr-2" />
+                      Calculadora IRAV 2026
+                    </Link>
+                  </Button>
+                </div>
               </FadeIn>
             </div>
           </div>
