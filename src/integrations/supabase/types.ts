@@ -502,6 +502,98 @@ export type Database = {
           },
         ]
       }
+      email_campaign_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          recipient_email: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          created_at: string
+          html_content: string
+          id: string
+          name: string
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          target_audience: string
+          target_segment: string | null
+          total_bounced: number
+          total_clicked: number
+          total_opened: number
+          total_recipients: number
+          total_sent: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          html_content?: string
+          id?: string
+          name: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          target_audience?: string
+          target_segment?: string | null
+          total_bounced?: number
+          total_clicked?: number
+          total_opened?: number
+          total_recipients?: number
+          total_sent?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          html_content?: string
+          id?: string
+          name?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          target_audience?: string
+          target_segment?: string | null
+          total_bounced?: number
+          total_clicked?: number
+          total_opened?: number
+          total_recipients?: number
+          total_sent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       landlord_contracts: {
         Row: {
           analysis_result: Json | null
