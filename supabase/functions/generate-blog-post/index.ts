@@ -250,9 +250,11 @@ El artículo debe:
 REGLAS DE LENGUAJE LEGAL (OBLIGATORIO):
 - NUNCA uses afirmaciones absolutas como "es ilegal", "es nulo", "está prohibido"
 - USA lenguaje matizado: "según la LAU", "se considera", "podría ser", "generalmente"
-- SIEMPRE cita la fuente legal cuando menciones derechos u obligaciones
+- SIEMPRE incluye referencias legales específicas (ej. "art. 36 LAU", "art. 11 LAU")
+- USA datos numéricos concretos (plazos de 30 días, 4 meses preaviso, 1 mes fianza)
 - NO actúes como asesor legal - el contenido es informativo, no constituye asesoramiento
 - Evita imperativos como "debes" o "tienes que" - usa "es recomendable", "se aconseja"
+- INCLUYE al final del post una sección "En resumen" con 3-5 bullet points clave
 
 Ejemplos de transformación:
 - MAL: "Es ilegal cobrar más de 3 meses de fianza"

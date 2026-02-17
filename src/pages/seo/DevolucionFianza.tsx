@@ -18,25 +18,25 @@ const pasos = [
   {
     numero: "01",
     titulo: "Entrega las llaves y documenta el estado",
-    descripcion: "Haz fotos y vídeo del estado del piso. Si es posible, firma un acta de entrega con el propietario donde conste la fecha y el estado de la vivienda.",
+    descripcion: "Haz fotos y vídeo del estado del piso. Firma un acta de entrega con la fecha y estado (art. 36.4 LAU).",
     icono: FileText,
   },
   {
     numero: "02",
     titulo: "Espera el plazo legal de 30 días",
-    descripcion: "Según la LAU, el propietario dispone de 30 días desde la entrega de llaves para devolverte la fianza. Este plazo está fijado por el artículo 36.4 de la LAU.",
+    descripcion: "El arrendador tiene un plazo máximo de 30 días desde la entrega de llaves para devolver el saldo de la fianza (art. 36.4 LAU).",
     icono: Clock,
   },
   {
     numero: "03",
     titulo: "Reclama por escrito si no la devuelve",
-    descripcion: "Pasados los 30 días, envía un burofax reclamando la devolución. A partir del día 31 se generan intereses legales a tu favor.",
+    descripcion: "Si pasa el plazo, envía un burofax. Desde el día 31 se generan intereses legales a tu favor automáticamente (art. 36.4 LAU).",
     icono: AlertTriangle,
   },
   {
     numero: "04",
     titulo: "Acude a la OMIC o al juzgado",
-    descripcion: "Si no responde, presenta reclamación en la OMIC o interpón un proceso monitorio (rápido y sin abogado para cantidades menores de 2.000€).",
+    descripcion: "Para cantidades inferiores a 2.000 €, puedes interponer un juicio verbal sin necesidad de abogado ni procurador (art. 31 LEC).",
     icono: Calculator,
   },
 ];
@@ -53,27 +53,27 @@ const motivosIlegales = [
 const faqs = [
   {
     question: "¿Cuánto tiempo tiene el casero para devolverme la fianza?",
-    answer: "30 días naturales. Según el artículo 36.4 de la LAU, el propietario dispone de este plazo desde la entrega de llaves para devolverte la fianza. Si no lo hace, empiezan a generarse intereses legales a tu favor."
+    answer: "30 días. Según el art. 36.4 de la LAU, el saldo de la fianza debe restituirse al inquilino al final del arriendo. Si transcurre un mes desde la entrega de llaves sin devolución, devenga el interés legal."
   },
   {
     question: "¿Puede el casero quedarse mi fianza por el desgaste normal?",
-    answer: "No, generalmente no. Según la jurisprudencia, el desgaste normal derivado del uso habitual de la vivienda no justificaría retener la fianza. La pintura ligeramente deteriorada, pequeñas marcas en paredes o el uso normal de electrodomésticos se consideran desgaste natural, no daños imputables al inquilino."
+    answer: "No. El art. 1561 del Código Civil establece que el inquilino debe devolver la finca tal como la recibió, salvo lo que hubiese perecido por el tiempo o por causa inevitable. El deterioro por uso ordinario no es indemnizable."
   },
   {
     question: "¿Qué puedo hacer si no me devuelven la fianza en 30 días?",
-    answer: "1) Envía un burofax certificado reclamando la devolución con intereses, 2) Presenta reclamación ante la OMIC de tu ayuntamiento, 3) Si sigue sin responder, interpón un proceso monitorio (sin abogado para menos de 2.000€). A partir del día 31 se generan intereses."
+    answer: "Envía un burofax reclamando el principal más los intereses legales (art. 36.4 LAU). Si no responde, puedes demandar en juicio verbal sin abogado si la cuantía es menor de 2.000 € (art. 250.1.1 LEC)."
   },
   {
     question: "¿Cuánto dinero de fianza me pueden pedir legalmente?",
-    answer: "Máximo 3 meses. La fianza legal obligatoria es de 1 mensualidad para vivienda habitual. Además, pueden pedir hasta 2 meses como garantía adicional. Cualquier cantidad superior se consideraría contraria a la LAU."
+    answer: "La fianza en metálico es de 1 mensualidad para vivienda (art. 36.1 LAU). Las garantías adicionales no pueden exceder de 2 mensualidades de renta (art. 36.5 LAU). Total máximo: 3 meses."
   },
   {
     question: "¿Puedo usar la fianza para pagar el último mes de alquiler?",
-    answer: "No es recomendable ni legal. La fianza tiene una finalidad distinta: garantizar posibles daños o impagos. Si dejas de pagar el último mes, el propietario puede reclamarte judicialmente y generar intereses de demora."
+    answer: "No. La fianza garantiza el cumplimiento de obligaciones y desperfectos (art. 36.1 LAU). No puedes compensarla unilateralmente con la renta; el pago del alquiler es una obligación distinta (art. 17 LAU)."
   },
   {
     question: "¿Qué intereses me corresponden si no me devuelven la fianza a tiempo?",
-    answer: "El interés legal del dinero (actualmente en torno al 3-4% anual). Estos intereses se calculan desde el día 31 hasta la devolución efectiva de la fianza."
+    answer: "El interés legal del dinero, que se fija anualmente en los Presupuestos Generales del Estado (actualmente 3,25% para 2024, sujeto a actualización). Se devenga desde el día 31 tras la entrega de llaves (art. 36.4 LAU)."
   },
 ];
 
@@ -379,6 +379,24 @@ const DevolucionFianza = () => {
                   </FadeIn>
                 ))}
               </Accordion>
+            </div>
+          </div>
+        </section>
+
+        {/* En resumen */}
+        <section className="py-16 bg-background">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-semibold text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El propietario tiene <strong>30 días</strong> desde la entrega de llaves para devolver la fianza (art. 36.4 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>La fianza legal es exactamente <strong>1 mensualidad</strong> para vivienda habitual (art. 36.1 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Desde el <strong>día 31</strong> sin devolución, se generan <strong>intereses legales</strong> (3-4% anual) a tu favor.</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El <strong>desgaste normal</strong> por uso habitual no justifica retener la fianza según la jurisprudencia.</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Puedes reclamar mediante <strong>proceso monitorio</strong> sin necesidad de abogado para deudas inferiores a 2.000 €.</span></li>
+                </ul>
+              </FadeIn>
             </div>
           </div>
         </section>

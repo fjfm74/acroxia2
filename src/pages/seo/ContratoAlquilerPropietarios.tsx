@@ -129,36 +129,36 @@ const schemaFAQ = {
 const faqs = [
   {
     question: "¿Cuántos meses de fianza puedo pedir en 2026?",
-    answer: "En 2026, puedes pedir 1 mes de fianza legal (obligatoria) más un máximo de 2 meses de garantía adicional. El total nunca puede superar los 3 meses de renta. La fianza debe depositarse en el organismo autonómico correspondiente dentro del plazo establecido por cada comunidad."
+    answer: "Máximo 3 meses en total: 1 mes de fianza legal obligatoria (art. 36.1 LAU) + un máximo de 2 mensualidades como garantía adicional (art. 36.5 LAU)."
   },
   {
     question: "¿Puedo subir la renta libremente cada año?",
-    answer: "No. Desde 2025, la actualización anual de la renta está limitada al IRAV (Índice de Referencia de Arrendamientos de Vivienda), que sustituye al IPC para contratos de vivienda. Debes consultar el índice vigente en la web del INE o en la página de tu comunidad autónoma."
+    answer: "No. La actualización anual está topada por el IRAV (Índice de Referencia de Arrendamientos de Vivienda) según la Disposición final 6ª de la Ley 12/2023, que modifica el art. 18 de la LAU."
   },
   {
     question: "¿Qué pasa si mi piso está en zona tensionada?",
-    answer: "En zonas tensionadas, la renta del nuevo contrato está limitada a la del contrato anterior. Para nuevos arrendamientos sin contrato previo, aplica el índice de referencia de precios. Además, debes incluir una declaración específica en el contrato. Puedes verificar si tu zona está declarada tensionada en el portal SERPAVI del MIVAU."
+    answer: "En zonas tensionadas (art. 18 Ley 12/2023), la renta del nuevo contrato no puede superar la del anterior (con actualización IRAV). Si no hubo contrato previo en 5 años, se limita al índice de precios de referencia."
   },
   {
     question: "¿Cuánto dura como mínimo un contrato de alquiler?",
-    answer: "La duración mínima es de 5 años si el arrendador es persona física, o 7 años si es persona jurídica (empresas, fondos, etc.). Tras este período, si ninguna parte notifica la no renovación con 4 meses de antelación (arrendador) o 2 meses (inquilino), el contrato se prorroga obligatoriamente por períodos anuales hasta un máximo de 3 años adicionales."
+    answer: "5 años si el arrendador es persona física y 7 años si es jurídica (art. 9.1 LAU). El inquilino puede desistir tras 6 meses, pero el arrendador debe respetar el plazo mínimo."
   },
   {
     question: "¿Puedo cobrar el IBI al inquilino?",
-    answer: "No en contratos de vivienda habitual. El IBI es un impuesto sobre la propiedad que corresponde legalmente al propietario del inmueble. Incluir una cláusula que lo repercuta al inquilino podría considerarse abusiva y ser declarada nula por un juez."
+    answer: "Solo si se pacta expresamente en el contrato y se indica el importe anual a fecha de contrato (art. 20.1 LAU). En vivienda habitual, la norma general es que lo paga el propietario."
   },
   {
     question: "¿Quién paga los honorarios de la inmobiliaria?",
-    answer: "Desde la reforma de la LAU en 2019, los gastos de gestión inmobiliaria y formalización del contrato corresponden al arrendador cuando este es persona jurídica. En la práctica, la jurisprudencia tiende a aplicar este criterio también a personas físicas. No se pueden repercutir estos gastos al inquilino."
+    answer: "El arrendador, siempre que sea persona jurídica (art. 20.1 LAU). Si es persona física, la ley no lo prohíbe expresamente, pero la jurisprudencia tiende a proteger al consumidor."
   },
   {
     question: "¿Dónde debo depositar la fianza?",
-    answer: "La fianza debe depositarse en el organismo autonómico correspondiente (INCASOL en Cataluña, IVIMA en Madrid, etc.). El plazo varía según la comunidad, generalmente entre 15 y 30 días desde la firma. Al finalizar el contrato, tienes 1 mes para devolver la fianza al inquilino."
+    answer: "En el organismo de la CCAA correspondiente (ej. INCASOL, IVIMA). Es una obligación administrativa del arrendador; no hacerlo puede acarrear sanciones (Disp. Adicional 3ª LAU)."
   },
   {
     question: "¿Qué ocurre si no incluyo algún requisito obligatorio en el contrato?",
-    answer: "La omisión de requisitos obligatorios (como la mención de la renta del contrato anterior en zonas tensionadas) puede hacer que determinadas cláusulas sean nulas. En algunos casos, puede suponer sanciones administrativas. Es recomendable usar un modelo de contrato actualizado a 2026 que incluya todos los elementos legales."
-  }
+    answer: "Las cláusulas contrarias a la LAU se considerarán nulas y se tendrán por no puestas (art. 6 LAU). El contrato seguirá vigente pero regido por los mínimos legales protectores del inquilino."
+  },
 ];
 
 const ContratoAlquilerPropietarios = () => {
@@ -701,6 +701,24 @@ const ContratoAlquilerPropietarios = () => {
                 </Accordion>
               </div>
             </FadeIn>
+          </div>
+        </section>
+
+        {/* En resumen */}
+        <section className="bg-background py-16">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-medium text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Duración mínima: <strong>5 años</strong> (persona física) o <strong>7 años</strong> (persona jurídica) según art. 9.1 LAU.</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Fianza: <strong>1 mes</strong> legal + máximo <strong>2 meses</strong> de garantía adicional (arts. 36.1 y 36.5 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Actualización anual limitada al <strong>IRAV</strong>, no al IPC (art. 18 LAU modificado).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>En <strong>zonas tensionadas</strong>: renta limitada al contrato anterior o al SERPAVI (art. 17.7 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Gastos de gestión inmobiliaria a cargo del <strong>arrendador</strong> (art. 20.1 LAU).</span></li>
+                </ul>
+              </FadeIn>
+            </div>
           </div>
         </section>
 

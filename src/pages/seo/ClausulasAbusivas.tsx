@@ -17,42 +17,42 @@ import {
 const clausulasAbusivas = [
   {
     titulo: "Exigir más de 2 meses de garantía adicional",
-    descripcion: "La LAU limita la fianza legal a 1 mes + máximo 2 meses de garantía adicional. Más de 3 meses en total se considera contrario a la normativa vigente.",
+    descripcion: "La fianza legal es exactamente 1 mensualidad de renta (art. 36.1 LAU). Las garantías adicionales no pueden superar 2 mensualidades (art. 36.5 LAU). Cualquier cantidad superior a 3 meses en total se considera contraria a la normativa vigente.",
     legal: false,
   },
   {
     titulo: "Cobrar gastos de inmobiliaria al inquilino",
-    descripcion: "Desde 2019, los honorarios de gestión inmobiliaria corresponden al arrendador según la normativa vigente.",
+    descripcion: "Según el artículo 20.1 de la LAU (modificado por RDL 7/2019), los gastos de gestión inmobiliaria y formalización del contrato corresponden al arrendador cuando este es persona jurídica.",
     legal: false,
   },
   {
     titulo: "Obligar a pagar el IBI",
-    descripcion: "El IBI es un impuesto sobre la propiedad. En vivienda habitual, corresponde al propietario según la LAU.",
+    descripcion: "El IBI es un impuesto sobre la propiedad que grava al titular del inmueble. En contratos de vivienda habitual, repercutirlo al inquilino podría considerarse abusivo según el art. 20 LAU y la jurisprudencia del Tribunal Supremo.",
     legal: false,
   },
   {
     titulo: "Prohibir mascotas de forma genérica",
-    descripcion: "Una prohibición absoluta puede considerarse abusiva. Se permiten restricciones razonables, no prohibiciones totales.",
+    descripcion: "Una prohibición absoluta de animales de compañía puede considerarse abusiva según el art. 82 del TRLGDCU al generar un desequilibrio significativo. Se permiten restricciones razonables, no prohibiciones totales.",
     legal: false,
   },
   {
     titulo: "Penalizaciones superiores a 1 mes/año",
-    descripcion: "La LAU permite máximo 1 mensualidad por año que falte, prorrateada. Cualquier penalización mayor se considera abusiva según la LAU.",
+    descripcion: "Según el artículo 11 de la LAU, la indemnización por desistimiento anticipado es máximo 1 mensualidad por cada año que reste de contrato, prorrateada por meses. Cualquier penalización mayor podría ser declarada nula.",
     legal: false,
   },
   {
     titulo: "Permitir entrada del casero sin previo aviso",
-    descripcion: "El domicilio es inviolable (art. 18 CE). El propietario solo puede entrar con tu consentimiento o autorización judicial.",
+    descripcion: "El domicilio es inviolable según el artículo 18.2 de la Constitución Española. El propietario solo puede entrar con consentimiento del inquilino o autorización judicial. Una cláusula que otorgue acceso libre es nula de pleno derecho.",
     legal: false,
   },
   {
     titulo: "Renunciar a los derechos de la LAU",
-    descripcion: "Cualquier cláusula que te haga renunciar a derechos que la LAU te otorga como inquilino podría ser nula de pleno derecho.",
+    descripcion: "Según el artículo 6 de la LAU, son nulas las estipulaciones que modifiquen en perjuicio del arrendatario las normas del Título II de la LAU. El inquilino no puede renunciar válidamente a sus derechos legales.",
     legal: false,
   },
   {
     titulo: "Cobrar derramas extraordinarias al inquilino",
-    descripcion: "Las reparaciones estructurales y mejoras del edificio corresponden al propietario según la normativa vigente.",
+    descripcion: "Las obras de conservación y mejora del edificio corresponden al propietario según los artículos 21 y 22 de la LAU. Solo las pequeñas reparaciones por uso ordinario (art. 21.4 LAU) son responsabilidad del inquilino.",
     legal: false,
   },
 ];
@@ -60,23 +60,23 @@ const clausulasAbusivas = [
 const faqs = [
   {
     question: "¿Qué es una cláusula abusiva en un contrato de alquiler?",
-    answer: "Una cláusula abusiva es aquella que contraviene la Ley de Arrendamientos Urbanos (LAU) o genera un desequilibrio significativo entre los derechos del inquilino y del arrendador. Según la LAU, estas cláusulas se consideran nulas de pleno derecho y carecerían de efecto legal aunque se hayan firmado."
+    answer: "Es una estipulación que contraviene la LAU o el art. 82 del TRLGDCU, generando un desequilibrio significativo en perjuicio del inquilino. Son nulas de pleno derecho (art. 6 LAU) y carecen de efecto legal aunque se hayan firmado."
   },
   {
     question: "¿Puedo negarme a cumplir una cláusula abusiva si ya firmé el contrato?",
-    answer: "Sí. Las cláusulas consideradas abusivas según la LAU serían nulas automáticamente, independientemente de que las hayas firmado. El resto del contrato sigue siendo válido. Si el casero intenta aplicarlas, puedes negarte y, si insiste, reclamar ante la OMIC o judicialmente."
+    answer: "Sí. Las cláusulas contrarias a la LAU son nulas automáticamente (art. 6 LAU), independientemente de la firma. El resto del contrato sigue siendo válido. Puedes reclamar ante la OMIC o judicialmente si el casero insiste."
   },
   {
     question: "¿Cómo puedo saber si mi contrato tiene cláusulas ilegales?",
-    answer: "Puedes revisar tu contrato manualmente comparándolo con la LAU, o usar herramientas de análisis con IA como ACROXIA que identifican cláusulas potencialmente abusivas en menos de 2 minutos y te explican por qué podrían ser contrarias a la LAU."
+    answer: "Compara cada cláusula con los artículos 6, 11, 17, 20, 21, 25 y 36 de la LAU. También puedes usar herramientas de análisis con IA como ACROXIA que identifican cláusulas potencialmente abusivas en menos de 2 minutos."
   },
   {
     question: "¿Qué hacer si descubro cláusulas abusivas después de firmar?",
-    answer: "Documenta las cláusulas, comunica por escrito al propietario que no las aceptas, guarda toda la comunicación. Si intenta aplicarlas, puedes denunciar ante Consumo o interponer demanda de nulidad."
+    answer: "1) Documenta las cláusulas con captura del contrato, 2) Comunica por escrito al propietario (burofax) que son nulas según la LAU, 3) Si insiste en aplicarlas, denuncia ante Consumo o interpón demanda de nulidad parcial."
   },
   {
     question: "¿Puedo anular todo el contrato si tiene cláusulas abusivas?",
-    answer: "No es necesario. Solo las cláusulas abusivas son nulas; el resto del contrato permanece válido. Solo en casos extremos de desequilibrio grave podrías solicitar la resolución completa."
+    answer: "No es necesario. Solo las cláusulas abusivas son nulas; el resto del contrato permanece válido (art. 10 TRLGDCU). Solo en casos de desequilibrio grave podrías solicitar la resolución completa."
   },
 ];
 
@@ -342,6 +342,24 @@ const ClausulasAbusivas = () => {
                   </FadeIn>
                 ))}
               </Accordion>
+            </div>
+          </div>
+        </section>
+
+        {/* En resumen */}
+        <section className="py-16 bg-background">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-semibold text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>La fianza legal máxima es <strong>1 mes</strong> de renta + máximo <strong>2 meses</strong> de garantía adicional (arts. 36.1 y 36.5 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Los <strong>gastos de inmobiliaria</strong> corresponden al arrendador, no al inquilino (art. 20.1 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>La <strong>penalización por desistimiento</strong> es máximo 1 mensualidad por año restante (art. 11 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Las cláusulas que modifiquen la LAU en perjuicio del inquilino son <strong>nulas de pleno derecho</strong> (art. 6 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Si tu contrato tiene cláusulas abusivas, puedes <strong>reclamar ante la OMIC</strong> o mediante demanda judicial.</span></li>
+                </ul>
+              </FadeIn>
             </div>
           </div>
         </section>
