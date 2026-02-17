@@ -152,6 +152,7 @@ const ImpagoAlquilerPropietarios = () => {
     "@type": "HowTo",
     "name": "Cómo actuar ante el impago del alquiler",
     "description": "Pasos legales para propietarios ante el impago de rentas por parte del inquilino",
+    "totalTime": "P6M",
     "step": pasosImpago.map((paso, index) => ({
       "@type": "HowToStep",
       "position": index + 1,
