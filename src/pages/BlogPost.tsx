@@ -25,6 +25,11 @@ interface FAQ {
   answer: string;
 }
 
+interface HowToStep {
+  name: string;
+  text: string;
+}
+
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
 
@@ -190,9 +195,32 @@ const BlogPost = () => {
     }))
   } : null;
 
-  const jsonLdSchemas = faqSchema 
-    ? [blogPostingSchema, faqSchema] 
-    : [blogPostingSchema];
+  // HowTo schema for posts with steps
+  const howToSteps: HowToStep[] = Array.isArray((post as any).howto_steps)
+    ? ((post as any).howto_steps as any[]).filter((s: any) => s?.name && s?.text)
+    : [];
+  const howToName = (post as any).howto_name as string | null;
+  const howToTotalTime = (post as any).howto_total_time as string | null;
+
+  const howToSchema: Record<string, unknown> | null = howToSteps.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": howToName || post.title,
+    ...(howToTotalTime ? { "totalTime": howToTotalTime } : {}),
+    "description": post.meta_description || post.excerpt,
+    "step": howToSteps.map((step, index) => ({
+      "@type": "HowToStep",
+      "position": index + 1,
+      "name": step.name,
+      "text": step.text
+    }))
+  } : null;
+
+  const jsonLdSchemas = [
+    blogPostingSchema,
+    ...(faqSchema ? [faqSchema] : []),
+    ...(howToSchema ? [howToSchema] : []),
+  ];
 
   // Determinar audiencia para breadcrumbs
   const audienceLabel = post.audience === "propietario" ? "Propietarios" : "Inquilinos";
