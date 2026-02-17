@@ -1,5 +1,4 @@
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
 import Header from "@/components/landing/Header";
@@ -8,6 +7,7 @@ import BlogSidebar from "@/components/blog/BlogSidebar";
 import TableOfContents from "@/components/blog/TableOfContents";
 import AuthorBox from "@/components/blog/AuthorBox";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import SEOHead from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
@@ -137,27 +137,20 @@ const BlogPost = () => {
     ? (post.faqs as any[]).filter((faq: any) => faq?.question && faq?.answer)
     : [];
 
-  // Article schema with E-E-A-T author data + isPartOf for hierarchy
-  const articleSchema = {
+  // Word count for structured data
+  const wordCount = post.content ? post.content.split(/\s+/).length : 0;
+
+  // BlogPosting schema
+  const blogPostingSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     "headline": post.title,
-    "description": post.meta_description,
-    "image": post.image,
-    "datePublished": post.published_at,
-    "dateModified": post.updated_at,
-    "author": post.author ? {
-      "@type": "Person",
-      "name": post.author.name,
-      "jobTitle": post.author.role,
-      "url": `https://acroxia.com/autores/${post.author.slug}`,
-      "sameAs": [
-        post.author.linkedin_url,
-        post.author.twitter_url
-      ].filter(Boolean)
-    } : {
+    "description": post.meta_description || post.excerpt,
+    "image": post.image || "https://acroxia.com/og-image.jpg",
+    "author": {
       "@type": "Organization",
-      "name": "ACROXIA"
+      "name": "ACROXIA",
+      "url": "https://acroxia.com"
     },
     "publisher": {
       "@type": "Organization",
@@ -167,19 +160,24 @@ const BlogPost = () => {
         "url": "https://acroxia.com/acroxia-logo.png"
       }
     },
+    "datePublished": post.published_at,
+    "dateModified": post.updated_at,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://acroxia.com/blog/${post.slug}`
+    },
     "isPartOf": {
       "@type": "Blog",
       "name": "Blog ACROXIA",
       "url": "https://acroxia.com/blog"
     },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": `https://acroxia.com/blog/${post.slug}`
-    }
+    "articleSection": post.category,
+    "inLanguage": "es-ES",
+    "wordCount": wordCount
   };
 
-  // FAQ schema for AI Overviews and Featured Snippets
-  const faqSchema = faqs.length > 0 ? {
+  // FAQ schema for posts with FAQs
+  const faqSchema: Record<string, unknown> | null = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": faqs.map(faq => ({
@@ -192,40 +190,30 @@ const BlogPost = () => {
     }))
   } : null;
 
+  const jsonLdSchemas = faqSchema 
+    ? [blogPostingSchema, faqSchema] 
+    : [blogPostingSchema];
+
   // Determinar audiencia para breadcrumbs
   const audienceLabel = post.audience === "propietario" ? "Propietarios" : "Inquilinos";
   const audienceUrl = `/blog?audiencia=${post.audience || "inquilino"}`;
 
   return (
     <>
-      <Helmet>
-        <html lang="es-ES" />
-        <title>{post.title} | ACROXIA Blog</title>
-        <meta name="description" content={post.meta_description || post.excerpt} />
-        <meta name="keywords" content={post.keywords?.join(", ") || ""} />
-        <link rel="canonical" href={`https://acroxia.com/blog/${post.slug}`} />
-        <link rel="alternate" hrefLang="es-ES" href={`https://acroxia.com/blog/${post.slug}`} />
-        <link rel="alternate" hrefLang="x-default" href={`https://acroxia.com/blog/${post.slug}`} />
-        <meta property="og:title" content={`${post.title} | ACROXIA Blog`} />
-        <meta property="og:description" content={post.meta_description || post.excerpt} />
-        <meta property="og:url" content={`https://acroxia.com/blog/${post.slug}`} />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content={post.image || "https://acroxia.com/og-image.jpg"} />
-        <meta property="og:locale" content="es_ES" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:description" content={post.meta_description || post.excerpt} />
-        <meta name="twitter:image" content={post.image || "https://acroxia.com/og-image.jpg"} />
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
-        {faqSchema && (
-          <script type="application/ld+json">
-            {JSON.stringify(faqSchema)}
-          </script>
-        )}
-      </Helmet>
-
+      <SEOHead
+        title={`${post.title} | ACROXIA Blog`}
+        description={post.meta_description || post.excerpt}
+        canonical={`https://acroxia.com/blog/${post.slug}`}
+        ogImage={post.image || "https://acroxia.com/og-image.jpg"}
+        ogType="article"
+        keywords={post.keywords?.join(", ") || ""}
+        jsonLd={jsonLdSchemas}
+        articleMeta={{
+          author: post.author?.name || "ACROXIA",
+          datePublished: post.published_at || undefined,
+          dateModified: post.updated_at || undefined,
+        }}
+      />
       <div className="min-h-screen bg-background">
         <Header />
         <main>
