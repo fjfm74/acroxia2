@@ -94,28 +94,28 @@ const excepcionesSubida = [
 const faqs = [
   {
     question: "¿Cómo sé si mi vivienda está en zona tensionada?",
-    answer: "Puedes consultarlo en el Sistema Estatal de Referencia de Precios (SERPAVI) del Ministerio de Vivienda: https://serpavi.mivau.gob.es/. Introduce la dirección de tu inmueble y el sistema te indicará si está en zona tensionada y cuál es el índice de referencia aplicable."
+    answer: "Consulta el índice SERPAVI (Sistema Estatal de Referencia de Precios de Alquiler de Vivienda) en la web del MIVAU. Las zonas se declaran por orden ministerial según el art. 18 de la Ley 12/2023."
   },
   {
     question: "¿Qué pasa si no declaro la zona tensionada en el contrato?",
-    answer: "Omitir esta información puede considerarse un defecto del contrato que beneficia al inquilino. Este podría impugnar cláusulas de renta que excedan los límites legales y reclamar la devolución de cantidades pagadas en exceso."
+    answer: "Es obligatorio según el art. 31 de la Ley 12/2023. Ocultarlo impide aplicar las subidas legales y el inquilino podría reclamar la devolución del exceso de renta pagado más intereses."
   },
   {
     question: "¿Puedo subir la renta si el inquilino anterior pagaba muy poco?",
-    answer: "En zona tensionada, el límite es la renta del contrato anterior. Solo puedes incrementarla si realizaste obras de mejora (hasta +10%) o si esa renta era inferior al índice SERPAVI, en cuyo caso puedes aplicar el índice."
+    answer: "No libremente. En zona tensionada, el tope es la renta anterior actualizada (art. 17.6 LAU). Solo puedes subir hasta un 10% extra si has hecho obras de rehabilitación o mejora energética en los últimos 2 años."
   },
   {
     question: "¿Afecta la zona tensionada a los alquileres de temporada?",
-    answer: "Los alquileres de temporada legítimos (estudiantes, trabajadores desplazados temporalmente) no están sujetos a los límites de zona tensionada. Sin embargo, simular un alquiler de temporada cuando es vivienda habitual es fraude de ley."
+    answer: "En principio no, pues la LAU (art. 3) los excluye de las normas de vivienda habitual. Pero cuidado: usar el temporal en fraude de ley para esquivar topes es sancionable."
   },
   {
     question: "¿Cuánto tiempo dura la declaración de zona tensionada?",
-    answer: "La declaración de zona tensionada tiene una vigencia inicial de 3 años, prorrogables por periodos iguales si persisten las condiciones que motivaron la declaración. Puede ser revocada si cambian las circunstancias del mercado."
+    answer: "3 años prorrogables anualmente si subsisten las circunstancias económicas (art. 18.2 Ley 12/2023). Las CCAA deben solicitar la prórroga al Ministerio."
   },
   {
     question: "¿Qué es el IRAV y cómo afecta a mi alquiler?",
-    answer: "El IRAV (Índice de Referencia de Arrendamientos de Vivienda) sustituye al IPC para actualizar rentas. En 2026 es del 2,2%. Es el máximo incremento anual permitido para renovaciones, independientemente de la inflación real."
-  }
+    answer: "Es el índice que sustituye al IPC para actualizaciones anuales (Disp. Final 6ª Ley 12/2023). En 2026, limita la subida al 2,2% aproximadamente, protegiendo al inquilino de la inflación."
+  },
 ];
 
 const ZonasTensionadasPropietarios = () => {
@@ -480,6 +480,24 @@ const ZonasTensionadasPropietarios = () => {
                 </Accordion>
               </div>
             </FadeIn>
+          </div>
+        </section>
+
+        {/* En resumen */}
+        <section className="bg-background py-16">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-medium text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Una zona es tensionada cuando el alquiler supera el <strong>30%</strong> de la renta media o sube más de <strong>3 puntos</strong> sobre el IPC en 5 años (art. 18.3 Ley 12/2023).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>La renta de nuevos contratos está limitada a la del <strong>contrato anterior</strong> o al índice <strong>SERPAVI</strong> (art. 17.6-17.7 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Es <strong>obligatorio declarar</strong> la zona tensionada y la renta anterior en el contrato.</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Excepciones: obras de mejora permiten subida de hasta <strong>+10%</strong> sobre el límite.</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Consulta tu dirección en <strong>serpavi.mivau.gob.es</strong> para verificar si estás en zona tensionada.</span></li>
+                </ul>
+              </FadeIn>
+            </div>
           </div>
         </section>
 

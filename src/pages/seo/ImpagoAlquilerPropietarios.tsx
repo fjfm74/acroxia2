@@ -78,28 +78,28 @@ const opcionesProteccion = [
 const faqs = [
   {
     question: "¿Cuánto tarda un desahucio por impago en 2026?",
-    answer: "El procedimiento de desahucio express por falta de pago suele tardar entre 4 y 8 meses desde la presentación de la demanda hasta el lanzamiento efectivo, dependiendo de la carga del juzgado. En casos de vulnerabilidad del inquilino, los plazos pueden extenderse significativamente."
+    answer: "Entre 4 y 8 meses de media. Aunque la Ley 5/2018 agilizó los trámites ('desahucio express'), los plazos dependen de la carga del juzgado y de si el inquilino solicita asistencia jurídica gratuita."
   },
   {
     question: "¿Cuánto cuesta un desahucio?",
-    answer: "Los costes aproximados incluyen: abogado (800-1.500€), procurador (300-500€), burofax previo (30-50€) y tasas judiciales (si proceden). En total, entre 1.200€ y 2.500€ dependiendo de la complejidad y si el inquilino se opone."
+    answer: "Entre 1.200€ y 2.500€. Es obligatorio acudir con abogado y procurador (art. 23 LEC). Incluye honorarios, tasas y poderes notariales. Las costas se suelen imponer al inquilino, pero si es insolvente, difícilmente las cobrarás."
   },
   {
     question: "¿Puedo cortar los suministros si el inquilino no paga?",
-    answer: "No. Cortar suministros (agua, luz, gas) para forzar el desalojo es ilegal y constituye un delito de coacciones. Debes seguir siempre la vía judicial, aunque sea más lenta."
+    answer: "No. Cortar luz, agua o gas se considera delito de coacciones (art. 172 Código Penal) o realización arbitraria del propio derecho. Puede conllevar penas de prisión o multa para el propietario."
   },
   {
     question: "¿Qué hago si el inquilino se va sin pagar y deja deudas?",
-    answer: "Puedes reclamar las cantidades adeudadas mediante procedimiento monitorio (para deudas líquidas) o juicio verbal. Conserva el contrato, recibos impagados y comunicaciones como prueba. La fianza depositada se puede aplicar a las deudas pendientes."
+    answer: "Inicia un proceso monitorio (art. 812 LEC) para reclamar rentas debidas. Puedes compensar con la fianza (art. 36 LAU), pero si no cubre todo, la reclamación judicial es la vía para embargar bienes futuros."
   },
   {
     question: "¿El seguro de impago cubre okupas?",
-    answer: "Generalmente no. Los seguros de impago cubren inquilinos con contrato vigente. Para okupación existe un seguro específico de protección de vivienda vacía o antiokupación que cubre la defensa jurídica en estos casos."
+    answer: "Depende. La mayoría cubre impago de inquilinos con contrato. Si es una ocupación ilegal sin contrato ('patada en la puerta'), se requiere un seguro específico de protección jurídica o antiocupación."
   },
   {
     question: "¿Puedo reclamar los gastos de comunidad e IBI impagados?",
-    answer: "Si el contrato establece que estos gastos son a cargo del inquilino, puedes reclamarlos junto con las rentas impagadas en el procedimiento de desahucio. Es importante que estén claramente especificados en el contrato."
-  }
+    answer: "Sí, si el contrato establece expresamente que son a cargo del inquilino (art. 20.1 LAU). Se consideran cantidades asimiladas a la renta y su impago permite instar el desahucio (art. 27.2.a LAU)."
+  },
 ];
 
 const ImpagoAlquilerPropietarios = () => {
@@ -425,6 +425,24 @@ const ImpagoAlquilerPropietarios = () => {
                 </Accordion>
               </div>
             </FadeIn>
+          </div>
+        </section>
+
+        {/* En resumen */}
+        <section className="bg-background py-16">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-medium text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El impago de renta es causa de resolución del contrato (art. 27.2.a LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Un desahucio express por impago tarda entre <strong>4 y 8 meses</strong> (Ley 5/2018).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Coste aproximado del procedimiento: <strong>1.200-2.500 €</strong> (abogado + procurador).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Cortar suministros para forzar el desalojo es <strong>delito de coacciones</strong> (art. 172 CP).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Prevención: seguro de impago (<strong>3-5%</strong> de renta anual) o fianza + garantía adicional (máx. 3 meses, art. 36 LAU).</span></li>
+                </ul>
+              </FadeIn>
+            </div>
           </div>
         </section>
 

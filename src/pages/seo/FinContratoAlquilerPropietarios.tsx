@@ -109,28 +109,28 @@ const preavisos = [
 const faqs = [
   {
     question: "¿Puedo no renovar el contrato sin dar motivo?",
-    answer: "Sí, pero solo tras cumplir el periodo mínimo obligatorio (5 años si eres particular, 7 si eres empresa) más los 3 años de prórrogas obligatorias. Después, puedes no renovar notificando con 4 meses de antelación sin necesidad de justificar el motivo."
+    answer: "Solo tras finalizar la prórroga obligatoria (5 o 7 años) y las tácitas (3 años). Debes preavisar con 4 meses de antelación (art. 10.1 LAU). Antes de eso, solo puedes recuperar por necesidad propia si está en el contrato."
   },
   {
     question: "¿Cuánto preaviso debo dar al inquilino para no renovar?",
-    answer: "Como propietario debes notificar con al menos 4 meses de antelación a la fecha de vencimiento del contrato o de la prórroga. La notificación debe ser por escrito, preferiblemente burofax con acuse de recibo."
+    answer: "4 meses. El art. 10 de la LAU amplió el plazo de preaviso para el arrendador a 4 meses antes de la fecha de vencimiento. El inquilino solo necesita avisar con 2 meses."
   },
   {
     question: "¿Qué pasa si el inquilino no quiere irse al terminar el contrato?",
-    answer: "Si has notificado correctamente y el inquilino no abandona, debes iniciar un procedimiento judicial de desahucio por expiración del plazo contractual. Nunca cambies la cerradura ni cortes suministros, ya que sería delito."
+    answer: "Se convierte en precario. Debes interponer demanda de desahucio por expiración de plazo (art. 1569 CC). Si sigues cobrando renta sin protestar, podría entenderse que consientes la tácita reconducción (art. 1566 CC)."
   },
   {
     question: "¿Puedo echar al inquilino si necesito la vivienda para mi hijo?",
-    answer: "Sí, si esta causa está prevista en el contrato. Debes notificar con 2 meses de antelación y el familiar debe ocupar la vivienda en los 3 meses siguientes. Si no se cumple, el inquilino puede volver o exigir indemnización."
+    answer: "Sí, si eres persona física, ha pasado 1 año de contrato y esta causa consta expresamente en el contrato (art. 9.3 LAU). Preaviso de 2 meses. Debes ocuparla en 3 meses."
   },
   {
     question: "¿Qué indemnización le corresponde al inquilino si desiste antes de tiempo?",
-    answer: "El inquilino puede desistir tras 6 meses de contrato, con preaviso de 30 días. La indemnización pactable es de 1 mes de renta por cada año de contrato que reste por cumplir (proporcional si es menos de un año)."
+    answer: "Si se pactó, 1 mes de renta por cada año de contrato restante (art. 11 LAU). Si queda menos de un año, la parte proporcional. Sin pacto, no hay indemnización automática."
   },
   {
     question: "¿Puedo vender la vivienda y que el comprador eche al inquilino?",
-    answer: "No. La venta no extingue el contrato de alquiler. El nuevo propietario se subroga en tu posición como arrendador y debe respetar los términos del contrato hasta su finalización. El inquilino tiene derecho de tanteo y retracto."
-  }
+    answer: "No. El art. 14 de la LAU protege al inquilino: el comprador queda subrogado en los derechos y obligaciones del arrendador durante los 5 o 7 primeros años del contrato, aunque no esté inscrito."
+  },
 ];
 
 const FinContratoAlquilerPropietarios = () => {
@@ -504,6 +504,24 @@ const FinContratoAlquilerPropietarios = () => {
                 </Accordion>
               </div>
             </FadeIn>
+          </div>
+        </section>
+
+        {/* En resumen */}
+        <section className="bg-background py-16">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-medium text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Duración mínima: <strong>5 años</strong> (persona física) o <strong>7 años</strong> (persona jurídica) + <strong>3 años</strong> de prórrogas obligatorias (arts. 9 y 10 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Preaviso del arrendador para no renovar: <strong>4 meses</strong> antes del vencimiento (art. 9.1 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Recuperación por necesidad propia: <strong>2 meses</strong> de preaviso y ocupación efectiva en <strong>3 meses</strong> (art. 9.3 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Desistimiento del inquilino: tras <strong>6 meses</strong>, con <strong>30 días</strong> de preaviso e indemnización de 1 mes/año restante (art. 11 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>La venta del inmueble <strong>no extingue el contrato</strong>: el comprador se subroga como arrendador (art. 14 LAU).</span></li>
+                </ul>
+              </FadeIn>
+            </div>
           </div>
         </section>
 

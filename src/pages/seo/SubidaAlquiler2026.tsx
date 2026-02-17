@@ -24,22 +24,22 @@ const comparativaIndices = [
 const queHacer = [
   {
     situacion: "El casero quiere subir más del IRAV",
-    accion: "Puedes negarte. Según la normativa vigente, la subida estaría limitada al IRAV. Comunica por escrito que solo aceptas la subida conforme a la ley.",
+    accion: "Es ilegal. Según la Disposición final 6ª de la Ley 12/2023, la actualización no puede superar el índice de referencia (IRAV).",
     legal: false,
   },
   {
     situacion: "No te avisan con 1 mes de antelación",
-    accion: "La subida no puede aplicarse ese mes. Deben esperar al siguiente período de actualización.",
+    accion: "La subida no aplica ese mes. El art. 18.2 de la LAU exige notificación por escrito con un mes de antelación a la mensualidad en que deba surtir efecto.",
     legal: false,
   },
   {
     situacion: "Aplican IPC en lugar de IRAV",
-    accion: "Desde 2024, el IPC no aplica para vivienda habitual. Según la normativa actual, el IRAV sería el índice aplicable para actualizar la renta.",
+    accion: "Incorrecto. Desde 2026, el art. 18 de la LAU establece el IRAV como límite máximo para actualizaciones de renta en contratos de vivienda.",
     legal: false,
   },
   {
     situacion: "El contrato dice \"subida según IPC\"",
-    accion: "En principio, la ley prevalece sobre el contrato. Según la normativa, la subida estaría limitada al IRAV.",
+    accion: "Prevalece la ley. Aunque el contrato diga IPC, si este es superior al IRAV, se aplica el límite del IRAV (norma imperativa de protección al inquilino).",
     legal: true,
   },
 ];
@@ -47,35 +47,35 @@ const queHacer = [
 const faqs = [
   {
     question: "¿Cuánto puede subir mi alquiler en 2026?",
-    answer: "Máximo el IRAV, que actualmente ronda el 2,2%. Según la normativa vigente, tu casero no podría aplicar una subida superior a este porcentaje en la actualización anual de la renta."
+    answer: "Máximo el IRAV (~2,2%). La Disposición final 6ª de la Ley de Vivienda 12/2023 establece que desde 2025 se aplicará un nuevo índice de referencia inferior a la evolución del IPC para evitar subidas desproporcionadas."
   },
   {
     question: "¿Qué es el IRAV y cómo funciona?",
-    answer: "El IRAV es el nuevo índice creado por la Ley de Vivienda 2023 para sustituir al IPC en las actualizaciones de alquiler. Es más estable que el IPC y está diseñado específicamente para el mercado de la vivienda. Lo publica mensualmente el INE."
+    answer: "Es el Índice de Referencia de Arrendamientos de Vivienda, publicado por el INE (Disp. Adicional 1ª Ley 12/2023). Sustituye al IPC como tope máximo en las revisiones anuales para garantizar estabilidad."
   },
   {
     question: "¿El IRAV aplica a todos los contratos de alquiler?",
-    answer: "El IRAV aplica a contratos de vivienda habitual. No aplica a locales comerciales, oficinas, viviendas turísticas ni otros usos distintos de vivienda habitual, que pueden pactar libremente el índice de actualización."
+    answer: "Aplica a todos los contratos de arrendamiento de vivienda habitual sujetos a la LAU 29/1994. No aplica a locales, oficinas o alquiler de temporada (art. 3 LAU)."
   },
   {
     question: "¿Con cuánto tiempo deben avisarme de la subida?",
-    answer: "Mínimo 1 mes de antelación. El propietario debe comunicarte la subida con al menos 1 mes de antelación a la fecha de actualización (normalmente el aniversario del contrato). Si no te avisa a tiempo, la subida no puede aplicarse hasta el siguiente período."
+    answer: "Mínimo 1 mes. El art. 18.2 de la LAU exige que el arrendador notifique la actualización por escrito, indicando el porcentaje aplicado, con un mes de antelación al pago de la nueva mensualidad."
   },
   {
     question: "Mi contrato dice \"subida según IPC\", ¿qué aplica?",
-    answer: "Aplica el IRAV. Aunque tu contrato mencione el IPC, desde 2024 la subida máxima para vivienda habitual es el IRAV. Según la normativa vigente, no podrían aplicarte el IPC aunque lo ponga en el contrato."
+    answer: "El menor de los dos: IPC o IRAV. Si el contrato pacta IPC, se aplicará este salvo que supere al IRAV, en cuyo caso opera el tope legal del IRAV como norma imperativa (art. 18.1 LAU modificado)."
   },
   {
     question: "¿Qué diferencia hay entre IRAV e IPC?",
-    answer: "El IPC mide la inflación general de la economía y puede ser muy volátil (llegó al 10% en 2022). El IRAV está diseñado específicamente para vivienda y es más estable, rondando el 2-3%. El IRAV protege mejor a los inquilinos de subidas bruscas."
+    answer: "El IPC mide la inflación general; el IRAV es específico para vivienda. La Ley 12/2023 introdujo el IRAV para desvincular el alquiler de elementos volátiles como la energía, buscando un índice más estable."
   },
   {
     question: "¿Pueden subirme el alquiler fuera de la actualización anual?",
-    answer: "No. Durante la vigencia del contrato, solo pueden actualizar la renta en la fecha de aniversario y conforme al IRAV. Cualquier otra subida fuera de estos términos podría considerarse contraria a la normativa."
+    answer: "No. El art. 18.1 de la LAU establece que la renta solo puede revisarse anualmente en la fecha de cada vigencia del contrato, no en cualquier momento."
   },
   {
     question: "¿Qué hago si la subida es abusiva?",
-    answer: "1) Verifica que no supera el IRAV, 2) Comunica por escrito que rechazas la subida ilegal, 3) Paga solo la renta + IRAV, 4) Si insisten, acude a la OMIC o Consumo. No pagues la diferencia mientras reclamas."
+    answer: "Paga la renta anterior más la subida legal (IRAV) y notifícalo por burofax. El impago parcial podría ser causa de desahucio, pero pagar lo que corresponde legalmente no (art. 17 LAU)."
   },
 ];
 
@@ -382,13 +382,31 @@ const SubidaAlquiler2026 = () => {
           </div>
         </section>
 
+        {/* En resumen */}
+        <section className="py-16 bg-background">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-semibold text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Desde 2026, la subida máxima del alquiler es el <strong>IRAV (~2,2%)</strong>, que sustituye al IPC (Disposición final 6ª Ley 12/2023).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El propietario debe avisar con al menos <strong>1 mes</strong> de antelación a la fecha de actualización (art. 18 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Aunque el contrato diga "subida según IPC", <strong>la ley prevalece</strong> y limita al IRAV (art. 18 LAU modificado).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>En <strong>zonas tensionadas</strong>, la renta de nuevos contratos está además limitada al SERPAVI (art. 17.7 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El IRAV lo publica mensualmente el <strong>INE</strong> en ine.es y es obligatorio para todos los contratos de vivienda habitual.</span></li>
+                </ul>
+              </FadeIn>
+            </div>
+          </div>
+        </section>
+
         {/* Trust Notice */}
         <section className="py-12 bg-muted/50">
           <div className="container mx-auto px-6">
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-sm text-muted-foreground">
                 <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal. 
-                Para casos específicos, consulta con un profesional del derecho. ACROXIA es una herramienta de análisis 
+                El valor del IRAV debe consultarse en la web oficial del INE. ACROXIA es una herramienta de análisis 
                 que ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
               </p>
             </div>

@@ -102,28 +102,28 @@ const pasosDevolucion = [
 const faqs = [
   {
     question: "¿Estoy obligado a depositar la fianza en un organismo oficial?",
-    answer: "Sí, en la mayoría de Comunidades Autónomas es obligatorio depositar la fianza en el organismo correspondiente (INCASOL, IVIMA, etc.) en el plazo establecido. El incumplimiento puede acarrear sanciones."
+    answer: "Sí. La Disposición Adicional Tercera de la LAU obliga al depósito en la CCAA. No hacerlo es una infracción grave sancionable con multa (del 6% al 75% del importe no depositado según la región)."
   },
   {
     question: "¿Cuánto tiempo tengo para devolver la fianza al inquilino?",
-    answer: "El plazo legal es de 1 mes desde la entrega de llaves. Si no devuelves la fianza en este plazo, empiezan a generarse intereses legales a favor del inquilino sobre la cantidad adeudada."
+    answer: "1 mes desde la entrega de las llaves (art. 36.4 LAU). Pasado ese plazo, el inquilino puede reclamar el interés legal del dinero sobre la cantidad adeudada."
   },
   {
     question: "¿Puedo quedarme con la fianza si el inquilino se va antes de tiempo?",
-    answer: "No automáticamente. Si el inquilino ejerce su derecho de desistimiento tras 6 meses, debe pagarte 1 mes de indemnización por cada año que falte, pero no pierdes el derecho a retener la fianza solo por eso. La fianza cubre rentas impagadas y desperfectos."
+    answer: "Depende. Si desiste tras 6 meses con 30 días de preaviso, solo puedes cobrar la indemnización pactada (máx 1 mes/año restante, art. 11 LAU). No puedes retener toda la fianza 'por castigo'."
   },
   {
     question: "¿Cómo documento los desperfectos para justificar descuentos?",
-    answer: "Realiza un inventario fotográfico al inicio y al final del contrato. Haz la inspección final con el inquilino presente y firma un acta de estado de la vivienda. Guarda facturas de reparaciones si las hay."
+    answer: "Mediante el informe de fin de contrato firmado por ambas partes y reportaje fotográfico. El art. 21.4 LAU obliga al inquilino a pagar pequeñas reparaciones, pero el deterioro grave requiere prueba de culpa (art. 1563 CC)."
   },
   {
     question: "¿Qué pasa si la fianza no cubre todos los daños?",
-    answer: "Si los daños superan el importe de la fianza, puedes reclamar la diferencia al inquilino. Primero intenta un acuerdo amistoso y, si no hay respuesta, puedes acudir a un procedimiento monitorio para deudas líquidas."
+    answer: "Puedes reclamar el exceso judicialmente. La fianza es una garantía (art. 36 LAU), pero no limita la responsabilidad del inquilino. Si los daños son mayores, responde con sus bienes (art. 1911 CC)."
   },
   {
     question: "¿Puedo cobrar más de 1 mes de fianza?",
-    answer: "La fianza legal es siempre de 1 mes de renta para vivienda habitual. Además, puedes pedir una garantía adicional, pero el total (fianza + garantía) no puede superar 3 meses de renta en ningún caso."
-  }
+    answer: "Como fianza legal en metálico, no (1 mes, art. 36.1 LAU). Como garantía adicional, sí, hasta un máximo de 2 mensualidades de renta (art. 36.5 LAU). Total máximo: 3 meses."
+  },
 ];
 
 const DepositoFianzaPropietarios = () => {
@@ -481,6 +481,24 @@ const DepositoFianzaPropietarios = () => {
                 </Accordion>
               </div>
             </FadeIn>
+          </div>
+        </section>
+
+        {/* En resumen */}
+        <section className="bg-background py-16">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <FadeIn>
+                <h2 className="font-serif text-2xl font-medium text-foreground mb-6">En resumen</h2>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>La fianza legal es <strong>1 mensualidad</strong> de renta para vivienda habitual (art. 36.1 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El total de fianza + garantías adicionales no puede superar <strong>3 meses</strong> de renta (art. 36.5 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Depósito obligatorio en organismo autonómico: INCASOL (Cataluña), IVIMA (Madrid), etc., en plazos de <strong>15 a 60 días</strong>.</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Plazo de devolución al inquilino: <strong>30 días</strong> desde la entrega de llaves (art. 36.4 LAU).</span></li>
+                  <li className="flex items-start gap-3"><CheckCircle className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Solo se puede descontar por <strong>desperfectos documentados</strong> y deudas; nunca por desgaste normal de uso.</span></li>
+                </ul>
+              </FadeIn>
+            </div>
           </div>
         </section>
 
