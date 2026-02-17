@@ -260,7 +260,11 @@ const ImpagoAlquilerPropietarios = () => {
                     considera un seguro de impago (3-5% anual) o asegúrate de que tu{" "}
                     <Link to="/contrato-alquiler-propietarios" className="underline hover:text-foreground">contrato cumple la LAU</Link>. 
                     Al finalizar, recuerda las reglas de{" "}
-                    <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">devolución de fianza</Link>.
+                    <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">devolución de fianza</Link>. 
+                    Si la vivienda está en{" "}
+                    <Link to="/zonas-tensionadas-propietarios" className="underline hover:text-foreground">zona tensionada</Link>, 
+                    revisa las limitaciones adicionales. Consulta también cómo gestionar el{" "}
+                    <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link>.
                   </p>
                   <p className="text-xs text-muted-foreground mt-3">
                     Última actualización: enero 2026 | Normativa vigente: LAU y LEC

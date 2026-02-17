@@ -253,8 +253,10 @@ const ZonasTensionadasPropietarios = () => {
                   Debes declararlo obligatoriamente en el{" "}
                   <Link to="/contrato-alquiler-propietarios" className="underline hover:text-foreground">contrato de alquiler</Link>. 
                   Consulta también las reglas de{" "}
-                  <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">depósito de fianza</Link> y{" "}
-                  <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link>.
+                  <Link to="/deposito-fianza-propietarios" className="underline hover:text-foreground">depósito de fianza</Link>,{" "}
+                  <Link to="/fin-contrato-alquiler-propietarios" className="underline hover:text-foreground">fin de contrato</Link> y 
+                  cómo actuar ante{" "}
+                  <Link to="/impago-alquiler-propietarios" className="underline hover:text-foreground">impago del alquiler</Link>.
                 </p>
                 <p className="text-xs text-muted-foreground mt-3">
                   Última actualización: enero 2026 | Normativa vigente: Ley de Vivienda y LAU
