@@ -32,36 +32,20 @@ const schemaService = {
   "offers": [
     {
       "@type": "Offer",
-      "name": "Propietario Único",
-      "price": "49",
+      "name": "Propietario",
+      "price": "29",
       "priceCurrency": "EUR",
-      "description": "Análisis + generador de contratos LAU 2026",
+      "description": "Análisis + generador de contratos LAU 2026. Pago único por contrato.",
       "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/InStock",
       "url": "https://acroxia.com/propietarios"
     },
     {
       "@type": "Offer",
-      "name": "Propietario Múltiple",
-      "price": "99",
-      "priceCurrency": "EUR",
-      "description": "Hasta 5 propiedades con alertas de renovación",
-      "priceValidUntil": "2026-12-31",
-      "availability": "https://schema.org/InStock",
-      "url": "https://acroxia.com/propietarios",
-      "priceSpecification": {
-        "@type": "UnitPriceSpecification",
-        "price": "99",
-        "priceCurrency": "EUR",
-        "billingDuration": "P1Y"
-      }
-    },
-    {
-      "@type": "Offer",
-      "name": "Cartera Premium",
+      "name": "Propietario Pro",
       "price": "149",
       "priceCurrency": "EUR",
-      "description": "Contratos ilimitados para carteras de +5 viviendas",
+      "description": "Análisis ilimitados, gestión multi-propiedad y alertas de renovación",
       "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/InStock",
       "url": "https://acroxia.com/propietarios",

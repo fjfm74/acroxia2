@@ -246,7 +246,7 @@ function buildSystemPrompt(config: FullSiteConfig, userProfile: string): string 
   const profileNote = userProfile === "profesional"
     ? "PERFIL DETECTADO: PROFESIONAL (inmobiliaria, gestoría, etc). Enfócate en los planes B2B (99€/mes o 149€/mes) y menciona /profesionales/inmobiliarias o /profesionales/gestorias."
     : userProfile === "propietario"
-    ? "PERFIL DETECTADO: PROPIETARIO particular. Enfócate en los planes para propietarios (49€ pago único, 99€/año, 149€/año) y menciona la página /propietarios."
+    ? "PERFIL DETECTADO: PROPIETARIO particular. Enfócate en los planes para propietarios (29€ pago único por contrato, 149€/año Pro ilimitados) y menciona la página /propietarios."
     : userProfile === "inquilino"
     ? "PERFIL DETECTADO: INQUILINO particular. Enfócate en los planes B2C (14,99€ análisis único) y el análisis gratuito en /analizar-gratis."
     : "PERFIL NO DETECTADO: Tras 2-3 mensajes sin saber el perfil, haz una pregunta natural como: '¿Estás buscando revisar un contrato como inquilino o como propietario?' o '¿Es un contrato que vas a firmar tú o uno que quieres ofrecer a un inquilino?'. NO preguntes directamente '¿eres inquilino o propietario?' - intégralo de forma natural.";
