@@ -38,7 +38,7 @@ const Pricing = () => {
       "offerCount": 10,
       "offers": [
         // Inquilinos (B2C)
-        offer("Preview Gratuito", "0", "Score de riesgo, conteo de cláusulas y 3 ejemplos bloqueados. Sin registro."),
+        offer("Escaneo Rápido", "0", "Preview gratuito: puntuación de riesgo, alertas detectadas y 2 cláusulas parcialmente visibles. Sin registro."),
         offer("Análisis Completo", "39", "1 análisis completo con informe detallado de todas las cláusulas."),
         offer("Pack Comparador", "79", "3 análisis completos para comparar contratos antes de firmar."),
         offer("Suscripción Mensual", "12", "Análisis ilimitados, alertas de renovación y cambios legislativos."),
