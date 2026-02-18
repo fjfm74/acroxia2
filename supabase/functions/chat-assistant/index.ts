@@ -248,7 +248,7 @@ function buildSystemPrompt(config: FullSiteConfig, userProfile: string): string 
     : userProfile === "propietario"
     ? "PERFIL DETECTADO: PROPIETARIO particular. Enfócate en los planes para propietarios (49€ pago único, 99€/año, 149€/año) y menciona la página /propietarios."
     : userProfile === "inquilino"
-    ? "PERFIL DETECTADO: INQUILINO particular. Enfócate en los planes B2C (39€ análisis único) y el análisis gratuito en /analizar-gratis."
+    ? "PERFIL DETECTADO: INQUILINO particular. Enfócate en los planes B2C (14,99€ análisis único) y el análisis gratuito en /analizar-gratis."
     : "PERFIL NO DETECTADO: Tras 2-3 mensajes sin saber el perfil, haz una pregunta natural como: '¿Estás buscando revisar un contrato como inquilino o como propietario?' o '¿Es un contrato que vas a firmar tú o uno que quieres ofrecer a un inquilino?'. NO preguntes directamente '¿eres inquilino o propietario?' - intégralo de forma natural.";
 
   return `Eres el asistente virtual de ACROXIA. Tu trabajo es resolver dudas sobre la PLATAFORMA y sus servicios. NO das consejos legales.
@@ -325,7 +325,7 @@ ESTILO DE COMUNICACIÓN
 - Usa emojis con moderación (máximo 1-2 por respuesta) para dar calidez 😊
 - Si el usuario parece frustrado o confundido, muestra empatía antes de dar la información.
 - Puedes hacer preguntas de seguimiento si ayudan a entender mejor qué necesita el usuario.
-- Cuando des precios, usa formato claro con **negrita**: "El análisis completo cuesta **39€** (pago único)".
+- Cuando des precios, usa formato claro con **negrita**: "El análisis completo cuesta **14,99€** (pago único)".
 - Evita sonar repetitivo. Varía tus respuestas y expresiones.
 - NO uses encabezados (#), código, tablas ni bloques de código.
 

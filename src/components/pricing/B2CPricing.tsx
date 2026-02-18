@@ -20,9 +20,11 @@ const plans = [
   },
   {
     name: "Análisis Único",
-    price: "39",
+    price: "14,99",
     period: "",
     description: "Análisis completo para un contrato específico",
+    subPrice: "Menos de lo que cuesta un café al día",
+    subPriceColor: "text-green-600",
     features: [
       "1 análisis completo",
       "Informe detallado en PDF",
@@ -34,9 +36,11 @@ const plans = [
   },
   {
     name: "Pack Comparador",
-    price: "79",
+    price: "34,99",
     period: "",
     description: "Ideal para comparar varios pisos antes de decidir",
+    subPrice: "11,66€ por análisis",
+    subPriceColor: "text-muted-foreground",
     features: [
       "3 análisis completos",
       "Comparativa entre contratos",
@@ -95,7 +99,12 @@ const B2CPricing = () => {
                       <span className="text-charcoal/60 text-sm">{plan.period}</span>
                     )}
                   </div>
-                  <p className="text-sm text-charcoal/60 mt-3">{plan.description}</p>
+                  {plan.subPrice && (
+                    <p className={`text-xs font-medium mt-1 ${plan.subPriceColor || "text-charcoal/60"}`}>
+                      {plan.subPrice}
+                    </p>
+                  )}
+                  <p className="text-sm text-charcoal/60 mt-2">{plan.description}</p>
                 </div>
 
                 <ul className="space-y-3 mb-8">

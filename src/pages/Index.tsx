@@ -54,7 +54,7 @@ const Index = () => {
     "image": "https://acroxia.com/og-image.jpg",
     "offers": {
       "@type": "Offer",
-      "price": "39",
+      "price": "14.99",
       "priceCurrency": "EUR",
       "description": "Informe completo de análisis (preview gratuito disponible)",
       "priceValidUntil": "2026-12-31",
