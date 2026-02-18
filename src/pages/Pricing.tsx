@@ -39,8 +39,8 @@ const Pricing = () => {
       "offers": [
         // Inquilinos (B2C)
         offer("Escaneo Rápido", "0", "Preview gratuito: puntuación de riesgo, alertas detectadas y 2 cláusulas parcialmente visibles. Sin registro."),
-        offer("Análisis Completo", "39", "1 análisis completo con informe detallado de todas las cláusulas."),
-        offer("Pack Comparador", "79", "3 análisis completos para comparar contratos antes de firmar."),
+        offer("Análisis Completo", "14.99", "1 análisis completo con informe detallado de todas las cláusulas."),
+        offer("Pack Comparador", "34.99", "3 análisis completos para comparar contratos antes de firmar."),
         offer("Suscripción Mensual", "12", "Análisis ilimitados, alertas de renovación y cambios legislativos."),
         offer("Suscripción Anual", "99", "Análisis ilimitados durante 12 meses. Ahorro de 45€ vs mensual."),
         // Propietarios (B2C)
@@ -57,7 +57,7 @@ const Pricing = () => {
   return (
     <>
       <SEOHead
-        title="Precios ACROXIA 2026 | Análisis de Contratos desde 39€"
+        title="Precios ACROXIA 2026 | Análisis de Contratos desde 14,99€"
         description="Planes transparentes para inquilinos, propietarios y profesionales. Desde preview gratuito hasta análisis ilimitados con API. Todos los precios incluyen IVA."
         canonical="https://acroxia.com/precios"
         keywords="precio analisis contrato alquiler, identificar cláusulas problemáticas precio, revisar contrato alquiler coste"
