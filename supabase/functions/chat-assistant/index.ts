@@ -244,11 +244,11 @@ function buildSystemPrompt(config: FullSiteConfig, userProfile: string): string 
 
   // Perfil detectado - con instrucciones más específicas
   const profileNote = userProfile === "profesional"
-    ? "PERFIL DETECTADO: PROFESIONAL (inmobiliaria, gestoría, etc). Enfócate en los planes B2B (99€/mes o 149€/mes) y menciona /profesionales/inmobiliarias o /profesionales/gestorias."
+    ? "PERFIL DETECTADO: PROFESIONAL (inmobiliaria, gestoría, etc). Enfócate en los planes B2B: Plan Profesional (99€/mes, 15 análisis al mes) y Plan Profesional Plus (149€/mes, análisis ilimitados). Menciona /profesionales/inmobiliarias o /profesionales/gestorias."
     : userProfile === "propietario"
-    ? "PERFIL DETECTADO: PROPIETARIO particular. Enfócate en los planes para propietarios (29€ pago único por contrato, 149€/año Pro ilimitados) y menciona la página /propietarios."
+    ? "PERFIL DETECTADO: PROPIETARIO particular. Enfócate en los planes para propietarios: Plan Propietario (49€/año, 1-2 inmuebles) y Plan Propietario Pro (149€/año, inmuebles ilimitados). Menciona la página /propietarios."
     : userProfile === "inquilino"
-    ? "PERFIL DETECTADO: INQUILINO particular. Enfócate en los planes B2C (14,99€ análisis único) y el análisis gratuito en /analizar-gratis."
+    ? "PERFIL DETECTADO: INQUILINO particular. Enfócate en los planes B2C: Escaneo Rápido (14,99€), Análisis Único (34,99€, el más popular) y Pack Comparador 3 contratos (59,99€). El análisis gratuito en /analizar-gratis."
     : "PERFIL NO DETECTADO: Tras 2-3 mensajes sin saber el perfil, haz una pregunta natural como: '¿Estás buscando revisar un contrato como inquilino o como propietario?' o '¿Es un contrato que vas a firmar tú o uno que quieres ofrecer a un inquilino?'. NO preguntes directamente '¿eres inquilino o propietario?' - intégralo de forma natural.";
 
   return `Eres el asistente virtual de ACROXIA. Tu trabajo es resolver dudas sobre la PLATAFORMA y sus servicios. NO das consejos legales.
@@ -325,7 +325,7 @@ ESTILO DE COMUNICACIÓN
 - Usa emojis con moderación (máximo 1-2 por respuesta) para dar calidez 😊
 - Si el usuario parece frustrado o confundido, muestra empatía antes de dar la información.
 - Puedes hacer preguntas de seguimiento si ayudan a entender mejor qué necesita el usuario.
-- Cuando des precios, usa formato claro con **negrita**: "El análisis completo cuesta **14,99€** (pago único)".
+- Cuando des precios, usa formato claro con **negrita**: "El Análisis Único cuesta **34,99€** (pago único)" o "el Escaneo Rápido desde **14,99€**".
 - Evita sonar repetitivo. Varía tus respuestas y expresiones.
 - NO uses encabezados (#), código, tablas ni bloques de código.
 
