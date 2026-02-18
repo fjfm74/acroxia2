@@ -5,15 +5,17 @@ import SubscriptionCard from "./SubscriptionCard";
 
 const plans = [
   {
-    name: "Gratis",
+    name: "Escaneo Rápido",
     price: "0",
     period: "",
-    description: "Tu primer análisis para descubrir ACROXIA",
+    description: "Preview gratuito de tu contrato",
     features: [
-      "1 análisis básico",
-      "Identificación de cláusulas potencialmente problemáticas",
+      "Puntuación de riesgo (1-10)",
+      "Número de alertas detectadas",
+      "2 cláusulas parcialmente visibles",
+      "Válido durante 24 horas",
     ],
-    cta: "Empezar gratis",
+    cta: "Escanear contrato gratis",
     highlighted: false,
   },
   {
