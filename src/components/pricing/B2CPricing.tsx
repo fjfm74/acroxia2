@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
-import SubscriptionCard from "./SubscriptionCard";
 
 const plans = [
   {
@@ -32,7 +31,8 @@ const plans = [
       "Recomendaciones personalizadas",
     ],
     cta: "Analizar contrato",
-    highlighted: false,
+    highlighted: true,
+    badge: "Recomendado",
   },
   {
     name: "Pack Comparador",
@@ -40,7 +40,7 @@ const plans = [
     period: "",
     description: "Ideal para comparar varios pisos antes de decidir",
     subPrice: "11,66€ por análisis",
-    subPriceColor: "text-muted-foreground",
+    subPriceColor: "text-charcoal/60",
     features: [
       "3 análisis completos",
       "Comparativa entre contratos",
@@ -49,8 +49,7 @@ const plans = [
       "Recomendaciones personalizadas",
     ],
     cta: "Comparar contratos",
-    highlighted: true,
-    badge: "Más popular",
+    highlighted: false,
   },
 ];
 
@@ -69,7 +68,7 @@ const B2CPricing = () => {
           </div>
         </FadeIn>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <FadeIn key={plan.name} delay={index * 0.1}>
               <div
@@ -128,11 +127,6 @@ const B2CPricing = () => {
               </div>
             </FadeIn>
           ))}
-          
-          {/* Subscription Card with toggle */}
-          <FadeIn delay={0.3}>
-            <SubscriptionCard />
-          </FadeIn>
         </div>
       </div>
     </section>
