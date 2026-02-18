@@ -17,6 +17,8 @@ const b2bPlans = [
       "Soporte sobre la plataforma",
     ],
     upsell: null as string | null,
+    badge: "Más popular" as string | null,
+    highlighted: true,
     cta: "Contratar",
   },
   {
@@ -30,7 +32,9 @@ const b2bPlans = [
       "Todo lo del Plan Profesional +",
       "Análisis ilimitados para equipos con alto volumen",
     ],
-    upsell: "Sin límite mensual de análisis",
+    upsell: "Sin límite mensual de análisis" as string | null,
+    badge: null as string | null,
+    highlighted: false,
     cta: "Contratar",
   },
 ];
@@ -56,7 +60,21 @@ const B2BPricing = () => {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {b2bPlans.map((plan, index) => (
             <FadeIn key={plan.name} delay={index * 0.15}>
-              <div className="bg-cream/5 backdrop-blur-sm border border-cream/10 rounded-2xl p-8 transition-all duration-300 hover:bg-cream/10 h-full flex flex-col">
+              <div
+                className={`relative backdrop-blur-sm rounded-2xl p-8 transition-all duration-300 h-full flex flex-col ${
+                  plan.highlighted
+                    ? "bg-cream/10 border-2 border-success/70 shadow-xl shadow-success/10"
+                    : "bg-cream/5 border border-cream/10 hover:bg-cream/10"
+                }`}
+              >
+                {plan.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                    <span className="bg-success text-white text-xs font-medium px-4 py-1.5 rounded-full">
+                      {plan.badge}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-cream/10 flex items-center justify-center">
                     <plan.icon className="w-6 h-6 text-cream" />
@@ -84,7 +102,13 @@ const B2BPricing = () => {
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
                       <Check className="w-4 h-4 text-cream/80 mt-0.5 flex-shrink-0" />
-                      <span className={`text-sm ${feature.endsWith("+") || feature.includes("Todo lo") ? "text-cream font-medium" : "text-cream/80"}`}>
+                      <span
+                        className={`text-sm ${
+                          feature.includes("Todo lo")
+                            ? "text-cream font-medium"
+                            : "text-cream/80"
+                        }`}
+                      >
                         {feature}
                       </span>
                     </li>
