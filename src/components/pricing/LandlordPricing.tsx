@@ -63,13 +63,13 @@ const LandlordPricing = () => {
               <div
                 className={`relative bg-white rounded-2xl p-8 transition-all duration-300 hover:shadow-lg h-full flex flex-col ${
                   plan.highlighted
-                    ? "ring-2 ring-charcoal shadow-xl"
+                    ? "ring-2 ring-success shadow-xl shadow-success/10"
                     : "border border-charcoal/10 shadow-sm"
                 }`}
               >
                 {plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                    <span className="bg-charcoal text-cream text-xs font-medium px-4 py-1.5 rounded-full">
+                    <span className="bg-success text-white text-xs font-medium px-4 py-1.5 rounded-full">
                       {plan.badge}
                     </span>
                   </div>
