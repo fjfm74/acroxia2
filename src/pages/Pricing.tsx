@@ -2,9 +2,7 @@ import SEOHead from "@/components/seo/SEOHead";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import PricingHero from "@/components/pricing/PricingHero";
-import B2CPricing from "@/components/pricing/B2CPricing";
-import LandlordPricing from "@/components/pricing/LandlordPricing";
-import B2BPricing from "@/components/pricing/B2BPricing";
+import PricingProfileSelector from "@/components/pricing/PricingProfileSelector";
 import MarketplaceTeaser from "@/components/pricing/MarketplaceTeaser";
 import PricingFAQ from "@/components/pricing/PricingFAQ";
 
@@ -67,9 +65,7 @@ const Pricing = () => {
         <Header />
         <main>
           <PricingHero />
-          <B2CPricing />
-          <LandlordPricing />
-          <B2BPricing />
+          <PricingProfileSelector />
           <MarketplaceTeaser />
           <PricingFAQ />
         </main>
