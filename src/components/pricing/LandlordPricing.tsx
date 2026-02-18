@@ -5,49 +5,36 @@ import FadeIn from "@/components/animations/FadeIn";
 
 const plans = [
   {
-    name: "Propietario Único",
-    price: "49",
+    name: "Propietario",
+    price: "29",
     period: "",
-    description: "Para propietarios con 1-2 inmuebles",
+    description: "Pago único por contrato",
     features: [
       "1 análisis completo de contrato",
-      "Generador de contrato conforme a LAU",
-      "Verificación de zona tensionada",
-      "Informe PDF descargable",
+      "Generador de contrato adaptado a la LAU",
+      "Checklist de cumplimiento legal",
+      "Descarga en PDF",
     ],
-    cta: "Comprar análisis",
+    cta: "Analizar y generar contrato",
     highlighted: false,
+    badge: undefined as string | undefined,
   },
   {
-    name: "Propietario Múltiple",
-    price: "99",
-    period: "/año",
-    description: "Para propietarios con varios inmuebles",
-    features: [
-      "5 análisis al año",
-      "Generador de contratos ilimitado",
-      "Alertas de renovación",
-      "Verificación de zonas tensionadas",
-      "Soporte prioritario",
-    ],
-    cta: "Suscribirse",
-    highlighted: true,
-    badge: "Más popular",
-  },
-  {
-    name: "Cartera Premium",
+    name: "Propietario Pro",
     price: "149",
     period: "/año",
-    description: "Para carteras de alquiler profesionalizadas",
+    description: "Para gestionar múltiples propiedades",
     features: [
       "Análisis ilimitados",
       "Generador de contratos ilimitado",
-      "Alertas de renovación y vencimientos",
-      "Dashboard de gestión",
-      "Soporte dedicado",
+      "Alertas de renovación por propiedad",
+      "Gestión multi-propiedad",
+      "Detección de zona tensionada",
+      "Historial completo",
     ],
-    cta: "Suscribirse",
-    highlighted: false,
+    cta: "Activar plan Pro",
+    highlighted: true,
+    badge: "Recomendado para +3 inmuebles",
   },
 ];
 
@@ -70,7 +57,7 @@ const LandlordPricing = () => {
           </div>
         </FadeIn>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {plans.map((plan, index) => (
             <FadeIn key={plan.name} delay={index * 0.1}>
               <div
@@ -81,7 +68,7 @@ const LandlordPricing = () => {
                 }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <span className="bg-charcoal text-cream text-xs font-medium px-4 py-1.5 rounded-full">
                       {plan.badge}
                     </span>
@@ -129,8 +116,8 @@ const LandlordPricing = () => {
 
         <FadeIn delay={0.3}>
           <div className="text-center mt-10">
-            <Link 
-              to="/propietarios" 
+            <Link
+              to="/propietarios"
               className="text-sm font-medium text-charcoal/70 hover:text-charcoal underline underline-offset-4"
             >
               Ver todas las funcionalidades para propietarios →

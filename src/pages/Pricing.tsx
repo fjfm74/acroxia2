@@ -44,9 +44,8 @@ const Pricing = () => {
         offer("Suscripción Mensual", "12", "Análisis ilimitados, alertas de renovación y cambios legislativos."),
         offer("Suscripción Anual", "99", "Análisis ilimitados durante 12 meses. Ahorro de 45€ vs mensual."),
         // Propietarios (B2C)
-        offer("Propietario Único", "49", "Análisis de contrato + generador de contratos conformes a la LAU 2026.", "https://acroxia.com/propietarios"),
-        offer("Propietario Múltiple", "99", "Hasta 5 propiedades, alertas de renovación y verificador de zona tensionada.", "https://acroxia.com/propietarios"),
-        offer("Cartera Premium", "149", "Propiedades ilimitadas, generador de contratos y soporte prioritario.", "https://acroxia.com/propietarios"),
+        offer("Propietario", "29", "Análisis de contrato + generador de contratos conformes a la LAU 2026. Pago único.", "https://acroxia.com/propietarios"),
+        offer("Propietario Pro", "149", "Análisis ilimitados, gestión multi-propiedad y alertas de renovación.", "https://acroxia.com/propietarios"),
         // Profesionales (B2B)
         offer("Profesional", "99", "10 análisis/mes con informes con marca propia para gestorías e inmobiliarias."),
         offer("Profesional Plus", "149", "Análisis ilimitados, API de integración e informes personalizados."),
