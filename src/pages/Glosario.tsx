@@ -204,6 +204,144 @@ const glossaryTerms: GlossaryTerm[] = [
     relatedLink: "/zonas-tensionadas-propietarios",
     relatedLabel: "Zonas tensionadas",
   },
+  // --- NUEVOS TÉRMINOS ---
+  {
+    term: "Actualización de renta",
+    definition: "Modificación anual del importe de la renta pactada en el contrato. Desde 2026 se aplica el IRAV como índice de referencia, sustituyendo al IPC. El arrendador debe notificar la actualización con al menos 30 días de antelación.",
+    legalRef: "Art. 18 LAU",
+    relatedLink: "/subida-alquiler-2026",
+    relatedLabel: "Subida alquiler 2026",
+  },
+  {
+    term: "Aval bancario",
+    definition: "Garantía personal emitida por una entidad financiera que asegura el cumplimiento de las obligaciones del inquilino (principalmente el pago de la renta) en caso de impago. Puede solicitarse como garantía adicional junto a la fianza legal, con el límite de dos mensualidades extra.",
+    legalRef: "Art. 36.5 LAU",
+    relatedLink: "/deposito-fianza-propietarios",
+    relatedLabel: "Garantías en el alquiler",
+  },
+  {
+    term: "Cédula de habitabilidad",
+    definition: "Documento administrativo que acredita que una vivienda cumple los requisitos mínimos de habitabilidad establecidos por la normativa autonómica. Es necesaria para celebrar contratos de arrendamiento en muchas comunidades autónomas como Cataluña, Valencia o Baleares.",
+  },
+  {
+    term: "Certificado energético",
+    definition: "Documento oficial que evalúa la eficiencia energética de un inmueble mediante una escala de letras de la A (más eficiente) a la G (menos eficiente). Es obligatorio incluirlo en el contrato de arrendamiento y entregarlo al inquilino. Su ausencia puede generar sanciones al propietario.",
+    legalRef: "RD 235/2013",
+  },
+  {
+    term: "Comunidad de propietarios",
+    definition: "Organización formada por los propietarios de pisos y locales de un edificio sometido al régimen de propiedad horizontal. El inquilino puede estar obligado a pagar los gastos de comunidad si así se pacta expresamente en el contrato, pero el propietario sigue siendo el responsable frente a la comunidad.",
+    legalRef: "Ley 49/1960 de Propiedad Horizontal",
+  },
+  {
+    term: "Contrato verbal",
+    definition: "Acuerdo de arrendamiento celebrado sin plasmarlo por escrito. Es legalmente válido en España, pero su prueba resulta muy compleja. En ausencia de contrato escrito, se aplican las normas de la LAU con una duración mínima de 5 años y renta mensual equivalente al precio de mercado de la zona.",
+    legalRef: "Art. 37 LAU",
+  },
+  {
+    term: "Escritura de propiedad",
+    definition: "Documento notarial que acredita la titularidad de un inmueble. El inquilino puede solicitar al arrendador que le muestre el título que le acredita como propietario o persona facultada para arrendar, como garantía de que el contrato se celebra con la persona correcta.",
+    legalRef: "Art. 4 CC",
+  },
+  {
+    term: "Gastos de suministros",
+    definition: "Costes de servicios básicos como electricidad, agua, gas o telecomunicaciones. Por defecto corresponden al inquilino, salvo pacto en contrario. Una cláusula que los imponga al arrendatario sin distinguir consumo real de consumo estimado puede considerarse abusiva.",
+    relatedLink: "/clausulas-abusivas-alquiler",
+    relatedLabel: "Cláusulas abusivas",
+  },
+  {
+    term: "Habitabilidad",
+    definition: "Conjunto de condiciones que debe reunir una vivienda para ser apta para el uso residencial: suministros básicos (agua, electricidad), salubridad, ventilación e iluminación adecuadas y ausencia de humedades estructurales. El arrendador está obligado a mantenerlas durante toda la vigencia del contrato.",
+    legalRef: "Art. 21 LAU",
+  },
+  {
+    term: "IPC",
+    definition: "Índice de Precios de Consumo. Indicador estadístico elaborado por el INE que mide la evolución del coste de la vida. Fue el índice de referencia para actualizar las rentas de alquiler hasta 2022, cuando se limitó su aplicación. Desde 2026 ha sido sustituido por el IRAV para contratos de vivienda habitual.",
+    legalRef: "Art. 18 LAU",
+    relatedLink: "/subida-alquiler-2026",
+    relatedLabel: "Nuevo índice IRAV",
+  },
+  {
+    term: "Lanzamiento",
+    definition: "Fase final del procedimiento de desahucio en la que el juzgado ordena la entrega efectiva de la posesión del inmueble al propietario, mediante la intervención del secretario judicial. El lanzamiento puede suspenderse temporalmente en casos de vulnerabilidad acreditada.",
+    legalRef: "Art. 703 LEC",
+    relatedLink: "/impago-alquiler-propietarios",
+    relatedLabel: "Proceso de desahucio",
+  },
+  {
+    term: "Ley de Vivienda",
+    definition: "Ley 12/2023, de 24 de mayo, por el derecho a la vivienda. Primera ley estatal de vivienda en España. Introduce las zonas de mercado tensionado, limita las rentas en dichas zonas, extiende la duración mínima de los contratos con grandes tenedores a 7 años y refuerza la protección de colectivos vulnerables.",
+    legalRef: "Ley 12/2023",
+    relatedLink: "/zonas-tensionadas-propietarios",
+    relatedLabel: "Zonas tensionadas",
+  },
+  {
+    term: "Mediación arrendaticia",
+    definition: "Procedimiento extrajudicial de resolución de conflictos entre arrendador y arrendatario ante un tercero imparcial. Es voluntaria y confidencial. Puede resolver controversias sobre el estado de la vivienda, devolución de fianza o renegociación de condiciones evitando costosos procedimientos judiciales.",
+  },
+  {
+    term: "Nuda propiedad",
+    definition: "Modalidad de propiedad en la que el titular posee el bien pero carece del derecho de uso y disfrute (usufructo). En el contexto del alquiler, el nudo propietario no puede arrendar la vivienda sin el consentimiento del usufructuario. Un contrato firmado solo por el nudo propietario podría no ser válido.",
+  },
+  {
+    term: "Obras de mejora",
+    definition: "Actuaciones de mejora realizadas por el arrendador en la vivienda que van más allá del mantenimiento básico (p. ej. instalación de ascensor, cambio de ventanas). El inquilino está obligado a tolerarlas si duran menos de 20 días, con derecho a reducción de renta si le privan del uso de zonas de la vivienda.",
+    legalRef: "Art. 22 LAU",
+  },
+  {
+    term: "Opus locato",
+    definition: "Término jurídico latino que designa la obligación del arrendador de entregar y mantener la vivienda en condiciones de uso. Implica que si el inmueble presenta defectos previos al contrato que el propietario no comunicó, el inquilino puede resolver el contrato o exigir reducción de renta.",
+    legalRef: "Art. 1554 CC",
+  },
+  {
+    term: "Pacto de no concurrencia",
+    definition: "Estipulación contractual que limita la actividad del arrendatario en locales de negocio para evitar la competencia con otros negocios del propietario. No aplica a contratos de vivienda habitual. Su inclusión en un arrendamiento residencial puede considerarse una cláusula abusiva.",
+    relatedLink: "/clausulas-abusivas-alquiler",
+    relatedLabel: "Cláusulas abusivas",
+  },
+  {
+    term: "Precario",
+    definition: "Situación jurídica de quien ocupa un inmueble ajeno sin título, sin pagar renta y por mera tolerancia del propietario. No se rige por la LAU sino por el Código Civil. Los procedimientos para recuperar la vivienda en precario son distintos al desahucio por impago y suelen ser más complejos.",
+    legalRef: "Art. 1750 CC",
+  },
+  {
+    term: "Registro de la Propiedad",
+    definition: "Institución pública que inscribe los derechos sobre bienes inmuebles. La inscripción del contrato de arrendamiento protege al inquilino frente a posibles ventas del inmueble, pues permite oponer su derecho de arrendamiento a terceros adquirentes. Requiere que el contrato conste en escritura pública.",
+    legalRef: "Art. 7 LAU",
+  },
+  {
+    term: "Reparaciones a cargo del inquilino",
+    definition: "Pequeñas reparaciones derivadas del uso ordinario de la vivienda que corresponden al arrendatario, como la sustitución de bombillas, grifos que gotean o pequeñas averías de electrodomésticos por uso. Las reparaciones estructurales o de mayor entidad siempre son responsabilidad del arrendador.",
+    legalRef: "Art. 21.4 LAU",
+    relatedLink: "/clausulas-abusivas-alquiler",
+    relatedLabel: "Responsabilidad en reparaciones",
+  },
+  {
+    term: "Resolución del contrato",
+    definition: "Extinción anticipada del contrato de arrendamiento por incumplimiento de las obligaciones de alguna de las partes. Las causas de resolución por parte del arrendador incluyen el impago de la renta, la realización de actividades ilícitas o daños en la vivienda. El arrendatario puede resolverlo si el propietario no realiza reparaciones necesarias.",
+    legalRef: "Art. 27 LAU",
+  },
+  {
+    term: "Retraso en la entrega de llaves",
+    definition: "Situación en que el arrendador no pone la vivienda a disposición del inquilino en la fecha pactada en el contrato. Puede dar derecho al arrendatario a reclamar daños y perjuicios, a resolver el contrato con devolución de cantidades anticipadas o a exigir el cumplimiento forzoso del acuerdo.",
+    legalRef: "Art. 1124 CC",
+  },
+  {
+    term: "Tácita reconducción",
+    definition: "Renovación automática de un contrato de arrendamiento cuando, al vencimiento del plazo pactado, ninguna de las partes comunica su intención de no prorrogarlo y el arrendatario continúa en posesión del inmueble con el consentimiento del arrendador.",
+    legalRef: "Art. 1566 CC",
+  },
+  {
+    term: "Usufructo",
+    definition: "Derecho real que permite a su titular usar y disfrutar de un bien ajeno con obligación de conservar su forma y sustancia. El usufructuario puede arrendar la vivienda durante la vigencia del usufructo. Si el inquilino firma un contrato con el usufructuario, el alquiler puede extinguirse al finalizar el usufructo.",
+    legalRef: "Art. 480 CC",
+  },
+  {
+    term: "Visita de inspección",
+    definition: "Derecho del arrendador a acceder a la vivienda para comprobar su estado o realizar obras. Debe realizarse siempre con preaviso razonable y en horario adecuado. Una cláusula que permita al propietario entrar sin avisar al inquilino puede considerarse abusiva al vulnerar el derecho a la inviolabilidad del domicilio.",
+    relatedLink: "/clausulas-abusivas-alquiler",
+    relatedLabel: "Cláusulas abusivas",
+  },
 ];
 
 const Glosario = () => {
