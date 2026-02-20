@@ -30,7 +30,8 @@ const b2bPlans = [
     description: "Para equipos con alto volumen de contratos",
     features: [
       "Todo lo del Plan Profesional +",
-      "Análisis ilimitados para equipos con alto volumen",
+      "Análisis ilimitados",
+      "Soporte prioritario",
     ],
     upsell: "Sin límite mensual de análisis" as string | null,
     badge: null as string | null,

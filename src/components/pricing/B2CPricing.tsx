@@ -26,7 +26,7 @@ const plans = [
     subPriceColor: "text-green-600",
     features: [
       "1 análisis completo",
-      "Informe detallado en PDF",
+      "Todas las cláusulas analizadas",
       "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
     ],
@@ -43,8 +43,7 @@ const plans = [
     subPriceColor: "text-charcoal/60",
     features: [
       "3 análisis completos",
-      "Comparativa entre contratos",
-      "Informe detallado en PDF",
+      "Todas las cláusulas analizadas",
       "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
     ],
