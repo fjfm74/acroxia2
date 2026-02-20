@@ -45,8 +45,8 @@ const Pricing = () => {
         offer("Propietario", "29", "Análisis de contrato + generador de contratos conformes a la LAU 2026. Pago único.", "https://acroxia.com/propietarios"),
         offer("Propietario Pro", "149", "Análisis ilimitados, gestión multi-propiedad y alertas de renovación.", "https://acroxia.com/propietarios"),
         // Profesionales (B2B)
-        offer("Profesional", "99", "10 análisis/mes con informes con marca propia para gestorías e inmobiliarias."),
-        offer("Profesional Plus", "149", "Análisis ilimitados, API de integración e informes personalizados."),
+        offer("Profesional", "99", "15 análisis/mes con informes con marca propia para gestorías e inmobiliarias."),
+        offer("Profesional Plus", "149", "Análisis ilimitados e informes personalizados."),
       ]
     }
   };

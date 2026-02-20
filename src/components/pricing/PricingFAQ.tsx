@@ -15,12 +15,12 @@ const faqs = [
   {
     question: "¿Puedo cambiar de plan en cualquier momento?",
     answer:
-      "Sí, puedes actualizar tu plan en cualquier momento. Si pasas de un pack de análisis a la suscripción anual, los análisis restantes se convertirán en crédito para futuros servicios premium.",
+      "Sí, puedes actualizar tu plan en cualquier momento. El cambio se aplica de forma inmediata y solo pagarás la diferencia del nuevo plan.",
   },
   {
     question: "¿Cómo funcionan los pagos?",
     answer:
-      "Aceptamos tarjetas de crédito/débito y PayPal. Los pagos son procesados de forma segura a través de Stripe. Para planes empresariales, también ofrecemos facturación mensual o anual con transferencia bancaria.",
+      "Aceptamos tarjetas de crédito y débito. Los pagos son procesados de forma segura con encriptación bancaria.",
   },
   {
     question: "¿Ofrecéis factura para empresas?",
