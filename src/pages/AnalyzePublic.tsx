@@ -257,8 +257,8 @@ const AnalyzePublic = () => {
   return (
     <>
       <SEOHead
-        title="Analiza tu Contrato de Alquiler Gratis con IA | ACROXIA"
-        description="Sube tu contrato en PDF o imagen y obtén un análisis gratuito en menos de 2 minutos. Detecta cláusulas abusivas según la LAU 2026. Sin registro."
+        title="Analiza tu Contrato Gratis: Detecta Cláusulas Ilegales en 2 min"
+        description="Sube tu contrato de alquiler (PDF, DOCX o foto) y detecta cláusulas ilegales en 2 minutos con IA. Basado en la LAU 2026. 100% gratis, sin registro."
         canonical="https://acroxia.com/analizar-gratis"
         keywords="analizar contrato alquiler gratis, revisar contrato alquiler, cláusulas abusivas, derechos inquilino"
         jsonLd={{
