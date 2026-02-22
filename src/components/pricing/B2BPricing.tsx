@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Building2 } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
+import WaitlistModal from "@/components/WaitlistModal";
 
 const b2bPlans = [
   {
@@ -19,7 +21,6 @@ const b2bPlans = [
     upsell: null as string | null,
     badge: "Más popular" as string | null,
     highlighted: true,
-    cta: "Contratar",
   },
   {
     icon: Building2,
@@ -36,11 +37,13 @@ const b2bPlans = [
     upsell: "Sin límite mensual de análisis" as string | null,
     badge: null as string | null,
     highlighted: false,
-    cta: "Contratar",
   },
 ];
 
 const B2BPricing = () => {
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
+
   return (
     <section className="py-24 bg-charcoal">
       <div className="container mx-auto px-6">
@@ -116,14 +119,24 @@ const B2BPricing = () => {
                   ))}
                 </ul>
 
-                <Button className="w-full rounded-full bg-cream text-charcoal hover:bg-cream/90 font-medium">
-                  {plan.cta}
+                <Button
+                  onClick={() => { setSelectedPlan(plan.name); setWaitlistOpen(true); }}
+                  className="w-full rounded-full bg-cream text-charcoal hover:bg-cream/90 font-medium"
+                >
+                  Unirme a la lista
                 </Button>
               </div>
             </FadeIn>
           ))}
         </div>
       </div>
+
+      <WaitlistModal
+        open={waitlistOpen}
+        onOpenChange={setWaitlistOpen}
+        planName={selectedPlan}
+        source="pricing_b2b"
+      />
     </section>
   );
 };

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
+import WaitlistModal from "@/components/WaitlistModal";
+import { Link } from "react-router-dom";
 
 const plans = [
   {
@@ -16,6 +19,7 @@ const plans = [
     ],
     cta: "Escanear contrato gratis",
     highlighted: false,
+    isFree: true,
   },
   {
     name: "Análisis Único",
@@ -30,9 +34,10 @@ const plans = [
       "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
     ],
-    cta: "Analizar contrato",
+    cta: "Unirme a la lista",
     highlighted: true,
     badge: "Recomendado",
+    isFree: false,
   },
   {
     name: "Pack Comparador",
@@ -47,12 +52,22 @@ const plans = [
       "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
     ],
-    cta: "Comparar contratos",
+    cta: "Unirme a la lista",
     highlighted: false,
+    isFree: false,
   },
 ];
 
 const B2CPricing = () => {
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
+
+  const handlePlanClick = (plan: typeof plans[0]) => {
+    if (plan.isFree) return; // Free plan links directly
+    setSelectedPlan(plan.name);
+    setWaitlistOpen(true);
+  };
+
   return (
     <section className="py-24 bg-background">
       <div className="container mx-auto px-6">
@@ -114,20 +129,37 @@ const B2CPricing = () => {
                   ))}
                 </ul>
 
-                <Button
-                  className={`w-full rounded-full font-medium ${
-                    plan.highlighted
-                      ? "bg-charcoal text-cream hover:bg-charcoal/90"
-                      : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
-                  }`}
-                >
-                  {plan.cta}
-                </Button>
+                {plan.isFree ? (
+                  <Button
+                    asChild
+                    className="w-full rounded-full font-medium bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
+                  >
+                    <Link to="/analizar-gratis">{plan.cta}</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handlePlanClick(plan)}
+                    className={`w-full rounded-full font-medium ${
+                      plan.highlighted
+                        ? "bg-charcoal text-cream hover:bg-charcoal/90"
+                        : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
+                    }`}
+                  >
+                    {plan.cta}
+                  </Button>
+                )}
               </div>
             </FadeIn>
           ))}
         </div>
       </div>
+
+      <WaitlistModal
+        open={waitlistOpen}
+        onOpenChange={setWaitlistOpen}
+        planName={selectedPlan}
+        source="pricing_b2c"
+      />
     </section>
   );
 };
