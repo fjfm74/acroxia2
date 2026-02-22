@@ -1,133 +1,95 @@
-# Panel de Campanas de Email Marketing
 
-## Resumen
 
-Crear un sistema completo de campañas de email marketing dentro del panel de administracion, accesible desde `/admin/marketing/campañas`. Incluye creacion de campañas con plantillas segmentadas (inquilino, propietario, profesional), editor visual, programacion de envios y metricas basicas de apertura/clicks.
+# Plan: Mejora de captacion de leads y CTR
 
-## Arquitectura
+## Diagnostico actual
 
-### 1. Base de datos - Nuevas tablas
+El sitio tiene un problema doble:
 
-**Tabla `email_campaigns**`
+1. **CTR organico muy bajo (0.45%)**: 3,550 impresiones pero solo 16 clics. Los title tags y meta descriptions no generan suficiente curiosidad/urgencia para que el usuario haga clic.
+2. **0 leads capturados**: De los pocos usuarios que llegan, ninguno deja su email. El modal de captura solo aparece tras 45 segundos en la pagina de resultados (y casi nadie llega ahi). No hay ningun otro mecanismo de captura en todo el sitio.
 
-- `id` (uuid, PK)
-- `name` (text) - Nombre interno de la campana
-- `subject` (text) - Asunto del email
-- `html_content` (text) - Contenido HTML del email
-- `target_audience` (text) - "inquilino", "propietario", "profesional", "all"
-- `target_segment` (text, nullable) - Filtro adicional: "gestoria", "inmobiliaria", etc.
-- `status` (text) - "draft", "scheduled", "sending", "sent", "cancelled"
-- `scheduled_for` (timestamptz, nullable)
-- `sent_at` (timestamptz, nullable)
-- `total_recipients` (int, default 0)
-- `total_sent` (int, default 0)
-- `total_opened` (int, default 0)
-- `total_clicked` (int, default 0)
-- `total_bounced` (int, default 0)
-- `created_at`, `updated_at` (timestamptz)
+## Acciones propuestas
 
-RLS: Solo admins pueden gestionar (`has_role(auth.uid(), 'admin')`).
+### 1. Mejorar CTR con mejores titles y descriptions (SEO on-page)
 
-**Tabla `email_campaign_events**`
+Reescribir los meta tags de las paginas clave para hacerlos mas atractivos en los SERPs, usando numeros, urgencia y beneficio directo:
 
-- `id` (uuid, PK)
-- `campaign_id` (uuid, FK -> email_campaigns)
-- `event_type` (text) - "sent", "opened", "clicked", "bounced", "unsubscribed"
-- `recipient_email` (text)
-- `metadata` (jsonb, nullable) - URL clickeada, user agent, etc.
-- `created_at` (timestamptz)
+| Pagina | Title actual | Title propuesto |
+|--------|-------------|-----------------|
+| Home | "ACROXIA - Analiza tu Contrato de Alquiler con IA \| Detecta Clausulas Abusivas" | "Analiza tu Contrato de Alquiler con IA en 2 min \| ACROXIA" |
+| /analizar-gratis | "Analiza tu Contrato de Alquiler Gratis con IA \| ACROXIA" | "Analiza tu Contrato Gratis: Detecta Clausulas Ilegales en 2 min" |
+| /propietarios | Revisar y optimizar | "Propietarios: Verifica que tu Contrato Cumple la LAU 2026 \| ACROXIA" |
+| Guias SEO | Revisar titles para incluir fechas (2026) y datos concretos | Anadir "[Actualizado 2026]" y cifras concretas |
 
-RLS: Solo admins lectura. Insercion publica (para webhooks de tracking).
+Las descriptions se reescribiran con formato: **beneficio + dato + CTA**.
 
-### 2. Plantillas predefinidas
+### 2. Exit-intent popup para captar emails antes de que se vayan
 
-Se crearan 6 plantillas base almacenadas en el codigo (no en BD) como constantes:
+Crear un componente `ExitIntentCapture` que detecte cuando el raton sale de la ventana (desktop) o tras 30s de inactividad (movil):
 
-**Inquilino (2 plantillas):**
+- Se muestra solo 1 vez por sesion (controlado con sessionStorage)
+- Copy directo: "Antes de irte... Tu contrato podria tener clausulas ilegales"
+- Solo pide email + consentimiento
+- Guarda el lead en la tabla `leads` con source = "exit_intent"
+- Se incluye en las paginas de blog, guias SEO y la Home
 
-- "Bienvenida al blog" - Presentacion de ACROXIA y link al analisis gratuito
-- "Tip semanal" - Consejo legal con CTA a analizar contrato
+### 3. CTA flotante en paginas de blog y guias SEO
 
-**Propietario (2 plantillas):**
+Anadir un banner sticky en la parte inferior de los posts de blog y guias:
 
-- "Novedades LAU 2026" - Actualizaciones normativas relevantes
-- "Herramientas para propietarios" - Presentacion de funcionalidades
+- Aparece tras hacer scroll del 40% del contenido
+- Copy: "Tiene tu contrato clausulas como estas? Analizalo gratis"
+- Boton directo a `/analizar-gratis`
+- Se puede cerrar y no vuelve a aparecer en esa sesion
 
-**Profesional (2 plantillas):**
+### 4. Lead magnet en la sidebar del blog
 
-- "Primer contacto B2B" - Email informativo no publicitario presentando ACROXIA
-- "Oferta profesional" - Ventajas del plan Pro para gestorias/inmobiliarias
+Anadir un formulario de email en la sidebar de los posts que ofrezca algo concreto:
 
-Todas seguiran el design system de email existente (cream/charcoal, Playfair Display).
+- "Recibe nuestra guia: 5 clausulas ilegales mas comunes en 2026"
+- Solo pide email
+- Guarda en `leads` con source = "blog_lead_magnet"
 
-### 3. Componentes frontend
+### 5. Reducir friccion en el LeadCaptureModal existente
 
-**Pagina principal: `AdminCampaigns.tsx**`
+El modal actual pide demasiados datos y tarda 45s en aparecer:
 
-- Listado de campanas con estado, fecha, metricas rapidas
-- Botones para crear nueva campana
-- Filtros por estado y audiencia
+- Reducir el delay de 45s a 15s
+- Hacer que el campo "situacion" sea opcional (no bloquee el envio)
+- Mejorar el copy del boton: de "Activar recordatorio" a "Enviar mi resumen gratis"
 
-**Editor: `AdminCampaignEdit.tsx**`
+### 6. CTA inline contextual en la Home (seccion Stats)
 
-- Selector de audiencia objetivo (inquilino/propietario/profesional/todos)
-- Selector de plantilla base (las 6 predefinidas)
-- Editor de asunto
-- Editor de contenido HTML con preview en tiempo real
-- Selector de segmento B2B (gestoria, inmobiliaria, etc.)
-- Programacion: enviar ahora o programar fecha/hora
-- Preview del email renderizado
-- Contador de destinatarios estimados
+Tras la seccion de estadisticas, anadir un CTA intermedio antes de "Como funciona":
 
-**Componente de metricas: `CampaignMetrics.tsx**`
+- "Unete a los +2,800 inquilinos que ya analizaron su contrato"
+- Input de email inline + boton "Analizar gratis"
+- Al hacer submit, guarda email como lead y redirige a `/analizar-gratis`
 
-- Open rate, click rate, bounce rate
-- Grafico de barras con recharts
-- Timeline de envios
+---
 
-### 4. Edge function: `send-campaign`
+## Detalle tecnico
 
-- Recibe `campaign_id`
-- Valida que el usuario es admin
-- Consulta destinatarios segun audiencia y segmento:
-  - Inquilinos: `blog_subscribers` con audience="inquilino" + `profiles` con user_type="inquilino" y marketing_consent=true
-  - Propietarios: idem con audience="propietario"
-  - Profesionales: `marketing_contacts` no unsubscribed, filtrado por segmento
-  - Todos: union de los tres
-- Envia en lotes de 10 con delays de 500ms entre lotes
-- Registra eventos en `email_campaign_events`
-- Actualiza contadores en `email_campaigns`
-- Incluye link de baja en cada email
+### Archivos a crear
+- `src/components/ExitIntentCapture.tsx` - Popup de exit-intent con deteccion de mouseout/inactividad
+- `src/components/blog/StickyBottomCTA.tsx` - Banner sticky para blog/guias
 
-### 5. Edge function: `track-email-event`
+### Archivos a modificar
+- `src/pages/Index.tsx` - Mejorar SEO title/description, anadir ExitIntentCapture y CTA inline
+- `src/pages/AnalyzePublic.tsx` - Mejorar meta tags
+- `src/pages/Propietarios.tsx` - Mejorar meta tags
+- `src/pages/FreeResultPreview.tsx` - Reducir delay del modal de 45s a 15s
+- `src/components/LeadCaptureModal.tsx` - Hacer contract_status opcional, mejorar CTA text
+- `src/pages/BlogPost.tsx` - Anadir ExitIntentCapture y StickyBottomCTA
+- `src/components/landing/HeroSection.tsx` - Anadir micro-texto de urgencia
+- `src/components/blog/BlogSidebar.tsx` - Anadir lead magnet form
+- Varias paginas SEO - Actualizar titles con "[2026]"
 
-- Endpoint publico (sin auth) para tracking de aperturas y clicks
-- Apertura: pixel de tracking 1x1 en el HTML del email
-- Click: wrapper de URLs que registra el click y redirige
-- Registra en `email_campaign_events`
+### Base de datos
+- Sin cambios de schema necesarios. La tabla `leads` ya soporta los campos `source`, `email`, `utm_*`
 
-### 6. Navegacion
+### Metricas esperadas
+- CTR: de 0.45% a 1.5-2.5% con mejores titles
+- Leads: de 0 a capturas recurrentes con 4 puntos de contacto nuevos (exit-intent, sticky CTA, sidebar, modal mejorado)
 
-- Anadir tab "Campanas" dentro de la pagina `/admin/marketing` usando Tabs de Radix
-- Tab 1: CRM Contactos (contenido actual)
-- Tab 2: Campanas de Email (nuevo)
-
-Esto evita crear rutas nuevas y mantiene todo el marketing centralizado.
-
-## Secuencia de implementacion
-
-1. Migracion de base de datos (2 tablas + RLS)
-2. Plantillas de email predefinidas (constantes en codigo)
-3. Edge function `send-campaign` para envio masivo
-4. Edge function `track-email-event` para metricas
-5. Componentes frontend (listado, editor, metricas)
-6. Integracion con tabs en AdminContactsCRM
-7. Registro en `supabase/config.toml`
-
-## Detalles tecnicos
-
-- Las plantillas reutilizan los estilos base de `_shared/email-templates.ts`
-- El tracking de apertura usa un pixel transparente: `<img src="https://...track-email-event?type=open&cid=X&email=Y" width="1" height="1" />`
-- El tracking de clicks wrappea cada link: `https://...track-email-event?type=click&cid=X&email=Y&url=ENCODED_URL` que hace redirect
-- El envio respeta el limite de Resend (plan Pro: 50k/mes)
-- Preview de destinatarios: query en tiempo real que cuenta los contactos elegibles segun los filtros seleccionados
