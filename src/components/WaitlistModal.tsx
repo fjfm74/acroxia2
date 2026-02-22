@@ -107,7 +107,7 @@ const WaitlistModal = ({
         });
       }
 
-      trackConversion("waitlist_signup", {
+      trackConversion("lead_captured", {
         plan_name: planName,
         source,
         user_type: userType,

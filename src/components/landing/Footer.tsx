@@ -52,14 +52,6 @@ const Footer = ({ hideSubscription = false }: FooterProps) => {
                 <Mail className="w-4 h-4" />
                 <span>contacto@acroxia.com</span>
               </li>
-              <li className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Phone className="w-4 h-4" />
-                <span>+34 900 000 000</span>
-              </li>
-              <li className="flex items-start gap-2 text-muted-foreground text-sm">
-                <MapPin className="w-4 h-4 mt-0.5" />
-                <span>Barcelona, España</span>
-              </li>
             </ul>
           </div>
           

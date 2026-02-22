@@ -12,7 +12,7 @@ const Privacidad = () => {
         {/* Introducción */}
         <section>
           <p className="leading-relaxed">
-            En ACROXIA TECH S.L. (en adelante, "ACROXIA") nos comprometemos a proteger la privacidad de nuestros usuarios. Esta Política de Privacidad describe cómo recopilamos, utilizamos, almacenamos y protegemos la información personal que nos proporcionas al utilizar nuestros servicios, de conformidad con el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD).
+            En ACROXIA (en adelante, "ACROXIA") nos comprometemos a proteger la privacidad de nuestros usuarios. Esta Política de Privacidad describe cómo recopilamos, utilizamos, almacenamos y protegemos la información personal que nos proporcionas al utilizar nuestros servicios, de conformidad con el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD).
           </p>
         </section>
 
@@ -22,11 +22,8 @@ const Privacidad = () => {
             1. Responsable del Tratamiento
           </h2>
           <div className="bg-muted rounded-2xl p-6 space-y-2">
-            <p><strong className="text-foreground">Responsable:</strong> ACROXIA TECH S.L.</p>
-            <p><strong className="text-foreground">CIF:</strong> B-12345678</p>
-            <p><strong className="text-foreground">Domicilio:</strong> Calle Diagonal 456, 4ª Planta, 08006 Barcelona, España</p>
-            <p><strong className="text-foreground">Email de contacto:</strong> legal@acroxia.com</p>
-            <p><strong className="text-foreground">Delegado de Protección de Datos (DPO):</strong> legal@acroxia.com</p>
+            <p><strong className="text-foreground">Responsable:</strong> ACROXIA</p>
+            <p><strong className="text-foreground">Email de contacto:</strong> contacto@acroxia.com</p>
           </div>
         </section>
 
@@ -226,7 +223,7 @@ const Privacidad = () => {
             <li><strong className="text-foreground">Retirada del consentimiento:</strong> Retirar tu consentimiento en cualquier momento.</li>
           </ul>
           <p className="mb-4 leading-relaxed">
-            Para ejercer estos derechos, puedes contactarnos en <strong className="text-foreground">legal@acroxia.com</strong> adjuntando una copia de tu documento de identidad.
+            Para ejercer estos derechos, puedes contactarnos en <strong className="text-foreground">contacto@acroxia.com</strong> adjuntando una copia de tu documento de identidad.
           </p>
           <p className="leading-relaxed">
             Asimismo, tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) si consideras que tus derechos han sido vulnerados: <a href="https://www.aepd.es" className="text-foreground underline hover:no-underline" target="_blank" rel="noopener noreferrer">www.aepd.es</a>
@@ -272,9 +269,7 @@ const Privacidad = () => {
             Si tienes cualquier pregunta sobre esta Política de Privacidad o sobre el tratamiento de tus datos personales, puedes contactarnos en:
           </p>
           <div className="bg-muted rounded-2xl p-6 mt-4 space-y-2">
-            <p><strong className="text-foreground">Email general:</strong> legal@acroxia.com</p>
-            <p><strong className="text-foreground">Delegado de Protección de Datos:</strong> legal@acroxia.com</p>
-            <p><strong className="text-foreground">Dirección postal:</strong> ACROXIA TECH S.L., Calle Diagonal 456, 4ª Planta, 08006 Barcelona, España</p>
+            <p><strong className="text-foreground">Email de contacto:</strong> contacto@acroxia.com</p>
           </div>
         </section>
       </div>

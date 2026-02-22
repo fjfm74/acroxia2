@@ -274,11 +274,8 @@ const Terminos = () => {
             Si tienes alguna pregunta sobre estos Términos, por favor contáctanos:
           </p>
           <div className="bg-muted rounded-2xl p-6 space-y-2">
-            <p><strong className="text-foreground">ACROXIA TECH S.L.</strong></p>
-            <p>Calle Diagonal 456, 4ª Planta</p>
-            <p>08006 Barcelona, España</p>
-            <p><strong className="text-foreground">Email:</strong> legal@acroxia.com</p>
-            <p><strong className="text-foreground">Teléfono:</strong> +34 900 000 000</p>
+            <p><strong className="text-foreground">ACROXIA</strong></p>
+            <p><strong className="text-foreground">Email:</strong> contacto@acroxia.com</p>
           </div>
         </section>
       </div>

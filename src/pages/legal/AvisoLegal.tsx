@@ -18,12 +18,9 @@ const AvisoLegal = () => {
             En cumplimiento del artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se informa de los siguientes datos del titular del sitio web:
           </p>
           <div className="bg-muted rounded-2xl p-6 space-y-2">
-            <p><strong className="text-foreground">Razón Social:</strong> ACROXIA TECH S.L.</p>
-            <p><strong className="text-foreground">CIF:</strong> B-12345678</p>
-            <p><strong className="text-foreground">Domicilio Social:</strong> Calle Diagonal 456, 4ª Planta, 08006 Barcelona, España</p>
-            <p><strong className="text-foreground">Email:</strong> legal@acroxia.com</p>
-            <p><strong className="text-foreground">Teléfono:</strong> +34 900 000 000</p>
-            <p><strong className="text-foreground">Registro Mercantil:</strong> Inscrita en el Registro Mercantil de Barcelona, Tomo 12345, Folio 67, Hoja B-89012</p>
+            <p><strong className="text-foreground">Denominación:</strong> ACROXIA</p>
+            <p><strong className="text-foreground">Email:</strong> contacto@acroxia.com</p>
+            <p className="text-sm text-muted-foreground mt-2">Los datos de identificación societaria se actualizarán una vez completada la constitución de la entidad mercantil.</p>
           </div>
         </section>
 
@@ -33,7 +30,7 @@ const AvisoLegal = () => {
             2. Objeto y Ámbito de Aplicación
           </h2>
           <p className="mb-4 leading-relaxed">
-            El presente Aviso Legal regula el uso del sitio web <strong className="text-foreground">www.acroxia.com</strong> (en adelante, el "Sitio Web"), del que es titular ACROXIA TECH S.L. (en adelante, "ACROXIA").
+            El presente Aviso Legal regula el uso del sitio web <strong className="text-foreground">www.acroxia.com</strong> (en adelante, el "Sitio Web"), del que es titular ACROXIA (en adelante, "ACROXIA").
           </p>
           <p className="leading-relaxed">
             ACROXIA es una plataforma tecnológica que ofrece servicios de análisis automatizado de contratos de alquiler mediante tecnología de inteligencia artificial, con el objetivo de identificar cláusulas potencialmente abusivas o contrarias a la legislación vigente.
