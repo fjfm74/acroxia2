@@ -234,7 +234,6 @@ const TransparenciaIA = () => {
           </p>
           <ul className="text-muted-foreground space-y-2">
             <li><strong>Email:</strong> <a href="mailto:contacto@acroxia.com" className="text-primary hover:underline">contacto@acroxia.com</a></li>
-            <li><strong>Delegado de Protección de Datos:</strong> <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">legal@acroxia.com</a></li>
           </ul>
         </section>
       </div>

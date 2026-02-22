@@ -13,13 +13,8 @@ const Contacto = () => {
     "description": "Contacta con el equipo de ACROXIA para resolver tus dudas sobre análisis de contratos de alquiler",
     "mainEntity": {
       "@type": "Organization",
-      "name": "ACROXIA TECH S.L.",
-      "email": "contacto@acroxia.com",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Madrid",
-        "addressCountry": "ES"
-      }
+      "name": "ACROXIA",
+      "email": "contacto@acroxia.com"
     }
   };
 
@@ -86,46 +81,6 @@ const Contacto = () => {
                             </div>
                           </div>
 
-                          {/* Legal Email */}
-                          <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center flex-shrink-0">
-                              <MessageSquare className="w-5 h-5 text-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-foreground mb-1">Consultas legales y privacidad</p>
-                              <a 
-                                href="mailto:legal@acroxia.com" 
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                legal@acroxia.com
-                              </a>
-                            </div>
-                          </div>
-
-                          {/* Phone */}
-                          <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center flex-shrink-0">
-                              <Phone className="w-5 h-5 text-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-foreground mb-1">Teléfono</p>
-                              <p className="text-muted-foreground">+34 900 000 000</p>
-                            </div>
-                          </div>
-
-                          {/* Location */}
-                          <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center flex-shrink-0">
-                              <MapPin className="w-5 h-5 text-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-foreground mb-1">Ubicación</p>
-                              <p className="text-muted-foreground">
-                                Calle Diagonal 456, 4ª Planta<br />
-                                08006 Barcelona, España
-                              </p>
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </FadeIn>
