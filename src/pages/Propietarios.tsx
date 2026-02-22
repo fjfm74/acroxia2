@@ -68,8 +68,8 @@ const Propietarios = () => {
   return (
     <>
       <SEOHead
-        title="Herramientas para Propietarios de Alquiler | Contratos LAU 2026 | ACROXIA"
-        description="Crea contratos conformes a la LAU 2026, gestiona fianzas, consulta zonas tensionadas y protege tu inversión inmobiliaria con herramientas de IA para propietarios."
+        title="Propietarios: Verifica que tu Contrato Cumple la LAU 2026 | ACROXIA"
+        description="¿Tu contrato de alquiler cumple la LAU 2026? Verifica zonas tensionadas, fianzas y cláusulas obligatorias. Herramientas de IA para propietarios."
         canonical="https://acroxia.com/propietarios"
         keywords="contrato alquiler propietario, análisis contrato arrendador, zonas tensionadas 2026, LAU propietarios, generador contrato alquiler"
         jsonLd={schemaService}

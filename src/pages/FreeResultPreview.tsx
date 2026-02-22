@@ -95,13 +95,13 @@ const FreeResultPreview = () => {
     return () => clearInterval(interval);
   }, [analysis?.expires_at]);
 
-  // Auto-show lead capture modal after 45 seconds
+  // Auto-show lead capture modal after 15 seconds
   useEffect(() => {
     if (!analysis || analysis.email) return;
     
     const timer = setTimeout(() => {
       setShowLeadModal(true);
-    }, 45000);
+    }, 15000);
 
     return () => clearTimeout(timer);
   }, [analysis]);

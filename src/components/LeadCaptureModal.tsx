@@ -44,10 +44,10 @@ const LeadCaptureModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !contractStatus || !acceptedPrivacy) {
+    if (!email || !acceptedPrivacy) {
       toast({
         title: "Campos requeridos",
-        description: "Por favor, completa todos los campos.",
+        description: "Por favor, completa el email y acepta la política de privacidad.",
         variant: "destructive",
       });
       return;
@@ -255,10 +255,10 @@ const LeadCaptureModal = ({
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={loading || !email || !contractStatus || !acceptedPrivacy}
+            disabled={loading || !email || !acceptedPrivacy}
             className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
           >
-            {loading ? "Guardando..." : "Activar recordatorio"}
+            {loading ? "Enviando..." : "Enviar mi resumen gratis"}
           </Button>
 
           {/* Security Note */}

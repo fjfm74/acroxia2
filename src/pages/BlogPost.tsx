@@ -1,4 +1,6 @@
 import { useParams, Link } from "react-router-dom";
+import ExitIntentCapture from "@/components/ExitIntentCapture";
+import StickyBottomCTA from "@/components/blog/StickyBottomCTA";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
 import Header from "@/components/landing/Header";
@@ -559,6 +561,8 @@ const BlogPost = () => {
           </section>
         </main>
         <Footer />
+        <ExitIntentCapture />
+        <StickyBottomCTA />
       </div>
     </>
   );

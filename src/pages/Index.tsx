@@ -2,9 +2,11 @@ import SEOHead from "@/components/seo/SEOHead";
 import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
 import StatsSection from "@/components/landing/StatsSection";
+import InlineLeadCTA from "@/components/landing/InlineLeadCTA";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import LatestArticlesSection from "@/components/landing/LatestArticlesSection";
 import Footer from "@/components/landing/Footer";
+import ExitIntentCapture from "@/components/ExitIntentCapture";
 
 const Index = () => {
   const organizationSchema = {
@@ -83,8 +85,8 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="ACROXIA - Analiza tu Contrato de Alquiler con IA | Detecta Cláusulas Abusivas"
-        description="Sube tu contrato de alquiler y descubre en menos de 2 minutos si contiene cláusulas abusivas. Análisis con IA basado en la LAU 2026. Preview gratuito sin registro."
+        title="Analiza tu Contrato de Alquiler con IA en 2 min | ACROXIA"
+        description="¿Tu contrato de alquiler es legal? Descúbrelo gratis en 2 minutos con IA. Detectamos cláusulas abusivas según la LAU 2026. Sin registro."
         canonical="https://acroxia.com/"
         keywords="analizar contrato alquiler, cláusulas abusivas alquiler, derechos inquilino España, LAU 2026, IA legal, contrato arrendamiento"
         jsonLd={[organizationSchema, websiteSchema, softwareAppSchema, howToSchema]}
@@ -95,10 +97,12 @@ const Index = () => {
         <main>
           <HeroSection />
           <StatsSection />
+          <InlineLeadCTA />
           <HowItWorksSection />
           <LatestArticlesSection />
         </main>
         <Footer />
+        <ExitIntentCapture />
       </div>
     </>
   );
