@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import { Check, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
+import WaitlistModal from "@/components/WaitlistModal";
+import { Link } from "react-router-dom";
 
 const plans = [
   {
@@ -15,7 +17,7 @@ const plans = [
       "Checklist de cumplimiento legal",
       "Descarga en PDF",
     ],
-    cta: "Analizar y generar contrato",
+    cta: "Unirme a la lista",
     highlighted: false,
     badge: undefined as string | undefined,
   },
@@ -32,13 +34,16 @@ const plans = [
       "Detección de zona tensionada",
       "Historial completo",
     ],
-    cta: "Activar plan Pro",
+    cta: "Unirme a la lista",
     highlighted: true,
     badge: "Recomendado para +3 inmuebles",
   },
 ];
 
 const LandlordPricing = () => {
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
+
   return (
     <section className="py-24 bg-muted">
       <div className="container mx-auto px-6">
@@ -100,14 +105,14 @@ const LandlordPricing = () => {
                 </ul>
 
                 <Button
-                  asChild
+                  onClick={() => { setSelectedPlan(plan.name); setWaitlistOpen(true); }}
                   className={`w-full rounded-full font-medium ${
                     plan.highlighted
                       ? "bg-charcoal text-cream hover:bg-charcoal/90"
                       : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
                   }`}
                 >
-                  <Link to="/registro">{plan.cta}</Link>
+                  {plan.cta}
                 </Button>
               </div>
             </FadeIn>
@@ -125,6 +130,13 @@ const LandlordPricing = () => {
           </div>
         </FadeIn>
       </div>
+
+      <WaitlistModal
+        open={waitlistOpen}
+        onOpenChange={setWaitlistOpen}
+        planName={selectedPlan}
+        source="pricing_landlord"
+      />
     </section>
   );
 };

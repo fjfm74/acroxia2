@@ -15,7 +15,8 @@ export type ConversionType =
   | 'onboarding_completed'
   | 'cta_clicked'
   | 'download_completed'
-  | 'scroll_milestone';
+  | 'scroll_milestone'
+  | 'waitlist_signup';
 
 interface EventParams {
   [key: string]: string | number | boolean | undefined | null;
@@ -100,6 +101,7 @@ const getConversionValue = (type: ConversionType): number => {
     cta_clicked: 1,
     download_completed: 3,
     scroll_milestone: 0,
+    waitlist_signup: 20,
   };
   return values[type] || 0;
 };

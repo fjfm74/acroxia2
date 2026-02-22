@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import WaitlistModal from "@/components/WaitlistModal";
 
 const SubscriptionCard = () => {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const monthlyPrice = "12";
   const annualPrice = "99";
@@ -19,18 +21,13 @@ const SubscriptionCard = () => {
   return (
     <div className="relative bg-white rounded-2xl p-8 transition-all duration-300 hover:shadow-lg h-full border border-charcoal/10 shadow-sm">
       <div className="mb-6">
-        <h3 className="font-serif text-lg font-medium text-charcoal mb-4">
-          Suscripción
-        </h3>
+        <h3 className="font-serif text-lg font-medium text-charcoal mb-4">Suscripción</h3>
 
-        {/* Toggle */}
         <div className="flex items-center justify-center gap-2 mb-4">
           <button
             onClick={() => setIsAnnual(false)}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-              !isAnnual
-                ? "bg-charcoal text-cream"
-                : "bg-charcoal/10 text-charcoal hover:bg-charcoal/20"
+              !isAnnual ? "bg-charcoal text-cream" : "bg-charcoal/10 text-charcoal hover:bg-charcoal/20"
             }`}
           >
             Mensual
@@ -38,9 +35,7 @@ const SubscriptionCard = () => {
           <button
             onClick={() => setIsAnnual(true)}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-              isAnnual
-                ? "bg-charcoal text-cream"
-                : "bg-charcoal/10 text-charcoal hover:bg-charcoal/20"
+              isAnnual ? "bg-charcoal text-cream" : "bg-charcoal/10 text-charcoal hover:bg-charcoal/20"
             }`}
           >
             Anual
@@ -51,15 +46,11 @@ const SubscriptionCard = () => {
           <span className="font-serif text-4xl font-semibold text-charcoal">
             €{isAnnual ? annualPrice : monthlyPrice}
           </span>
-          <span className="text-charcoal/60 text-sm">
-            {isAnnual ? "/año" : "/mes"}
-          </span>
+          <span className="text-charcoal/60 text-sm">{isAnnual ? "/año" : "/mes"}</span>
         </div>
 
         {isAnnual && (
-          <p className="text-center text-sm text-green-600 font-medium mt-2">
-            Ahorra {savings}€ al año
-          </p>
+          <p className="text-center text-sm text-green-600 font-medium mt-2">Ahorra {savings}€ al año</p>
         )}
 
         <p className="text-sm text-charcoal/60 mt-3 text-center">
@@ -76,9 +67,19 @@ const SubscriptionCard = () => {
         ))}
       </ul>
 
-      <Button className="w-full rounded-full font-medium bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream">
-        Suscribirse
+      <Button
+        onClick={() => setWaitlistOpen(true)}
+        className="w-full rounded-full font-medium bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
+      >
+        Unirme a la lista
       </Button>
+
+      <WaitlistModal
+        open={waitlistOpen}
+        onOpenChange={setWaitlistOpen}
+        planName={`Suscripción ${isAnnual ? "Anual" : "Mensual"}`}
+        source="pricing_subscription"
+      />
     </div>
   );
 };
