@@ -12,7 +12,7 @@ const BOOTSTRAP_DAYS = 45;
 const LOOKBACK_OVERLAP_DAYS = 2;
 const MAX_SEEN = 5000;
 
-// ─── Relevance: INCLUDE terms (high priority) ───────────────────────────────
+// ─── Relevance: INCLUDE patterns ─────────────────────────────────────────────
 const INCLUDE_PATTERNS: RegExp[] = [
   /ley\s*29\/1994/i,
   /arrendamientos?\s*urbanos?/i,
@@ -20,7 +20,7 @@ const INCLUDE_PATTERNS: RegExp[] = [
   /derecho\s*a\s*la\s*vivienda/i,
   /\birav\b/i,
   /índice\s*de\s*referencia\s*de\s*arrendamientos?\s*de\s*vivienda/i,
-  /zonas?\s*de\s*mercado\s*residencial\s*tensionad/i,
+  /zonas?\s*(de\s*)?mercado\s*residencial\s*tensionad/i,
   /mercado\s*residencial\s*tensionado/i,
   /depósito\s*de\s*fianza/i,
   /fianzas?\s*de\s*arrendamientos?/i,
@@ -61,10 +61,7 @@ const EXCLUDE_PATTERNS: RegExp[] = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDateBOE(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}${m}${day}`;
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function formatDateISO(d: Date): string {
@@ -72,11 +69,9 @@ function formatDateISO(d: Date): string {
 }
 
 function isRelevant(text: string): boolean {
-  // First check exclusions
   for (const pat of EXCLUDE_PATTERNS) {
     if (pat.test(text)) return false;
   }
-  // Then check inclusions
   for (const pat of INCLUDE_PATTERNS) {
     if (pat.test(text)) return true;
   }
@@ -87,7 +82,31 @@ function isExcludedId(id: string): boolean {
   return id.startsWith("BOE-B-");
 }
 
-// ─── BOE API (JSON mode) ────────────────────────────────────────────────────
+// ─── XML Parsing ─────────────────────────────────────────────────────────────
+
+function extractTag(xml: string, tag: string): string {
+  const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
+  const match = xml.match(regex);
+  return match ? match[1].trim() : "";
+}
+
+function extractAttr(xml: string, tag: string, attr: string): string {
+  const regex = new RegExp(`<${tag}[^>]*\\s${attr}="([^"]*)"`, "i");
+  const match = xml.match(regex);
+  return match ? match[1] : "";
+}
+
+function extractAllBlocks(xml: string, tag: string): string[] {
+  const blocks: string[] = [];
+  const regex = new RegExp(`<${tag}[\\s>][\\s\\S]*?</${tag}>`, "gi");
+  let match;
+  while ((match = regex.exec(xml)) !== null) {
+    blocks.push(match[0]);
+  }
+  return blocks;
+}
+
+// ─── BOE API (XML) ──────────────────────────────────────────────────────────
 
 interface FoundItem {
   identificador: string;
@@ -99,18 +118,12 @@ interface FoundItem {
   departamento?: string;
 }
 
-const BOE_HEADERS = {
-  "Accept": "application/json",
-  "User-Agent": "ACROXIA-Monitor/3.0",
-};
-
 async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
   const url = `https://www.boe.es/datosabiertos/api/boe/sumario/${dateStr}`;
-  console.log(`[BOE] Sumario: ${url}`);
   const items: FoundItem[] = [];
 
   try {
-    const res = await fetch(url, { headers: BOE_HEADERS });
+    const res = await fetch(url, { headers: { "User-Agent": "ACROXIA-Monitor/3.0" } });
     if (res.status === 404) {
       console.log(`[BOE] ${dateStr}: 404, skip`);
       return items;
@@ -120,52 +133,55 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
       return items;
     }
 
-    const data = await res.json();
-    const pubDate = data?.data?.sumario_nbo?.metadatos?.fecha_publicacion || dateStr;
-    const formattedDate = pubDate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
-
-    // Navigate the JSON structure: data.data.sumario_nbo.diario[]
-    const diarios = data?.data?.sumario_nbo?.diario || [];
+    const xml = await res.text();
     
-    for (const diario of diarios) {
-      const secciones = diario?.seccion || [];
-      for (const seccion of secciones) {
-        const secCode = seccion?.codigo || "";
-        const departamentos = seccion?.departamento || [];
-        
-        for (const dept of departamentos) {
-          const deptName = dept?.nombre || "";
-          const epigrafes = dept?.epigrafe || [];
-          
-          for (const epigrafe of epigrafes) {
-            const itemList = epigrafe?.item || [];
-            
-            for (const item of itemList) {
-              const id = item?.identificador || "";
-              const titulo = item?.titulo || "";
-              
-              if (!id || !titulo) continue;
-              if (isExcludedId(id)) continue;
-              
-              const fullText = `${titulo} ${deptName}`;
-              if (!isRelevant(fullText)) continue;
+    // Check status code inside XML
+    const statusCode = extractTag(xml, "code");
+    if (statusCode && statusCode !== "200") {
+      console.warn(`[BOE] ${dateStr}: XML status ${statusCode}`);
+      return items;
+    }
 
-              const urlPdf = item?.url_pdf?.texto || item?.url_pdf || "";
-              const urlHtml = item?.url_html || `https://www.boe.es/diario_boe/txt.php?id=${id}`;
+    const pubDateRaw = extractTag(xml, "fecha_publicacion") || dateStr;
+    const formattedDate = pubDateRaw.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
 
-              items.push({
-                identificador: id,
-                titulo,
-                fecha: formattedDate,
-                fuente: "boe_sumario",
-                url: urlHtml || urlPdf,
-                seccion: secCode,
-                departamento: deptName,
-              });
+    // Parse: <seccion> → <departamento> → <epigrafe> → <item>
+    const secciones = extractAllBlocks(xml, "seccion");
 
-              console.log(`[BOE] ✓ MATCH: ${id} – ${titulo.substring(0, 80)}`);
-            }
-          }
+    for (const secXml of secciones) {
+      const secCode = extractAttr(secXml, "seccion", "codigo");
+      const secName = extractAttr(secXml, "seccion", "nombre");
+
+      const departamentos = extractAllBlocks(secXml, "departamento");
+      for (const deptXml of departamentos) {
+        const deptName = extractAttr(deptXml, "departamento", "nombre");
+
+        // Items can be inside <epigrafe> or directly in <departamento>
+        const itemBlocks = extractAllBlocks(deptXml, "item");
+
+        for (const itemXml of itemBlocks) {
+          const id = extractTag(itemXml, "identificador");
+          const titulo = extractTag(itemXml, "titulo");
+
+          if (!id || !titulo) continue;
+          if (isExcludedId(id)) continue;
+
+          const fullText = `${titulo} ${deptName} ${secName}`;
+          if (!isRelevant(fullText)) continue;
+
+          const urlHtml = extractTag(itemXml, "url_html") || `https://www.boe.es/diario_boe/txt.php?id=${id}`;
+
+          items.push({
+            identificador: id,
+            titulo,
+            fecha: formattedDate,
+            fuente: "boe_sumario",
+            url: urlHtml,
+            seccion: secCode,
+            departamento: deptName,
+          });
+
+          console.log(`[BOE] ✓ ${id} – ${titulo.substring(0, 100)}`);
         }
       }
     }
@@ -173,55 +189,6 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
     console.warn(`[BOE] Error sumario ${dateStr}:`, err);
   }
 
-  return items;
-}
-
-async function fetchLegislation(): Promise<FoundItem[]> {
-  const items: FoundItem[] = [];
-  const queries = [
-    "arrendamientos urbanos vivienda",
-    "mercado residencial tensionado",
-    "Ley 29/1994",
-    "Ley 12/2023 vivienda",
-  ];
-
-  for (const q of queries) {
-    try {
-      const url = `https://www.boe.es/datosabiertos/api/legislacion-consolidada?query=${encodeURIComponent(q)}&limit=20`;
-      console.log(`[BOE] Legislación: ${url}`);
-      const res = await fetch(url, { headers: BOE_HEADERS });
-      if (!res.ok) {
-        console.warn(`[BOE] Legislación "${q}": HTTP ${res.status}`);
-        continue;
-      }
-
-      const data = await res.json();
-      const resultItems = data?.data?.items || data?.items || [];
-      console.log(`[BOE] Legislación "${q}": ${resultItems.length} items`);
-
-      for (const item of resultItems) {
-        const id = item?.identificador || item?.id || "";
-        const titulo = item?.titulo || item?.title || "";
-        if (!id || !titulo) continue;
-        if (isExcludedId(id)) continue;
-
-        if (!isRelevant(titulo)) continue;
-
-        const urlHtml = item?.url_html || item?.url || "";
-        const fechaPub = item?.fecha_publicacion || item?.fecha || formatDateISO(new Date());
-
-        items.push({
-          identificador: id,
-          titulo,
-          fecha: fechaPub.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
-          fuente: "legislacion_consolidada",
-          url: urlHtml,
-        });
-      }
-    } catch (err) {
-      console.warn(`[BOE] Legislación error:`, err);
-    }
-  }
   return items;
 }
 
@@ -262,14 +229,12 @@ function buildEmailHtml(items: FoundItem[], fromDate: string, toDate: string): s
     <tr style="border-bottom:1px solid #E5E2DE;">
       <td style="padding:16px;">
         <div style="font-size:11px;color:#8B8680;margin-bottom:6px;">
-          ${item.identificador} · ${item.fuente === "boe_sumario" ? `Sección ${item.seccion || "?"}` : "Legislación consolidada"} · ${item.departamento || ""}
+          ${item.identificador} · Sección ${item.seccion || "?"} · ${item.departamento || ""}
         </div>
         <h3 style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#1F1D1B;margin:0 0 8px;line-height:1.4;">
           ${item.titulo}
         </h3>
-        <div>
-          <a href="${item.url}" style="display:inline-block;background:#1F1D1B;color:#FAF8F5;padding:8px 16px;border-radius:50px;text-decoration:none;font-size:13px;">Ver en BOE</a>
-        </div>
+        <a href="${item.url}" style="display:inline-block;background:#1F1D1B;color:#FAF8F5;padding:8px 16px;border-radius:50px;text-decoration:none;font-size:13px;">Ver en BOE</a>
       </td>
     </tr>
   `).join("");
@@ -283,7 +248,7 @@ function buildEmailHtml(items: FoundItem[], fromDate: string, toDate: string): s
       </div>
       <div style="padding:28px;">
         <div style="background:#E8F5E9;border-left:4px solid #22C55E;padding:14px 18px;margin-bottom:20px;">
-          <p style="margin:0;color:#1F1D1B;font-size:15px;"><strong>${items.length}</strong> novedad${items.length !== 1 ? "es" : ""} relevante${items.length !== 1 ? "s" : ""}</p>
+          <p style="margin:0;color:#1F1D1B;font-size:15px;"><strong>${items.length}</strong> novedad${items.length !== 1 ? "es" : ""}</p>
           <p style="margin:4px 0 0;color:#5C5752;font-size:13px;">Periodo: ${fromDate} → ${toDate}</p>
         </div>
         <table style="width:100%;border-collapse:collapse;">${rows}</table>
@@ -300,11 +265,9 @@ function buildEmailHtml(items: FoundItem[], fromDate: string, toDate: string): s
 
 async function sendNotification(items: FoundItem[], fromDate: string, toDate: string, resendKey: string | undefined): Promise<void> {
   if (!resendKey) {
-    console.warn("[NOTIFY] No RESEND_API_KEY, skipping email");
+    console.warn("[NOTIFY] No RESEND_API_KEY, skipping");
     return;
   }
-  const html = buildEmailHtml(items, fromDate, toDate);
-  const subject = `🔔 BOE: ${items.length} novedad${items.length !== 1 ? "es" : ""} arrendamientos – ${toDate}`;
   try {
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -313,8 +276,8 @@ async function sendNotification(items: FoundItem[], fromDate: string, toDate: st
         from: "ACROXIA Monitor <alertas@acroxia.com>",
         to: ["nuriafrancis@gmail.com"],
         reply_to: "contacto@acroxia.com",
-        subject,
-        html,
+        subject: `🔔 BOE: ${items.length} novedad${items.length !== 1 ? "es" : ""} arrendamientos – ${toDate}`,
+        html: buildEmailHtml(items, fromDate, toDate),
       }),
     });
     console.log(emailRes.ok ? "[NOTIFY] Email sent ✓" : `[NOTIFY] Email failed: ${await emailRes.text()}`);
@@ -346,11 +309,9 @@ async function handler(req: Request): Promise<Response> {
   };
 
   try {
-    // 1. Load state
     const state = await loadState(supabase);
     const seenSet = new Set(state.seen_ids);
 
-    // 2. Date range
     const lastChecked = new Date(state.last_checked);
     const fromDate = new Date(lastChecked);
     fromDate.setDate(fromDate.getDate() - LOOKBACK_OVERLAP_DAYS);
@@ -360,7 +321,7 @@ async function handler(req: Request): Promise<Response> {
     result.to = formatDateBOE(toDate);
     console.log(`[MONITOR v2] Range: ${result.from} → ${result.to}, seen: ${seenSet.size}`);
 
-    // 3. Fetch summaries day by day
+    // Fetch summaries day by day
     const allItems: FoundItem[] = [];
     const current = new Date(fromDate);
     while (current <= toDate) {
@@ -369,16 +330,10 @@ async function handler(req: Request): Promise<Response> {
       current.setDate(current.getDate() + 1);
     }
     result.detalle_fuentes.boe_sumario = allItems.length;
-
-    // 4. Fetch legislation
-    const legItems = await fetchLegislation();
-    allItems.push(...legItems);
-    result.detalle_fuentes.legislacion_consolidada = legItems.length;
-
     result.encontrados = allItems.length;
-    console.log(`[MONITOR v2] Found: ${allItems.length} (sumario: ${result.detalle_fuentes.boe_sumario}, leg: ${result.detalle_fuentes.legislacion_consolidada})`);
+    console.log(`[MONITOR v2] Found: ${allItems.length} relevant items from sumarios`);
 
-    // 5. Deduplicate
+    // Deduplicate
     const newItems: FoundItem[] = [];
     for (const item of allItems) {
       const dedupeKey = item.identificador || `${item.fuente}|${item.fecha}|${item.titulo}`;
@@ -390,7 +345,7 @@ async function handler(req: Request): Promise<Response> {
     result.nuevos = newItems.length;
     console.log(`[MONITOR v2] New: ${newItems.length}`);
 
-    // 6. Insert into boe_publications
+    // Insert into boe_publications
     if (newItems.length > 0) {
       const { error: insertErr } = await supabase
         .from("boe_publications")
@@ -413,19 +368,17 @@ async function handler(req: Request): Promise<Response> {
         result.aviso = `Error al insertar: ${insertErr.message}`;
       }
 
-      // 7. Send notification
       await sendNotification(newItems, formatDateISO(fromDate), formatDateISO(toDate), resendKey);
     }
 
-    // 8. Save state (always)
+    // Save state always
     state.last_checked = formatDateISO(toDate);
     state.seen_ids = Array.from(seenSet);
     await saveState(supabase, state);
 
-    // 9. Log
+    // Log
     await supabase.from("boe_monitoring_logs").insert({
-      source,
-      success: true,
+      source, success: true,
       publications_found: result.encontrados,
       new_publications: result.nuevos,
       error_message: result.aviso,
