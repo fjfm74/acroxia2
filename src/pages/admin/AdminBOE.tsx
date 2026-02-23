@@ -159,16 +159,10 @@ export default function AdminBOE() {
   // Process approved publication into legal document
   const processPublicationMutation = useMutation({
     mutationFn: async (pub: BOEPublication) => {
-      if (!pub.pdf_url) throw new Error("No hay PDF disponible");
+      const sourceUrl = pub.boe_url || `https://www.boe.es/diario_boe/txt.php?id=${pub.boe_id}`;
       setProcessingId(pub.id);
-      const pdfResponse = await fetch(pub.pdf_url);
-      if (!pdfResponse.ok) throw new Error("Error al descargar el PDF");
-      const pdfBlob = await pdfResponse.blob();
-      const fileName = `boe-${pub.boe_id.replace(/[^a-zA-Z0-9]/g, "-")}-${Date.now()}.pdf`;
-      const { error: uploadError } = await supabase.storage
-        .from("legal-docs")
-        .upload(fileName, pdfBlob, { contentType: "application/pdf", upsert: false });
-      if (uploadError) throw new Error(`Upload: ${uploadError.message}`);
+
+      // Create legal document entry directly (source_type: 'url', no file upload needed)
       const { data: docData, error: docError } = await supabase
         .from("legal_documents")
         .insert({
@@ -176,19 +170,25 @@ export default function AdminBOE() {
           description: pub.summary || `Publicación BOE: ${pub.boe_id}`,
           type: "boe" as const,
           jurisdiction: "estatal" as const,
-          source: pub.boe_url || `https://www.boe.es/diario_boe/txt.php?id=${pub.boe_id}`,
+          source: sourceUrl,
+          source_url: sourceUrl,
+          source_type: "url",
           effective_date: pub.publication_date,
-          file_path: fileName,
+          file_path: null,
           is_active: true
         })
         .select()
         .single();
       if (docError) throw new Error(`Doc: ${docError.message}`);
+
+      // Trigger AI processing via edge function
       const { error: processError } = await supabase.functions.invoke(
         "process-legal-document",
-        { body: { documentId: docData.id, filePath: fileName } }
+        { body: { documentId: docData.id, sourceUrl } }
       );
       if (processError) toast.warning("Documento creado pero pendiente de procesar con IA");
+
+      // Mark BOE publication as processed
       const { error: updateError } = await supabase
         .from("boe_publications")
         .update({ status: "processed", processed_document_id: docData.id, reviewed_at: new Date().toISOString() })
@@ -198,11 +198,11 @@ export default function AdminBOE() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["boe-publications"] });
-      toast.success(`Procesado: ${data.title.substring(0, 50)}...`);
+      toast.success(`Procesado y enviado a Documentos Legales: ${data.title.substring(0, 50)}...`);
       setProcessingId(null);
     },
     onError: (error: Error) => {
-      toast.error("Error: " + error.message);
+      toast.error("Error al procesar: " + error.message);
       setProcessingId(null);
     }
   });
@@ -428,10 +428,15 @@ export default function AdminBOE() {
                                   </Button>
                                 </>
                               )}
-                              {pub.status === "approved" && (
+                              {(pub.status === "approved" || pub.status === "pending_review") && (
                                 <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  onClick={() => processPublicationMutation.mutate(pub)}
-                                  disabled={processingId === pub.id || !pub.pdf_url}>
+                                  onClick={() => {
+                                    if (pub.status === "pending_review") {
+                                      updateStatusMutation.mutate({ id: pub.id, status: "approved" });
+                                    }
+                                    processPublicationMutation.mutate(pub);
+                                  }}
+                                  disabled={processingId === pub.id}>
                                   {processingId === pub.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                                   <span className="ml-1 text-xs">Procesar</span>
                                 </Button>
