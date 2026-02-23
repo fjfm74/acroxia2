@@ -68,14 +68,14 @@ function formatDateISO(d: Date): string {
   return d.toISOString().split("T")[0];
 }
 
-function isRelevant(text: string): boolean {
+function isRelevant(text: string, id?: string): { relevant: boolean; reason: string } {
   for (const pat of EXCLUDE_PATTERNS) {
-    if (pat.test(text)) return false;
+    if (pat.test(text)) return { relevant: false, reason: `EXCLUDED by ${pat.source}` };
   }
   for (const pat of INCLUDE_PATTERNS) {
-    if (pat.test(text)) return true;
+    if (pat.test(text)) return { relevant: true, reason: `INCLUDED by ${pat.source}` };
   }
-  return false;
+  return { relevant: false, reason: "NO_MATCH" };
 }
 
 function isExcludedId(id: string): boolean {
@@ -170,10 +170,25 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
           const titulo = extractTag(itemXml, "titulo");
 
           if (!id || !titulo) continue;
-          if (isExcludedId(id)) continue;
+          if (isExcludedId(id)) {
+            console.log(`[BOE] ✗ ${id} – EXCLUDED (BOE-B- prefix)`);
+            continue;
+          }
 
           const fullText = `${titulo} ${deptName} ${secName}`;
-          if (!isRelevant(fullText)) continue;
+          const { relevant, reason } = isRelevant(fullText, id);
+          
+          if (!relevant) {
+            // Log excluded and no-match items for debugging
+            if (reason.startsWith("EXCLUDED")) {
+              console.log(`[BOE] ✗ ${id} – ${reason} – ${titulo.substring(0, 120)}`);
+            }
+            // Log ALL items from sections 1 and 2 (legislative sections) even if no match
+            if (secCode === "1" || secCode === "2" || secCode === "2A" || secCode === "2B") {
+              console.log(`[BOE] ? ${id} [S${secCode}] – ${reason} – ${titulo.substring(0, 150)}`);
+            }
+            continue;
+          }
 
           const urlHtml = extractTag(itemXml, "url_html") || `https://www.boe.es/diario_boe/txt.php?id=${id}`;
 
@@ -187,7 +202,7 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
             departamento: deptName,
           });
 
-          console.log(`[BOE] ✓ ${id} – ${titulo.substring(0, 100)}`);
+          console.log(`[BOE] ✓ ${id} [S${secCode}] – ${reason} – ${titulo.substring(0, 100)}`);
         }
       }
     }
