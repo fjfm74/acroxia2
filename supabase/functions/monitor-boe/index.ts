@@ -12,72 +12,72 @@ const BOOTSTRAP_DAYS = 45;
 const LOOKBACK_OVERLAP_DAYS = 2;
 const MAX_SEEN = 5000;
 
-// ─── Relevance: INCLUDE patterns ─────────────────────────────────────────────
-const INCLUDE_PATTERNS: RegExp[] = [
-  // Core rental legislation
-  /ley\s*29\/1994/i,
-  /arrendamientos?\s*urbanos?/i,
-  /ley\s*12\/2023/i,
-  /derecho\s*a\s*la\s*vivienda/i,
-  /\birav\b/i,
-  /índice\s*de\s*referencia\s*de\s*arrendamientos?\s*de\s*vivienda/i,
-  // Tensioned zones
-  /zonas?\s*(de\s*)?mercado\s*residencial\s*tensionad/i,
-  /mercado\s*residencial\s*tensionado/i,
-  // Financial aspects
-  /depósito\s*de\s*fianza/i,
-  /fianzas?\s*de\s*arrendamientos?/i,
-  /gastos?\s*de\s*gestión\s*inmobiliaria/i,
-  /garantía\s*adicional/i,
-  /actualización\s*de\s*renta/i,
-  /subida\s*(de(l)?\s*)?alquiler/i,
-  // Contract lifecycle
-  /prórroga.{0,30}arrendamiento/i,
-  /preaviso.{0,30}arrendamiento/i,
-  /arrendamiento.{0,30}prórroga/i,
-  /arrendamiento.{0,30}preaviso/i,
-  /contrato\s*de\s*alquiler\s*residencial/i,
-  /arrendamiento\s*de\s*vivienda/i,
-  /renta\s*de\s*alquiler/i,
-  // Housing laws (autonómicas y estatales)
-  /\bley\b.{0,20}\bvivienda\b/i,
-  /\bvivienda\b.{0,20}\b(ley|decreto|real\s*decreto|orden)\b/i,
-  /\bpolítica\s*(de\s*)?vivienda\b/i,
-  /\bparque\s*(público\s*)?de\s*vivienda/i,
-  /vivienda\s*(protegida|social|asequible|habitual)/i,
-  /alquiler\s*(social|asequible|protegido)/i,
-  // Evictions & tenants
-  /desahucio/i,
-  /lanzamiento.{0,30}(vivienda|arrendamiento|inquilino)/i,
-  /\binquilino/i,
-  /\barrendatario/i,
-  /\barrendador/i,
-  // Abusive clauses
-  /cláusula.{0,20}(abusiva|nula).{0,30}(alquiler|arrendamiento|vivienda)/i,
-  // Registry & government
-  /registro\s*de\s*contratos\s*de\s*arrendamiento/i,
-  /secretaría\s*de\s*estado\s*de\s*vivienda/i,
+// ─── INCLUDE_STRONG: patrones de inclusión directa ───────────────────────────
+const INCLUDE_STRONG: { label: string; pattern: RegExp }[] = [
+  { label: "LAU_29_1994", pattern: /arrendamientos?\s+urbanos?|ley\s+29\/1994/i },
+  { label: "LEY_12_2023", pattern: /ley\s+12\/2023|derecho\s+a\s+la\s+vivienda/i },
+  { label: "IRAV", pattern: /\birav\b|índice\s+de\s+referencia\s+de\s+arrendamientos\s+de\s+vivienda/i },
+  { label: "ZONA_TENSIONADA", pattern: /zona(?:s)?\s+de\s+mercado\s+residencial\s+tensionad/i },
+  { label: "LEY_VIVIENDA_CCAA", pattern: /ley\s+\d+\/\d{4}.*\bde\s+vivienda\b/i },
+  { label: "DECRETO_VIVIENDA", pattern: /decreto-ley\s+\d+\/\d{4}.*\b(vivienda|alquiler|arrendamiento)\b/i },
+  { label: "DEPOSITO_FIANZA", pattern: /dep[oó]sito\s+de\s+fianza|fianzas?\s+de\s+arrendamientos/i },
+  { label: "GASTOS_GESTION", pattern: /gastos\s+de\s+gesti[oó]n\s+inmobiliaria/i },
+  { label: "GARANTIA_ADICIONAL", pattern: /garant[ií]a\s+adicional.{0,40}(arrend|alquiler)/i },
+  { label: "ACTUALIZACION_RENTA", pattern: /actualizaci[oó]n\s+de\s+renta.{0,40}(arrend|alquiler)|subida\s+del\s+alquiler/i },
+  { label: "PRORROGA", pattern: /pr[oó]rroga.{0,40}(arrend|alquiler|contrato\s+de\s+alquiler)/i },
+  { label: "PREAVISO", pattern: /preaviso.{0,40}(arrend|alquiler|contrato\s+de\s+alquiler)/i },
+  { label: "MERCADO_TENSIONADO", pattern: /mercado\s+residencial\s+tensionado/i },
+  { label: "VIVIENDA_PROTEGIDA", pattern: /vivienda\s+(protegida|social|asequible|habitual)/i },
+  { label: "ALQUILER_SOCIAL", pattern: /alquiler\s+(social|asequible|protegido)/i },
+  { label: "DESAHUCIO", pattern: /desahucio/i },
+  { label: "POLITICA_VIVIENDA", pattern: /\bpolítica\s+(de\s+)?vivienda\b/i },
+  { label: "PARQUE_VIVIENDA", pattern: /\bparque\s+(público\s+)?de\s+vivienda/i },
+  { label: "CONTRATO_ALQUILER", pattern: /contrato\s+de\s+alquiler\s+residencial/i },
+  { label: "ARRENDAMIENTO_VIVIENDA", pattern: /arrendamiento\s+de\s+vivienda/i },
+  { label: "RENTA_ALQUILER", pattern: /renta\s+de\s+alquiler/i },
+  { label: "REGISTRO_CONTRATOS", pattern: /registro\s+de\s+contratos\s+de\s+arrendamiento/i },
+  { label: "SECRETARIA_VIVIENDA", pattern: /secretaría\s+de\s+estado\s+de\s+vivienda/i },
+  { label: "INQUILINO", pattern: /\binquilino/i },
+  { label: "ARRENDATARIO", pattern: /\barrendatario/i },
+  { label: "ARRENDADOR", pattern: /\barrendador/i },
+  { label: "CLAUSULA_ABUSIVA", pattern: /cláusula.{0,20}(abusiva|nula).{0,30}(alquiler|arrendamiento|vivienda)/i },
+  { label: "LANZAMIENTO_VIVIENDA", pattern: /lanzamiento.{0,30}(vivienda|arrendamiento|inquilino)/i },
+  { label: "LEY_VIVIENDA_GENERIC", pattern: /\bley\b.{0,20}\bvivienda\b/i },
+  { label: "VIVIENDA_DECRETO", pattern: /\bvivienda\b.{0,20}\b(ley|decreto|real\s+decreto|orden)\b/i },
 ];
 
-// ─── Relevance: EXCLUDE patterns (strict) ────────────────────────────────────
-const EXCLUDE_PATTERNS: RegExp[] = [
-  /alquiler\s*de\s*corta\s*duración/i,
-  /uso\s*turístico/i,
+// ─── Jurisprudencia constitucional relevante ─────────────────────────────────
+function isConstitucionalRelevant(text: string): boolean {
+  if (!/sentencia/i.test(text)) return false;
+  if (!/recurso\s+de\s+inconstitucionalidad/i.test(text)) return false;
+  return /ley\s+12\/2023|vivienda|arrendamientos?\s+urbanos?/i.test(text);
+}
+
+// ─── EXCLUDE: patrones de exclusión dura ─────────────────────────────────────
+const EXCLUDE_HARD: { label: string; pattern: RegExp }[] = [
+  { label: "TURISMO_CORTA", pattern: /alquiler\s+de\s+corta\s+duración/i },
+  { label: "USO_TURISTICO", pattern: /uso\s+turístico/i },
+  { label: "TURISTICO", pattern: /turístic[oa]/i },
+  { label: "VACACIONAL", pattern: /vacacional/i },
+  { label: "NUM_REGISTRO", pattern: /número\s+de\s+registro/i },
+  { label: "REGISTRO_UNICO", pattern: /registro\s+único/i },
+  { label: "CODIGO_ALQUILER", pattern: /código\s+de\s+alquiler/i },
+  { label: "LICITACION", pattern: /anuncio\s+de\s+(licitación|formalización|adjudicación)/i },
+  { label: "EXPEDIENTE", pattern: /expediente\s*:/i },
+  { label: "OBJETO", pattern: /objeto\s*:/i },
+  { label: "ARREND_NO_RESID", pattern: /arrendamiento\s+de\s+(vehículos?|equipos?|licencias?|maquinaria|software)/i },
+  { label: "IRPF", pattern: /\birpf\b/i },
+  { label: "IVA", pattern: /\biva\b/i },
+  { label: "IRENTA", pattern: /impuesto\s+sobre\s+la\s+renta/i },
+  { label: "IVA_LARGO", pattern: /impuesto\s+sobre\s+(el\s+)?valor\s+añadido/i },
+];
+
+// ─── DGSJFP conditional: solo excluir si contiene turístico/corta duración ───
+const DGSJFP_EXCLUDE_IF: RegExp[] = [
   /turístic[oa]/i,
+  /corta\s+duración/i,
+  /registro\s+único/i,
   /vacacional/i,
-  /número\s*de\s*registro/i,
-  /registro\s*único/i,
-  /código\s*de\s*alquiler/i,
-  /anuncio\s*de\s*(licitación|formalización|adjudicación)/i,
-  /expediente\s*:/i,
-  /objeto\s*:/i,
-  /arrendamiento\s*de\s*(vehículos?|equipos?|licencias?|maquinaria|software)/i,
-  /\birpf\b/i,
-  /\biva\b/i,
-  /impuesto\s*sobre\s*la\s*renta/i,
-  /impuesto\s*sobre\s*(el\s*)?valor\s*añadido/i,
-  /dgsjfp/i,
-  /recurso\s*registral.{0,40}turístic/i,
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -90,18 +90,59 @@ function formatDateISO(d: Date): string {
   return d.toISOString().split("T")[0];
 }
 
-function isRelevant(text: string, id?: string): { relevant: boolean; reason: string } {
-  for (const pat of EXCLUDE_PATTERNS) {
-    if (pat.test(text)) return { relevant: false, reason: `EXCLUDED by ${pat.source}` };
-  }
-  for (const pat of INCLUDE_PATTERNS) {
-    if (pat.test(text)) return { relevant: true, reason: `INCLUDED by ${pat.source}` };
-  }
-  return { relevant: false, reason: "NO_MATCH" };
+// Audit counters
+interface AuditCounters {
+  evaluated: number;
+  excluded: number;
+  no_match: number;
+  matched: number;
+  inserted: number;
+  duplicates: number;
+  errors: number;
+  excludeReasons: Record<string, number>;
+  includeReasons: Record<string, number>;
+  insertedIds: string[];
+}
+
+function newAudit(): AuditCounters {
+  return { evaluated: 0, excluded: 0, no_match: 0, matched: 0, inserted: 0, duplicates: 0, errors: 0, excludeReasons: {}, includeReasons: {}, insertedIds: [] };
 }
 
 function isExcludedId(id: string): boolean {
   return id.startsWith("BOE-B-");
+}
+
+function classify(text: string, id: string): { action: "INCLUDE" | "EXCLUDE" | "NO_MATCH"; reason: string } {
+  // 1. Hard exclude
+  for (const { label, pattern } of EXCLUDE_HARD) {
+    if (pattern.test(text)) {
+      return { action: "EXCLUDE", reason: label };
+    }
+  }
+
+  // 2. DGSJFP conditional
+  if (/dgsjfp/i.test(text)) {
+    for (const pat of DGSJFP_EXCLUDE_IF) {
+      if (pat.test(text)) {
+        return { action: "EXCLUDE", reason: "DGSJFP_TURISTICO" };
+      }
+    }
+    // If DGSJFP but not touristic, fall through to normal evaluation
+  }
+
+  // 3. Jurisprudencia constitucional
+  if (isConstitucionalRelevant(text)) {
+    return { action: "INCLUDE", reason: "JURISPRUD_CONSTITUCIONAL" };
+  }
+
+  // 4. Strong include
+  for (const { label, pattern } of INCLUDE_STRONG) {
+    if (pattern.test(text)) {
+      return { action: "INCLUDE", reason: label };
+    }
+  }
+
+  return { action: "NO_MATCH", reason: "NO_MATCH" };
 }
 
 // ─── XML Parsing ─────────────────────────────────────────────────────────────
@@ -140,14 +181,14 @@ interface FoundItem {
   departamento?: string;
 }
 
-async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
+async function fetchSummary(dateStr: string, audit: AuditCounters): Promise<FoundItem[]> {
   const url = `https://www.boe.es/datosabiertos/api/boe/sumario/${dateStr}`;
   const items: FoundItem[] = [];
 
   try {
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "application/xml, text/xml, */*",
         "Accept-Language": "es-ES,es;q=0.9",
       },
@@ -162,8 +203,6 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
     }
 
     const xml = await res.text();
-    
-    // Check status code inside XML
     const statusCode = extractTag(xml, "code");
     if (statusCode && statusCode !== "200") {
       console.warn(`[BOE] ${dateStr}: XML status ${statusCode}`);
@@ -173,47 +212,53 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
     const pubDateRaw = extractTag(xml, "fecha_publicacion") || dateStr;
     const formattedDate = pubDateRaw.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
 
-    // Parse: <seccion> → <departamento> → <epigrafe> → <item>
     const secciones = extractAllBlocks(xml, "seccion");
 
     for (const secXml of secciones) {
       const secCode = extractAttr(secXml, "seccion", "codigo");
       const secName = extractAttr(secXml, "seccion", "nombre");
-
       const departamentos = extractAllBlocks(secXml, "departamento");
+
       for (const deptXml of departamentos) {
         const deptName = extractAttr(deptXml, "departamento", "nombre");
-
-        // Items can be inside <epigrafe> or directly in <departamento>
         const itemBlocks = extractAllBlocks(deptXml, "item");
 
         for (const itemXml of itemBlocks) {
           const id = extractTag(itemXml, "identificador");
           const titulo = extractTag(itemXml, "titulo");
-
           if (!id || !titulo) continue;
+
+          audit.evaluated++;
+
           if (isExcludedId(id)) {
-            console.log(`[BOE] ✗ ${id} – EXCLUDED (BOE-B- prefix)`);
+            audit.excluded++;
+            audit.excludeReasons["BOE-B-PREFIX"] = (audit.excludeReasons["BOE-B-PREFIX"] || 0) + 1;
             continue;
           }
 
           const fullText = `${titulo} ${deptName} ${secName}`;
-          const { relevant, reason } = isRelevant(fullText, id);
-          
-          if (!relevant) {
-            // Log excluded and no-match items for debugging
-            if (reason.startsWith("EXCLUDED")) {
-              console.log(`[BOE] ✗ ${id} – ${reason} – ${titulo.substring(0, 120)}`);
-            }
-            // Log ALL items from sections 1 and 2 (legislative sections) even if no match
+          const { action, reason } = classify(fullText, id);
+
+          if (action === "EXCLUDE") {
+            audit.excluded++;
+            audit.excludeReasons[reason] = (audit.excludeReasons[reason] || 0) + 1;
+            console.log(`[BOE] ✗ ${id} – EXCLUDED:${reason} – ${titulo.substring(0, 120)}`);
+            continue;
+          }
+
+          if (action === "NO_MATCH") {
+            audit.no_match++;
             if (secCode === "1" || secCode === "2" || secCode === "2A" || secCode === "2B") {
-              console.log(`[BOE] ? ${id} [S${secCode}] – ${reason} – ${titulo.substring(0, 150)}`);
+              console.log(`[BOE] ? ${id} [S${secCode}] – NO_MATCH – ${titulo.substring(0, 150)}`);
             }
             continue;
           }
 
-          const urlHtml = extractTag(itemXml, "url_html") || `https://www.boe.es/diario_boe/txt.php?id=${id}`;
+          // INCLUDE
+          audit.matched++;
+          audit.includeReasons[reason] = (audit.includeReasons[reason] || 0) + 1;
 
+          const urlHtml = extractTag(itemXml, "url_html") || `https://www.boe.es/diario_boe/txt.php?id=${id}`;
           items.push({
             identificador: id,
             titulo,
@@ -224,12 +269,13 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
             departamento: deptName,
           });
 
-          console.log(`[BOE] ✓ ${id} [S${secCode}] – ${reason} – ${titulo.substring(0, 100)}`);
+          console.log(`[BOE] ✓ ${id} [S${secCode}] – ${reason} – ${titulo.substring(0, 120)}`);
         }
       }
     }
   } catch (err) {
     console.warn(`[BOE] Error sumario ${dateStr}:`, err);
+    audit.errors++;
   }
 
   return items;
@@ -329,6 +375,21 @@ async function sendNotification(items: FoundItem[], fromDate: string, toDate: st
   }
 }
 
+// ─── Audit logging ──────────────────────────────────────────────────────────
+
+function logAuditSummary(audit: AuditCounters, fromDate: string, toDate: string, seenCount: number): void {
+  console.log(`[MONITOR v2] Summary: evaluated=${audit.evaluated} excluded=${audit.excluded} no_match=${audit.no_match} matched=${audit.matched} inserted=${audit.inserted} duplicates=${audit.duplicates} errors=${audit.errors}`);
+
+  const topExcl = Object.entries(audit.excludeReasons).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(", ");
+  console.log(`[MONITOR v2] TopExclusions: ${topExcl || "none"}`);
+
+  const topIncl = Object.entries(audit.includeReasons).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(", ");
+  console.log(`[MONITOR v2] TopIncludes: ${topIncl || "none"}`);
+
+  console.log(`[MONITOR v2] Inserted IDs: ${audit.insertedIds.length > 0 ? audit.insertedIds.join(", ") : "none"}`);
+  console.log(`[MONITOR v2] Range: ${fromDate} → ${toDate}, seen: ${seenCount}`);
+}
+
 // ─── Main Handler ────────────────────────────────────────────────────────────
 
 async function handler(req: Request): Promise<Response> {
@@ -345,10 +406,13 @@ async function handler(req: Request): Promise<Response> {
   try { const body = await req.json(); source = body.source || "manual"; } catch { /* no body */ }
 
   console.log(`[MONITOR v2] Started – source: ${source}`);
+  const audit = newAudit();
+
   const result: any = {
-    ok: false, from: "", to: "", encontrados: 0, nuevos: 0,
+    ok: false, from: "", to: "",
+    evaluated: 0, excluded: 0, no_match: 0, matched: 0,
+    inserted: 0, duplicates: 0, errors: 0,
     detalle_fuentes: { legislacion_consolidada: 0, boe_sumario: 0 },
-    aviso: null,
   };
 
   try {
@@ -360,21 +424,21 @@ async function handler(req: Request): Promise<Response> {
     fromDate.setDate(fromDate.getDate() - LOOKBACK_OVERLAP_DAYS);
     const toDate = new Date();
 
-    result.from = formatDateBOE(fromDate);
-    result.to = formatDateBOE(toDate);
-    console.log(`[MONITOR v2] Range: ${result.from} → ${result.to}, seen: ${seenSet.size}`);
+    const fromStr = formatDateBOE(fromDate);
+    const toStr = formatDateBOE(toDate);
+    result.from = fromStr;
+    result.to = toStr;
+    console.log(`[MONITOR v2] Range: ${fromStr} → ${toStr}, seen: ${seenSet.size}`);
 
     // Fetch summaries day by day
     const allItems: FoundItem[] = [];
     const current = new Date(fromDate);
     while (current <= toDate) {
-      const dayItems = await fetchSummary(formatDateBOE(current));
+      const dayItems = await fetchSummary(formatDateBOE(current), audit);
       allItems.push(...dayItems);
       current.setDate(current.getDate() + 1);
     }
     result.detalle_fuentes.boe_sumario = allItems.length;
-    result.encontrados = allItems.length;
-    console.log(`[MONITOR v2] Found: ${allItems.length} relevant items from sumarios`);
 
     // Deduplicate
     const newItems: FoundItem[] = [];
@@ -383,10 +447,10 @@ async function handler(req: Request): Promise<Response> {
       if (!seenSet.has(dedupeKey)) {
         seenSet.add(dedupeKey);
         newItems.push(item);
+      } else {
+        audit.duplicates++;
       }
     }
-    result.nuevos = newItems.length;
-    console.log(`[MONITOR v2] New: ${newItems.length}`);
 
     // Insert into boe_publications
     if (newItems.length > 0) {
@@ -408,38 +472,54 @@ async function handler(req: Request): Promise<Response> {
         );
       if (insertErr) {
         console.error("[MONITOR v2] Insert error:", insertErr);
-        result.aviso = `Error al insertar: ${insertErr.message}`;
+        audit.errors++;
+      } else {
+        audit.inserted = newItems.length;
+        audit.insertedIds = newItems.map(i => i.identificador);
       }
 
       await sendNotification(newItems, formatDateISO(fromDate), formatDateISO(toDate), resendKey);
     }
 
-    // Save state always
+    // Save state
     state.last_checked = formatDateISO(toDate);
     state.seen_ids = Array.from(seenSet);
     await saveState(supabase, state);
 
+    // Populate result
+    result.evaluated = audit.evaluated;
+    result.excluded = audit.excluded;
+    result.no_match = audit.no_match;
+    result.matched = audit.matched;
+    result.inserted = audit.inserted;
+    result.duplicates = audit.duplicates;
+    result.errors = audit.errors;
+
     // Log
     await supabase.from("boe_monitoring_logs").insert({
       source, success: true,
-      publications_found: result.encontrados,
-      new_publications: result.nuevos,
-      error_message: result.aviso,
+      publications_found: audit.matched,
+      new_publications: audit.inserted,
+      error_message: audit.errors > 0 ? `${audit.errors} errors during run` : null,
     });
 
+    logAuditSummary(audit, fromStr, toStr, seenSet.size);
+
     result.ok = true;
-    console.log(`[MONITOR v2] Done – ${JSON.stringify(result)}`);
+    console.log(`[MONITOR v2] Done ✓`);
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
     console.error("[MONITOR v2] Fatal:", err);
-    result.aviso = err.message || "Unknown error";
+    audit.errors++;
+    logAuditSummary(audit, result.from, result.to, 0);
+
     await supabase.from("boe_monitoring_logs").insert({
-      source, success: false, publications_found: result.encontrados,
-      new_publications: result.nuevos, error_message: result.aviso, retry_pending: true,
+      source, success: false, publications_found: audit.matched,
+      new_publications: audit.inserted, error_message: err.message || "Unknown error", retry_pending: true,
     });
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify({ ...result, ok: false, errors: audit.errors }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
