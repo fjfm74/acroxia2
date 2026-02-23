@@ -184,7 +184,7 @@ export default function AdminBOE() {
       // Trigger AI processing via edge function
       const { error: processError } = await supabase.functions.invoke(
         "process-legal-document",
-        { body: { documentId: docData.id, sourceUrl } }
+        { body: { documentId: docData.id, sourceUrl, sourceType: "url" } }
       );
       if (processError) toast.warning("Documento creado pero pendiente de procesar con IA");
 
