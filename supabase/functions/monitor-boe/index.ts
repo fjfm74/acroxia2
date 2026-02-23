@@ -14,20 +14,24 @@ const MAX_SEEN = 5000;
 
 // ─── Relevance: INCLUDE patterns ─────────────────────────────────────────────
 const INCLUDE_PATTERNS: RegExp[] = [
+  // Core rental legislation
   /ley\s*29\/1994/i,
   /arrendamientos?\s*urbanos?/i,
   /ley\s*12\/2023/i,
   /derecho\s*a\s*la\s*vivienda/i,
   /\birav\b/i,
   /índice\s*de\s*referencia\s*de\s*arrendamientos?\s*de\s*vivienda/i,
+  // Tensioned zones
   /zonas?\s*(de\s*)?mercado\s*residencial\s*tensionad/i,
   /mercado\s*residencial\s*tensionado/i,
+  // Financial aspects
   /depósito\s*de\s*fianza/i,
   /fianzas?\s*de\s*arrendamientos?/i,
   /gastos?\s*de\s*gestión\s*inmobiliaria/i,
   /garantía\s*adicional/i,
   /actualización\s*de\s*renta/i,
   /subida\s*(de(l)?\s*)?alquiler/i,
+  // Contract lifecycle
   /prórroga.{0,30}arrendamiento/i,
   /preaviso.{0,30}arrendamiento/i,
   /arrendamiento.{0,30}prórroga/i,
@@ -35,6 +39,24 @@ const INCLUDE_PATTERNS: RegExp[] = [
   /contrato\s*de\s*alquiler\s*residencial/i,
   /arrendamiento\s*de\s*vivienda/i,
   /renta\s*de\s*alquiler/i,
+  // Housing laws (autonómicas y estatales)
+  /\bley\b.{0,20}\bvivienda\b/i,
+  /\bvivienda\b.{0,20}\b(ley|decreto|real\s*decreto|orden)\b/i,
+  /\bpolítica\s*(de\s*)?vivienda\b/i,
+  /\bparque\s*(público\s*)?de\s*vivienda/i,
+  /vivienda\s*(protegida|social|asequible|habitual)/i,
+  /alquiler\s*(social|asequible|protegido)/i,
+  // Evictions & tenants
+  /desahucio/i,
+  /lanzamiento.{0,30}(vivienda|arrendamiento|inquilino)/i,
+  /\binquilino/i,
+  /\barrendatario/i,
+  /\barrendador/i,
+  // Abusive clauses
+  /cláusula.{0,20}(abusiva|nula).{0,30}(alquiler|arrendamiento|vivienda)/i,
+  // Registry & government
+  /registro\s*de\s*contratos\s*de\s*arrendamiento/i,
+  /secretaría\s*de\s*estado\s*de\s*vivienda/i,
 ];
 
 // ─── Relevance: EXCLUDE patterns (strict) ────────────────────────────────────
