@@ -9,34 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { 
-  RefreshCw, 
-  FileText, 
-  ExternalLink, 
-  Check, 
-  X, 
-  Clock,
-  AlertCircle,
-  Download,
-  Settings,
-  History,
-  Link as LinkIcon,
-  Loader2
+  RefreshCw, FileText, ExternalLink, Check, X, Clock,
+  AlertCircle, Download, Settings, History, Link as LinkIcon, Loader2,
+  Database, Zap
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -69,11 +51,9 @@ interface MonitoringLog {
   retry_pending: boolean;
 }
 
-interface MonitoringConfig {
-  enabled: boolean;
-  notification_emails: string[];
-  search_terms: string[];
-  sections: string[];
+interface MonitorState {
+  last_checked: string;
+  seen_ids: string[];
 }
 
 const statusConfig = {
@@ -89,6 +69,7 @@ export default function AdminBOE() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isRunningManual, setIsRunningManual] = useState(false);
+  const [lastRunResult, setLastRunResult] = useState<any>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Fetch publications
@@ -99,11 +80,7 @@ export default function AdminBOE() {
         .from("boe_publications")
         .select("*")
         .order("publication_date", { ascending: false });
-      
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
-      }
-      
+      if (statusFilter !== "all") query = query.eq("status", statusFilter);
       const { data, error } = await query;
       if (error) throw error;
       return data as BOEPublication[];
@@ -119,24 +96,22 @@ export default function AdminBOE() {
         .select("*")
         .order("check_time", { ascending: false })
         .limit(50);
-      
       if (error) throw error;
       return data as MonitoringLog[];
     }
   });
 
-  // Fetch config
-  const { data: config } = useQuery({
-    queryKey: ["boe-config"],
+  // Fetch monitor state
+  const { data: monitorState } = useQuery({
+    queryKey: ["monitor-state"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("site_config")
-        .select("value")
-        .eq("key", "boe_monitoring_config")
-        .single() as { data: { value: MonitoringConfig } | null; error: any };
-      
+        .from("legal_monitor_state")
+        .select("value, updated_at")
+        .eq("key", "arrendamientos_monitor_v1")
+        .maybeSingle();
       if (error) throw error;
-      return data?.value as MonitoringConfig;
+      return data as unknown as { value: MonitorState; updated_at: string } | null;
     }
   });
 
@@ -145,43 +120,37 @@ export default function AdminBOE() {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
         .from("boe_publications")
-        .update({ 
-          status, 
-          reviewed_at: new Date().toISOString() 
-        })
+        .update({ status, reviewed_at: new Date().toISOString() })
         .eq("id", id);
-      
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boe-publications"] });
       toast.success("Estado actualizado");
     },
-    onError: (error) => {
-      toast.error("Error al actualizar: " + error.message);
-    }
+    onError: (error) => toast.error("Error: " + error.message)
   });
 
   // Run manual check
   const runManualCheck = async () => {
     setIsRunningManual(true);
+    setLastRunResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("monitor-boe", {
         body: { source: "manual_admin" }
       });
-      
       if (error) throw error;
-      
+      setLastRunResult(data);
       toast.success(
-        data.new_publications > 0 
-          ? `Se encontraron ${data.new_publications} nuevas publicaciones`
-          : "No se encontraron nuevas publicaciones"
+        data.nuevos > 0 
+          ? `${data.nuevos} nuevas publicaciones encontradas`
+          : "Sin novedades"
       );
-      
       queryClient.invalidateQueries({ queryKey: ["boe-publications"] });
       queryClient.invalidateQueries({ queryKey: ["boe-monitoring-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["monitor-state"] });
     } catch (error: any) {
-      toast.error("Error al ejecutar la consulta: " + error.message);
+      toast.error("Error: " + error.message);
     } finally {
       setIsRunningManual(false);
     }
@@ -190,27 +159,16 @@ export default function AdminBOE() {
   // Process approved publication into legal document
   const processPublicationMutation = useMutation({
     mutationFn: async (pub: BOEPublication) => {
-      if (!pub.pdf_url) throw new Error("No hay PDF disponible para esta publicación");
-      
+      if (!pub.pdf_url) throw new Error("No hay PDF disponible");
       setProcessingId(pub.id);
-      
-      // 1. Download PDF from BOE
       const pdfResponse = await fetch(pub.pdf_url);
-      if (!pdfResponse.ok) throw new Error("Error al descargar el PDF del BOE");
+      if (!pdfResponse.ok) throw new Error("Error al descargar el PDF");
       const pdfBlob = await pdfResponse.blob();
-      
-      // 2. Upload to Supabase Storage
       const fileName = `boe-${pub.boe_id.replace(/[^a-zA-Z0-9]/g, "-")}-${Date.now()}.pdf`;
       const { error: uploadError } = await supabase.storage
         .from("legal-docs")
-        .upload(fileName, pdfBlob, {
-          contentType: "application/pdf",
-          upsert: false
-        });
-      
-      if (uploadError) throw new Error(`Error al subir PDF: ${uploadError.message}`);
-      
-      // 3. Create legal document entry
+        .upload(fileName, pdfBlob, { contentType: "application/pdf", upsert: false });
+      if (uploadError) throw new Error(`Upload: ${uploadError.message}`);
       const { data: docData, error: docError } = await supabase
         .from("legal_documents")
         .insert({
@@ -225,54 +183,36 @@ export default function AdminBOE() {
         })
         .select()
         .single();
-      
-      if (docError) throw new Error(`Error al crear documento: ${docError.message}`);
-      
-      // 4. Process with AI (extract chunks)
+      if (docError) throw new Error(`Doc: ${docError.message}`);
       const { error: processError } = await supabase.functions.invoke(
         "process-legal-document",
         { body: { documentId: docData.id, filePath: fileName } }
       );
-      
-      if (processError) {
-        console.error("Error processing document with AI:", processError);
-        // Document created but not processed - we'll still continue
-        toast.warning("Documento creado pero pendiente de procesar con IA");
-      }
-      
-      // 5. Update BOE publication status
+      if (processError) toast.warning("Documento creado pero pendiente de procesar con IA");
       const { error: updateError } = await supabase
         .from("boe_publications")
-        .update({ 
-          status: "processed",
-          processed_document_id: docData.id,
-          reviewed_at: new Date().toISOString()
-        })
+        .update({ status: "processed", processed_document_id: docData.id, reviewed_at: new Date().toISOString() })
         .eq("id", pub.id);
-      
-      if (updateError) throw new Error(`Error al actualizar publicación: ${updateError.message}`);
-      
+      if (updateError) throw new Error(`Update: ${updateError.message}`);
       return docData;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["boe-publications"] });
-      toast.success(`Documento procesado correctamente: ${data.title.substring(0, 50)}...`);
+      toast.success(`Procesado: ${data.title.substring(0, 50)}...`);
       setProcessingId(null);
     },
     onError: (error: Error) => {
-      toast.error("Error al procesar: " + error.message);
+      toast.error("Error: " + error.message);
       setProcessingId(null);
     }
   });
 
-  // Filter publications by search
   const filteredPublications = publications?.filter(pub => 
     searchQuery === "" || 
     pub.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     pub.boe_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Stats
   const stats = {
     total: publications?.length || 0,
     pending: publications?.filter(p => p.status === "pending_review").length || 0,
@@ -284,15 +224,59 @@ export default function AdminBOE() {
   return (
     <AdminLayout 
       title="Monitor BOE" 
-      description="Sistema de monitorización de publicaciones del BOE sobre arrendamiento urbano"
+      description="Monitor de novedades legales sobre arrendamientos (con deduplicación y estado persistente)"
     >
       <div className="space-y-6">
+        {/* Monitor State Card */}
+        <Card className="border-dashed">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Database className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Estado del monitor</p>
+                  {monitorState ? (
+                    <p className="text-xs text-muted-foreground">
+                      Última revisión: {format(new Date(monitorState.value.last_checked), "dd/MM/yyyy", { locale: es })} · 
+                      IDs rastreados: {monitorState.value.seen_ids?.length || 0} · 
+                      Actualizado: {format(new Date(monitorState.updated_at), "dd/MM/yyyy HH:mm", { locale: es })}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Sin estado previo — la primera ejecución hará bootstrap de 45 días</p>
+                  )}
+                </div>
+              </div>
+              <Button 
+                onClick={runManualCheck} 
+                disabled={isRunningManual}
+                className="rounded-full"
+              >
+                {isRunningManual ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Zap className="h-4 w-4 mr-2" />
+                )}
+                {isRunningManual ? "Ejecutando..." : "Ejecutar ahora"}
+              </Button>
+            </div>
+
+            {/* Last run result */}
+            {lastRunResult && (
+              <div className="mt-4 p-3 rounded-lg bg-muted text-sm font-mono">
+                <pre className="whitespace-pre-wrap text-xs">
+                  {JSON.stringify(lastRunResult, null, 2)}
+                </pre>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-semibold">{stats.total}</div>
-              <p className="text-sm text-muted-foreground">Total publicaciones</p>
+              <p className="text-sm text-muted-foreground">Total</p>
             </CardContent>
           </Card>
           <Card>
@@ -321,7 +305,7 @@ export default function AdminBOE() {
           </Card>
         </div>
 
-        {/* Actions Bar */}
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex gap-4 items-center">
             <Input
@@ -343,15 +327,6 @@ export default function AdminBOE() {
               </SelectContent>
             </Select>
           </div>
-          
-          <Button 
-            onClick={runManualCheck} 
-            disabled={isRunningManual}
-            className="rounded-full"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRunningManual ? 'animate-spin' : ''}`} />
-            {isRunningManual ? "Consultando..." : "Consultar ahora"}
-          </Button>
         </div>
 
         {/* Tabs */}
@@ -383,11 +358,11 @@ export default function AdminBOE() {
                   <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">No hay publicaciones</h3>
                   <p className="text-muted-foreground mb-4">
-                    No se han encontrado publicaciones del BOE. Ejecuta una consulta manual para buscar.
+                    Ejecuta el monitor para buscar novedades del BOE.
                   </p>
-                  <Button onClick={runManualCheck} disabled={isRunningManual}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Consultar BOE ahora
+                  <Button onClick={runManualCheck} disabled={isRunningManual} className="rounded-full">
+                    <Zap className="h-4 w-4 mr-2" />
+                    Ejecutar ahora
                   </Button>
                 </CardContent>
               </Card>
@@ -407,7 +382,6 @@ export default function AdminBOE() {
                     {filteredPublications?.map((pub) => {
                       const statusInfo = statusConfig[pub.status as keyof typeof statusConfig] || statusConfig.pending_review;
                       const StatusIcon = statusInfo.icon;
-                      
                       return (
                         <TableRow key={pub.id}>
                           <TableCell>
@@ -433,68 +407,38 @@ export default function AdminBOE() {
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
                               {pub.pdf_url && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => window.open(pub.pdf_url!, "_blank")}
-                                >
+                                <Button variant="ghost" size="sm" onClick={() => window.open(pub.pdf_url!, "_blank")}>
                                   <Download className="h-4 w-4" />
                                 </Button>
                               )}
                               {pub.boe_url && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => window.open(pub.boe_url!, "_blank")}
-                                >
+                                <Button variant="ghost" size="sm" onClick={() => window.open(pub.boe_url!, "_blank")}>
                                   <ExternalLink className="h-4 w-4" />
                                 </Button>
                               )}
                               {pub.status === "pending_review" && (
                                 <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                    onClick={() => updateStatusMutation.mutate({ id: pub.id, status: "approved" })}
-                                  >
+                                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    onClick={() => updateStatusMutation.mutate({ id: pub.id, status: "approved" })}>
                                     <Check className="h-4 w-4" />
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => updateStatusMutation.mutate({ id: pub.id, status: "rejected" })}
-                                  >
+                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => updateStatusMutation.mutate({ id: pub.id, status: "rejected" })}>
                                     <X className="h-4 w-4" />
                                   </Button>
                                 </>
                               )}
                               {pub.status === "approved" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                   onClick={() => processPublicationMutation.mutate(pub)}
-                                  disabled={processingId === pub.id || !pub.pdf_url}
-                                  title={!pub.pdf_url ? "No hay PDF disponible" : "Procesar en base de conocimiento"}
-                                >
-                                  {processingId === pub.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <FileText className="h-4 w-4" />
-                                  )}
+                                  disabled={processingId === pub.id || !pub.pdf_url}>
+                                  {processingId === pub.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                                   <span className="ml-1 text-xs">Procesar</span>
                                 </Button>
                               )}
                               {pub.status === "processed" && pub.processed_document_id && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  onClick={() => navigate(`/admin/documentos`)}
-                                  title="Ver documento procesado"
-                                >
+                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() => navigate(`/admin/documentos`)}>
                                   <LinkIcon className="h-4 w-4" />
                                 </Button>
                               )}
@@ -534,20 +478,16 @@ export default function AdminBOE() {
                           {format(new Date(log.check_time), "dd/MM/yyyy HH:mm", { locale: es })}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-xs">
-                            {log.source}
-                          </Badge>
+                          <Badge variant="outline" className="text-xs">{log.source}</Badge>
                         </TableCell>
                         <TableCell>
                           {log.success ? (
                             <Badge className="bg-green-100 text-green-800 text-xs">
-                              <Check className="h-3 w-3 mr-1" />
-                              Éxito
+                              <Check className="h-3 w-3 mr-1" />Éxito
                             </Badge>
                           ) : (
                             <Badge className="bg-red-100 text-red-800 text-xs">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Error
+                              <AlertCircle className="h-3 w-3 mr-1" />Error
                             </Badge>
                           )}
                         </TableCell>
@@ -567,52 +507,53 @@ export default function AdminBOE() {
           <TabsContent value="config" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Configuración del Monitor</CardTitle>
+                <CardTitle>Configuración del Monitor v2</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h4 className="font-medium mb-2">Estado</h4>
-                  <Badge className={config?.enabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                    {config?.enabled ? "Activo" : "Desactivado"}
-                  </Badge>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-2">Emails de notificación</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {config?.notification_emails?.map((email, idx) => (
-                      <Badge key={idx} variant="outline">{email}</Badge>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
                   <h4 className="font-medium mb-2">Términos de búsqueda</h4>
                   <div className="flex flex-wrap gap-2">
-                    {config?.search_terms?.map((term, idx) => (
+                    {["arrendamiento", "alquiler", "vivienda", "desahucio", "fianza", "inquilino", "mercado residencial tensionado", "irav", "arrendatario", "arrendador", "renta", "LAU"].map((term, idx) => (
                       <Badge key={idx} variant="secondary">{term}</Badge>
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">Secciones monitorizadas</h4>
                   <div className="flex flex-wrap gap-2">
-                    {config?.sections?.map((section, idx) => (
-                      <Badge key={idx} variant="outline">Sección {section}</Badge>
-                    ))}
+                    <Badge variant="outline">Sección I</Badge>
+                    <Badge variant="outline">Sección III</Badge>
                   </div>
                 </div>
 
+                <div>
+                  <h4 className="font-medium mb-2">Parámetros</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• <strong>Bootstrap:</strong> 45 días de histórico en primera ejecución</li>
+                    <li>• <strong>Lookback overlap:</strong> 2 días de solape para no perder cambios</li>
+                    <li>• <strong>Max IDs rastreados:</strong> 5.000</li>
+                    <li>• <strong>Deduplicación:</strong> por identificador BOE (boe_id)</li>
+                  </ul>
+                </div>
+
                 <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-2">Horarios de ejecución automática</h4>
+                  <h4 className="font-medium mb-2">Ejecución automática</h4>
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">09:00</Badge>
-                    <Badge variant="outline">12:00</Badge>
-                    <Badge variant="outline">22:00</Badge>
+                    <Badge variant="outline">08:15 (Europe/Madrid)</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-2">
-                    El sistema consulta automáticamente el BOE 3 veces al día en estos horarios.
+                    Cron diario configurado. También puedes ejecutar manualmente desde el botón superior.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <h4 className="font-medium mb-2">Notificaciones</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">nuriafrancis@gmail.com</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Solo se envía email cuando hay novedades. Sin novedades, se actualiza el estado sin notificar.
                   </p>
                 </div>
               </CardContent>
