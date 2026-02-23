@@ -123,7 +123,13 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
   const items: FoundItem[] = [];
 
   try {
-    const res = await fetch(url, { headers: { "User-Agent": "ACROXIA-Monitor/3.0" } });
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "application/xml, text/xml, */*",
+        "Accept-Language": "es-ES,es;q=0.9",
+      },
+    });
     if (res.status === 404) {
       console.log(`[BOE] ${dateStr}: 404, skip`);
       return items;
