@@ -15,10 +15,11 @@ const MAX_SEEN = 5000;
 const SEARCH_TERMS = [
   "arrendamiento", "alquiler", "vivienda", "desahucio", "fianza",
   "inquilino", "mercado residencial tensionado", "irav",
-  "arrendatario", "arrendador", "renta", "LAU"
+  "arrendatario", "arrendador", "renta", "lau"
 ];
 
-const SECTIONS = ["I", "III"];
+// Section codes as they appear in BOE XML (numeric strings)
+const SECTIONS = ["1", "3"];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -35,11 +36,31 @@ function formatDateISO(d: Date): string {
 
 function isRelevant(text: string): boolean {
   const lower = text.toLowerCase();
-  return SEARCH_TERMS.some(t => lower.includes(t.toLowerCase()));
+  return SEARCH_TERMS.some(t => lower.includes(t));
 }
 
-function stableId(item: any): string {
-  return item.id || item.identificador || item.urlPdf || `${item.titulo?.substring(0, 80)}_${item.fechaPublicacion || ""}`;
+// ─── XML Parsing helpers ─────────────────────────────────────────────────────
+
+function extractTag(xml: string, tag: string): string {
+  const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
+  const match = xml.match(regex);
+  return match ? match[1].trim() : "";
+}
+
+function extractAttr(xml: string, tag: string, attr: string): string {
+  const regex = new RegExp(`<${tag}[^>]*\\s${attr}="([^"]*)"`, "i");
+  const match = xml.match(regex);
+  return match ? match[1] : "";
+}
+
+function extractAllBlocks(xml: string, tag: string): string[] {
+  const blocks: string[] = [];
+  const regex = new RegExp(`<${tag}[\\s>][\\s\\S]*?</${tag}>`, "gi");
+  let match;
+  while ((match = regex.exec(xml)) !== null) {
+    blocks.push(match[0]);
+  }
+  return blocks;
 }
 
 // ─── BOE API ─────────────────────────────────────────────────────────────────
@@ -63,7 +84,7 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
 
   try {
     const res = await fetch(url, {
-      headers: { Accept: "application/json", "User-Agent": "ACROXIA-Monitor/2.0" },
+      headers: { "User-Agent": "ACROXIA-Monitor/2.0" },
     });
     if (res.status === 404) {
       console.log(`[BOE] No summary for ${dateStr} (404), skipping`);
@@ -74,42 +95,53 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
       return items;
     }
 
-    const json = await res.json();
-    const data = json?.data?.sumario;
-    if (!data) return items;
+    const xml = await res.text();
+    
+    // Extract publication date
+    const pubDateRaw = extractTag(xml, "fecha_publicacion") || dateStr;
+    const pubDate = pubDateRaw.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
 
-    const pubDate = data.metaInfo?.fechaPublicacion || dateStr.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
-    const diario = data.diario || [];
+    // Find all <seccion> blocks
+    const secciones = extractAllBlocks(xml, "seccion");
+    console.log(`[BOE] ${dateStr}: found ${secciones.length} secciones`);
 
-    for (const seccion of diario) {
-      const secId = seccion.seccion?.codigo || "";
-      if (SECTIONS.length > 0 && !SECTIONS.includes(secId)) continue;
+    for (const secXml of secciones) {
+      const secCode = extractAttr(secXml, "seccion", "codigo");
+      
+      // Filter by configured sections
+      if (SECTIONS.length > 0 && !SECTIONS.includes(secCode)) continue;
 
-      const walk = (container: any) => {
-        const entries = container.items || container.epigrafes || container.departamentos || [];
-        for (const entry of entries) {
-          if (entry.items || entry.epigrafes || entry.departamentos) {
-            walk(entry);
-          }
-          const titulo = entry.titulo || entry.title || "";
-          const id = entry.id || entry.identificador || "";
-          if (!titulo || !id) continue;
-          if (!isRelevant(titulo)) continue;
+      // Find all <item> blocks within this section
+      const itemBlocks = extractAllBlocks(secXml, "item");
+      
+      for (const itemXml of itemBlocks) {
+        const identificador = extractTag(itemXml, "identificador");
+        const titulo = extractTag(itemXml, "titulo");
+        
+        if (!identificador || !titulo) continue;
+        if (!isRelevant(titulo)) continue;
 
-          items.push({
-            boe_id: id,
-            title: titulo,
-            publication_date: pubDate,
-            pdf_url: entry.urlPdf || null,
-            boe_url: entry.urlHtml || `https://www.boe.es/diario_boe/txt.php?id=${id}`,
-            section: secId || null,
-            department: entry.departamento || container.departamento || null,
-            summary: (entry.control || titulo).substring(0, 500),
-            source: "sumario",
-          });
-        }
-      };
-      walk(seccion);
+        // Extract the department from parent context
+        // Try to find which departamento this item belongs to
+        const deptName = extractAttr(secXml, "departamento", "nombre") || null;
+
+        const pdfUrl = extractTag(itemXml, "url_pdf").replace(/<[^>]*>/g, "").trim() || null;
+        const htmlUrl = extractTag(itemXml, "url_html") || `https://www.boe.es/diario_boe/txt.php?id=${identificador}`;
+
+        items.push({
+          boe_id: identificador,
+          title: titulo,
+          publication_date: pubDate,
+          pdf_url: pdfUrl || `https://www.boe.es/boe/dias/${pubDate.replace(/-/g, "/")}/pdfs/${identificador}.pdf`,
+          boe_url: htmlUrl,
+          section: secCode,
+          department: deptName,
+          summary: titulo.substring(0, 500),
+          source: "sumario",
+        });
+
+        console.log(`[BOE] MATCH: ${identificador} - ${titulo.substring(0, 80)}...`);
+      }
     }
   } catch (err) {
     console.warn(`[BOE] Error fetching summary ${dateStr}:`, err);
@@ -120,32 +152,42 @@ async function fetchSummary(dateStr: string): Promise<FoundItem[]> {
 
 async function fetchLegislation(): Promise<FoundItem[]> {
   const items: FoundItem[] = [];
-  const queries = ["arrendamiento urbano vivienda", "mercado residencial tensionado irav"];
+  const queries = ["arrendamiento urbano vivienda", "mercado residencial tensionado"];
 
   for (const q of queries) {
     try {
-      const url = `https://www.boe.es/datosabiertos/api/legislacion-consolidada?query=${encodeURIComponent(q)}&limit=50`;
+      const url = `https://www.boe.es/datosabiertos/api/legislacion-consolidada?query=${encodeURIComponent(q)}&limit=20`;
       console.log(`[BOE] Legislation search: ${url}`);
       const res = await fetch(url, {
-        headers: { Accept: "application/json", "User-Agent": "ACROXIA-Monitor/2.0" },
+        headers: { "User-Agent": "ACROXIA-Monitor/2.0" },
       });
-      if (!res.ok) continue;
-      const json = await res.json();
-      const results = json?.data?.items || json?.data || [];
-      for (const r of results) {
-        const titulo = r.titulo || r.title || "";
-        const id = r.id || r.identificador || "";
-        if (!titulo || !id) continue;
+      if (!res.ok) {
+        console.warn(`[BOE] Legislation search ${res.status}`);
+        continue;
+      }
+
+      const xml = await res.text();
+      const itemBlocks = extractAllBlocks(xml, "item");
+      console.log(`[BOE] Legislation "${q}": ${itemBlocks.length} items`);
+
+      for (const itemXml of itemBlocks) {
+        const id = extractTag(itemXml, "identificador");
+        const titulo = extractTag(itemXml, "titulo");
+        if (!id || !titulo) continue;
+
+        const urlPdf = extractTag(itemXml, "url_pdf").replace(/<[^>]*>/g, "").trim() || null;
+        const urlHtml = extractTag(itemXml, "url_html") || null;
+        const fechaPub = extractTag(itemXml, "fecha_publicacion") || formatDateISO(new Date());
 
         items.push({
           boe_id: id,
           title: titulo,
-          publication_date: r.fechaPublicacion || r.fecha_publicacion || formatDateISO(new Date()),
-          pdf_url: r.urlPdf || null,
-          boe_url: r.urlHtml || r.url || null,
+          publication_date: fechaPub.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
+          pdf_url: urlPdf,
+          boe_url: urlHtml,
           section: null,
-          department: r.departamento || null,
-          summary: (r.analisis || titulo).substring(0, 500),
+          department: null,
+          summary: titulo.substring(0, 500),
           source: "legislacion_consolidada",
         });
       }
@@ -159,7 +201,7 @@ async function fetchLegislation(): Promise<FoundItem[]> {
 // ─── State Management ────────────────────────────────────────────────────────
 
 interface MonitorState {
-  last_checked: string; // ISO date
+  last_checked: string;
   seen_ids: string[];
 }
 
@@ -170,29 +212,20 @@ async function loadState(supabase: any): Promise<MonitorState> {
     .eq("key", STATE_KEY)
     .maybeSingle();
 
-  if (data?.value) {
-    return data.value as MonitorState;
-  }
+  if (data?.value) return data.value as MonitorState;
 
-  // Bootstrap: start from BOOTSTRAP_DAYS ago
   const from = new Date();
   from.setDate(from.getDate() - BOOTSTRAP_DAYS);
   return { last_checked: formatDateISO(from), seen_ids: [] };
 }
 
 async function saveState(supabase: any, state: MonitorState): Promise<void> {
-  // Trim seen_ids to MAX_SEEN
   if (state.seen_ids.length > MAX_SEEN) {
     state.seen_ids = state.seen_ids.slice(-MAX_SEEN);
   }
-
   await supabase
     .from("legal_monitor_state")
-    .upsert({
-      key: STATE_KEY,
-      value: state,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "key" });
+    .upsert({ key: STATE_KEY, value: state, updated_at: new Date().toISOString() }, { onConflict: "key" });
 }
 
 // ─── Email Notification ─────────────────────────────────────────────────────
@@ -207,8 +240,8 @@ function buildEmailHtml(items: FoundItem[], fromDate: string, toDate: string): s
         <h3 style="font-family:'Playfair Display',Georgia,serif;font-size:16px;color:#1F1D1B;margin:0 0 8px;line-height:1.4;">
           ${item.title}
         </h3>
-        <div style="display:flex;gap:8px;">
-          ${item.boe_url ? `<a href="${item.boe_url}" style="display:inline-block;background:#1F1D1B;color:#FAF8F5;padding:8px 16px;border-radius:50px;text-decoration:none;font-size:13px;">Ver en BOE</a>` : ""}
+        <div>
+          ${item.boe_url ? `<a href="${item.boe_url}" style="display:inline-block;background:#1F1D1B;color:#FAF8F5;padding:8px 16px;border-radius:50px;text-decoration:none;font-size:13px;margin-right:8px;">Ver en BOE</a>` : ""}
           ${item.pdf_url ? `<a href="${item.pdf_url}" style="display:inline-block;border:1px solid #1F1D1B;color:#1F1D1B;padding:8px 16px;border-radius:50px;text-decoration:none;font-size:13px;">PDF</a>` : ""}
         </div>
       </td>
@@ -224,7 +257,7 @@ function buildEmailHtml(items: FoundItem[], fromDate: string, toDate: string): s
       </div>
       <div style="padding:28px;">
         <div style="background:#E8F5E9;border-left:4px solid #22C55E;padding:14px 18px;margin-bottom:20px;">
-          <p style="margin:0;color:#1F1D1B;font-size:15px;"><strong>${items.length}</strong> novedad${items.length !== 1 ? "es" : ""} encontrada${items.length !== 1 ? "s" : ""}</p>
+          <p style="margin:0;color:#1F1D1B;font-size:15px;"><strong>${items.length}</strong> novedad${items.length !== 1 ? "es" : ""}</p>
           <p style="margin:4px 0 0;color:#5C5752;font-size:13px;">Periodo: ${fromDate} → ${toDate}</p>
         </div>
         <table style="width:100%;border-collapse:collapse;">${rows}</table>
@@ -244,10 +277,8 @@ async function sendNotification(items: FoundItem[], fromDate: string, toDate: st
     console.warn("[NOTIFY] No RESEND_API_KEY, skipping email");
     return;
   }
-
   const html = buildEmailHtml(items, fromDate, toDate);
   const subject = `🔔 BOE: ${items.length} novedad${items.length !== 1 ? "es" : ""} sobre arrendamientos – ${toDate}`;
-
   try {
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -260,28 +291,10 @@ async function sendNotification(items: FoundItem[], fromDate: string, toDate: st
         html,
       }),
     });
-    if (emailRes.ok) {
-      console.log("[NOTIFY] Email sent successfully");
-    } else {
-      console.error("[NOTIFY] Email failed:", await emailRes.text());
-    }
+    console.log(emailRes.ok ? "[NOTIFY] Email sent" : `[NOTIFY] Email failed: ${await emailRes.text()}`);
   } catch (err) {
     console.error("[NOTIFY] Email error:", err);
   }
-
-  // Also send alert
-  try {
-    await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        process: "monitor-boe",
-        processName: "Monitor BOE Arrendamientos",
-        error: `${items.length} novedades encontradas (${fromDate} → ${toDate})`,
-        context: { count: items.length, titles: items.slice(0, 5).map(i => i.title.substring(0, 80)) },
-      }),
-    });
-  } catch { /* best effort */ }
 }
 
 // ─── Main Handler ────────────────────────────────────────────────────────────
@@ -297,13 +310,9 @@ async function handler(req: Request): Promise<Response> {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   let source = "manual";
-  try {
-    const body = await req.json();
-    source = body.source || "manual";
-  } catch { /* no body */ }
+  try { const body = await req.json(); source = body.source || "manual"; } catch { /* no body */ }
 
   console.log(`[MONITOR] Started – source: ${source}`);
-
   const result: any = { ok: false, from: "", to: "", encontrados: 0, nuevos: 0, aviso: null };
 
   try {
@@ -311,7 +320,7 @@ async function handler(req: Request): Promise<Response> {
     const state = await loadState(supabase);
     const seenSet = new Set(state.seen_ids);
 
-    // 2. Calculate date range with lookback overlap
+    // 2. Date range with lookback overlap
     const lastChecked = new Date(state.last_checked);
     const fromDate = new Date(lastChecked);
     fromDate.setDate(fromDate.getDate() - LOOKBACK_OVERLAP_DAYS);
@@ -319,10 +328,9 @@ async function handler(req: Request): Promise<Response> {
 
     result.from = formatDateBOE(fromDate);
     result.to = formatDateBOE(toDate);
-
     console.log(`[MONITOR] Range: ${result.from} → ${result.to}, seen_ids: ${seenSet.size}`);
 
-    // 3. Fetch summaries for each day in range
+    // 3. Fetch summaries for each day
     const allItems: FoundItem[] = [];
     const current = new Date(fromDate);
     while (current <= toDate) {
@@ -341,17 +349,15 @@ async function handler(req: Request): Promise<Response> {
     // 5. Deduplicate against seen_ids
     const newItems: FoundItem[] = [];
     for (const item of allItems) {
-      const id = item.boe_id;
-      if (!seenSet.has(id)) {
-        seenSet.add(id);
+      if (!seenSet.has(item.boe_id)) {
+        seenSet.add(item.boe_id);
         newItems.push(item);
       }
     }
-
     result.nuevos = newItems.length;
     console.log(`[MONITOR] New items: ${newItems.length}`);
 
-    // 6. Insert new items into boe_publications
+    // 6. Insert new items
     if (newItems.length > 0) {
       const { error: insertErr } = await supabase
         .from("boe_publications")
@@ -369,7 +375,6 @@ async function handler(req: Request): Promise<Response> {
           })),
           { onConflict: "boe_id" }
         );
-
       if (insertErr) {
         console.error("[MONITOR] Insert error:", insertErr);
         result.aviso = `Error al insertar: ${insertErr.message}`;
@@ -395,40 +400,25 @@ async function handler(req: Request): Promise<Response> {
 
     result.ok = true;
     console.log(`[MONITOR] Done – ${JSON.stringify(result)}`);
-
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
     console.error("[MONITOR] Fatal error:", err);
     result.aviso = err.message || "Unknown error";
-
     await supabase.from("boe_monitoring_logs").insert({
-      source,
-      success: false,
-      publications_found: result.encontrados,
-      new_publications: result.nuevos,
-      error_message: result.aviso,
-      retry_pending: true,
+      source, success: false, publications_found: result.encontrados,
+      new_publications: result.nuevos, error_message: result.aviso, retry_pending: true,
     });
-
-    // Alert
     try {
       await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          process: "monitor-boe",
-          processName: "Monitor BOE",
-          error: err.message,
-          context: { source, attempted_at: new Date().toISOString() },
-        }),
+        body: JSON.stringify({ process: "monitor-boe", processName: "Monitor BOE", error: err.message, context: { source } }),
       });
     } catch { /* best effort */ }
-
     return new Response(JSON.stringify(result), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 }
