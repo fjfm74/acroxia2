@@ -914,6 +914,24 @@ export type Database = {
           },
         ]
       }
+      legal_monitor_state: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       llm_files_cache: {
         Row: {
           content: string
