@@ -114,6 +114,15 @@ const WaitlistModal = ({
         marketing_consent: marketingConsent,
       });
 
+      // Send admin notification email
+      supabase.functions.invoke("send-alert-email", {
+        body: {
+          process: "Waitlist Signup",
+          error: `Nuevo registro en waitlist: ${normalizedName} (${normalizedEmail}) - Perfil: ${userType} - Plan: ${planName || "general"} - Fuente: ${source}`,
+          context: { name: normalizedName, email: normalizedEmail, userType, planName, source, marketingConsent },
+        },
+      }).catch((err) => console.error("Alert email error:", err));
+
       setSuccess(true);
       toast({ title: "¡Te has unido a la lista!", description: "Te avisaremos cuando estemos listos." });
     } catch (error: any) {
