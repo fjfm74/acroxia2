@@ -251,32 +251,47 @@ Ultra high resolution.`;
   }
 }
 
-// Send newsletter to subscribers
+// Send newsletter to subscribers with automatic retries
 async function sendNewsletterNotification(postId: string): Promise<{ sent: number; errors: number }> {
-  try {
-    console.log(`[schedule-daily-post-landlord] Triggering newsletter for post: ${postId}`);
-    
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-blog-notification`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseServiceKey}`
-      },
-      body: JSON.stringify({ postId })
-    });
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 5000;
 
-    if (!response.ok) {
-      console.error("[schedule-daily-post-landlord] Newsletter notification failed:", response.status);
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      console.log(`[schedule-daily-post-landlord] Triggering newsletter for post: ${postId} (attempt ${attempt}/${MAX_RETRIES})`);
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/send-blog-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseServiceKey}`
+        },
+        body: JSON.stringify({ postId })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[schedule-daily-post-landlord] Newsletter failed (attempt ${attempt}): HTTP ${response.status} - ${errorText}`);
+        if (attempt < MAX_RETRIES) {
+          await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+          continue;
+        }
+        return { sent: 0, errors: 1 };
+      }
+
+      const result = await response.json();
+      console.log("[schedule-daily-post-landlord] Newsletter result:", result);
+      return { sent: result.sent || 0, errors: result.errors || 0 };
+    } catch (error) {
+      console.error(`[schedule-daily-post-landlord] Newsletter error (attempt ${attempt}):`, error);
+      if (attempt < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
       return { sent: 0, errors: 1 };
     }
-
-    const result = await response.json();
-    console.log("[schedule-daily-post-landlord] Newsletter result:", result);
-    return { sent: result.sent || 0, errors: result.errors || 0 };
-  } catch (error) {
-    console.error("[schedule-daily-post-landlord] Newsletter error:", error);
-    return { sent: 0, errors: 1 };
   }
+  return { sent: 0, errors: 1 };
 }
 
 // Send confirmation email (post already published)
