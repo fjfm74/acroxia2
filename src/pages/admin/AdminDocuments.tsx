@@ -396,14 +396,23 @@ const AdminDocuments = () => {
 
   const deleteDocument = async (doc: LegalDocument) => {
     try {
+      // Clear FK references from other documents pointing to this one
+      await supabase.from("legal_documents").update({ superseded_by_id: null }).eq("superseded_by_id", doc.id);
+      // Clear relations, chunks, then the document
       await supabase.from("document_relations").delete().or(`source_document_id.eq.${doc.id},target_document_id.eq.${doc.id}`);
       await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
+      // Delete file from storage if exists
+      const { data: docData } = await supabase.from("legal_documents").select("file_path").eq("id", doc.id).maybeSingle();
+      if (docData?.file_path) {
+        await supabase.storage.from("legal-docs").remove([docData.file_path]);
+      }
       const { error } = await supabase.from("legal_documents").delete().eq("id", doc.id);
       if (error) throw error;
       toast({ title: "Documento eliminado", description: `"${doc.title}" ha sido eliminado` });
       fetchDocuments();
     } catch (error) {
-      toast({ title: "Error", description: "No se pudo eliminar", variant: "destructive" });
+      console.error("Error deleting document:", error);
+      toast({ title: "Error", description: "No se pudo eliminar el documento", variant: "destructive" });
     }
   };
 
