@@ -68,14 +68,15 @@ serve(async (req) => {
       (existingRelations || []).map(r => `${r.source_document_id}::${r.target_document_id}::${r.relation_type}`)
     );
 
-    // 3. Build a compact catalog of all documents for the AI (include effective_date for temporal ordering)
+    // 3. Build a compact catalog of all documents for the AI (include effective_date + territorial info)
     const catalog = documents.map(d => ({
       id: d.id,
       title: d.title,
       type: d.type,
       jurisdiction: d.jurisdiction,
+      territorial_entity: d.territorial_entity || "no especificada",
       effective_date: d.effective_date || "desconocida",
-      summary: d.ai_summary?.substring(0, 200) || "",
+      summary: d.ai_summary?.substring(0, 300) || "",
       keywords: (d.keywords || []).slice(0, 10),
     }));
 
@@ -83,7 +84,7 @@ serve(async (req) => {
     const prompt = `Eres un experto en derecho español. Analiza esta lista de documentos legales y detecta TODAS las relaciones entre ellos.
 
 CATÁLOGO DE DOCUMENTOS:
-${catalog.map(d => `- [${d.id}] "${d.title}" (${d.type}, ${d.jurisdiction}, fecha entrada en vigor: ${d.effective_date}) - ${d.summary}`).join("\n")}
+${catalog.map(d => `- [${d.id}] "${d.title}" (${d.type}, ${d.jurisdiction}, territorio: ${d.territorial_entity}, fecha entrada en vigor: ${d.effective_date}) - ${d.summary}`).join("\n")}
 
 Para cada relación detectada, indica:
 {
@@ -111,6 +112,13 @@ REGLAS CRÍTICAS DE DIRECCIÓN TEMPORAL:
 - Ejemplo: La Ley 29/1994 derogó parcialmente el Decreto 4104/1964 (LAU 1964), pero este sigue vigente para contratos anteriores al 9 de mayo de 1985. Relación correcta: source=Ley 29/1994 --modifica--> target=Decreto 4104/1964, con temporal_note="El Decreto sigue vigente para contratos anteriores al 9/5/1985".
 - La Ley 12/2023 (Ley de Vivienda) modifica la LAU (Ley 29/1994) y el RD-Ley 7/2019.
 - Los decretos autonómicos que declaran zonas tensionadas desarrollan la Ley 12/2023.
+
+REGLAS CRÍTICAS DE INCOMPATIBILIDAD TERRITORIAL:
+- Una ley autonómica SOLO puede derogar o modificar leyes de la MISMA comunidad autónoma. NUNCA puede derogar o modificar leyes de OTRA comunidad autónoma.
+- Ejemplo INCORRECTO: Ley 5/2025 de Andalucía --deroga--> Ley 13/1996 de Cataluña. Esto es IMPOSIBLE porque son comunidades autónomas distintas.
+- Una ley estatal SÍ puede modificar o derogar leyes autonómicas o estatales.
+- Leyes autonómicas de distintas CCAA que regulan la misma materia son "complementa" entre sí, NUNCA "deroga" ni "modifica".
+- Usa el campo "territorio" de cada documento para verificar la compatibilidad territorial ANTES de asignar relaciones de tipo deroga o modifica.
 
 Responde SOLO con JSON: { "relations": [ ... ] }`;
 
@@ -142,12 +150,22 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
       if (!VALID_RELATION_TYPES.includes(relType)) continue;
       if (!docMap.has(relation.source_id) || !docMap.has(relation.target_id)) continue;
 
-      // TEMPORAL VALIDATION: source must be newer than target for deroga/modifica
+      // TERRITORIAL VALIDATION: autonomic laws from different CCAA cannot deroga/modifica each other
       const sourceDoc = docMap.get(relation.source_id);
       const targetDoc = docMap.get(relation.target_id);
+      
+      if ((relType === "deroga" || relType === "modifica") && 
+          sourceDoc?.jurisdiction === "autonomica" && targetDoc?.jurisdiction === "autonomica" &&
+          sourceDoc?.territorial_entity && targetDoc?.territorial_entity &&
+          sourceDoc.territorial_entity !== targetDoc.territorial_entity) {
+        console.warn(`REJECTED TERRITORIAL: "${sourceDoc.title}" (${sourceDoc.territorial_entity}) cannot ${relType} "${targetDoc.title}" (${targetDoc.territorial_entity}) - different autonomous communities. Skipping.`);
+        continue;
+      }
+
+      // TEMPORAL VALIDATION: source must be newer than target for deroga/modifica
       if ((relType === "deroga" || relType === "modifica") && sourceDoc?.effective_date && targetDoc?.effective_date) {
         if (new Date(sourceDoc.effective_date) < new Date(targetDoc.effective_date)) {
-          console.warn(`REJECTED: "${sourceDoc.title}" (${sourceDoc.effective_date}) cannot ${relType} "${targetDoc.title}" (${targetDoc.effective_date}) - source is OLDER than target. Skipping.`);
+          console.warn(`REJECTED TEMPORAL: "${sourceDoc.title}" (${sourceDoc.effective_date}) cannot ${relType} "${targetDoc.title}" (${targetDoc.effective_date}) - source is OLDER than target. Skipping.`);
           continue;
         }
       }
