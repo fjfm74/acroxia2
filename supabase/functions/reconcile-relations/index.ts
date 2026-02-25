@@ -1,6 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+const VALID_RELATION_TYPES = new Set([
+  "deroga",
+  "modifica",
+  "complementa",
+  "amplia",
+  "prorroga",
+  "desarrolla",
+  "interpreta",
+]);
+
+const normType = (v: string) => (v ?? "").trim().toLowerCase();
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -8,9 +20,25 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-const VALID_RELATION_TYPES = [
-  "deroga", "modifica", "complementa", "amplia", "prorroga", "desarrolla", "interpreta"
-];
+function normalizeText(input: string): string {
+  return (input || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function territoryKey(doc: any): string | null {
+  const code = String(doc?.territorial_code ?? "")
+    .trim()
+    .toUpperCase();
+
+  if (/^ES-[A-Z]{2}$/.test(code)) return code;
+
+  const entity = normalizeText(String(doc?.territorial_entity ?? ""));
+  return entity || null;
+}
 
 async function callAI(messages: any[], model = "google/gemini-2.5-flash"): Promise<string> {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -19,9 +47,13 @@ async function callAI(messages: any[], model = "google/gemini-2.5-flash"): Promi
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ model, messages, temperature: 0.1 }),
+    body: JSON.stringify({ model, messages, temperature: 0 }),
   });
-  if (!response.ok) throw new Error(`AI call failed: ${response.status}`);
+
+  if (!response.ok) {
+    throw new Error(`AI call failed: ${response.status}`);
+  }
+
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
 }
@@ -37,54 +69,148 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let runId: string | null = null;
+  let corpusHash = "";
+  let docsCount = 0;
+  let aiDetected = 0;
+  let inserted = 0;
+  let skippedDup = 0;
+  let skippedInvalid = 0;
+  let supersededChunks = 0;
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Get all active documents with their chunks summary
-    const { data: documents, error: docError } = await supabase
-      .from("legal_documents")
-      .select("id, title, type, jurisdiction, territorial_entity, ai_summary, keywords, superseded_by_id, supersedes_ids, effective_date")
-      .eq("is_active", true)
-      .eq("processing_status", "completed");
+    // 0) Hash de corpus para idempotencia
+    const { data: hashData, error: hashError } = await supabase.rpc("compute_legal_corpus_hash");
+    if (hashError) throw new Error(`Error computing corpus hash: ${hashError.message}`);
+    corpusHash = String(hashData ?? "");
 
-    if (docError) throw new Error(`Error fetching documents: ${docError.message}`);
-    if (!documents || documents.length < 2) {
+    // 0.1) Si el corpus no cambió, salir en modo skipped
+    const { data: prevRun, error: prevErr } = await supabase
+      .from("reconciliation_runs")
+      .select("id")
+      .eq("mode", "full")
+      .eq("status", "completed")
+      .eq("corpus_hash", corpusHash)
+      .limit(1)
+      .maybeSingle();
+
+    if (prevErr) throw new Error(`Error checking previous run: ${prevErr.message}`);
+
+    if (prevRun) {
+      await supabase.from("reconciliation_runs").insert({
+        mode: "full",
+        status: "skipped",
+        corpus_hash: corpusHash,
+        docs_count: 0,
+        ai_relations_detected: 0,
+        relations_inserted: 0,
+        relations_skipped_duplicate: 0,
+        relations_skipped_invalid: 0,
+        finished_at: new Date().toISOString(),
+      });
+
       return new Response(
-        JSON.stringify({ success: true, message: "Se necesitan al menos 2 documentos para reconciliar relaciones", relations_found: 0 }),
+        JSON.stringify({
+          success: true,
+          skipped: true,
+          reason: "corpus unchanged",
+          relations_inserted: 0,
+          message: "Corpus sin cambios. Reconciliación omitida.",
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    console.log(`Reconciling relations between ${documents.length} documents`);
+    // 1) Cargar documentos activos + completed
+    const { data: docsRaw, error: docError } = await supabase
+      .from("legal_documents")
+      .select(
+        "id, title, type, jurisdiction, territorial_entity, territorial_code, ai_summary, keywords, superseded_by_id, supersedes_ids, effective_date",
+      )
+      .eq("is_active", true)
+      .eq("processing_status", "completed");
 
-    // 2. Get existing relations to avoid re-analyzing known pairs
-    const { data: existingRelations } = await supabase
+    if (docError) throw new Error(`Error fetching documents: ${docError.message}`);
+
+    const documents = (docsRaw || []) as any[];
+    const sortedDocuments = [...documents].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    docsCount = sortedDocuments.length;
+
+    if (docsCount < 2) {
+      await supabase.from("reconciliation_runs").insert({
+        mode: "full",
+        status: "skipped",
+        corpus_hash: corpusHash,
+        docs_count: docsCount,
+        ai_relations_detected: 0,
+        relations_inserted: 0,
+        relations_skipped_duplicate: 0,
+        relations_skipped_invalid: 0,
+        finished_at: new Date().toISOString(),
+        error_message: "Se necesitan al menos 2 documentos para reconciliar",
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Se necesitan al menos 2 documentos para reconciliar relaciones",
+          relations_found: 0,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // 1.1) Crear run running
+    const { data: runRow, error: runErr } = await supabase
+      .from("reconciliation_runs")
+      .insert({
+        mode: "full",
+        status: "running",
+        corpus_hash: corpusHash,
+      })
+      .select("id")
+      .single();
+
+    if (runErr) throw new Error(`Error creating reconciliation run: ${runErr.message}`);
+    runId = runRow.id;
+
+    console.log(`Reconciling relations between ${sortedDocuments.length} documents`);
+
+    // 2) Cargar relaciones existentes para dedupe
+    const { data: existingRelations, error: existingErr } = await supabase
       .from("document_relations")
       .select("source_document_id, target_document_id, relation_type");
 
+    if (existingErr) throw new Error(`Error fetching existing relations: ${existingErr.message}`);
+
     const existingRelationKeys = new Set(
-      (existingRelations || []).map(r => `${r.source_document_id}::${r.target_document_id}::${r.relation_type}`)
+      (existingRelations || []).map(
+        (r: any) => `${r.source_document_id}::${r.target_document_id}::${normType(r.relation_type)}`,
+      ),
     );
 
-    // 3. Build a compact catalog of all documents for the AI (include effective_date + territorial info)
-    const catalog = documents.map(d => ({
+    // 3) Catálogo compacto ordenado
+    const catalog = sortedDocuments.map((d) => ({
       id: d.id,
       title: d.title,
       type: d.type,
       jurisdiction: d.jurisdiction,
       territorial_entity: d.territorial_entity || "no especificada",
+      territorial_code: d.territorial_code || "N/A",
       effective_date: d.effective_date || "desconocida",
       summary: d.ai_summary?.substring(0, 300) || "",
       keywords: (d.keywords || []).slice(0, 10),
     }));
 
-    // 4. Ask AI to detect relations between all documents in ONE call
+    // 4) Llamada IA global
     const prompt = `Eres un experto en derecho español. Analiza esta lista de documentos legales y detecta TODAS las relaciones entre ellos.
 
 CATÁLOGO DE DOCUMENTOS:
-${catalog.map(d => `- [${d.id}] "${d.title}" (${d.type}, ${d.jurisdiction}, territorio: ${d.territorial_entity}, fecha entrada en vigor: ${d.effective_date}) - ${d.summary}`).join("\n")}
+${catalog.map((d) => `- [${d.id}] "${d.title}" (${d.type}, ${d.jurisdiction}, territorio: ${d.territorial_entity}, code: ${d.territorial_code}, fecha entrada en vigor: ${d.effective_date}) - ${d.summary}`).join("\n")}
 
 Para cada relación detectada, indica:
 {
@@ -92,38 +218,23 @@ Para cada relación detectada, indica:
   "target_id": "UUID del documento MÁS ANTIGUO que es afectado",
   "type": "deroga|modifica|complementa|amplia|prorroga|desarrolla|interpreta",
   "affected_articles": ["Art. X"] (solo para modifica/deroga parcial, vacío si no aplica),
-  "temporal_note": "Si el documento antiguo sigue siendo aplicable a ciertos contratos, indicar aquí (ej: 'vigente para contratos anteriores a 1995')",
+  "temporal_note": "Si el documento antiguo sigue siendo aplicable a ciertos contratos, indicar aquí",
   "description": "Breve descripción"
 }
 
-TIPOS:
-- deroga: Reemplaza COMPLETAMENTE otro documento sin excepciones temporales. NO usar si el documento antiguo sigue vigente para ciertos contratos.
-- modifica: Cambia artículos específicos de otro. Usar cuando una ley nueva modifica parcialmente una anterior.
-- complementa: Añade información nueva sin invalidar
-- amplia: Extiende el alcance de otro
-- prorroga: Extiende la vigencia temporal
-- desarrolla: Reglamento que desarrolla una ley
-- interpreta: Jurisprudencia que interpreta
-
-REGLAS CRÍTICAS DE DIRECCIÓN TEMPORAL:
-- El source SIEMPRE es el documento MÁS RECIENTE (fecha posterior). El target es el documento MÁS ANTIGUO (fecha anterior).
-- Una ley nueva NUNCA puede ser derogada por una ley más antigua. Si un decreto de 1964 es mencionado como "derogado por la Ley 29/1994", la relación es: source=Ley 29/1994 --modifica/deroga--> target=Decreto 1964. NUNCA al revés.
-- Si un documento antiguo sigue vigente para contratos anteriores a cierta fecha, usa "modifica" en vez de "deroga", porque no es una derogación total.
-- Ejemplo: La Ley 29/1994 derogó parcialmente el Decreto 4104/1964 (LAU 1964), pero este sigue vigente para contratos anteriores al 9 de mayo de 1985. Relación correcta: source=Ley 29/1994 --modifica--> target=Decreto 4104/1964, con temporal_note="El Decreto sigue vigente para contratos anteriores al 9/5/1985".
-- La Ley 12/2023 (Ley de Vivienda) modifica la LAU (Ley 29/1994) y el RD-Ley 7/2019.
-- Los decretos autonómicos que declaran zonas tensionadas desarrollan la Ley 12/2023.
-
-REGLAS CRÍTICAS DE INCOMPATIBILIDAD TERRITORIAL:
-- Una ley autonómica SOLO puede derogar o modificar leyes de la MISMA comunidad autónoma. NUNCA puede derogar o modificar leyes de OTRA comunidad autónoma.
-- Ejemplo INCORRECTO: Ley 5/2025 de Andalucía --deroga--> Ley 13/1996 de Cataluña. Esto es IMPOSIBLE porque son comunidades autónomas distintas.
-- Una ley estatal SÍ puede modificar o derogar leyes autonómicas o estatales.
-- Leyes autonómicas de distintas CCAA que regulan la misma materia son "complementa" entre sí, NUNCA "deroga" ni "modifica".
-- Usa el campo "territorio" de cada documento para verificar la compatibilidad territorial ANTES de asignar relaciones de tipo deroga o modifica.
+REGLAS CRÍTICAS:
+- source debe ser igual o más reciente que target para deroga/modifica.
+- Una norma autonómica SOLO puede derogar o modificar normas de su MISMA CCAA.
+- Si hay duda entre deroga total y vigencia parcial por fecha, usar modifica.
+- No inventes relaciones si no hay evidencia clara en título/resumen/keywords.
 
 Responde SOLO con JSON: { "relations": [ ... ] }`;
 
     const aiContent = await callAI([
-      { role: "system", content: "Detectas relaciones entre documentos legales españoles. Responde solo con JSON válido." },
+      {
+        role: "system",
+        content: "Detectas relaciones entre documentos legales españoles. Responde solo con JSON válido.",
+      },
       { role: "user", content: prompt },
     ]);
 
@@ -137,76 +248,108 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
       detectedRelations = [];
     }
 
+    aiDetected = detectedRelations.length;
     console.log(`AI detected ${detectedRelations.length} potential relations`);
 
-    // 5. Process each relation
-    let newRelations = 0;
-    let supersededChunks = 0;
-    const docMap = new Map(documents.map(d => [d.id, d]));
+    // 5) Procesar relaciones
+    const docMap = new Map(sortedDocuments.map((d: any) => [d.id, d]));
 
     for (const relation of detectedRelations) {
-      if (!relation.source_id || !relation.target_id || !relation.type) continue;
-      const relType = relation.type.toLowerCase();
-      if (!VALID_RELATION_TYPES.includes(relType)) continue;
-      if (!docMap.has(relation.source_id) || !docMap.has(relation.target_id)) continue;
-
-      // TERRITORIAL VALIDATION: autonomic laws from different CCAA cannot deroga/modifica each other
-      const sourceDoc = docMap.get(relation.source_id);
-      const targetDoc = docMap.get(relation.target_id);
-      
-      if ((relType === "deroga" || relType === "modifica") && 
-          sourceDoc?.jurisdiction === "autonomica" && targetDoc?.jurisdiction === "autonomica" &&
-          sourceDoc?.territorial_entity && targetDoc?.territorial_entity &&
-          sourceDoc.territorial_entity !== targetDoc.territorial_entity) {
-        console.warn(`REJECTED TERRITORIAL: "${sourceDoc.title}" (${sourceDoc.territorial_entity}) cannot ${relType} "${targetDoc.title}" (${targetDoc.territorial_entity}) - different autonomous communities. Skipping.`);
+      if (!relation?.source_id || !relation?.target_id || !relation?.type) {
+        skippedInvalid++;
         continue;
       }
 
-      // TEMPORAL VALIDATION: source must be newer than target for deroga/modifica
-      if ((relType === "deroga" || relType === "modifica") && sourceDoc?.effective_date && targetDoc?.effective_date) {
-        if (new Date(sourceDoc.effective_date) < new Date(targetDoc.effective_date)) {
-          console.warn(`REJECTED TEMPORAL: "${sourceDoc.title}" (${sourceDoc.effective_date}) cannot ${relType} "${targetDoc.title}" (${targetDoc.effective_date}) - source is OLDER than target. Skipping.`);
+      const relType = normType(relation.type);
+      if (!VALID_RELATION_TYPES.has(relType)) {
+        skippedInvalid++;
+        continue;
+      }
+
+      if (!docMap.has(relation.source_id) || !docMap.has(relation.target_id)) {
+        skippedInvalid++;
+        continue;
+      }
+
+      if (relation.source_id === relation.target_id) {
+        skippedInvalid++;
+        continue;
+      }
+
+      const sourceDoc = docMap.get(relation.source_id);
+      const targetDoc = docMap.get(relation.target_id);
+
+      // Validación territorial (hard)
+      if (
+        (relType === "deroga" || relType === "modifica") &&
+        sourceDoc?.jurisdiction === "autonomica" &&
+        targetDoc?.jurisdiction === "autonomica"
+      ) {
+        const sourceTerritory = territoryKey(sourceDoc);
+        const targetTerritory = territoryKey(targetDoc);
+
+        if (sourceTerritory && targetTerritory && sourceTerritory !== targetTerritory) {
+          console.warn(
+            `REJECTED TERRITORIAL: "${sourceDoc.title}" (${sourceTerritory}) cannot ${relType} "${targetDoc.title}" (${targetTerritory})`,
+          );
+          skippedInvalid++;
           continue;
         }
       }
 
-      // Skip if already exists
+      // Validación temporal (hard)
+      if ((relType === "deroga" || relType === "modifica") && sourceDoc?.effective_date && targetDoc?.effective_date) {
+        if (new Date(sourceDoc.effective_date) < new Date(targetDoc.effective_date)) {
+          console.warn(
+            `REJECTED TEMPORAL: "${sourceDoc.title}" (${sourceDoc.effective_date}) cannot ${relType} "${targetDoc.title}" (${targetDoc.effective_date})`,
+          );
+          skippedInvalid++;
+          continue;
+        }
+      }
+
       const key = `${relation.source_id}::${relation.target_id}::${relType}`;
       if (existingRelationKeys.has(key)) {
-        console.log(`Relation already exists: ${key}`);
+        skippedDup++;
         continue;
       }
 
-      // Insert relation
       const { error: insertError } = await supabase.from("document_relations").insert({
         source_document_id: relation.source_id,
         target_document_id: relation.target_id,
         relation_type: relType,
         affected_articles: relation.affected_articles || [],
         description: relation.temporal_note
-          ? `${relation.description || ''}. Nota temporal: ${relation.temporal_note}`
-          : (relation.description || null),
+          ? `${relation.description || ""}. Nota temporal: ${relation.temporal_note}`
+          : relation.description || null,
         detected_by: "ai_reconcile",
+        reconciliation_run_id: runId,
       });
 
       if (insertError) {
-        console.error(`Error inserting relation:`, insertError);
+        if ((insertError as any).code === "23505") {
+          skippedDup++;
+          existingRelationKeys.add(key);
+          continue;
+        }
+
+        console.error("Error inserting relation:", insertError);
+        skippedInvalid++;
         continue;
       }
 
-      newRelations++;
+      inserted++;
       existingRelationKeys.add(key);
 
       console.log(`New relation: "${sourceDoc?.title}" --${relType}--> "${targetDoc?.title}"`);
 
-      // Apply effects based on type
+      // Efectos
       if (relType === "deroga") {
-        // If there's a temporal_note, the old doc still applies to some contracts - DON'T deactivate
         if (relation.temporal_note) {
-          console.log(`Deroga with temporal applicability: "${targetDoc?.title}" stays active. Note: ${relation.temporal_note}`);
-          // Just record the relation, don't deactivate chunks or document
+          console.log(
+            `Deroga with temporal applicability: "${targetDoc?.title}" stays active. Note: ${relation.temporal_note}`,
+          );
         } else {
-          // Full supersede - only when truly fully derogated
           const { data: oldChunks } = await supabase
             .from("legal_chunks")
             .select("id")
@@ -217,7 +360,11 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
             await supabase
               .from("legal_chunks")
               .update({ is_superseded: true, superseded_at: new Date().toISOString() })
-              .in("id", oldChunks.map((c: any) => c.id));
+              .in(
+                "id",
+                oldChunks.map((c: any) => c.id),
+              );
+
             supersededChunks += oldChunks.length;
 
             await supabase
@@ -229,8 +376,8 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
           }
         }
       } else if (relType === "modifica") {
-        // Partial supersede by article
         const affectedArticles = relation.affected_articles || [];
+
         for (const articleRef of affectedArticles) {
           const { data: oldChunks } = await supabase
             .from("legal_chunks")
@@ -243,15 +390,19 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
             await supabase
               .from("legal_chunks")
               .update({ is_superseded: true, superseded_at: new Date().toISOString() })
-              .in("id", oldChunks.map((c: any) => c.id));
+              .in(
+                "id",
+                oldChunks.map((c: any) => c.id),
+              );
+
             supersededChunks += oldChunks.length;
             console.log(`Modifica: marked ${oldChunks.length} chunks of "${articleRef}" as superseded`);
           }
         }
 
-        // Update supersedes_ids
-        const sourceDoc = docMap.get(relation.source_id);
-        const currentSupersedes = sourceDoc?.supersedes_ids || [];
+        const sourceDocNow = docMap.get(relation.source_id);
+        const currentSupersedes = sourceDocNow?.supersedes_ids || [];
+
         if (!currentSupersedes.includes(relation.target_id)) {
           await supabase
             .from("legal_documents")
@@ -259,32 +410,73 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
             .eq("id", relation.source_id);
         }
       }
-      // complementa, amplia, prorroga, desarrolla, interpreta: just the relation record
     }
 
-    // 6. Get final stats
     const { count: totalRelations } = await supabase
       .from("document_relations")
       .select("id", { count: "exact", head: true });
 
+    if (runId) {
+      await supabase
+        .from("reconciliation_runs")
+        .update({
+          status: "completed",
+          finished_at: new Date().toISOString(),
+          docs_count: docsCount,
+          ai_relations_detected: aiDetected,
+          relations_inserted: inserted,
+          relations_skipped_duplicate: skippedDup,
+          relations_skipped_invalid: skippedInvalid,
+        })
+        .eq("id", runId);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        documents_analyzed: documents.length,
-        new_relations_found: newRelations,
+        documents_analyzed: docsCount,
+        new_relations_found: inserted,
         total_relations: totalRelations || 0,
         chunks_marked_superseded: supersededChunks,
-        message: newRelations > 0
-          ? `Se detectaron ${newRelations} nuevas relaciones entre documentos. ${supersededChunks} chunks marcados como obsoletos.`
-          : "No se encontraron nuevas relaciones. Todo está al día.",
+        skipped_duplicates: skippedDup,
+        skipped_invalid: skippedInvalid,
+        message:
+          inserted > 0
+            ? `Se detectaron ${inserted} nuevas relaciones entre documentos. ${supersededChunks} chunks marcados como obsoletos.`
+            : "No se encontraron nuevas relaciones. Todo está al día.",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("Error in reconcile-relations:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+
+    try {
+      if (runId) {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        await supabase
+          .from("reconciliation_runs")
+          .update({
+            status: "failed",
+            finished_at: new Date().toISOString(),
+            error_message: error instanceof Error ? error.message : String(error),
+            docs_count: docsCount,
+            ai_relations_detected: aiDetected,
+            relations_inserted: inserted,
+            relations_skipped_duplicate: skippedDup,
+            relations_skipped_invalid: skippedInvalid,
+          })
+          .eq("id", runId);
+      }
+    } catch (runErr) {
+      console.error("Error updating failed run:", runErr);
+    }
+
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
