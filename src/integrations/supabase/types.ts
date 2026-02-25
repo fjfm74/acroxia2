@@ -139,6 +139,39 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_document_relations_reset_20260225: {
+        Row: {
+          affected_articles: string[] | null
+          created_at: string | null
+          description: string | null
+          detected_by: string | null
+          id: string | null
+          relation_type: string | null
+          source_document_id: string | null
+          target_document_id: string | null
+        }
+        Insert: {
+          affected_articles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          detected_by?: string | null
+          id?: string | null
+          relation_type?: string | null
+          source_document_id?: string | null
+          target_document_id?: string | null
+        }
+        Update: {
+          affected_articles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          detected_by?: string | null
+          id?: string | null
+          relation_type?: string | null
+          source_document_id?: string | null
+          target_document_id?: string | null
+        }
+        Relationships: []
+      }
       backup_invalid_chunks_20260225: {
         Row: {
           affected_municipalities: string[] | null
@@ -232,6 +265,51 @@ export type Database = {
           relation_type?: string | null
           source_document_id?: string | null
           target_document_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_legal_chunks_superseded_reset_20260225: {
+        Row: {
+          document_id: string | null
+          id: string | null
+          is_superseded: boolean | null
+          superseded_at: string | null
+          superseded_by_chunk_id: string | null
+        }
+        Insert: {
+          document_id?: string | null
+          id?: string | null
+          is_superseded?: boolean | null
+          superseded_at?: string | null
+          superseded_by_chunk_id?: string | null
+        }
+        Update: {
+          document_id?: string | null
+          id?: string | null
+          is_superseded?: boolean | null
+          superseded_at?: string | null
+          superseded_by_chunk_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_legal_documents_supersession_reset_20260225: {
+        Row: {
+          id: string | null
+          is_active: boolean | null
+          superseded_by_id: string | null
+          supersedes_ids: string[] | null
+        }
+        Insert: {
+          id?: string | null
+          is_active?: boolean | null
+          superseded_by_id?: string | null
+          supersedes_ids?: string[] | null
+        }
+        Update: {
+          id?: string | null
+          is_active?: boolean | null
+          superseded_by_id?: string | null
+          supersedes_ids?: string[] | null
         }
         Relationships: []
       }
