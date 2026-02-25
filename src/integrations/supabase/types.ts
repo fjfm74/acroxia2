@@ -139,6 +139,102 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_invalid_chunks_20260225: {
+        Row: {
+          affected_municipalities: string[] | null
+          affected_provinces: string[] | null
+          applies_when: Json | null
+          article_reference: string | null
+          chunk_index: number | null
+          content: string | null
+          created_at: string | null
+          document_id: string | null
+          id: string | null
+          is_superseded: boolean | null
+          key_entities: string[] | null
+          metadata: Json | null
+          search_vector: unknown
+          section_title: string | null
+          semantic_category: string | null
+          superseded_at: string | null
+          superseded_by_chunk_id: string | null
+          territorial_scope: string | null
+        }
+        Insert: {
+          affected_municipalities?: string[] | null
+          affected_provinces?: string[] | null
+          applies_when?: Json | null
+          article_reference?: string | null
+          chunk_index?: number | null
+          content?: string | null
+          created_at?: string | null
+          document_id?: string | null
+          id?: string | null
+          is_superseded?: boolean | null
+          key_entities?: string[] | null
+          metadata?: Json | null
+          search_vector?: unknown
+          section_title?: string | null
+          semantic_category?: string | null
+          superseded_at?: string | null
+          superseded_by_chunk_id?: string | null
+          territorial_scope?: string | null
+        }
+        Update: {
+          affected_municipalities?: string[] | null
+          affected_provinces?: string[] | null
+          applies_when?: Json | null
+          article_reference?: string | null
+          chunk_index?: number | null
+          content?: string | null
+          created_at?: string | null
+          document_id?: string | null
+          id?: string | null
+          is_superseded?: boolean | null
+          key_entities?: string[] | null
+          metadata?: Json | null
+          search_vector?: unknown
+          section_title?: string | null
+          semantic_category?: string | null
+          superseded_at?: string | null
+          superseded_by_chunk_id?: string | null
+          territorial_scope?: string | null
+        }
+        Relationships: []
+      }
+      backup_invalid_rel_20260225: {
+        Row: {
+          affected_articles: string[] | null
+          created_at: string | null
+          description: string | null
+          detected_by: string | null
+          id: string | null
+          relation_type: string | null
+          source_document_id: string | null
+          target_document_id: string | null
+        }
+        Insert: {
+          affected_articles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          detected_by?: string | null
+          id?: string | null
+          relation_type?: string | null
+          source_document_id?: string | null
+          target_document_id?: string | null
+        }
+        Update: {
+          affected_articles?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          detected_by?: string | null
+          id?: string | null
+          relation_type?: string | null
+          source_document_id?: string | null
+          target_document_id?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           audience: string
@@ -765,6 +861,7 @@ export type Database = {
           semantic_category: string | null
           superseded_at: string | null
           superseded_by_chunk_id: string | null
+          territorial_code: string | null
           territorial_scope: string | null
         }
         Insert: {
@@ -785,6 +882,7 @@ export type Database = {
           semantic_category?: string | null
           superseded_at?: string | null
           superseded_by_chunk_id?: string | null
+          territorial_code?: string | null
           territorial_scope?: string | null
         }
         Update: {
@@ -805,6 +903,7 @@ export type Database = {
           semantic_category?: string | null
           superseded_at?: string | null
           superseded_by_chunk_id?: string | null
+          territorial_code?: string | null
           territorial_scope?: string | null
         }
         Relationships: [
@@ -845,6 +944,7 @@ export type Database = {
           source_url: string | null
           superseded_by_id: string | null
           supersedes_ids: string[] | null
+          territorial_code: string | null
           territorial_entity: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
@@ -872,6 +972,7 @@ export type Database = {
           source_url?: string | null
           superseded_by_id?: string | null
           supersedes_ids?: string[] | null
+          territorial_code?: string | null
           territorial_entity?: string | null
           title: string
           type: Database["public"]["Enums"]["legal_doc_type"]
@@ -899,6 +1000,7 @@ export type Database = {
           source_url?: string | null
           superseded_by_id?: string | null
           supersedes_ids?: string[] | null
+          territorial_code?: string | null
           territorial_entity?: string | null
           title?: string
           type?: Database["public"]["Enums"]["legal_doc_type"]
