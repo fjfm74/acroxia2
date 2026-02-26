@@ -644,6 +644,7 @@ export type Database = {
           description: string | null
           detected_by: string | null
           id: string
+          reconciliation_run_id: string | null
           relation_type: string
           source_document_id: string
           target_document_id: string
@@ -654,6 +655,7 @@ export type Database = {
           description?: string | null
           detected_by?: string | null
           id?: string
+          reconciliation_run_id?: string | null
           relation_type: string
           source_document_id: string
           target_document_id: string
@@ -664,11 +666,19 @@ export type Database = {
           description?: string | null
           detected_by?: string | null
           id?: string
+          reconciliation_run_id?: string | null
           relation_type?: string
           source_document_id?: string
           target_document_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "document_relations_reconciliation_run_id_fkey"
+            columns: ["reconciliation_run_id"]
+            isOneToOne: false
+            referencedRelation: "reconciliation_runs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "document_relations_source_document_id_fkey"
             columns: ["source_document_id"]
@@ -1369,6 +1379,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reconciliation_runs: {
+        Row: {
+          ai_relations_detected: number
+          corpus_hash: string
+          docs_count: number
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          mode: string
+          relations_inserted: number
+          relations_skipped_duplicate: number
+          relations_skipped_invalid: number
+          started_at: string
+          status: string
+        }
+        Insert: {
+          ai_relations_detected?: number
+          corpus_hash: string
+          docs_count?: number
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          relations_inserted?: number
+          relations_skipped_duplicate?: number
+          relations_skipped_invalid?: number
+          started_at?: string
+          status: string
+        }
+        Update: {
+          ai_relations_detected?: number
+          corpus_hash?: string
+          docs_count?: number
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          relations_inserted?: number
+          relations_skipped_duplicate?: number
+          relations_skipped_invalid?: number
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       scheduled_posts: {
         Row: {
           approval_token: string
@@ -1583,6 +1638,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      compute_legal_corpus_hash: { Args: never; Returns: string }
       decrement_credit: { Args: never; Returns: undefined }
       get_anonymous_analysis: {
         Args: { analysis_uuid: string }
@@ -1614,6 +1670,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
+      map_territorial_code: { Args: { p_entity: string }; Returns: string }
       search_legal_chunks:
         | {
             Args: { match_count?: number; search_query: string }
