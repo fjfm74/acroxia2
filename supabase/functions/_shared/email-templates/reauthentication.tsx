@@ -47,8 +47,8 @@ export default ReauthenticationEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }
 const container = { maxWidth: '560px', margin: '0 auto' }
-const header = { padding: '32px 40px 24px', borderBottom: '1px solid #E8E6E3' }
-const logo = { display: 'block' as const, margin: '0 auto' }
+const header = { padding: '32px 40px 24px', borderBottom: '1px solid #E8E6E3', backgroundColor: '#FAF8F5', textAlign: 'center' as const }
+const logo = { display: 'inline-block' as const, margin: '0 auto', maxWidth: '160px', height: 'auto' }
 const content = { padding: '40px 40px 32px' }
 const h1 = {
   fontFamily: "'Playfair Display', Georgia, serif",
