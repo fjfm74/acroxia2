@@ -12,7 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, slide_number, post_id } = await req.json();
+    const {
+      prompt,
+      slide_number,
+      post_id,
+      platform = "instagram",
+      content_type = "carousel",
+      title = "",
+      audience = "inquilino",
+    } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -28,22 +36,50 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Generate image with Gemini
-    const imagePrompt = `Create a minimalist, professional social media slide image for Instagram.
+    const formatGuide =
+      content_type === "story"
+        ? "Vertical 9:16 composition optimized for story consumption."
+        : content_type === "post"
+          ? "Single editorial composition optimized for one-card social post."
+          : content_type === "reel_script"
+            ? "Vertical-friendly hero composition suitable for reel cover or video frame."
+            : "Square composition optimized for carousel cover or slide.";
+
+    const platformGuide =
+      platform === "linkedin"
+        ? "Professional, corporate-editorial, slightly more sober."
+        : platform === "tiktok"
+          ? "Dynamic but still clean and premium, with stronger visual focus."
+          : platform === "twitter"
+            ? "Sharp, minimal, information-first editorial feel."
+            : "Clean, premium and editorial for modern social media.";
+
+    const audienceGuide =
+      audience === "propietario"
+        ? "Visual context suitable for landlords, rental management, contracts, keys, documentation and residential assets."
+        : "Visual context suitable for tenants, rental life, contract review, home use and rights awareness.";
+
+    const imagePrompt = `Create a premium editorial social media image.
+
+CONTENT CONTEXT:
+- Title/reference: ${title || "Legal housing content"}
+- Platform: ${platform}
+- Format: ${content_type}
+- Audience: ${audience}
+- Visual brief: ${prompt}
 
 STYLE REQUIREMENTS:
-- Background: Soft cream/beige gradient (#FAF8F5 to #F5F0EB)
-- Style: Clean, modern, editorial like Revolut or Apple
-- Color palette: Warm neutrals with subtle charcoal (#1F1D1B) accents
-- NO text in the image
-- Leave upper 30% relatively empty for text overlay
-- Dimensions: Square format optimized for 1080x1080
-- High contrast, visually striking
+- ${formatGuide}
+- ${platformGuide}
+- ${audienceGuide}
+- Elegant, realistic, trustworthy editorial style
+- Warm neutral palette, soft contrast, premium housing/legal-tech feel
+- No text, no letters, no watermarks, no logos
+- Leave enough negative space for later text overlay
+- Avoid generic stock-photo clichés
+- Prioritize believable interiors, documents, architecture or human moments related to housing and contracts
 
-VISUAL CONTENT:
-${prompt}
-
-The image should feel premium, trustworthy, and professional - suitable for a legal tech platform helping renters understand their rights.`;
+The final image must feel consistent with a high-quality blog featured image for a Spanish legal-housing publication.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -83,48 +119,37 @@ The image should feel premium, trustworthy, and professional - suitable for a le
       throw new Error("No image generated");
     }
 
-    // Extract base64 data
     const base64Data = imageData.replace(/^data:image\/\w+;base64,/, "");
     const binaryData = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
 
-    // Generate unique filename
     const filename = `${post_id}/slide-${slide_number}-${Date.now()}.png`;
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabase.storage
-      .from("social-images")
-      .upload(filename, binaryData, {
-        contentType: "image/png",
-        upsert: true,
-      });
+    const { error: uploadError } = await supabase.storage.from("social-images").upload(filename, binaryData, {
+      contentType: "image/png",
+      upsert: true,
+    });
 
     if (uploadError) {
       console.error("Upload error:", uploadError);
       throw new Error(`Failed to upload image: ${uploadError.message}`);
     }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("social-images")
-      .getPublicUrl(filename);
+    const { data: urlData } = supabase.storage.from("social-images").getPublicUrl(filename);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         image_url: urlData.publicUrl,
-        slide_number 
+        slide_number,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     console.error("Error generating social image:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
