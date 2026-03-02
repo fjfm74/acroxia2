@@ -98,53 +98,66 @@ function getAccent(slide?: Slide): string {
 }
 
 function buildSlideSvg(slide?: Slide, embeddedImage?: string): string {
-  const safeBody = escapeXml(slide?.body?.trim() || "");
-  const safeImage = embeddedImage ? escapeXml(embeddedImage) : slide?.image_url ? escapeXml(slide.image_url) : "";
-  const accent = getAccent(slide);
+  const safeImage = embeddedImage ? escapeXml(embeddedImage) : "";
+  const headlineLines = wrapText(slide?.headline || "Slide sin contenido", 22, 3);
+  const bodyLines = wrapText(slide?.body || "", 34, 4);
 
-  const headlineLines = wrapText(slide?.headline || "Slide sin contenido", 18, 4);
-  const bodyLines = wrapText(slide?.body || "", 30, 4);
+  const isCover = slide?.type === "cover";
+  const isCta = slide?.type === "cta";
 
-  const headlineFontSize = headlineLines.length >= 4 ? 68 : headlineLines.length === 3 ? 76 : 84;
-  const bodyFontSize = 34;
-  const headlineStartY = safeImage ? 720 : 360;
-  const bodyStartY = headlineStartY + headlineLines.length * (headlineFontSize + 10) + 28;
+  const headlineFontSize = isCta ? 74 : 70;
+  const bodyFontSize = 30;
+
+  const headlineStartY = 380;
+  const bodyStartY = headlineStartY + headlineLines.length * (headlineFontSize + 8) + 36;
 
   const headlineTspans = headlineLines
-    .map((line, index) => `<tspan x="72" dy="${index === 0 ? 0 : headlineFontSize + 10}">${escapeXml(line)}</tspan>`)
+    .map((line, index) => `<tspan x="540" dy="${index === 0 ? 0 : headlineFontSize + 8}">${escapeXml(line)}</tspan>`)
     .join("");
 
   const bodyTspans = bodyLines
-    .map((line, index) => `<tspan x="72" dy="${index === 0 ? 0 : bodyFontSize + 10}">${escapeXml(line)}</tspan>`)
+    .map((line, index) => `<tspan x="540" dy="${index === 0 ? 0 : bodyFontSize + 14}">${escapeXml(line)}</tspan>`)
     .join("");
+
+  if (isCover && safeImage) {
+    return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+      <rect width="1080" height="1080" fill="#F5F1EB" />
+      <image href="${safeImage}" x="0" y="0" width="1080" height="1080" preserveAspectRatio="xMidYMid slice" />
+    </svg>`;
+  }
 
   return `
   <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
-    <defs>
-      <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#F8F4EE" />
-        <stop offset="100%" stop-color="#E9E1D6" />
-      </linearGradient>
-      <linearGradient id="imageOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="rgba(255,255,255,0.02)" />
-        <stop offset="58%" stop-color="rgba(255,255,255,0.08)" />
-        <stop offset="100%" stop-color="rgba(255,255,255,0.24)" />
-      </linearGradient>
-    </defs>
+    <rect width="1080" height="1080" fill="#F3EFEB" />
 
-    <rect width="1080" height="1080" fill="url(#bgGradient)" />
-
-    ${safeImage ? `<image href="${safeImage}" x="0" y="0" width="1080" height="1080" preserveAspectRatio="xMidYMid slice" />` : ""}
-    ${safeImage ? `<rect width="1080" height="1080" fill="url(#imageOverlay)" />` : ""}
-
-    <text x="72" y="${headlineStartY}" font-family="Georgia, serif" font-size="${headlineFontSize}" font-weight="700" fill="#0F172A">
+    <text
+      x="540"
+      y="${headlineStartY}"
+      text-anchor="middle"
+      font-family="Georgia, serif"
+      font-size="${headlineFontSize}"
+      font-weight="700"
+      fill="#1A1A1A"
+    >
       ${headlineTspans}
     </text>
 
-    ${safeBody ? `<text x="72" y="${bodyStartY}" font-family="Helvetica, Arial, sans-serif" font-size="${bodyFontSize}" font-weight="500" fill="#334155">${bodyTspans}</text>` : ""}
-
-    <rect x="72" y="998" rx="18" ry="18" width="160" height="8" fill="${accent}" opacity="0.9" />
-    <text x="850" y="1012" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#334155">acroxia.es</text>
+    ${
+      bodyLines.length > 0
+        ? `<text
+            x="540"
+            y="${bodyStartY}"
+            text-anchor="middle"
+            font-family="Helvetica, Arial, sans-serif"
+            font-size="${bodyFontSize}"
+            font-weight="400"
+            fill="#7A716B"
+          >
+            ${bodyTspans}
+          </text>`
+        : ""
+    }
   </svg>`;
 }
 
