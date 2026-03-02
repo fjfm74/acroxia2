@@ -19,12 +19,21 @@ type Platform = "instagram" | "tiktok" | "facebook" | "linkedin" | "twitter";
 type ContentType = "post" | "carousel" | "story" | "reel_script" | "thread";
 type Status = "draft" | "ready" | "published";
 
+const VALID_CONTENT_TYPES_BY_PLATFORM: Record<Platform, ContentType[]> = {
+  instagram: ["post", "carousel", "story", "reel_script"],
+  tiktok: ["reel_script"],
+  facebook: ["post", "carousel", "story", "reel_script"],
+  linkedin: ["post", "carousel", "thread"],
+  twitter: ["post", "thread"],
+};
+
+const getDefaultContentType = (platform: Platform): ContentType => VALID_CONTENT_TYPES_BY_PLATFORM[platform][0];
+
 const AdminSocialEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
 
-  // Form state
   const [isLoading, setIsLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [platform, setPlatform] = useState<Platform>("instagram");
@@ -36,17 +45,12 @@ const AdminSocialEdit = () => {
   const [generatingSlideImage, setGeneratingSlideImage] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch post data
   useEffect(() => {
     const fetchPost = async () => {
       if (!id) return;
 
       try {
-        const { data, error } = await supabase
-          .from("social_posts")
-          .select("*")
-          .eq("id", id)
-          .single();
+        const { data, error } = await supabase.from("social_posts").select("*").eq("id", id).single();
 
         if (error) throw error;
 
@@ -69,7 +73,13 @@ const AdminSocialEdit = () => {
     fetchPost();
   }, [id, navigate, toast]);
 
-  // Generate image for a slide
+  useEffect(() => {
+    const allowed = VALID_CONTENT_TYPES_BY_PLATFORM[platform];
+    if (!allowed.includes(contentType)) {
+      setContentType(getDefaultContentType(platform));
+    }
+  }, [platform, contentType]);
+
   const generateSlideImage = async (slideIndex: number) => {
     const slide = slides[slideIndex];
     if (!slide) return;
@@ -81,6 +91,9 @@ const AdminSocialEdit = () => {
           prompt: slide.visual_suggestion || slide.headline,
           slide_number: slide.slide_number,
           post_id: id,
+          platform,
+          content_type: contentType,
+          title,
         },
       });
 
@@ -93,17 +106,16 @@ const AdminSocialEdit = () => {
       toast({ title: "Imagen generada" });
     } catch (error) {
       console.error("Error generating image:", error);
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "No se pudo generar la imagen", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo generar la imagen",
+        variant: "destructive",
       });
     } finally {
       setGeneratingSlideImage(null);
     }
   };
 
-  // Save post
   const savePost = async (newStatus?: Status) => {
     if (!title.trim()) {
       toast({ title: "Error", description: "Añade un título", variant: "destructive" });
@@ -112,9 +124,7 @@ const AdminSocialEdit = () => {
 
     setIsSaving(true);
     try {
-      const imageUrls = slides
-        .filter(s => s.image_url)
-        .map(s => s.image_url as string);
+      const imageUrls = slides.filter((s) => s.image_url).map((s) => s.image_url as string);
 
       const { error } = await supabase
         .from("social_posts")
@@ -136,17 +146,16 @@ const AdminSocialEdit = () => {
       if (newStatus) navigate("/admin/social");
     } catch (error) {
       console.error("Error saving post:", error);
-      toast({ 
-        title: "Error", 
-        description: "No se pudo guardar el contenido", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el contenido",
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Add new slide
   const addSlide = () => {
     const newSlide: Slide = {
       slide_number: slides.length + 1,
@@ -158,20 +167,19 @@ const AdminSocialEdit = () => {
     setSlides([...slides, newSlide]);
   };
 
-  // Update slide
   const updateSlide = (index: number, slide: Slide) => {
     const updated = [...slides];
     updated[index] = slide;
     setSlides(updated);
   };
 
-  // Delete slide
   const deleteSlide = (index: number) => {
     const updated = slides.filter((_, i) => i !== index);
-    updated.forEach((s, i) => { s.slide_number = i + 1; });
+    updated.forEach((s, i) => {
+      s.slide_number = i + 1;
+    });
     setSlides(updated);
   };
-
 
   if (isLoading) {
     return (
@@ -184,23 +192,14 @@ const AdminSocialEdit = () => {
   }
 
   return (
-    <AdminLayout
-      title="Editar contenido social"
-      description={`Editando: ${title}`}
-    >
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/admin/social")}
-        className="mb-6"
-      >
+    <AdminLayout title="Editar contenido social" description={`Editando: ${title}`}>
+      <Button variant="ghost" onClick={() => navigate("/admin/social")} className="mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Volver a Social Media
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Left column: Editor */}
         <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-          {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Título interno</Label>
             <Input
@@ -211,33 +210,18 @@ const AdminSocialEdit = () => {
             />
           </div>
 
-          {/* Platform selector */}
           <PlatformSelector value={platform} onChange={setPlatform} />
 
-          {/* Content type selector */}
-          <ContentTypeSelector 
-            value={contentType} 
-            onChange={setContentType} 
-            platform={platform}
-          />
+          <ContentTypeSelector value={contentType} onChange={setContentType} platform={platform} />
 
-          {/* Caption editor */}
           <div className="space-y-4">
             <h3 className="font-medium">Caption</h3>
             <CaptionEditor value={caption} onChange={setCaption} platform={platform} />
             <HashtagEditor hashtags={hashtags} onChange={setHashtags} platform={platform} />
           </div>
 
-          {/* Publish actions */}
-          <PublishActions
-            platform={platform}
-            title={title}
-            caption={caption}
-            hashtags={hashtags}
-            slides={slides}
-          />
+          <PublishActions platform={platform} title={title} caption={caption} hashtags={hashtags} slides={slides} />
 
-          {/* Slides editor */}
           {slides.length > 0 && (contentType === "carousel" || contentType === "story" || contentType === "thread") && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -263,7 +247,6 @@ const AdminSocialEdit = () => {
             </div>
           )}
 
-          {/* Single post/reel image */}
           {slides.length === 1 && (contentType === "post" || contentType === "reel_script") && (
             <div className="space-y-4">
               <h3 className="font-medium">Imagen</h3>
@@ -278,23 +261,13 @@ const AdminSocialEdit = () => {
             </div>
           )}
 
-          {/* Save buttons */}
           <div className="flex gap-3 pt-4 border-t border-border">
-            <Button
-              variant="outline"
-              onClick={() => savePost()}
-              disabled={isSaving}
-              className="rounded-full"
-            >
+            <Button variant="outline" onClick={() => savePost()} disabled={isSaving} className="rounded-full">
               <Save className="h-4 w-4 mr-2" />
               Guardar cambios
             </Button>
             {status === "draft" && (
-              <Button
-                onClick={() => savePost("ready")}
-                disabled={isSaving}
-                className="rounded-full"
-              >
+              <Button onClick={() => savePost("ready")} disabled={isSaving} className="rounded-full">
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -317,16 +290,10 @@ const AdminSocialEdit = () => {
           </div>
         </div>
 
-        {/* Right column: Preview - hidden on mobile */}
         <div className="lg:col-span-1 hidden lg:block">
           <div className="sticky top-28 space-y-4">
             <h3 className="font-medium text-center">Vista previa</h3>
-            <SocialPreviewMockup
-              platform={platform}
-              slides={slides}
-              caption={caption}
-              hashtags={hashtags}
-            />
+            <SocialPreviewMockup platform={platform} slides={slides} caption={caption} hashtags={hashtags} />
           </div>
         </div>
       </div>
