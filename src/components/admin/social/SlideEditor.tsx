@@ -69,26 +69,25 @@ function getAccent(slide?: Slide): string {
   return "#1F2937";
 }
 
-function buildSlideSvg(slide?: Slide): string {
+function buildSlideSvg(slide?: Slide, embeddedImage?: string): string {
   const safeBody = escapeXml(slide?.body?.trim() || "");
-  const safeImage = slide?.image_url ? escapeXml(slide.image_url) : "";
+  const safeImage = embeddedImage ? escapeXml(embeddedImage) : slide?.image_url ? escapeXml(slide.image_url) : "";
   const accent = getAccent(slide);
-  const eyebrow = slide?.type === "cover" ? "ACROXIA" : slide?.type === "cta" ? "SIGUIENTE PASO" : "CLAVE";
 
   const headlineLines = wrapText(slide?.headline || "Slide sin contenido", 18, 4);
   const bodyLines = wrapText(slide?.body || "", 30, 4);
 
   const headlineFontSize = headlineLines.length >= 4 ? 68 : headlineLines.length === 3 ? 76 : 84;
   const bodyFontSize = 34;
-  const headlineStartY = safeImage ? 690 : 360;
+  const headlineStartY = safeImage ? 720 : 360;
   const bodyStartY = headlineStartY + headlineLines.length * (headlineFontSize + 10) + 28;
 
   const headlineTspans = headlineLines
-    .map((line, index) => `<tspan x="96" dy="${index === 0 ? 0 : headlineFontSize + 10}">${escapeXml(line)}</tspan>`)
+    .map((line, index) => `<tspan x="72" dy="${index === 0 ? 0 : headlineFontSize + 10}">${escapeXml(line)}</tspan>`)
     .join("");
 
   const bodyTspans = bodyLines
-    .map((line, index) => `<tspan x="96" dy="${index === 0 ? 0 : bodyFontSize + 10}">${escapeXml(line)}</tspan>`)
+    .map((line, index) => `<tspan x="72" dy="${index === 0 ? 0 : bodyFontSize + 10}">${escapeXml(line)}</tspan>`)
     .join("");
 
   return `
@@ -99,13 +98,9 @@ function buildSlideSvg(slide?: Slide): string {
         <stop offset="100%" stop-color="#E9E1D6" />
       </linearGradient>
       <linearGradient id="imageOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="rgba(15,23,42,0.08)" />
-        <stop offset="55%" stop-color="rgba(15,23,42,0.18)" />
-        <stop offset="100%" stop-color="rgba(15,23,42,0.72)" />
-      </linearGradient>
-      <linearGradient id="panelGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color="rgba(255,255,255,0.96)" />
-        <stop offset="100%" stop-color="rgba(255,255,255,0.90)" />
+        <stop offset="0%" stop-color="rgba(255,255,255,0.02)" />
+        <stop offset="58%" stop-color="rgba(255,255,255,0.08)" />
+        <stop offset="100%" stop-color="rgba(255,255,255,0.24)" />
       </linearGradient>
     </defs>
 
@@ -114,22 +109,14 @@ function buildSlideSvg(slide?: Slide): string {
     ${safeImage ? `<image href="${safeImage}" x="0" y="0" width="1080" height="1080" preserveAspectRatio="xMidYMid slice" />` : ""}
     ${safeImage ? `<rect width="1080" height="1080" fill="url(#imageOverlay)" />` : ""}
 
-    ${!safeImage ? `<circle cx="900" cy="180" r="220" fill="rgba(29,78,216,0.08)" />` : ""}
-    ${!safeImage ? `<circle cx="220" cy="920" r="300" fill="rgba(42,122,99,0.08)" />` : ""}
-
-    <rect x="64" y="64" rx="28" ry="28" width="260" height="56" fill="rgba(255,255,255,0.82)" />
-    <text x="96" y="100" font-family="Georgia, serif" font-size="24" font-weight="700" fill="${accent}" letter-spacing="2">${eyebrow}</text>
-
-    <rect x="64" y="${safeImage ? 620 : 290}" rx="42" ry="42" width="952" height="${safeImage ? 352 : 420}" fill="url(#panelGradient)" />
-
-    <text x="96" y="${headlineStartY}" font-family="Georgia, serif" font-size="${headlineFontSize}" font-weight="700" fill="#111827">
+    <text x="72" y="${headlineStartY}" font-family="Georgia, serif" font-size="${headlineFontSize}" font-weight="700" fill="#0F172A">
       ${headlineTspans}
     </text>
 
-    ${safeBody ? `<text x="96" y="${bodyStartY}" font-family="Helvetica, Arial, sans-serif" font-size="${bodyFontSize}" font-weight="500" fill="#374151">${bodyTspans}</text>` : ""}
+    ${safeBody ? `<text x="72" y="${bodyStartY}" font-family="Helvetica, Arial, sans-serif" font-size="${bodyFontSize}" font-weight="500" fill="#334155">${bodyTspans}</text>` : ""}
 
-    <rect x="64" y="1000" rx="18" ry="18" width="190" height="10" fill="${accent}" opacity="0.9" />
-    <text x="840" y="1014" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="rgba(17,24,39,0.72)">acroxia.es</text>
+    <rect x="72" y="998" rx="18" ry="18" width="160" height="8" fill="${accent}" opacity="0.9" />
+    <text x="850" y="1012" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#334155">acroxia.es</text>
   </svg>`;
 }
 
