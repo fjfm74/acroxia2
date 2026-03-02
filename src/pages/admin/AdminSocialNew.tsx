@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Loader2, ArrowLeft, Save, Plus } from "lucide-react";
@@ -22,6 +22,42 @@ import { useAuth } from "@/contexts/AuthContext";
 
 type Platform = "instagram" | "tiktok" | "facebook" | "linkedin" | "twitter";
 type ContentType = "post" | "carousel" | "story" | "reel_script" | "thread";
+type Audience = "inquilino" | "propietario";
+
+interface BlogSource {
+  id: string;
+  title: string;
+  category: string;
+  excerpt: string;
+  content: string;
+  image: string | null;
+  meta_description: string | null;
+  keywords: string[] | null;
+  audience: Audience;
+  read_time: string;
+  status: string;
+}
+
+const VALID_CONTENT_TYPES_BY_PLATFORM: Record<Platform, ContentType[]> = {
+  instagram: ["post", "carousel", "story", "reel_script"],
+  tiktok: ["reel_script"],
+  facebook: ["post", "carousel", "story", "reel_script"],
+  linkedin: ["post", "carousel", "thread"],
+  twitter: ["post", "thread"],
+};
+
+const getDefaultContentType = (platform: Platform): ContentType => VALID_CONTENT_TYPES_BY_PLATFORM[platform][0];
+
+const applyFeaturedImageToSlides = (baseSlides: Slide[], featuredImage?: string | null): Slide[] => {
+  if (!featuredImage || baseSlides.length === 0) return baseSlides;
+
+  return baseSlides.map((slide, index) => {
+    if (index === 0 || slide.type === "cover") {
+      return { ...slide, image_url: featuredImage };
+    }
+    return slide;
+  });
+};
 
 const AdminSocialNew = () => {
   const navigate = useNavigate();
@@ -31,7 +67,6 @@ const AdminSocialNew = () => {
 
   const blogIdFromUrl = searchParams.get("blog_id");
 
-  // Form state
   const [title, setTitle] = useState("");
   const [platform, setPlatform] = useState<Platform>("instagram");
   const [contentType, setContentType] = useState<ContentType>("carousel");
@@ -39,32 +74,45 @@ const AdminSocialNew = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
+  const [customAudience, setCustomAudience] = useState<Audience>("inquilino");
   const [selectedBlogId, setSelectedBlogId] = useState(blogIdFromUrl || "");
   const [generatingSlideImage, setGeneratingSlideImage] = useState<number | null>(null);
 
-  // UI state
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"blog" | "topic">(blogIdFromUrl ? "blog" : "topic");
 
-  // Fetch blog posts for selection
   const { data: blogPosts } = useQuery({
-    queryKey: ["blog-posts-published"],
+    queryKey: ["blog-posts-social-source"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_posts")
-        .select("id, title, category, excerpt, content")
-        .eq("status", "published")
-        .order("published_at", { ascending: false });
+        .select("id, title, category, excerpt, content, image, meta_description, keywords, audience, read_time, status")
+        .order("updated_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []) as BlogSource[];
     },
   });
 
-  // Generate content with AI
+  const selectedBlogPost = useMemo(
+    () => blogPosts?.find((post) => post.id === selectedBlogId) ?? null,
+    [blogPosts, selectedBlogId],
+  );
+
+  useEffect(() => {
+    const allowed = VALID_CONTENT_TYPES_BY_PLATFORM[platform];
+    if (!allowed.includes(contentType)) {
+      setContentType(getDefaultContentType(platform));
+    }
+  }, [platform, contentType]);
+
   const generateContent = async () => {
     if (activeTab === "blog" && !selectedBlogId) {
       toast({ title: "Error", description: "Selecciona un post del blog", variant: "destructive" });
+      return;
+    }
+    if (activeTab === "blog" && !selectedBlogPost) {
+      toast({ title: "Error", description: "No se ha podido cargar el post seleccionado", variant: "destructive" });
       return;
     }
     if (activeTab === "topic" && !customTopic.trim()) {
@@ -74,15 +122,12 @@ const AdminSocialNew = () => {
 
     setIsGenerating(true);
     try {
-      const blogPost = activeTab === "blog" 
-        ? blogPosts?.find(p => p.id === selectedBlogId)
-        : null;
-
       const { data, error } = await supabase.functions.invoke("generate-social-content", {
         body: {
           mode: activeTab === "blog" ? "from_blog" : "from_topic",
-          blog_post: blogPost,
+          blog_post: activeTab === "blog" ? selectedBlogPost : null,
           custom_topic: customTopic,
+          audience: activeTab === "blog" ? selectedBlogPost?.audience : customAudience,
           platform,
           content_type: contentType,
         },
@@ -90,32 +135,33 @@ const AdminSocialNew = () => {
 
       if (error) throw error;
 
-      // Update form with generated content
+      const generatedSlides = Array.isArray(data.slides) ? (data.slides as Slide[]) : [];
+      const finalSlides =
+        activeTab === "blog" ? applyFeaturedImageToSlides(generatedSlides, selectedBlogPost?.image) : generatedSlides;
+
       setCaption(data.caption || "");
-      setSlides(data.slides || []);
+      setSlides(finalSlides);
       setHashtags(data.hashtags || []);
-      
-      // Auto-generate title
-      if (!title && blogPost) {
-        setTitle(`${platform.charAt(0).toUpperCase() + platform.slice(1)} - ${blogPost.title.slice(0, 40)}`);
+
+      if (!title && selectedBlogPost) {
+        setTitle(`${platform.charAt(0).toUpperCase() + platform.slice(1)} - ${selectedBlogPost.title.slice(0, 60)}`);
       } else if (!title && customTopic) {
-        setTitle(`${platform.charAt(0).toUpperCase() + platform.slice(1)} - ${customTopic.slice(0, 40)}`);
+        setTitle(`${platform.charAt(0).toUpperCase() + platform.slice(1)} - ${customTopic.slice(0, 60)}`);
       }
 
       toast({ title: "Contenido generado", description: "Revisa y edita el contenido antes de guardar." });
     } catch (error) {
       console.error("Error generating content:", error);
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "No se pudo generar el contenido", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo generar el contenido",
+        variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Generate image for a slide
   const generateSlideImage = async (slideIndex: number) => {
     const slide = slides[slideIndex];
     if (!slide) return;
@@ -126,13 +172,16 @@ const AdminSocialNew = () => {
         body: {
           prompt: slide.visual_suggestion || slide.headline,
           slide_number: slide.slide_number,
-          post_id: crypto.randomUUID(), // Temporary ID for storage organization
+          post_id: crypto.randomUUID(),
+          platform,
+          content_type: contentType,
+          title: activeTab === "blog" ? selectedBlogPost?.title || title : title || customTopic,
+          audience: activeTab === "blog" ? selectedBlogPost?.audience || customAudience : customAudience,
         },
       });
 
       if (error) throw error;
 
-      // Update slide with new image
       const updatedSlides = [...slides];
       updatedSlides[slideIndex] = { ...slide, image_url: data.image_url };
       setSlides(updatedSlides);
@@ -140,17 +189,16 @@ const AdminSocialNew = () => {
       toast({ title: "Imagen generada" });
     } catch (error) {
       console.error("Error generating image:", error);
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "No se pudo generar la imagen", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo generar la imagen",
+        variant: "destructive",
       });
     } finally {
       setGeneratingSlideImage(null);
     }
   };
 
-  // Save post
   const savePost = async (status: "draft" | "ready") => {
     if (!title.trim()) {
       toast({ title: "Error", description: "Añade un título", variant: "destructive" });
@@ -159,13 +207,10 @@ const AdminSocialNew = () => {
 
     setIsSaving(true);
     try {
-      const imageUrls = slides
-        .filter(s => s.image_url)
-        .map(s => s.image_url as string);
+      const imageUrls = slides.filter((s) => s.image_url).map((s) => s.image_url as string);
 
-      const { error } = await supabase
-        .from("social_posts")
-        .insert([{
+      const { error } = await supabase.from("social_posts").insert([
+        {
           title,
           platform,
           content_type: contentType,
@@ -173,33 +218,32 @@ const AdminSocialNew = () => {
           slides: JSON.parse(JSON.stringify(slides)),
           hashtags,
           image_urls: imageUrls,
-          source_blog_id: selectedBlogId || null,
+          source_blog_id: activeTab === "blog" ? selectedBlogId || null : null,
           status,
           author_id: user?.id,
-        }]);
+        },
+      ]);
 
       if (error) throw error;
 
-      toast({ 
+      toast({
         title: status === "ready" ? "Contenido listo" : "Borrador guardado",
-        description: status === "ready" 
-          ? "El contenido está listo para publicar" 
-          : "Puedes continuar editando más tarde"
+        description:
+          status === "ready" ? "El contenido está listo para publicar" : "Puedes continuar editando más tarde",
       });
       navigate("/admin/social");
     } catch (error) {
       console.error("Error saving post:", error);
-      toast({ 
-        title: "Error", 
-        description: "No se pudo guardar el contenido", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el contenido",
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Add new slide
   const addSlide = () => {
     const newSlide: Slide = {
       slide_number: slides.length + 1,
@@ -211,40 +255,29 @@ const AdminSocialNew = () => {
     setSlides([...slides, newSlide]);
   };
 
-  // Update slide
   const updateSlide = (index: number, slide: Slide) => {
     const updated = [...slides];
     updated[index] = slide;
     setSlides(updated);
   };
 
-  // Delete slide
   const deleteSlide = (index: number) => {
     const updated = slides.filter((_, i) => i !== index);
-    // Renumber slides
-    updated.forEach((s, i) => { s.slide_number = i + 1; });
+    updated.forEach((s, i) => {
+      s.slide_number = i + 1;
+    });
     setSlides(updated);
   };
 
-
   return (
-    <AdminLayout
-      title="Crear contenido social"
-      description="Genera posts para redes sociales con IA"
-    >
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/admin/social")}
-        className="mb-6"
-      >
+    <AdminLayout title="Crear contenido social" description="Genera posts para redes sociales con IA">
+      <Button variant="ghost" onClick={() => navigate("/admin/social")} className="mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Volver a Social Media
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Left column: Configuration */}
         <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-          {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Título interno</Label>
             <Input
@@ -255,17 +288,10 @@ const AdminSocialNew = () => {
             />
           </div>
 
-          {/* Platform selector */}
           <PlatformSelector value={platform} onChange={setPlatform} />
 
-          {/* Content type selector */}
-          <ContentTypeSelector 
-            value={contentType} 
-            onChange={setContentType} 
-            platform={platform}
-          />
+          <ContentTypeSelector value={contentType} onChange={setContentType} platform={platform} />
 
-          {/* Source selection */}
           <div className="bg-muted/50 rounded-xl p-6 space-y-4">
             <h3 className="font-medium">Fuente del contenido</h3>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "blog" | "topic")}>
@@ -281,27 +307,52 @@ const AdminSocialNew = () => {
                   <SelectContent>
                     {blogPosts?.map((post) => (
                       <SelectItem key={post.id} value={post.id}>
-                        {post.title}
+                        {post.title} {post.status !== "published" ? `(${post.status})` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedBlogPost && (
+                  <div className="mt-3 rounded-lg border border-border bg-background/80 p-3 text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground">{selectedBlogPost.title}</p>
+                    <p>
+                      {selectedBlogPost.category} · Audiencia {selectedBlogPost.audience} · {selectedBlogPost.read_time}
+                    </p>
+                    {selectedBlogPost.image && (
+                      <p className="mt-1">La portada social reutilizara la imagen destacada del post.</p>
+                    )}
+                  </div>
+                )}
               </TabsContent>
               <TabsContent value="topic" className="pt-4">
-                <Textarea
-                  value={customTopic}
-                  onChange={(e) => setCustomTopic(e.target.value)}
-                  placeholder="Describe el tema sobre el que quieres crear contenido..."
-                  rows={4}
-                />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-topic">Tema</Label>
+                    <Textarea
+                      id="custom-topic"
+                      value={customTopic}
+                      onChange={(e) => setCustomTopic(e.target.value)}
+                      placeholder="Describe el tema sobre el que quieres crear contenido..."
+                      rows={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Audiencia</Label>
+                    <Select value={customAudience} onValueChange={(value) => setCustomAudience(value as Audience)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="inquilino">Inquilinos</SelectItem>
+                        <SelectItem value="propietario">Propietarios</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
 
-            <Button 
-              onClick={generateContent} 
-              disabled={isGenerating}
-              className="w-full rounded-full"
-            >
+            <Button onClick={generateContent} disabled={isGenerating} className="w-full rounded-full">
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -316,7 +367,6 @@ const AdminSocialNew = () => {
             </Button>
           </div>
 
-          {/* Caption editor */}
           {caption && (
             <div className="space-y-4">
               <h3 className="font-medium">Caption</h3>
@@ -325,18 +375,10 @@ const AdminSocialNew = () => {
             </div>
           )}
 
-          {/* Publish actions */}
           {(caption || slides.length > 0) && (
-            <PublishActions
-              platform={platform}
-              title={title}
-              caption={caption}
-              hashtags={hashtags}
-              slides={slides}
-            />
+            <PublishActions platform={platform} title={title} caption={caption} hashtags={hashtags} slides={slides} />
           )}
 
-          {/* Slides editor */}
           {slides.length > 0 && (contentType === "carousel" || contentType === "story" || contentType === "thread") && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -362,7 +404,6 @@ const AdminSocialNew = () => {
             </div>
           )}
 
-          {/* Single post/reel image */}
           {slides.length === 1 && (contentType === "post" || contentType === "reel_script") && (
             <div className="space-y-4">
               <h3 className="font-medium">Imagen</h3>
@@ -377,23 +418,13 @@ const AdminSocialNew = () => {
             </div>
           )}
 
-          {/* Save buttons */}
           {(caption || slides.length > 0) && (
             <div className="flex gap-3 pt-4 border-t border-border">
-              <Button
-                variant="outline"
-                onClick={() => savePost("draft")}
-                disabled={isSaving}
-                className="rounded-full"
-              >
+              <Button variant="outline" onClick={() => savePost("draft")} disabled={isSaving} className="rounded-full">
                 <Save className="h-4 w-4 mr-2" />
                 Guardar borrador
               </Button>
-              <Button
-                onClick={() => savePost("ready")}
-                disabled={isSaving}
-                className="rounded-full"
-              >
+              <Button onClick={() => savePost("ready")} disabled={isSaving} className="rounded-full">
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -407,17 +438,11 @@ const AdminSocialNew = () => {
           )}
         </div>
 
-        {/* Right column: Preview - hidden on mobile */}
         <div className="lg:col-span-1 hidden lg:block">
           <div className="sticky top-28 space-y-4">
             <h3 className="font-medium text-center">Vista previa</h3>
             {slides.length > 0 || caption ? (
-              <SocialPreviewMockup
-                platform={platform}
-                slides={slides}
-                caption={caption}
-                hashtags={hashtags}
-              />
+              <SocialPreviewMockup platform={platform} slides={slides} caption={caption} hashtags={hashtags} />
             ) : (
               <div className="bg-muted/50 rounded-xl p-8 text-center text-sm text-muted-foreground">
                 Genera contenido para ver la vista previa
