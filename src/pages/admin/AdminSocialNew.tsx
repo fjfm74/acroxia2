@@ -51,12 +51,10 @@ const getDefaultContentType = (platform: Platform): ContentType => VALID_CONTENT
 const applyFeaturedImageToSlides = (baseSlides: Slide[], featuredImage?: string | null): Slide[] => {
   if (!featuredImage || baseSlides.length === 0) return baseSlides;
 
-  return baseSlides.map((slide, index) => {
-    if (index === 0 || slide.type === "cover") {
-      return { ...slide, image_url: featuredImage };
-    }
-    return slide;
-  });
+  return baseSlides.map((slide) => ({
+    ...slide,
+    image_url: slide.image_url || featuredImage,
+  }));
 };
 
 const AdminSocialNew = () => {
