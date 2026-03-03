@@ -241,23 +241,30 @@ const handler = async (req: Request): Promise<Response> => {
         const emailHtml = generateNewPostEmail(post, unsubscribeUrl, subscriber.name);
 
         try {
+          const emailPayload = {
+            from: "ACROXIA Blog <blog@acroxia.com>",
+            to: [subscriber.email],
+            reply_to: "contacto@acroxia.com",
+            subject: post.title,
+            html: emailHtml,
+          };
+          
+          console.log(`[send-blog-notification] Sending to ${subscriber.email}, subject: "${post.title}"`);
+          
           const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${RESEND_API_KEY}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              from: "ACROXIA Blog <blog@acroxia.com>",
-              to: [subscriber.email],
-              reply_to: "contacto@acroxia.com",
-              subject: post.title,
-              html: emailHtml,
-            }),
+            body: JSON.stringify(emailPayload),
           });
 
+          const responseBody = await response.text();
+          console.log(`[send-blog-notification] Resend response for ${subscriber.email}: HTTP ${response.status} - ${responseBody}`);
+
           if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            throw new Error(`HTTP ${response.status}: ${responseBody}`);
           }
           sentCount++;
         } catch (error) {
