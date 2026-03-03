@@ -17,12 +17,15 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [successMessage, setSuccessMessage] = useState(
+    "Te hemos enviado un email de confirmación. Haz clic en el enlace para activar tu suscripción.",
+  );
   const [errorMessage, setErrorMessage] = useState("");
   const [gdprConsent, setGdprConsent] = useState(false);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate email with Zod
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
@@ -31,15 +34,16 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
       return;
     }
     const validatedEmail = emailResult.data;
-    
+
     if (!gdprConsent) {
       setStatus("error");
       setErrorMessage("Debes aceptar la Política de Privacidad para suscribirte.");
       return;
     }
-    
+
     setIsSubscribing(true);
     setStatus("idle");
+    setSuccessMessage("Te hemos enviado un email de confirmación. Haz clic en el enlace para activar tu suscripción.");
     setErrorMessage("");
 
     try {
@@ -56,31 +60,55 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
       const now = new Date().toISOString();
 
       // Insert into blog_subscribers with GDPR fields
-      const { error: insertError } = await supabase
-        .from("blog_subscribers")
-        .insert({ 
-          email: validatedEmail, 
-          audience: selectedAudience,
-          name: name.trim() || null,
-          gdpr_consent: true,
-          gdpr_consent_at: now,
-          ip_address: ipAddress,
-        });
+      const { error: insertError } = await supabase.from("blog_subscribers").insert({
+        email: validatedEmail,
+        audience: selectedAudience,
+        name: name.trim() || null,
+        gdpr_consent: true,
+        gdpr_consent_at: now,
+        ip_address: ipAddress,
+      });
 
       if (insertError) {
         // Unique constraint violation = already subscribed
         if (insertError.code === "23505") {
-          setStatus("success");
-          setName("");
-          setEmail("");
-          setGdprConsent(false);
+          const { data: existingSubscriber, error: existingError } = await supabase
+            .from("blog_subscribers")
+            .select("confirmed, unsubscribed")
+            .eq("email", validatedEmail)
+            .eq("audience", selectedAudience)
+            .maybeSingle();
+
+          if (existingError || !existingSubscriber) {
+            throw existingError || insertError;
+          }
+
+          if (existingSubscriber.unsubscribed) {
+            setStatus("error");
+            setErrorMessage("Este email está dado de baja. Escríbenos si quieres reactivarlo manualmente.");
+          } else if (existingSubscriber.confirmed) {
+            setSuccessMessage("Este email ya estaba suscrito y confirmado.");
+            setStatus("success");
+            setName("");
+            setEmail("");
+            setGdprConsent(false);
+          } else {
+            await supabase.functions.invoke("send-blog-confirmation", {
+              body: { email: validatedEmail, audience: selectedAudience },
+            });
+            setSuccessMessage("Este email ya existía. Te hemos reenviado el email de confirmación.");
+            setStatus("success");
+            setName("");
+            setEmail("");
+            setGdprConsent(false);
+          }
         } else {
           throw insertError;
         }
       } else {
         // Send confirmation email
         await supabase.functions.invoke("send-blog-confirmation", {
-          body: { email: validatedEmail, audience: selectedAudience }
+          body: { email: validatedEmail, audience: selectedAudience },
         });
         setStatus("success");
         setName("");
@@ -105,9 +133,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
           <CheckCircle className="w-6 h-6 text-green-600" />
           <h3 className="font-medium text-foreground">¡Casi listo!</h3>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Te hemos enviado un email de confirmación. Haz clic en el enlace para activar tu suscripción.
-        </p>
+        <p className="text-sm text-muted-foreground">{successMessage}</p>
       </div>
     );
   }
@@ -117,9 +143,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
       <div className="w-10 h-10 rounded-xl bg-foreground/5 flex items-center justify-center mb-3">
         <Bell className="w-5 h-5 text-foreground" />
       </div>
-      <h3 className="font-medium text-foreground mb-2">
-        ¿Quieres recibir nuevos artículos?
-      </h3>
+      <h3 className="font-medium text-foreground mb-2">¿Quieres recibir nuevos artículos?</h3>
       <p className="text-sm text-muted-foreground mb-4">
         Te avisamos cuando publiquemos contenido para {audienceLabel}.
       </p>
@@ -141,7 +165,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
           disabled={isSubscribing}
           className="bg-background"
         />
-        
+
         {/* GDPR Consent Checkbox */}
         <div className="flex items-start gap-3">
           <Checkbox
@@ -150,10 +174,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
             onCheckedChange={(checked) => setGdprConsent(checked as boolean)}
             className="mt-0.5"
           />
-          <Label 
-            htmlFor="gdpr-consent" 
-            className="text-xs text-muted-foreground leading-relaxed cursor-pointer"
-          >
+          <Label htmlFor="gdpr-consent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
             Acepto la{" "}
             <Link to="/privacidad" className="text-primary hover:underline" target="_blank">
               Política de Privacidad
@@ -161,12 +182,8 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
             y recibir emails con nuevos artículos.
           </Label>
         </div>
-        
-        <Button 
-          type="submit" 
-          className="w-full rounded-full"
-          disabled={isSubscribing || !email || !gdprConsent}
-        >
+
+        <Button type="submit" className="w-full rounded-full" disabled={isSubscribing || !email || !gdprConsent}>
           {isSubscribing ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -183,9 +200,7 @@ const BlogSubscriptionForm = ({ selectedAudience }: BlogSubscriptionFormProps) =
           <span className="text-sm">{errorMessage}</span>
         </div>
       )}
-      <p className="text-xs text-muted-foreground mt-3 text-center">
-        Sin spam. Cancela cuando quieras.
-      </p>
+      <p className="text-xs text-muted-foreground mt-3 text-center">Sin spam. Cancela cuando quieras.</p>
     </div>
   );
 };
