@@ -13,7 +13,7 @@ const corsHeaders = {
 // Email styles
 const baseStyles = `
   body { 
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     background-color: #FAF8F5;
     margin: 0;
     padding: 0;
@@ -34,7 +34,7 @@ const baseStyles = `
     text-align: center;
   }
   .logo {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: Georgia, 'Times New Roman', serif;
     font-size: 28px;
     font-weight: 600;
     color: #FAF8F5;
@@ -45,7 +45,7 @@ const baseStyles = `
     padding: 48px 40px;
   }
   .title {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: Georgia, 'Times New Roman', serif;
     font-size: 24px;
     font-weight: 600;
     color: #1F1D1B;
@@ -126,17 +126,61 @@ interface BlogPost {
   read_time: string;
 }
 
-const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string, subscriberName?: string) => {
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function encodeMailHtmlText(value: string): string {
+  return escapeHtml(value)
+    .replace(/á/g, "&aacute;")
+    .replace(/é/g, "&eacute;")
+    .replace(/í/g, "&iacute;")
+    .replace(/ó/g, "&oacute;")
+    .replace(/ú/g, "&uacute;")
+    .replace(/Á/g, "&Aacute;")
+    .replace(/É/g, "&Eacute;")
+    .replace(/Í/g, "&Iacute;")
+    .replace(/Ó/g, "&Oacute;")
+    .replace(/Ú/g, "&Uacute;")
+    .replace(/ñ/g, "&ntilde;")
+    .replace(/Ñ/g, "&Ntilde;")
+    .replace(/ü/g, "&uuml;")
+    .replace(/Ü/g, "&Uuml;")
+    .replace(/¿/g, "&iquest;")
+    .replace(/¡/g, "&iexcl;")
+    .replace(/•/g, "&bull;");
+}
+
+function toPlainAscii(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[¿¡]/g, "")
+    .replace(/•/g, "-");
+}
+
+const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
   const postUrl = `https://acroxia.com/blog/${post.slug}`;
   const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
-  
+  const safeTitle = encodeMailHtmlText(post.title);
+  const safeExcerpt = encodeMailHtmlText(post.excerpt);
+  const safeCategory = encodeMailHtmlText(post.category);
+  const safeReadTime = encodeMailHtmlText(post.read_time);
+  const safeImage = post.image ? escapeHtml(post.image) : null;
+  const safePostUrl = escapeHtml(postUrl);
+  const safeUnsubscribeUrl = escapeHtml(unsubscribeUrl);
+
   return `
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
   <style>${baseStyles}</style>
 </head>
 <body>
@@ -146,12 +190,12 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string, subscriber
         <h1 class="logo">ACROXIA</h1>
       </div>
       <div class="content">
-        <span class="category-badge">${post.category} • ${post.read_time}</span>
-        ${post.image ? `<img src="${post.image}" alt="${post.title}" class="post-image" />` : ''}
-        <h2 class="title">${post.title}</h2>
-        <p class="excerpt">${post.excerpt}</p>
+        <span class="category-badge">${safeCategory} &bull; ${safeReadTime}</span>
+        ${safeImage ? `<img src="${safeImage}" alt="${safeTitle}" class="post-image" />` : ""}
+        <h2 class="title">${safeTitle}</h2>
+        <p class="excerpt">${safeExcerpt}</p>
         <div class="button-container">
-          <a href="${postUrl}" class="button">Leer artículo completo</a>
+          <a href="${safePostUrl}" class="button">Leer articulo completo</a>
         </div>
       </div>
       <div class="footer">
@@ -160,7 +204,7 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string, subscriber
           Recibes este email porque te suscribiste a nuestro contenido para ${audienceLabel}.
         </p>
         <p style="margin-top: 16px;">
-          <a href="${unsubscribeUrl}" class="unsubscribe-link">Darme de baja del newsletter</a>
+          <a href="${safeUnsubscribeUrl}" class="unsubscribe-link">Darme de baja del newsletter</a>
         </p>
       </div>
     </div>
@@ -169,6 +213,55 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string, subscriber
 </html>
   `;
 };
+
+const generateNewPostPlainText = (post: BlogPost, unsubscribeUrl: string) => {
+  const postUrl = `https://acroxia.com/blog/${post.slug}`;
+  const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
+
+  return [
+    "ACROXIA",
+    "",
+    `${toPlainAscii(post.category)} - ${toPlainAscii(post.read_time)}`,
+    toPlainAscii(post.title),
+    "",
+    toPlainAscii(post.excerpt),
+    "",
+    `Leer articulo completo: ${postUrl}`,
+    "",
+    `Recibes este email porque te suscribiste a nuestro contenido para ${audienceLabel}.`,
+    `Darme de baja del newsletter: ${unsubscribeUrl}`,
+  ].join("\n");
+};
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+async function recordDeliveryLog(
+  supabase: ReturnType<typeof createClient>,
+  input: {
+    blogPostId: string;
+    subscriberEmail: string;
+    audience: string;
+    status: "sent" | "failed";
+    providerMessageId?: string | null;
+    errorMessage?: string | null;
+  },
+) {
+  const { error } = await supabase.from("blog_newsletter_deliveries").insert({
+    blog_post_id: input.blogPostId,
+    subscriber_email: normalizeEmail(input.subscriberEmail),
+    audience: input.audience,
+    status: input.status,
+    provider: "resend",
+    provider_message_id: input.providerMessageId ?? null,
+    error_message: input.errorMessage ?? null,
+  });
+
+  if (error) {
+    console.error("[send-blog-notification] Failed to write delivery log:", error);
+  }
+}
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -179,10 +272,10 @@ const handler = async (req: Request): Promise<Response> => {
     const { postId } = await req.json();
 
     if (!postId) {
-      return new Response(
-        JSON.stringify({ error: "postId es requerido" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: "postId es requerido" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     console.log(`[send-blog-notification] Processing for post ${postId}`);
@@ -199,10 +292,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (postError || !post) {
       console.error("[send-blog-notification] Post not found:", postError);
-      return new Response(
-        JSON.stringify({ error: "Post no encontrado" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: "Post no encontrado" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     // Get confirmed subscribers for this audience
@@ -221,51 +314,107 @@ const handler = async (req: Request): Promise<Response> => {
     if (!subscribers || subscribers.length === 0) {
       console.log("[send-blog-notification] No subscribers found for audience:", post.audience);
       return new Response(
-        JSON.stringify({ success: true, message: "No hay suscriptores", sent: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({
+          success: true,
+          message: "No hay suscriptores",
+          sent: 0,
+          errors: 0,
+          totalRecipients: 0,
+          skippedAlreadySent: 0,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
-    console.log(`[send-blog-notification] Sending to ${subscribers.length} subscribers`);
+    const { data: sentDeliveries, error: sentDeliveriesError } = await supabase
+      .from("blog_newsletter_deliveries")
+      .select("subscriber_email")
+      .eq("blog_post_id", post.id)
+      .eq("status", "sent");
+
+    if (sentDeliveriesError) {
+      console.error("[send-blog-notification] Error fetching delivery logs:", sentDeliveriesError);
+      throw sentDeliveriesError;
+    }
+
+    const alreadySentEmails = new Set((sentDeliveries || []).map((row) => normalizeEmail(row.subscriber_email)));
+    const recipients = subscribers.filter((subscriber) => !alreadySentEmails.has(normalizeEmail(subscriber.email)));
+    const skippedAlreadySent = subscribers.length - recipients.length;
+
+    if (recipients.length === 0) {
+      console.log(
+        `[send-blog-notification] All ${subscribers.length} recipients already have a successful delivery log for post ${post.id}`,
+      );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Todos los suscriptores ya recibieron esta newsletter",
+          sent: 0,
+          errors: 0,
+          totalRecipients: subscribers.length,
+          skippedAlreadySent,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
+
+    console.log(
+      `[send-blog-notification] Sending to ${recipients.length} subscribers (${skippedAlreadySent} skipped as already sent)`,
+    );
 
     // Send emails in batches
     let sentCount = 0;
     let errorCount = 0;
     const BATCH_SIZE = 10;
 
-    for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
-      const batch = subscribers.slice(i, i + BATCH_SIZE);
-      
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE);
+
       const emailPromises = batch.map(async (subscriber) => {
         const unsubscribeUrl = `https://acroxia.com/blog/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${subscriber.confirmation_token}`;
-        const emailHtml = generateNewPostEmail(post, unsubscribeUrl, subscriber.name);
+        const emailHtml = generateNewPostEmail(post, unsubscribeUrl);
+        const emailText = generateNewPostPlainText(post, unsubscribeUrl);
 
         try {
-          const emailPayload = {
-            from: "ACROXIA Blog <blog@acroxia.com>",
-            to: [subscriber.email],
-            reply_to: "contacto@acroxia.com",
-            subject: post.title,
-            html: emailHtml,
-          };
-          
-          console.log(`[send-blog-notification] Sending to ${subscriber.email}, subject: "${post.title}"`);
-          
           const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
-              "Authorization": `Bearer ${RESEND_API_KEY}`,
+              Authorization: `Bearer ${RESEND_API_KEY}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(emailPayload),
+            body: JSON.stringify({
+              from: "ACROXIA <noreply@acroxia.com>",
+              to: [subscriber.email],
+              reply_to: "contacto@acroxia.com",
+              subject: post.title,
+              html: emailHtml,
+              text: emailText,
+              headers: {
+                "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
+              },
+            }),
           });
 
-          const responseBody = await response.text();
-          console.log(`[send-blog-notification] Resend response for ${subscriber.email}: HTTP ${response.status} - ${responseBody}`);
-
           if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${responseBody}`);
+            const errorText = await response.text();
+            await recordDeliveryLog(supabase, {
+              blogPostId: post.id,
+              subscriberEmail: subscriber.email,
+              audience: post.audience,
+              status: "failed",
+              errorMessage: `HTTP ${response.status}: ${errorText.slice(0, 1000)}`,
+            });
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
           }
+
+          const result = await response.json().catch(() => null);
+          await recordDeliveryLog(supabase, {
+            blogPostId: post.id,
+            subscriberEmail: subscriber.email,
+            audience: post.audience,
+            status: "sent",
+            providerMessageId: result?.id ?? null,
+          });
           sentCount++;
         } catch (error) {
           console.error(`[send-blog-notification] Error sending to ${subscriber.email}:`, error);
@@ -274,32 +423,37 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       await Promise.all(emailPromises);
-      
+
       // Small delay between batches to avoid rate limits
-      if (i + BATCH_SIZE < subscribers.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      if (i + BATCH_SIZE < recipients.length) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
 
-    console.log(`[send-blog-notification] Sent: ${sentCount}, Errors: ${errorCount}`);
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Notificaciones enviadas`,
-        sent: sentCount,
-        errors: errorCount
-      }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    console.log(
+      `[send-blog-notification] Sent: ${sentCount}, Errors: ${errorCount}, Skipped already sent: ${skippedAlreadySent}`,
     );
 
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Notificaciones procesadas`,
+        sent: sentCount,
+        errors: errorCount,
+        totalRecipients: subscribers.length,
+        skippedAlreadySent,
+        postId: post.id,
+        audience: post.audience,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+    );
   } catch (error: unknown) {
     console.error("[send-blog-notification] Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 
