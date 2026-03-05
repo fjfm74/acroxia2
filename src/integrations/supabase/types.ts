@@ -313,6 +313,50 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_newsletter_deliveries: {
+        Row: {
+          audience: string
+          blog_post_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          provider: string
+          provider_message_id: string | null
+          status: string
+          subscriber_email: string
+        }
+        Insert: {
+          audience: string
+          blog_post_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          provider?: string
+          provider_message_id?: string | null
+          status: string
+          subscriber_email: string
+        }
+        Update: {
+          audience?: string
+          blog_post_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          provider?: string
+          provider_message_id?: string | null
+          status?: string
+          subscriber_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_newsletter_deliveries_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           audience: string
