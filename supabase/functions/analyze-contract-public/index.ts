@@ -9,7 +9,12 @@ const corsHeaders = {
 
 function getFileType(filePath: string, mimeType?: string): "pdf" | "docx" | "image" {
   if (mimeType?.includes("pdf") || filePath.toLowerCase().endsWith(".pdf")) return "pdf";
-  if (mimeType?.includes("wordprocessingml") || filePath.toLowerCase().endsWith(".docx") || filePath.toLowerCase().endsWith(".doc")) return "docx";
+  if (
+    mimeType?.includes("wordprocessingml") ||
+    filePath.toLowerCase().endsWith(".docx") ||
+    filePath.toLowerCase().endsWith(".doc")
+  )
+    return "docx";
   return "image";
 }
 
@@ -17,10 +22,10 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
   const uint8Array = new Uint8Array(buffer);
   const decoder = new TextDecoder("utf-8", { fatal: false });
   const rawText = decoder.decode(uint8Array);
-  
+
   const textSegments = rawText.match(/[\x20-\x7E\xC0-\xFF\n\r\t]+/g) || [];
   return textSegments
-    .filter(segment => segment.length > 10)
+    .filter((segment) => segment.length > 10)
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
@@ -47,19 +52,21 @@ async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: s
     },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
-      messages: [{
-        role: "user",
-        content: [
-          { 
-            type: "text", 
-            text: "Transcribe TODO el texto visible en esta imagen de un contrato de alquiler español. Extrae el texto completo manteniendo la estructura del documento. Devuelve SOLO el texto transcrito sin comentarios adicionales." 
-          },
-          { 
-            type: "image_url", 
-            image_url: { url: `data:${mimeType};base64,${base64}` } 
-          }
-        ]
-      }]
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Transcribe TODO el texto visible en esta imagen de un contrato de alquiler español. Extrae el texto completo manteniendo la estructura del documento. Devuelve SOLO el texto transcrito sin comentarios adicionales.",
+            },
+            {
+              type: "image_url",
+              image_url: { url: `data:${mimeType};base64,${base64}` },
+            },
+          ],
+        },
+      ],
     }),
   });
 
@@ -69,6 +76,92 @@ async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: s
 
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
+}
+
+async function extractPdfTextWithVision(buffer: ArrayBuffer, apiKey: string): Promise<string> {
+  const uint8Array = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < uint8Array.length; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  const base64 = btoa(binary);
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      temperature: 0,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Transcribe TODO el texto legible de este PDF de alquiler en España. Mantén estructura por secciones cuando sea posible. Devuelve SOLO texto plano transcrito, sin comentarios.",
+            },
+            {
+              type: "image_url",
+              image_url: { url: `data:application/pdf;base64,${base64}` },
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error OCR PDF (vision): ${response.status} ${errorText.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+function looksLikeLowQualityPdfExtraction(text: string): boolean {
+  if (!text || text.length < 1200) return true;
+  const lower = text.toLowerCase();
+  const legalSignals = ["arrend", "claus", "renta", "fianza", "vivienda", "arrendador", "arrendatario"];
+  const hits = legalSignals.filter((s) => lower.includes(s)).length;
+  if (hits < 2) return true;
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  return wordCount < 200;
+}
+
+function splitContractCoreAndAnnexes(text: string): { coreText: string; annexText: string; splitApplied: boolean } {
+  const markers = [
+    /\banexo(?:s)?\b/i,
+    /c[ée]dula\s+de\s+habitabilidad/i,
+    /licencia\s+de\s+(?:primera|segunda)\s+ocupaci[oó]n/i,
+    /certificado\s+de\s+eficiencia\s+energ[ée]tica/i,
+    /etiqueta\s+energ[ée]tica/i,
+  ];
+
+  let splitIndex = -1;
+  for (const marker of markers) {
+    const match = marker.exec(text);
+    if (match && match.index >= 0 && (splitIndex === -1 || match.index < splitIndex)) {
+      splitIndex = match.index;
+    }
+  }
+
+  if (splitIndex > 5000) {
+    return {
+      coreText: text.slice(0, splitIndex).trim(),
+      annexText: text.slice(splitIndex).trim(),
+      splitApplied: true,
+    };
+  }
+
+  return {
+    coreText: text,
+    annexText: "",
+    splitApplied: false,
+  };
 }
 
 // Simplified system prompt for public analysis
@@ -121,7 +214,7 @@ serve(async (req) => {
 
   try {
     const { analysisId, filePath, fileType, sessionId } = await req.json();
-    
+
     if (!analysisId || !filePath) {
       throw new Error("Faltan parámetros requeridos");
     }
@@ -129,15 +222,13 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const apiKey = Deno.env.get("LOVABLE_API_KEY")!;
-    
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log(`Processing public analysis: ${analysisId}, file: ${filePath}`);
 
     // Download file from storage
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from("contracts")
-      .download(filePath);
+    const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
 
     if (downloadError || !fileData) {
       throw new Error(`Error descargando archivo: ${downloadError?.message}`);
@@ -153,6 +244,17 @@ serve(async (req) => {
     switch (detectedFileType) {
       case "pdf":
         contractText = await extractPdfText(buffer);
+        if (looksLikeLowQualityPdfExtraction(contractText)) {
+          console.log("Low-quality PDF text extraction detected in public analyzer, retrying with vision OCR...");
+          try {
+            const visionText = await extractPdfTextWithVision(buffer, apiKey);
+            if (visionText.length > contractText.length) {
+              contractText = visionText;
+            }
+          } catch (visionError) {
+            console.warn("Public analyzer vision OCR fallback failed:", visionError);
+          }
+        }
         break;
       case "docx":
         contractText = await extractDocxText(buffer);
@@ -170,7 +272,8 @@ serve(async (req) => {
 
     // Call AI for analysis
     const systemPrompt = buildSystemPrompt();
-    
+
+    const { coreText, annexText } = splitContractCoreAndAnnexes(contractText);
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -181,9 +284,12 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Analiza el siguiente contrato de alquiler:\n\n${contractText.substring(0, 15000)}` }
+          {
+            role: "user",
+            content: `Analiza el siguiente contrato de alquiler:\n\nCONTRATO BASE:\n${coreText.substring(0, 13000)}\n\nANEXOS:\n${annexText.substring(0, 3000)}\n\nTEXTO COMPLETO DE RESPALDO:\n${contractText.substring(0, 2000)}`,
+          },
         ],
-        temperature: 0.3,
+        temperature: 0,
       }),
     });
 
@@ -203,8 +309,10 @@ serve(async (req) => {
     }
 
     const analysisResult = JSON.parse(jsonMatch[0]);
-    
-    console.log(`Analysis complete: ${analysisResult.total_clauses} clauses, ${analysisResult.illegal_clauses} illegal`);
+
+    console.log(
+      `Analysis complete: ${analysisResult.total_clauses} clauses, ${analysisResult.illegal_clauses} illegal`,
+    );
 
     // Update anonymous_analyses with result
     const { error: updateError } = await supabase
@@ -218,8 +326,8 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         analysisId,
         preview: {
           total_clauses: analysisResult.total_clauses,
@@ -227,19 +335,15 @@ serve(async (req) => {
           suspicious_clauses: analysisResult.suspicious_clauses,
           illegal_clauses: analysisResult.illegal_clauses,
           recommendation: analysisResult.recommendation,
-        }
+        },
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-
   } catch (error: any) {
     console.error("Public analysis error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Error procesando el análisis" }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message || "Error procesando el análisis" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
