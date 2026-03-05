@@ -174,7 +174,7 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
   const safeImage = post.image ? escapeHtml(post.image) : null;
   const safePostUrl = escapeHtml(postUrl);
   const safeUnsubscribeUrl = escapeHtml(unsubscribeUrl);
-
+  
   return `
 <!DOCTYPE html>
 <html lang="es">
@@ -191,7 +191,7 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
       </div>
       <div class="content">
         <span class="category-badge">${safeCategory} &bull; ${safeReadTime}</span>
-        ${safeImage ? `<img src="${safeImage}" alt="${safeTitle}" class="post-image" />` : ""}
+        ${safeImage ? `<img src="${safeImage}" alt="${safeTitle}" class="post-image" />` : ''}
         <h2 class="title">${safeTitle}</h2>
         <p class="excerpt">${safeExcerpt}</p>
         <div class="button-container">
@@ -272,10 +272,10 @@ const handler = async (req: Request): Promise<Response> => {
     const { postId } = await req.json();
 
     if (!postId) {
-      return new Response(JSON.stringify({ error: "postId es requerido" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+      return new Response(
+        JSON.stringify({ error: "postId es requerido" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     console.log(`[send-blog-notification] Processing for post ${postId}`);
@@ -292,10 +292,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (postError || !post) {
       console.error("[send-blog-notification] Post not found:", postError);
-      return new Response(JSON.stringify({ error: "Post no encontrado" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+      return new Response(
+        JSON.stringify({ error: "Post no encontrado" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Get confirmed subscribers for this audience
@@ -314,15 +314,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (!subscribers || subscribers.length === 0) {
       console.log("[send-blog-notification] No subscribers found for audience:", post.audience);
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: "No hay suscriptores",
-          sent: 0,
-          errors: 0,
-          totalRecipients: 0,
-          skippedAlreadySent: 0,
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        JSON.stringify({ success: true, message: "No hay suscriptores", sent: 0, errors: 0, totalRecipients: 0, skippedAlreadySent: 0 }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -342,9 +335,7 @@ const handler = async (req: Request): Promise<Response> => {
     const skippedAlreadySent = subscribers.length - recipients.length;
 
     if (recipients.length === 0) {
-      console.log(
-        `[send-blog-notification] All ${subscribers.length} recipients already have a successful delivery log for post ${post.id}`,
-      );
+      console.log(`[send-blog-notification] All ${subscribers.length} recipients already have a successful delivery log for post ${post.id}`);
       return new Response(
         JSON.stringify({
           success: true,
@@ -354,13 +345,11 @@ const handler = async (req: Request): Promise<Response> => {
           totalRecipients: subscribers.length,
           skippedAlreadySent,
         }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(
-      `[send-blog-notification] Sending to ${recipients.length} subscribers (${skippedAlreadySent} skipped as already sent)`,
-    );
+    console.log(`[send-blog-notification] Sending to ${recipients.length} subscribers (${skippedAlreadySent} skipped as already sent)`);
 
     // Send emails in batches
     let sentCount = 0;
@@ -369,7 +358,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
       const batch = recipients.slice(i, i + BATCH_SIZE);
-
+      
       const emailPromises = batch.map(async (subscriber) => {
         const unsubscribeUrl = `https://acroxia.com/blog/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${subscriber.confirmation_token}`;
         const emailHtml = generateNewPostEmail(post, unsubscribeUrl);
@@ -379,7 +368,7 @@ const handler = async (req: Request): Promise<Response> => {
           const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${RESEND_API_KEY}`,
+              "Authorization": `Bearer ${RESEND_API_KEY}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -423,20 +412,18 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       await Promise.all(emailPromises);
-
+      
       // Small delay between batches to avoid rate limits
       if (i + BATCH_SIZE < recipients.length) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
-    console.log(
-      `[send-blog-notification] Sent: ${sentCount}, Errors: ${errorCount}, Skipped already sent: ${skippedAlreadySent}`,
-    );
+    console.log(`[send-blog-notification] Sent: ${sentCount}, Errors: ${errorCount}, Skipped already sent: ${skippedAlreadySent}`);
 
     return new Response(
-      JSON.stringify({
-        success: true,
+      JSON.stringify({ 
+        success: true, 
         message: `Notificaciones procesadas`,
         sent: sentCount,
         errors: errorCount,
@@ -445,15 +432,16 @@ const handler = async (req: Request): Promise<Response> => {
         postId: post.id,
         audience: post.audience,
       }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
+
   } catch (error: unknown) {
     console.error("[send-blog-notification] Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
   }
 };
 

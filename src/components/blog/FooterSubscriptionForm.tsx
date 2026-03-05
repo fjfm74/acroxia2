@@ -20,7 +20,7 @@ const FooterSubscriptionForm = () => {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validate email with Zod
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
@@ -29,13 +29,13 @@ const FooterSubscriptionForm = () => {
       return;
     }
     const validatedEmail = emailResult.data;
-
+    
     if (!gdprConsent) {
       setStatus("error");
       setErrorMessage("Debes aceptar la Política de Privacidad para suscribirte.");
       return;
     }
-
+    
     setIsSubscribing(true);
     setStatus("idle");
     setSuccessMessage("¡Revisa tu email para confirmar la suscripción!");
@@ -54,14 +54,16 @@ const FooterSubscriptionForm = () => {
 
       const now = new Date().toISOString();
 
-      const { error: insertError } = await supabase.from("blog_subscribers").insert({
-        email: validatedEmail,
-        audience,
-        name: name.trim() || null,
-        gdpr_consent: true,
-        gdpr_consent_at: now,
-        ip_address: ipAddress,
-      });
+      const { error: insertError } = await supabase
+        .from("blog_subscribers")
+        .insert({ 
+          email: validatedEmail, 
+          audience,
+          name: name.trim() || null,
+          gdpr_consent: true,
+          gdpr_consent_at: now,
+          ip_address: ipAddress,
+        });
 
       if (insertError) {
         if (insertError.code === "23505") {
@@ -87,7 +89,7 @@ const FooterSubscriptionForm = () => {
             setGdprConsent(false);
           } else {
             await supabase.functions.invoke("send-blog-confirmation", {
-              body: { email: validatedEmail, audience },
+              body: { email: validatedEmail, audience }
             });
             setSuccessMessage("Este email ya existía. Te hemos reenviado el email de confirmación.");
             setStatus("success");
@@ -100,7 +102,7 @@ const FooterSubscriptionForm = () => {
         }
       } else {
         await supabase.functions.invoke("send-blog-confirmation", {
-          body: { email: validatedEmail, audience },
+          body: { email: validatedEmail, audience }
         });
         setStatus("success");
         setName("");
@@ -118,10 +120,12 @@ const FooterSubscriptionForm = () => {
 
   if (status === "success") {
     return (
-      <div className="flex items-center justify-center gap-3 py-4">
-        <CheckCircle className="w-5 h-5 text-green-600" />
-        <p className="text-sm text-foreground">{successMessage}</p>
-      </div>
+        <div className="flex items-center justify-center gap-3 py-4">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <p className="text-sm text-foreground">
+            {successMessage}
+          </p>
+        </div>
     );
   }
 
@@ -133,8 +137,8 @@ const FooterSubscriptionForm = () => {
           type="button"
           onClick={() => setAudience("inquilino")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            audience === "inquilino"
-              ? "bg-foreground text-background"
+            audience === "inquilino" 
+              ? "bg-foreground text-background" 
               : "bg-foreground/10 text-foreground hover:bg-foreground/20"
           }`}
         >
@@ -144,8 +148,8 @@ const FooterSubscriptionForm = () => {
           type="button"
           onClick={() => setAudience("propietario")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            audience === "propietario"
-              ? "bg-foreground text-background"
+            audience === "propietario" 
+              ? "bg-foreground text-background" 
               : "bg-foreground/10 text-foreground hover:bg-foreground/20"
           }`}
         >
@@ -156,24 +160,28 @@ const FooterSubscriptionForm = () => {
       {/* Formulario */}
       <form onSubmit={handleSubscribe} className="space-y-3 max-w-md mx-auto">
         <div className="flex flex-col sm:flex-row gap-3">
-          <Input
-            type="text"
-            placeholder="Tu nombre"
+          <Input 
+            type="text" 
+            placeholder="Tu nombre" 
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={isSubscribing}
             className="flex-1 bg-background"
           />
-          <Input
-            type="email"
-            placeholder="tu@email.com"
+          <Input 
+            type="email" 
+            placeholder="tu@email.com" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={isSubscribing}
             className="flex-1 bg-background"
           />
-          <Button type="submit" className="rounded-full px-6" disabled={isSubscribing || !email || !gdprConsent}>
+          <Button 
+            type="submit" 
+            className="rounded-full px-6"
+            disabled={isSubscribing || !email || !gdprConsent}
+          >
             {isSubscribing ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -184,7 +192,7 @@ const FooterSubscriptionForm = () => {
             )}
           </Button>
         </div>
-
+        
         {/* GDPR Consent Checkbox */}
         <div className="flex items-start gap-3 justify-center">
           <Checkbox
@@ -193,8 +201,8 @@ const FooterSubscriptionForm = () => {
             onCheckedChange={(checked) => setGdprConsent(checked as boolean)}
             className="mt-0.5"
           />
-          <Label
-            htmlFor="footer-gdpr-consent"
+          <Label 
+            htmlFor="footer-gdpr-consent" 
             className="text-xs text-muted-foreground leading-relaxed cursor-pointer text-left"
           >
             Acepto la{" "}
@@ -213,7 +221,9 @@ const FooterSubscriptionForm = () => {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground text-center">Sin spam. Cancela cuando quieras.</p>
+      <p className="text-xs text-muted-foreground text-center">
+        Sin spam. Cancela cuando quieras.
+      </p>
     </div>
   );
 };
