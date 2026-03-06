@@ -7,6 +7,81 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+type SupportedLanguage = "es" | "ca" | "mixed_es_ca" | "unsupported";
+type LanguageDetectionResult = {
+  detectedLanguage: SupportedLanguage;
+  supported: boolean;
+  esScore: number;
+  caScore: number;
+};
+
+const ES_LANGUAGE_PATTERNS: RegExp[] = [
+  /\barrendador(?:a)?\b/gi,
+  /\barrendatari[oa]\b/gi,
+  /\balquiler\b/gi,
+  /\bvivienda\b/gi,
+  /\bfianza\b/gi,
+  /\bcl[áa]usula\b/gi,
+  /\bpr[óo]rroga\b/gi,
+  /\bdesistimiento\b/gi,
+  /\bcertificado de eficiencia energ[ée]tica\b/gi,
+  /\bc[ée]dula de habitabilidad\b/gi,
+  /\brenta\b/gi,
+  /\bgastos\b/gi,
+];
+
+const CA_LANGUAGE_PATTERNS: RegExp[] = [
+  /\barrendament\b/gi,
+  /\barrendatari[ae]\b/gi,
+  /\blloguer\b/gi,
+  /\bhabitatge\b/gi,
+  /\bfian[cç]a\b/gi,
+  /\bcl[àa]usula\b/gi,
+  /\bpr[òo]rroga\b/gi,
+  /\bdesistiment\b/gi,
+  /\bcertificat d['’]efici[èe]ncia energ[èe]tica\b/gi,
+  /\bc[èe]dula d['’]habitabilitat\b/gi,
+  /\brenda\b/gi,
+  /\bdespeses\b/gi,
+];
+
+function countLanguageMatches(text: string, patterns: RegExp[]): number {
+  return patterns.reduce((acc, pattern) => acc + (text.match(pattern)?.length || 0), 0);
+}
+
+function detectSupportedLanguage(text: string): LanguageDetectionResult {
+  const sample = text.toLowerCase().slice(0, 50000);
+  const esScore = countLanguageMatches(sample, ES_LANGUAGE_PATTERNS);
+  const caScore = countLanguageMatches(sample, CA_LANGUAGE_PATTERNS);
+  const total = esScore + caScore;
+
+  if (total < 3) {
+    return { detectedLanguage: "unsupported", supported: false, esScore, caScore };
+  }
+
+  if (esScore >= 3 && esScore >= caScore * 1.6) {
+    return { detectedLanguage: "es", supported: true, esScore, caScore };
+  }
+
+  if (caScore >= 3 && caScore >= esScore * 1.6) {
+    return { detectedLanguage: "ca", supported: true, esScore, caScore };
+  }
+
+  if (esScore >= 2 && caScore >= 2) {
+    return { detectedLanguage: "mixed_es_ca", supported: true, esScore, caScore };
+  }
+
+  if (esScore >= 3) {
+    return { detectedLanguage: "es", supported: true, esScore, caScore };
+  }
+
+  if (caScore >= 3) {
+    return { detectedLanguage: "ca", supported: true, esScore, caScore };
+  }
+
+  return { detectedLanguage: "unsupported", supported: false, esScore, caScore };
+}
+
 function getFileType(filePath: string, mimeType?: string): "pdf" | "docx" | "image" {
   if (mimeType?.includes("pdf") || filePath.toLowerCase().endsWith(".pdf")) return "pdf";
   if (
@@ -135,10 +210,15 @@ function looksLikeLowQualityPdfExtraction(text: string): boolean {
 function splitContractCoreAndAnnexes(text: string): { coreText: string; annexText: string; splitApplied: boolean } {
   const markers = [
     /\banexo(?:s)?\b/i,
+    /\bannex(?:os)?\b/i,
     /c[ée]dula\s+de\s+habitabilidad/i,
+    /c[èe]dula\s+d['’]habitabilitat/i,
     /licencia\s+de\s+(?:primera|segunda)\s+ocupaci[oó]n/i,
+    /llic[eè]ncia\s+de\s+(?:primera|segona)\s+ocupaci[oó]/i,
     /certificado\s+de\s+eficiencia\s+energ[ée]tica/i,
+    /certificat\s+d['’]efici[èe]ncia\s+energ[èe]tica/i,
     /etiqueta\s+energ[ée]tica/i,
+    /etiqueta\s+energ[èe]tica/i,
   ];
 
   let splitIndex = -1;
@@ -167,6 +247,7 @@ function splitContractCoreAndAnnexes(text: string): { coreText: string; annexTex
 // Simplified system prompt for public analysis
 function buildSystemPrompt(): string {
   return `Eres un experto en derecho inmobiliario español especializado en contratos de alquiler de vivienda habitual.
+El contrato puede estar en español o catalán. Debes interpretar equivalencias legales entre ambos idiomas.
 
 Tu tarea es analizar el contrato proporcionado e identificar cláusulas que puedan ser:
 - ILEGALES: Contravienen directamente la LAU u otra normativa aplicable
@@ -270,6 +351,38 @@ serve(async (req) => {
 
     console.log(`Extracted ${contractText.length} characters`);
 
+    const languageDetection = detectSupportedLanguage(contractText);
+    console.log(
+      `Language detection: ${languageDetection.detectedLanguage} (es=${languageDetection.esScore}, ca=${languageDetection.caScore})`,
+    );
+    if (!languageDetection.supported) {
+      await supabase
+        .from("anonymous_analyses")
+        .update({
+          analysis_result: {
+            error:
+              "No se puede validar el contrato: idioma no soportado. Actualmente solo se admiten español y catalán.",
+            code: "UNSUPPORTED_LANGUAGE",
+            detected_language: languageDetection.detectedLanguage,
+            language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
+          },
+        })
+        .eq("id", analysisId);
+
+      return new Response(
+        JSON.stringify({
+          error: "No se puede validar el contrato: idioma no soportado. Actualmente solo se admiten español y catalán.",
+          code: "UNSUPPORTED_LANGUAGE",
+          detected_language: languageDetection.detectedLanguage,
+          language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     // Call AI for analysis
     const systemPrompt = buildSystemPrompt();
 
@@ -309,6 +422,11 @@ serve(async (req) => {
     }
 
     const analysisResult = JSON.parse(jsonMatch[0]);
+    analysisResult.contract_metadata = {
+      ...(analysisResult.contract_metadata || {}),
+      detected_language: languageDetection.detectedLanguage,
+      language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
+    };
 
     console.log(
       `Analysis complete: ${analysisResult.total_clauses} clauses, ${analysisResult.illegal_clauses} illegal`,
