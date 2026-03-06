@@ -14,6 +14,81 @@ type RequiredDocSignals = {
   hasEnergyCertificate: boolean;
 };
 
+type SupportedLanguage = "es" | "ca" | "mixed_es_ca" | "unsupported";
+type LanguageDetectionResult = {
+  detectedLanguage: SupportedLanguage;
+  supported: boolean;
+  esScore: number;
+  caScore: number;
+};
+
+const ES_LANGUAGE_PATTERNS: RegExp[] = [
+  /\barrendador(?:a)?\b/gi,
+  /\barrendatari[oa]\b/gi,
+  /\balquiler\b/gi,
+  /\bvivienda\b/gi,
+  /\bfianza\b/gi,
+  /\bcl[áa]usula\b/gi,
+  /\bpr[óo]rroga\b/gi,
+  /\bdesistimiento\b/gi,
+  /\bcertificado de eficiencia energ[ée]tica\b/gi,
+  /\bc[ée]dula de habitabilidad\b/gi,
+  /\brenta\b/gi,
+  /\bgastos\b/gi,
+];
+
+const CA_LANGUAGE_PATTERNS: RegExp[] = [
+  /\barrendament\b/gi,
+  /\barrendatari[ae]\b/gi,
+  /\blloguer\b/gi,
+  /\bhabitatge\b/gi,
+  /\bfian[cç]a\b/gi,
+  /\bcl[àa]usula\b/gi,
+  /\bpr[òo]rroga\b/gi,
+  /\bdesistiment\b/gi,
+  /\bcertificat d['’]efici[èe]ncia energ[èe]tica\b/gi,
+  /\bc[èe]dula d['’]habitabilitat\b/gi,
+  /\brenda\b/gi,
+  /\bdespeses\b/gi,
+];
+
+function countLanguageMatches(text: string, patterns: RegExp[]): number {
+  return patterns.reduce((acc, pattern) => acc + (text.match(pattern)?.length || 0), 0);
+}
+
+function detectSupportedLanguage(text: string): LanguageDetectionResult {
+  const sample = text.toLowerCase().slice(0, 50000);
+  const esScore = countLanguageMatches(sample, ES_LANGUAGE_PATTERNS);
+  const caScore = countLanguageMatches(sample, CA_LANGUAGE_PATTERNS);
+  const total = esScore + caScore;
+
+  if (total < 3) {
+    return { detectedLanguage: "unsupported", supported: false, esScore, caScore };
+  }
+
+  if (esScore >= 3 && esScore >= caScore * 1.6) {
+    return { detectedLanguage: "es", supported: true, esScore, caScore };
+  }
+
+  if (caScore >= 3 && caScore >= esScore * 1.6) {
+    return { detectedLanguage: "ca", supported: true, esScore, caScore };
+  }
+
+  if (esScore >= 2 && caScore >= 2) {
+    return { detectedLanguage: "mixed_es_ca", supported: true, esScore, caScore };
+  }
+
+  if (esScore >= 3) {
+    return { detectedLanguage: "es", supported: true, esScore, caScore };
+  }
+
+  if (caScore >= 3) {
+    return { detectedLanguage: "ca", supported: true, esScore, caScore };
+  }
+
+  return { detectedLanguage: "unsupported", supported: false, esScore, caScore };
+}
+
 function getFileType(filePath: string, mimeType?: string): "pdf" | "docx" | "image" {
   if (mimeType?.includes("pdf") || filePath.toLowerCase().endsWith(".pdf")) return "pdf";
   if (
@@ -30,27 +105,39 @@ function extractKeyTerms(text: string): string {
   const terms: string[] = [];
   const lowerText = text.toLowerCase();
 
-  if (/fianza|deposito|garantia|aval/.test(lowerText)) terms.push("fianza garantia deposito");
-  if (/mensualidad|renta|euros|€|precio/.test(lowerText)) {
+  if (/fianza|deposito|garantia|aval|fian[çc]a|dip[oò]sit/.test(lowerText))
+    terms.push("fianza garantia deposito fiança dipòsit");
+  if (/mensualidad|renta|euros|€|precio|lloguer|renda|preu/.test(lowerText)) {
     terms.push("renta precio mensualidad");
     // Si hay indicios de precio/renta, añadir términos de zona tensionada
     terms.push("zona mercado residencial tensionado límite precio índice referencia");
   }
-  if (/año|años|meses|duracion|prorroga|renovacion/.test(lowerText)) terms.push("duracion prorroga plazo");
-  if (/obra|reforma|reparacion|mantenimiento|conservacion/.test(lowerText))
+  if (/año|años|meses|duracion|prorroga|renovacion|durada|pr[òo]rroga|renovaci[oó]/.test(lowerText))
+    terms.push("duracion prorroga plazo");
+  if (
+    /obra|reforma|reparacion|mantenimiento|conservacion|obres|reparaci[oó]|manteniment|conservaci[oó]/.test(lowerText)
+  )
     terms.push("obras reparaciones conservacion");
-  if (/penalizacion|indemnizacion|resolucion|desistimiento/.test(lowerText))
+  if (
+    /penalizacion|indemnizacion|resolucion|desistimiento|penalitzaci[oó]|indemnitzaci[oó]|resoluci[oó]|desistiment/.test(
+      lowerText,
+    )
+  )
     terms.push("penalizacion resolucion desistimiento");
-  if (/subarr|cesion|tercero/.test(lowerText)) terms.push("subarriendo cesion");
-  if (/ibi|impuesto|comunidad|gastos/.test(lowerText)) terms.push("gastos impuestos comunidad");
-  if (/inmobiliaria|honorarios|gestion/.test(lowerText)) terms.push("honorarios inmobiliaria");
-  if (/mascota|animal|perro|gato/.test(lowerText)) terms.push("mascotas prohibicion");
-  if (/seguro|responsabilidad/.test(lowerText)) terms.push("seguro responsabilidad");
+  if (/subarr|cesion|tercero|subarrend|cessi[oó]|tercer/.test(lowerText)) terms.push("subarriendo cesion");
+  if (/ibi|impuesto|comunidad|gastos|impost|comunitat|despeses/.test(lowerText))
+    terms.push("gastos impuestos comunidad");
+  if (/inmobiliaria|honorarios|gestion|immobili[aà]ria|honoraris|gesti[oó]/.test(lowerText))
+    terms.push("honorarios inmobiliaria");
+  if (/mascota|animal|perro|gato|gos|gat/.test(lowerText)) terms.push("mascotas prohibicion");
+  if (/seguro|responsabilidad|asseguran[cç]a|responsabilitat/.test(lowerText)) terms.push("seguro responsabilidad");
 
   // Siempre incluir términos de habitabilidad y certificado energético (obligatorios en todo contrato)
-  terms.push("habitabilidad cédula certificado energético vivienda habitual");
+  terms.push("habitabilidad cédula certificado energético vivienda habitual habitabilitat cèdula certificat energètic");
   // Siempre incluir términos base de arrendamiento
-  terms.push("arrendamiento vivienda habitual clausula ilegal abusiva LAU");
+  terms.push(
+    "arrendamiento vivienda habitual clausula ilegal abusiva LAU arrendament lloguer habitatge clàusula abusiva",
+  );
 
   return terms.join(" ");
 }
@@ -60,41 +147,47 @@ function mapTermsToSemanticCategories(text: string): string[] {
   const categories: Set<string> = new Set();
   const lowerText = text.toLowerCase();
 
-  if (/fianza|deposito|garantia|aval/.test(lowerText)) {
+  if (/fianza|deposito|garantia|aval|fian[çc]a|dip[oò]sit/.test(lowerText)) {
     categories.add("garantia");
     categories.add("obligacion");
   }
-  if (/mensualidad|renta|euros|€|precio|pago/.test(lowerText)) {
+  if (/mensualidad|renta|euros|€|precio|pago|lloguer|renda|preu|pagament/.test(lowerText)) {
     categories.add("limite_precio");
     categories.add("actualizacion");
   }
-  if (/año|años|meses|duracion|prorroga|renovacion|plazo/.test(lowerText)) {
+  if (/año|años|meses|duracion|prorroga|renovacion|plazo|durada|pr[òo]rroga|renovaci[oó]|termini/.test(lowerText)) {
     categories.add("plazo");
     categories.add("derecho");
   }
-  if (/obra|reforma|reparacion|mantenimiento|conservacion/.test(lowerText)) {
+  if (
+    /obra|reforma|reparacion|mantenimiento|conservacion|obres|reparaci[oó]|manteniment|conservaci[oó]/.test(lowerText)
+  ) {
     categories.add("obligacion");
   }
-  if (/penalizacion|indemnizacion|resolucion|desistimiento/.test(lowerText)) {
+  if (
+    /penalizacion|indemnizacion|resolucion|desistimiento|penalitzaci[oó]|indemnitzaci[oó]|resoluci[oó]|desistiment/.test(
+      lowerText,
+    )
+  ) {
     categories.add("sancion");
     categories.add("prohibicion");
   }
-  if (/subarr|cesion|tercero/.test(lowerText)) {
+  if (/subarr|cesion|tercero|subarrend|cessi[oó]|tercer/.test(lowerText)) {
     categories.add("prohibicion");
     categories.add("requisito");
   }
-  if (/ibi|impuesto|comunidad|gastos/.test(lowerText)) {
+  if (/ibi|impuesto|comunidad|gastos|impost|comunitat|despeses/.test(lowerText)) {
     categories.add("obligacion");
   }
-  if (/mascota|animal/.test(lowerText)) {
+  if (/mascota|animal|gos|gat/.test(lowerText)) {
     categories.add("prohibicion");
     categories.add("excepcion");
   }
-  if (/zona\s+tensionada|mercado\s+tensionado/.test(lowerText)) {
+  if (/zona\s+tensionada|mercado\s+tensionado|zona\s+tensionada|mercat\s+tensionat/.test(lowerText)) {
     categories.add("limite_precio");
     categories.add("lista_entidades");
   }
-  if (/procedimiento|demanda|desahucio|juicio/.test(lowerText)) {
+  if (/procedimiento|demanda|desahucio|juicio|procediment|judici|desnonament/.test(lowerText)) {
     categories.add("procedimiento");
   }
 
@@ -111,12 +204,16 @@ function extractMunicipality(text: string): string | null {
   const patterns = [
     // "situada en Cervera", "domicilio en Barcelona", etc.
     /(?:situada?\s+en|domicilio\s+en|ubicad[ao]\s+en|localidad\s+de|municipio\s+de|población\s+de|ciudad\s+de)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|d['']|la|el|les|l['']|dels?)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    // Catalán: "situat a", "domicili a", "municipi de", etc.
+    /(?:situad[ao]?\s+a|domicili\s+a|ubicad[ao]?\s+a|localitat\s+de|municipi\s+de|poblaci[oó]\s+de|ciutat\s+de)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|d['']|la|el|les|l['']|dels?)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
     // "C.P. 25200 Cervera"
     /C\.?P\.?\s*\d{5}\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
     // "en Cervera (Lleida)" o "en Cervera, Lleida"
     /\ben\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)\s*[,(]\s*(?:provincia\s+(?:de\s+)?)?[A-ZÀ-Ú]/gi,
     // "finca sita en Cervera"
     /finca\s+sita\s+en\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    // Catalán: "finca situada a Cervera"
+    /finca\s+situada?\s+a\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
   ];
 
   for (const pattern of patterns) {
@@ -443,9 +540,13 @@ function looksLikeLowQualityPdfExtraction(text: string): boolean {
 function splitContractCoreAndAnnexes(text: string): { coreText: string; annexText: string; splitApplied: boolean } {
   const markers = [
     /\banexo(?:s)?\b/i,
+    /\bannex(?:os)?\b/i,
     /c[ée]dula\s+de\s+habitabilidad/i,
+    /c[èe]dula\s+d['’]habitabilitat/i,
     /licencia\s+de\s+(?:primera|segunda)\s+ocupaci[oó]n/i,
+    /llic[eè]ncia\s+de\s+(?:primera|segona)\s+ocupaci[oó]/i,
     /certificado\s+de\s+eficiencia\s+energ[ée]tica/i,
+    /certificat\s+d['’]efici[èe]ncia\s+energ[èe]tica/i,
     /etiqueta\s+energ[ée]tica/i,
   ];
 
@@ -474,11 +575,16 @@ function splitContractCoreAndAnnexes(text: string): { coreText: string; annexTex
 
 function detectRequiredDocumentSignals(text: string): RequiredDocSignals {
   const lower = text.toLowerCase();
-  const hasCedulaHabitabilidad = /c[ée]dula\s+de\s+habitabilidad/.test(lower);
-  const hasOccupancyLicense = /licencia\s+de\s+(?:primera|segunda)\s+ocupaci[oó]n/.test(lower);
+  const hasCedulaHabitabilidad =
+    /c[ée]dula\s+de\s+habitabilidad/.test(lower) || /c[èe]dula\s+d['’]habitabilitat/.test(lower);
+  const hasOccupancyLicense =
+    /licencia\s+de\s+(?:primera|segunda)\s+ocupaci[oó]n/.test(lower) ||
+    /llic[eè]ncia\s+de\s+(?:primera|segona)\s+ocupaci[oó]/.test(lower);
   const hasEnergyCertificate =
     /certificado\s+de\s+eficiencia\s+energ[ée]tica/.test(lower) ||
+    /certificat\s+d['’]efici[èe]ncia\s+energ[èe]tica/.test(lower) ||
     /etiqueta\s+energ[ée]tica/.test(lower) ||
+    /etiqueta\s+energ[èe]tica/.test(lower) ||
     /\bcee\b/.test(lower);
 
   return {
@@ -562,6 +668,7 @@ INSTRUCCIONES PARA ESTE CASO:
   return `IDENTIDAD Y ROL
 ===============
 Eres el sistema de análisis legal de ACROXIA, la plataforma española líder en protección de inquilinos. Tu misión es analizar contratos de alquiler de vivienda habitual identificando cláusulas ilegales, abusivas o sospechosas con el máximo rigor jurídico.
+El contrato puede estar redactado en español o catalán. Debes interpretar equivalencias jurídicas en ambos idiomas (ej.: fianza/fiança, cédula/cèdula, certificado/certificat).
 
 ${zonaTensionadaSection}
 
@@ -888,6 +995,27 @@ serve(async (req) => {
 
     console.log(`Extracted ${contractText.length} characters from ${detectedType}`);
 
+    const languageDetection = detectSupportedLanguage(contractText);
+    console.log(
+      `Language detection: ${languageDetection.detectedLanguage} (es=${languageDetection.esScore}, ca=${languageDetection.caScore})`,
+    );
+
+    if (!languageDetection.supported) {
+      await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
+      return new Response(
+        JSON.stringify({
+          error: "No se puede validar el contrato: idioma no soportado. Actualmente solo se admiten español y catalán.",
+          code: "UNSUPPORTED_LANGUAGE",
+          detected_language: languageDetection.detectedLanguage,
+          language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     // Detect required documents across the full text (contract + annexes)
     const requiredDocSignals = detectRequiredDocumentSignals(contractText);
 
@@ -1203,6 +1331,8 @@ ${sanitizedContractText.substring(0, 4000)}`,
     analysis.contract_metadata.legal_context_available = hasLegalContext;
     analysis.contract_metadata.sources_count = availableSources.length;
     analysis.contract_metadata.detected_territory = territorialFilter;
+    analysis.contract_metadata.detected_language = languageDetection.detectedLanguage;
+    analysis.contract_metadata.language_scores = { es: languageDetection.esScore, ca: languageDetection.caScore };
     analysis.contract_metadata.required_docs_detected = requiredDocSignals;
     analysis.contract_metadata.contract_split_applied = splitApplied;
 
