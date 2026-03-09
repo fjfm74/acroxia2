@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { authErrorResponse, authorizeRequest } from "../_shared/auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -7,7 +8,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-key",
 };
 
 // Email styles
@@ -269,7 +270,28 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { postId } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON body" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const auth = await authorizeRequest({
+      req,
+      supabaseUrl: SUPABASE_URL,
+      supabaseServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
+      body,
+      allowAdminUser: true,
+      allowServiceRoleToken: true,
+      allowInternalKey: true,
+    });
+    if (!auth.ok) {
+      return authErrorResponse(auth, corsHeaders);
+    }
+
+    const { postId } = body;
 
     if (!postId) {
       return new Response(

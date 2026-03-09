@@ -1,10 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { authErrorResponse, authorizeRequest } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-key",
 };
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -520,7 +521,26 @@ serve(async (req) => {
 
   let documentId: string | null = null;
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      throw new Error("Invalid JSON body");
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const auth = await authorizeRequest({
+      req,
+      supabaseUrl,
+      supabaseServiceRoleKey: supabaseServiceKey,
+      body,
+      allowAdminUser: true,
+      allowServiceRoleToken: true,
+      allowInternalKey: true,
+    });
+    if (!auth.ok) {
+      return authErrorResponse(auth, corsHeaders);
+    }
+
     documentId = body.documentId;
     const filePath = body.filePath;
     const sourceType = body.sourceType || "pdf"; // "pdf" | "epub" | "url"
@@ -529,8 +549,6 @@ serve(async (req) => {
     if (!documentId) throw new Error("documentId is required");
     if (sourceType !== "url" && !filePath) throw new Error("filePath is required for file uploads");
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Read resume info BEFORE clearing it
