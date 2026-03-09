@@ -35,8 +35,9 @@ function extractBearerToken(authorizationHeader: string | null): string | null {
   return match?.[1]?.trim() || null;
 }
 
+// deno-lint-ignore no-explicit-any
 async function isAdminUser(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   userId: string,
 ): Promise<boolean> {
   const { data, error } = await supabase
@@ -92,11 +93,7 @@ export async function authorizeRequest(
 
   const token = extractBearerToken(req.headers.get("Authorization"));
   if (!token) {
-    return {
-      ok: false,
-      status: 401,
-      error: "Unauthorized",
-    };
+    return { ok: false, status: 401, error: "Unauthorized" };
   }
 
   if (allowServiceRoleToken && token === supabaseServiceRoleKey) {
@@ -104,18 +101,11 @@ export async function authorizeRequest(
   }
 
   if (!allowAdminUser && !allowAuthenticatedUser) {
-    return {
-      ok: false,
-      status: 403,
-      error: "Forbidden",
-    };
+    return { ok: false, status: 403, error: "Forbidden" };
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 
   const {
@@ -124,11 +114,7 @@ export async function authorizeRequest(
   } = await supabase.auth.getUser(token);
 
   if (userError || !user) {
-    return {
-      ok: false,
-      status: 401,
-      error: "Invalid authentication token",
-    };
+    return { ok: false, status: 401, error: "Invalid authentication token" };
   }
 
   if (allowAdminUser) {
@@ -154,25 +140,15 @@ export async function authorizeRequest(
     };
   }
 
-  return {
-    ok: false,
-    status: 403,
-    error: "Admin access required",
-  };
+  return { ok: false, status: 403, error: "Admin access required" };
 }
 
 export function authErrorResponse(
   auth: AuthorizationResult,
   corsHeaders: Record<string, string>,
 ): Response {
-  return new Response(
-    JSON.stringify({ error: auth.error || "Unauthorized" }),
-    {
-      status: auth.status || 401,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
-    },
-  );
+  return new Response(JSON.stringify({ error: auth.error || "Unauthorized" }), {
+    status: auth.status || 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }

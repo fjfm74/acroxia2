@@ -31,18 +31,6 @@ serve(async (req: Request) => {
 
     // Update campaign counters
     if (type === "open") {
-      await supabase.rpc("increment_campaign_counter", { 
-        p_campaign_id: campaignId, 
-        p_field: "total_opened" 
-      }).catch(() => {
-        // Fallback: direct update
-        supabase
-          .from("email_campaigns")
-          .update({ total_opened: supabase.rpc ? undefined : 0 })
-          .eq("id", campaignId);
-      });
-      
-      // Simple increment via raw update
       const { data: campaign } = await supabase
         .from("email_campaigns")
         .select("total_opened")

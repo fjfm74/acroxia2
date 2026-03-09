@@ -210,7 +210,7 @@ serve(async (req: Request): Promise<Response> => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Parse request first to check for internal key in body
-    let body: UpdateRequest & { internalKey?: string } = {};
+    let body: UpdateRequest & { internalKey?: string; maintenanceKey?: string } = {};
     try {
       body = await req.json();
     } catch (e) {
