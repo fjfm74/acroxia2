@@ -335,16 +335,16 @@ function validateAndNormalizeResponse(input: GenerateRequest, data: any): Social
 
   const slides = normalizedSlides.length > 0 ? normalizedSlides : fallback.slides;
   const hashtags = Array.isArray(data?.hashtags)
-    ? Array.from(new Set(data.hashtags.map((tag: string) => sanitizeHashtag(String(tag || ""))).filter(Boolean))).slice(
+    ? (Array.from(new Set(data.hashtags.map((tag: string) => sanitizeHashtag(String(tag || ""))).filter(Boolean))).slice(
         0,
         8,
-      )
+      ) as string[])
     : fallback.hashtags;
 
   return {
     caption: String(data?.caption || fallback.caption).trim(),
     slides,
-    hashtags: hashtags.length > 0 ? hashtags : fallback.hashtags,
+    hashtags: hashtags.length > 0 ? (hashtags as string[]) : fallback.hashtags,
     best_posting_time: String(data?.best_posting_time || BEST_POSTING_TIMES[input.platform]).trim(),
   };
 }

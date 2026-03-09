@@ -238,8 +238,9 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+// deno-lint-ignore no-explicit-any
 async function recordDeliveryLog(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   input: {
     blogPostId: string;
     subscriberEmail: string;
