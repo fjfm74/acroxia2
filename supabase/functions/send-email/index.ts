@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getEmailTemplate, type EmailData } from "../_shared/email-templates.ts";
+import { authErrorResponse, authorizeRequest } from "../_shared/auth.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -8,7 +9,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-key",
 };
 
 // Rate limit configuration
@@ -19,6 +20,10 @@ interface SendEmailRequest {
   type: 'confirmation' | 'welcome' | 'password_reset' | 'password_changed' | 'analysis_completed' | 'low_credits' | 'contact';
   to: string;
   data: EmailData;
+}
+
+function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 // Get client IP from request headers
@@ -88,13 +93,63 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { type, to, data }: SendEmailRequest = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON body" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { type, to, data }: SendEmailRequest = body as SendEmailRequest;
 
     if (!type || !to) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: type, to" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
+    }
+
+    if (type !== "contact") {
+      if (type === "password_changed") {
+        const auth = await authorizeRequest({
+          req,
+          supabaseUrl: SUPABASE_URL,
+          supabaseServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
+          body,
+          allowAuthenticatedUser: true,
+          allowAdminUser: true,
+          allowServiceRoleToken: true,
+          allowInternalKey: true,
+        });
+        if (!auth.ok) {
+          return authErrorResponse(auth, corsHeaders);
+        }
+
+        if (
+          auth.mode === "authenticated_user" &&
+          auth.userEmail &&
+          normalizeEmail(auth.userEmail) !== normalizeEmail(to)
+        ) {
+          return new Response(
+            JSON.stringify({ error: "Forbidden target email for password_changed template" }),
+            { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+      } else {
+        const auth = await authorizeRequest({
+          req,
+          supabaseUrl: SUPABASE_URL,
+          supabaseServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
+          body,
+          allowAdminUser: true,
+          allowServiceRoleToken: true,
+          allowInternalKey: true,
+        });
+        if (!auth.ok) {
+          return authErrorResponse(auth, corsHeaders);
+        }
+      }
     }
 
     // Apply rate limiting only to contact form submissions
