@@ -20,6 +20,7 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const RUN_STALE_MINUTES = 45;
 
 function normalizeText(input: string): string {
   return (input || "")
@@ -98,6 +99,46 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // A) Best-effort concurrency guard: avoid overlapping full reconciliations
+    const { data: runningRun, error: runningErr } = await supabase
+      .from("reconciliation_runs")
+      .select("id, started_at")
+      .eq("mode", "full")
+      .eq("status", "running")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (runningErr) throw new Error(`Error checking running reconciliation: ${runningErr.message}`);
+
+    if (runningRun?.id) {
+      const startedAtMs = new Date(runningRun.started_at).getTime();
+      const ageMs = Date.now() - startedAtMs;
+
+      if (Number.isFinite(startedAtMs) && ageMs < RUN_STALE_MINUTES * 60_000) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            skipped: true,
+            reason: "already running",
+            relations_inserted: 0,
+            message: "Ya hay una reconciliación en curso. Espera a que termine para lanzar otra.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      await supabase
+        .from("reconciliation_runs")
+        .update({
+          status: "failed",
+          finished_at: new Date().toISOString(),
+          error_message: `Auto-closed as stale after ${RUN_STALE_MINUTES} minutes without completion.`,
+        })
+        .eq("id", runningRun.id)
+        .eq("status", "running");
+    }
 
     // 0) Hash de corpus para idempotencia
     const { data: hashData, error: hashError } = await supabase.rpc("compute_legal_corpus_hash");
