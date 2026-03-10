@@ -267,16 +267,37 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
     aiDetected = detectedRelations.length;
     console.log(`AI detected ${detectedRelations.length} potential relations`);
 
+    const normalizedRelations = (detectedRelations || [])
+      .map((relation: any) => ({
+        ...relation,
+        type: normType(relation?.type),
+      }))
+      .sort((a: any, b: any) =>
+        `${a?.source_id || ""}::${a?.target_id || ""}::${a?.type || ""}`.localeCompare(
+          `${b?.source_id || ""}::${b?.target_id || ""}::${b?.type || ""}`,
+        ),
+      );
+
     // 5) Procesar relaciones
     const docMap = new Map(sortedDocuments.map((d: any) => [d.id, d]));
+    const seenInThisRun = new Set<string>();
+    const supersedesBySource = new Map<string, Set<string>>();
+    const changedSupersedesSources = new Set<string>();
 
-    for (const relation of detectedRelations) {
+    for (const d of sortedDocuments) {
+      supersedesBySource.set(
+        d.id,
+        new Set<string>(Array.isArray(d.supersedes_ids) ? d.supersedes_ids : []),
+      );
+    }
+
+    for (const relation of normalizedRelations) {
       if (!relation?.source_id || !relation?.target_id || !relation?.type) {
         skippedInvalid++;
         continue;
       }
 
-      const relType = normType(relation.type);
+      const relType = relation.type;
       if (!VALID_RELATION_TYPES.has(relType)) {
         skippedInvalid++;
         continue;
@@ -325,16 +346,30 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
       }
 
       const key = `${relation.source_id}::${relation.target_id}::${relType}`;
+      if (seenInThisRun.has(key)) {
+        skippedDup++;
+        continue;
+      }
+      seenInThisRun.add(key);
+
       if (existingRelationKeys.has(key)) {
         skippedDup++;
         continue;
       }
 
+      const affectedArticles = Array.from(
+        new Set(
+          (relation.affected_articles || [])
+            .map((a: any) => String(a || "").trim())
+            .filter((a: string) => a.length > 0),
+        ),
+      );
+
       const { error: insertError } = await supabase.from("document_relations").insert({
         source_document_id: relation.source_id,
         target_document_id: relation.target_id,
         relation_type: relType,
-        affected_articles: relation.affected_articles || [],
+        affected_articles: affectedArticles,
         description: relation.temporal_note
           ? `${relation.description || ""}. Nota temporal: ${relation.temporal_note}`
           : relation.description || null,
@@ -392,8 +427,6 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
           }
         }
       } else if (relType === "modifica") {
-        const affectedArticles = relation.affected_articles || [];
-
         for (const articleRef of affectedArticles) {
           const { data: oldChunks } = await supabase
             .from("legal_chunks")
@@ -415,17 +448,19 @@ Responde SOLO con JSON: { "relations": [ ... ] }`;
             console.log(`Modifica: marked ${oldChunks.length} chunks of "${articleRef}" as superseded`);
           }
         }
-
-        const sourceDocNow = docMap.get(relation.source_id);
-        const currentSupersedes = sourceDocNow?.supersedes_ids || [];
-
-        if (!currentSupersedes.includes(relation.target_id)) {
-          await supabase
-            .from("legal_documents")
-            .update({ supersedes_ids: [...currentSupersedes, relation.target_id] })
-            .eq("id", relation.source_id);
+        const sourceSet = supersedesBySource.get(relation.source_id) || new Set<string>();
+        const previousSize = sourceSet.size;
+        sourceSet.add(relation.target_id);
+        supersedesBySource.set(relation.source_id, sourceSet);
+        if (sourceSet.size !== previousSize) {
+          changedSupersedesSources.add(relation.source_id);
         }
       }
+    }
+
+    for (const sourceId of changedSupersedesSources) {
+      const ids = Array.from(supersedesBySource.get(sourceId) || []);
+      await supabase.from("legal_documents").update({ supersedes_ids: ids }).eq("id", sourceId);
     }
 
     const { count: totalRelations } = await supabase
