@@ -807,17 +807,11 @@ serve(async (req) => {
           allChunks = parsed.chunks || parsed || [];
         } catch (visionError) {
           console.error("PDF vision failed:", visionError);
-          allChunks = [{
-            content: `Documento: ${docInfo.title}. Pendiente de procesamiento manual. Error: ${visionError instanceof Error ? visionError.message : 'unknown'}`,
-            article_reference: null,
-            section_title: docInfo.title,
-            semantic_category: "otro",
-            key_entities: [],
-            applies_when: {},
-            territorial_scope: docInfo.jurisdiction === 'estatal' ? 'estatal' : 'autonomica',
-            affected_municipalities: [],
-            affected_provinces: [],
-          }];
+          throw new Error(
+            `No se pudo extraer el contenido del PDF mediante vision: ${
+              visionError instanceof Error ? visionError.message : "unknown"
+            }`,
+          );
         }
 
         // Insert chunks immediately for PDF vision
@@ -884,13 +878,13 @@ serve(async (req) => {
             );
             const { error: insertError } = await supabase.from("legal_chunks").insert(chunksToInsert);
             if (insertError) {
-              console.error(`Error inserting chunks for block ${i + 1}:`, insertError);
+              throw new Error(`Error inserting chunks for block ${i + 1}: ${insertError.message}`);
             } else {
               globalChunkIndex += blockChunks.length;
               chunksInsertedInThisRun += blockChunks.length;
               console.log(`Block ${i + 1}: saved ${blockChunks.length} chunks (total: ${globalChunkIndex})`);
+              allChunks.push(...blockChunks);
             }
-            allChunks.push(...blockChunks);
           } else {
             console.log(`Block ${i + 1}: no relevant chunks`);
           }
