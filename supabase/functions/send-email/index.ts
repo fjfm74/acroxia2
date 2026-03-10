@@ -26,6 +26,32 @@ function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function sanitizeSubject(value: string): string {
+  return String(value || "")
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 180);
+}
+
+function htmlToPlainText(html: string): string {
+  return String(html || "")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|tr|br)>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/\n\s+\n/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 // Get client IP from request headers
 function getClientIP(req: Request): string {
   // Try various headers that might contain the real IP
@@ -188,6 +214,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending ${type} email to ${to}`);
 
     const template = getEmailTemplate(type, data);
+    const normalizedTo = normalizeEmail(to);
+    const subject = sanitizeSubject(template.subject);
+    const text = htmlToPlainText(template.html);
 
     // Send via Resend API directly
     const response = await fetch("https://api.resend.com/emails", {
@@ -198,10 +227,11 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "ACROXIA <noreply@acroxia.com>",
-        to: [to],
+        to: [normalizedTo],
         reply_to: "contacto@acroxia.com",
-        subject: template.subject,
+        subject,
         html: template.html,
+        text,
       }),
     });
 

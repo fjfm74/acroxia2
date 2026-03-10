@@ -127,6 +127,12 @@ interface BlogPost {
   read_time: string;
 }
 
+interface Subscriber {
+  email: string;
+  confirmation_token: string | null;
+  name: string | null;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -165,13 +171,119 @@ function toPlainAscii(value: string): string {
     .replace(/•/g, "-");
 }
 
+function stripControlChars(value: string): string {
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ");
+}
+
+function mojibakeScore(value: string): number {
+  const badFragments = (value.match(/[ÃÂ�]/g) || []).length;
+  const weirdUtf = (value.match(/â[\u0080-\u00BF]/g) || []).length;
+  return badFragments * 2 + weirdUtf * 2;
+}
+
+function repairMojibake(value: string): string {
+  const input = String(value || "");
+  if (!/[ÃÂ�â]/.test(input)) return input;
+
+  try {
+    const bytes = Uint8Array.from(Array.from(input).map((ch) => ch.charCodeAt(0) & 0xff));
+    const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    if (decoded && mojibakeScore(decoded) < mojibakeScore(input)) {
+      return decoded;
+    }
+  } catch {
+    // noop
+  }
+
+  return input
+    .replace(/â¢/g, "•")
+    .replace(/â/g, "—")
+    .replace(/â/g, "–")
+    .replace(/â/g, "“")
+    .replace(/â/g, "”")
+    .replace(/â/g, "'")
+    .replace(/Â¿/g, "¿")
+    .replace(/Â¡/g, "¡")
+    .replace(/Ã¡/g, "á")
+    .replace(/Ã©/g, "é")
+    .replace(/Ã­/g, "í")
+    .replace(/Ã³/g, "ó")
+    .replace(/Ãº/g, "ú")
+    .replace(/Ã±/g, "ñ")
+    .replace(/Ã/g, "Á")
+    .replace(/Ã‰/g, "É")
+    .replace(/Ã/g, "Í")
+    .replace(/Ã“/g, "Ó")
+    .replace(/Ãš/g, "Ú")
+    .replace(/Ã‘/g, "Ñ");
+}
+
+function normalizeCopy(value: string): string {
+  return repairMojibake(stripControlChars(String(value || "")))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeSubject(value: string): string {
+  const normalized = normalizeCopy(value).replace(/[\r\n\t]+/g, " ");
+  return normalized.slice(0, 180);
+}
+
+function isLikelyContentRejection(status: number, bodyText: string): boolean {
+  if (status >= 500) return true;
+  const text = String(bodyText || "").toLowerCase();
+  return (
+    text.includes("content") ||
+    text.includes("blocked") ||
+    text.includes("rspamd") ||
+    text.includes("5.7.1") ||
+    text.includes("554")
+  );
+}
+
+async function sendViaResend(payload: Record<string, unknown>) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const rawBody = await response.text();
+  let parsedBody: any = null;
+  try {
+    parsedBody = rawBody ? JSON.parse(rawBody) : null;
+  } catch {
+    parsedBody = null;
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    rawBody,
+    parsedBody,
+  };
+}
+
+const SIMPLE_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidEmail(value: string): boolean {
+  return SIMPLE_EMAIL_REGEX.test(normalizeEmail(value));
+}
+
 const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
   const postUrl = `https://acroxia.com/blog/${post.slug}`;
   const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
-  const safeTitle = encodeMailHtmlText(post.title);
-  const safeExcerpt = encodeMailHtmlText(post.excerpt);
-  const safeCategory = encodeMailHtmlText(post.category);
-  const safeReadTime = encodeMailHtmlText(post.read_time);
+  const normalizedTitle = normalizeCopy(post.title);
+  const normalizedExcerpt = normalizeCopy(post.excerpt);
+  const normalizedCategory = normalizeCopy(post.category);
+  const normalizedReadTime = normalizeCopy(post.read_time);
+  const safeTitle = encodeMailHtmlText(normalizedTitle);
+  const safeExcerpt = encodeMailHtmlText(normalizedExcerpt);
+  const safeCategory = encodeMailHtmlText(normalizedCategory);
+  const safeReadTime = encodeMailHtmlText(normalizedReadTime);
   const safeImage = post.image ? escapeHtml(post.image) : null;
   const safePostUrl = escapeHtml(postUrl);
   const safeUnsubscribeUrl = escapeHtml(unsubscribeUrl);
@@ -222,16 +334,67 @@ const generateNewPostPlainText = (post: BlogPost, unsubscribeUrl: string) => {
   return [
     "ACROXIA",
     "",
-    `${toPlainAscii(post.category)} - ${toPlainAscii(post.read_time)}`,
-    toPlainAscii(post.title),
+    `${toPlainAscii(normalizeCopy(post.category))} - ${toPlainAscii(normalizeCopy(post.read_time))}`,
+    toPlainAscii(normalizeCopy(post.title)),
     "",
-    toPlainAscii(post.excerpt),
+    toPlainAscii(normalizeCopy(post.excerpt)),
     "",
     `Leer articulo completo: ${postUrl}`,
     "",
     `Recibes este email porque te suscribiste a nuestro contenido para ${audienceLabel}.`,
     `Darme de baja del newsletter: ${unsubscribeUrl}`,
   ].join("\n");
+};
+
+const generateFallbackEmail = (post: BlogPost, unsubscribeUrl: string) => {
+  const postUrl = `https://acroxia.com/blog/${post.slug}`;
+  const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
+  const title = escapeHtml(normalizeCopy(post.title));
+  const excerpt = escapeHtml(normalizeCopy(post.excerpt));
+  const category = escapeHtml(normalizeCopy(post.category));
+  const readTime = escapeHtml(normalizeCopy(post.read_time));
+  const safePostUrl = escapeHtml(postUrl);
+  const safeUnsubscribeUrl = escapeHtml(unsubscribeUrl);
+
+  const html = `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; color:#1F1D1B; line-height:1.6; margin:0; padding:24px;">
+  <h1 style="margin:0 0 16px 0; font-size:24px;">ACROXIA</h1>
+  <p style="margin:0 0 8px 0; color:#4A4745;">${category} · ${readTime}</p>
+  <h2 style="margin:0 0 12px 0; font-size:22px;">${title}</h2>
+  <p style="margin:0 0 20px 0;">${excerpt}</p>
+  <p style="margin:0 0 20px 0;">
+    <a href="${safePostUrl}" style="color:#1F1D1B;">Leer artículo completo</a>
+  </p>
+  <hr style="border:none; border-top:1px solid #ddd; margin:20px 0;" />
+  <p style="margin:0 0 8px 0; font-size:13px; color:#666;">
+    Recibes este email porque te suscribiste a nuestro contenido para ${escapeHtml(audienceLabel)}.
+  </p>
+  <p style="margin:0; font-size:13px;">
+    <a href="${safeUnsubscribeUrl}" style="color:#666;">Darme de baja del newsletter</a>
+  </p>
+</body>
+</html>`;
+
+  const text = [
+    "ACROXIA",
+    "",
+    `${toPlainAscii(normalizeCopy(post.category))} - ${toPlainAscii(normalizeCopy(post.read_time))}`,
+    toPlainAscii(normalizeCopy(post.title)),
+    "",
+    toPlainAscii(normalizeCopy(post.excerpt)),
+    "",
+    `Leer articulo completo: ${postUrl}`,
+    "",
+    `Recibes este email porque te suscribiste a nuestro contenido para ${audienceLabel}.`,
+    `Darme de baja del newsletter: ${unsubscribeUrl}`,
+  ].join("\n");
+
+  return { html, text };
 };
 
 function normalizeEmail(email: string): string {
@@ -353,8 +516,18 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const alreadySentEmails = new Set((sentDeliveries || []).map((row) => normalizeEmail(row.subscriber_email)));
-    const recipients = subscribers.filter((subscriber) => !alreadySentEmails.has(normalizeEmail(subscriber.email)));
-    const skippedAlreadySent = subscribers.length - recipients.length;
+    const uniqueByEmail = new Map<string, Subscriber>();
+    for (const subscriber of subscribers as Subscriber[]) {
+      const normalizedEmail = normalizeEmail(subscriber.email);
+      if (!uniqueByEmail.has(normalizedEmail)) {
+        uniqueByEmail.set(normalizedEmail, subscriber);
+      }
+    }
+
+    const dedupedSubscribers = Array.from(uniqueByEmail.values());
+    const skippedDuplicatedEmails = subscribers.length - dedupedSubscribers.length;
+    const recipients = dedupedSubscribers.filter((subscriber) => !alreadySentEmails.has(normalizeEmail(subscriber.email)));
+    const skippedAlreadySent = dedupedSubscribers.length - recipients.length;
 
     if (recipients.length === 0) {
       console.log(`[send-blog-notification] All ${subscribers.length} recipients already have a successful delivery log for post ${post.id}`);
@@ -371,7 +544,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`[send-blog-notification] Sending to ${recipients.length} subscribers (${skippedAlreadySent} skipped as already sent)`);
+    console.log(
+      `[send-blog-notification] Sending to ${recipients.length} subscribers (${skippedAlreadySent} already sent, ${skippedDuplicatedEmails} duplicated emails)`,
+    );
 
     // Send emails in batches
     let sentCount = 0;
@@ -382,58 +557,90 @@ const handler = async (req: Request): Promise<Response> => {
       const batch = recipients.slice(i, i + BATCH_SIZE);
       
       const emailPromises = batch.map(async (subscriber) => {
-        const unsubscribeUrl = `https://acroxia.com/blog/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${subscriber.confirmation_token}`;
+        if (!isValidEmail(subscriber.email)) {
+          await recordDeliveryLog(supabase, {
+            blogPostId: post.id,
+            subscriberEmail: subscriber.email,
+            audience: post.audience,
+            status: "failed",
+            errorMessage: "Invalid recipient email format",
+          });
+          return { sent: 0, errors: 1 };
+        }
+
+        const unsubscribeUrl = `https://acroxia.com/blog/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${encodeURIComponent(subscriber.confirmation_token || "")}`;
         const emailHtml = generateNewPostEmail(post, unsubscribeUrl);
         const emailText = generateNewPostPlainText(post, unsubscribeUrl);
+        const fallbackEmail = generateFallbackEmail(post, unsubscribeUrl);
+        const subject = normalizeSubject(post.title);
 
         try {
-          const response = await fetch("https://api.resend.com/emails", {
-            method: "POST",
+          let result = await sendViaResend({
+            from: "ACROXIA Blog <blog@acroxia.com>",
+            to: [normalizeEmail(subscriber.email)],
+            reply_to: "contacto@acroxia.com",
+            subject,
+            html: emailHtml,
+            text: emailText,
             headers: {
-              "Authorization": `Bearer ${RESEND_API_KEY}`,
-              "Content-Type": "application/json",
+              "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+              "List-ID": "ACROXIA Blog <blog.acroxia.com>",
             },
-            body: JSON.stringify({
-              from: "ACROXIA <noreply@acroxia.com>",
-              to: [subscriber.email],
-              reply_to: "contacto@acroxia.com",
-              subject: post.title,
-              html: emailHtml,
-              text: emailText,
-              headers: {
-                "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
-              },
-            }),
           });
 
-          if (!response.ok) {
-            const errorText = await response.text();
+          let usedFallback = false;
+          if (!result.ok && isLikelyContentRejection(result.status, result.rawBody)) {
+            usedFallback = true;
+            console.warn(
+              `[send-blog-notification] Content rejection for ${subscriber.email}, retrying with fallback template (HTTP ${result.status})`,
+            );
+            result = await sendViaResend({
+              from: "ACROXIA Blog <blog@acroxia.com>",
+              to: [normalizeEmail(subscriber.email)],
+              reply_to: "contacto@acroxia.com",
+              subject: `ACROXIA Blog | ${subject}`.slice(0, 190),
+              html: fallbackEmail.html,
+              text: fallbackEmail.text,
+              headers: {
+                "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                "List-ID": "ACROXIA Blog <blog.acroxia.com>",
+              },
+            });
+          }
+
+          if (!result.ok) {
             await recordDeliveryLog(supabase, {
               blogPostId: post.id,
               subscriberEmail: subscriber.email,
               audience: post.audience,
               status: "failed",
-              errorMessage: `HTTP ${response.status}: ${errorText.slice(0, 1000)}`,
+              errorMessage: `HTTP ${result.status}: ${String(result.rawBody || "").slice(0, 1000)}`,
             });
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
+            throw new Error(`HTTP ${result.status}: ${result.rawBody}`);
           }
 
-          const result = await response.json().catch(() => null);
           await recordDeliveryLog(supabase, {
             blogPostId: post.id,
             subscriberEmail: subscriber.email,
             audience: post.audience,
             status: "sent",
-            providerMessageId: result?.id ?? null,
+            providerMessageId: result.parsedBody?.id ?? null,
           });
-          sentCount++;
+          if (usedFallback) {
+            console.log(`[send-blog-notification] Delivery succeeded with fallback template for ${subscriber.email}`);
+          }
+          return { sent: 1, errors: 0 };
         } catch (error) {
           console.error(`[send-blog-notification] Error sending to ${subscriber.email}:`, error);
-          errorCount++;
+          return { sent: 0, errors: 1 };
         }
       });
 
-      await Promise.all(emailPromises);
+      const batchResults = await Promise.all(emailPromises);
+      sentCount += batchResults.reduce((acc, item) => acc + item.sent, 0);
+      errorCount += batchResults.reduce((acc, item) => acc + item.errors, 0);
       
       // Small delay between batches to avoid rate limits
       if (i + BATCH_SIZE < recipients.length) {
@@ -451,6 +658,7 @@ const handler = async (req: Request): Promise<Response> => {
         errors: errorCount,
         totalRecipients: subscribers.length,
         skippedAlreadySent,
+        skippedDuplicatedEmails,
         postId: post.id,
         audience: post.audience,
       }),
