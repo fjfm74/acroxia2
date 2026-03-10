@@ -306,6 +306,49 @@ const AdminDocuments = () => {
     return false;
   };
 
+  const markProcessingStartError = async (docId: string, message: string) => {
+    await supabase
+      .from("legal_documents")
+      .update({
+        processing_status: "error",
+        processing_error: message,
+        processing_completed_at: new Date().toISOString(),
+      })
+      .eq("id", docId);
+  };
+
+  const invokeDocumentProcessing = async (params: {
+    documentId: string;
+    filePath: string | null;
+    sourceType: string;
+    sourceUrl: string | null;
+  }) => {
+    const { data, error } = await supabase.functions.invoke("process-legal-document", {
+      body: {
+        documentId: params.documentId,
+        filePath: params.filePath,
+        sourceType: params.sourceType,
+        sourceUrl: params.sourceUrl,
+      },
+    });
+    const response = data as any;
+
+    if (error) {
+      throw new Error(error.message || "No se pudo iniciar el procesamiento");
+    }
+
+    if (response?.success === false && !response?.partial && !response?.skipped) {
+      throw new Error(response?.error || response?.message || "El procesamiento no pudo iniciarse");
+    }
+
+    if (response?.skipped) {
+      toast({
+        title: "Procesamiento omitido",
+        description: response?.message || "Este documento ya se está procesando.",
+      });
+    }
+  };
+
   const uploadDocument = async (skipDuplicateCheck = false) => {
     if (!newDoc.title) {
       toast({ title: "Campos requeridos", description: "El título es obligatorio", variant: "destructive" });
@@ -330,6 +373,7 @@ const AdminDocuments = () => {
 
     setUploading(true);
     setDuplicateWarning(null);
+    let createdDocId: string | null = null;
     try {
       let fileName: string | null = null;
 
@@ -360,6 +404,7 @@ const AdminDocuments = () => {
         .single();
 
       if (docError) throw docError;
+      createdDocId = docData.id;
 
       toast({
         title: "Documento subido",
@@ -381,21 +426,17 @@ const AdminDocuments = () => {
       });
       fetchDocuments();
 
-      // Fire-and-forget
-      supabase.functions
-        .invoke("process-legal-document", {
-          body: {
-            documentId: docData.id,
-            filePath: fileName,
-            sourceType: newDoc.source_type,
-            sourceUrl: newDoc.source_type === "url" ? newDoc.source_url : null,
-          },
-        })
-        .catch((err) => {
-          console.error("Edge function invocation error:", err);
-        });
+      await invokeDocumentProcessing({
+        documentId: docData.id,
+        filePath: fileName,
+        sourceType: newDoc.source_type,
+        sourceUrl: newDoc.source_type === "url" ? newDoc.source_url : null,
+      });
     } catch (error: any) {
       console.error("Error uploading document:", error);
+      if (createdDocId) {
+        await markProcessingStartError(createdDocId, `Error iniciando procesamiento: ${error.message}`);
+      }
       toast({ title: "Error al subir", description: error.message, variant: "destructive" });
     } finally {
       setUploading(false);
@@ -487,16 +528,17 @@ const AdminDocuments = () => {
 
       fetchDocuments();
 
-      supabase.functions
-        .invoke("process-legal-document", {
-          body: {
-            documentId: doc.id,
-            filePath: docData.file_path,
-            sourceType: docData.source_type || "pdf",
-            sourceUrl: docData.source_url,
-          },
-        })
-        .catch((err) => console.error("Reprocess error:", err));
+      try {
+        await invokeDocumentProcessing({
+          documentId: doc.id,
+          filePath: docData.file_path,
+          sourceType: docData.source_type || "pdf",
+          sourceUrl: docData.source_url || null,
+        });
+      } catch (invokeError: any) {
+        await markProcessingStartError(doc.id, `Error iniciando reproceso: ${invokeError.message}`);
+        throw invokeError;
+      }
     } catch (error: any) {
       toast({ title: "Error al reprocesar", description: error.message, variant: "destructive" });
     }
@@ -504,18 +546,19 @@ const AdminDocuments = () => {
 
   const [reprocessingAll, setReprocessingAll] = useState(false);
 
-  const reconcileRelations = async () => {
+  const reconcileRelations = async (force = false) => {
     setReprocessingAll(true);
     try {
       const { data, error } = await supabase.functions.invoke("reconcile-relations", {
-        body: {},
+        body: force ? { force: true } : {},
       });
+      const response = data as any;
       if (error) throw error;
       toast({
-        title: "Reconciliación completada",
+        title: force ? "Reconciliación forzada completada" : "Reconciliación completada",
         description:
-          data?.message ||
-          `${data?.new_relations_found || 0} nuevas relaciones detectadas. ${data?.chunks_marked_superseded || 0} chunks obsoletos.`,
+          response?.message ||
+          `${response?.new_relations_found || 0} nuevas relaciones detectadas. ${response?.chunks_marked_superseded || 0} chunks obsoletos.`,
       });
       fetchDocuments();
     } catch (err) {
@@ -591,12 +634,22 @@ const AdminDocuments = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
-              onClick={reconcileRelations}
+              onClick={() => reconcileRelations(false)}
               disabled={reprocessingAll || documents.length < 2}
               className="rounded-full w-full sm:w-auto"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${reprocessingAll ? "animate-spin" : ""}`} />
               {reprocessingAll ? "Reconciliando..." : "Reconciliar relaciones"}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => reconcileRelations(true)}
+              disabled={reprocessingAll || documents.length < 2}
+              className="rounded-full w-full sm:w-auto"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${reprocessingAll ? "animate-spin" : ""}`} />
+              {reprocessingAll ? "Reconciliando..." : "Forzar reconciliación"}
             </Button>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
