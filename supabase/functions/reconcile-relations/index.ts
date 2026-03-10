@@ -82,6 +82,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);
+    const forceReconcile = body?.force === true;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -157,7 +158,7 @@ serve(async (req) => {
 
     if (prevErr) throw new Error(`Error checking previous run: ${prevErr.message}`);
 
-    if (prevRun) {
+    if (prevRun && !forceReconcile) {
       await supabase.from("reconciliation_runs").insert({
         mode: "full",
         status: "skipped",
@@ -180,6 +181,10 @@ serve(async (req) => {
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    if (prevRun && forceReconcile) {
+      console.log("Force reconcile enabled. Ignoring unchanged corpus hash and continuing.");
     }
 
     // 1) Cargar documentos activos + completed
