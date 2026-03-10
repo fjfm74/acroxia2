@@ -15,59 +15,157 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 function normalizeText(text: string): string {
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function normalizeLegalTitle(text: string): string {
+  return normalizeText(String(text || ""))
+    .replace(/[^\w\s/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function titleTokens(text: string): string[] {
+  return normalizeLegalTitle(text)
+    .split(" ")
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 3);
+}
+
+function scoreTitleMatch(targetTitle: string, candidateTitle: string): number {
+  const targetNorm = normalizeLegalTitle(targetTitle);
+  const candidateNorm = normalizeLegalTitle(candidateTitle);
+  if (!targetNorm || !candidateNorm) return 0;
+  if (targetNorm === candidateNorm) return 1000;
+
+  let score = 0;
+  if (candidateNorm.includes(targetNorm)) score += 500;
+  if (targetNorm.includes(candidateNorm)) score += 350;
+  if (candidateNorm.startsWith(targetNorm) || targetNorm.startsWith(candidateNorm)) score += 120;
+
+  const targetSet = new Set(titleTokens(targetNorm));
+  const candidateSet = new Set(titleTokens(candidateNorm));
+  if (targetSet.size > 0) {
+    let common = 0;
+    for (const token of targetSet) {
+      if (candidateSet.has(token)) common++;
+    }
+    score += Math.round((common / targetSet.size) * 300);
+  }
+
+  const lengthPenalty = Math.abs(candidateNorm.length - targetNorm.length);
+  score -= Math.min(60, Math.floor(lengthPenalty / 8));
+  return score;
 }
 
 const SPANISH_PROVINCES = [
-  "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz",
-  "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real",
-  "Córdoba", "Cuenca", "Girona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva",
-  "Huesca", "Illes Balears", "Jaén", "La Coruña", "La Rioja", "Las Palmas", "León",
-  "Lleida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Ourense", "Palencia",
-  "Pontevedra", "Salamanca", "Santa Cruz de Tenerife", "Segovia", "Sevilla", "Soria",
-  "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza"
+  "Álava",
+  "Albacete",
+  "Alicante",
+  "Almería",
+  "Asturias",
+  "Ávila",
+  "Badajoz",
+  "Barcelona",
+  "Burgos",
+  "Cáceres",
+  "Cádiz",
+  "Cantabria",
+  "Castellón",
+  "Ciudad Real",
+  "Córdoba",
+  "Cuenca",
+  "Girona",
+  "Granada",
+  "Guadalajara",
+  "Guipúzcoa",
+  "Huelva",
+  "Huesca",
+  "Illes Balears",
+  "Jaén",
+  "La Coruña",
+  "La Rioja",
+  "Las Palmas",
+  "León",
+  "Lleida",
+  "Lugo",
+  "Madrid",
+  "Málaga",
+  "Murcia",
+  "Navarra",
+  "Ourense",
+  "Palencia",
+  "Pontevedra",
+  "Salamanca",
+  "Santa Cruz de Tenerife",
+  "Segovia",
+  "Sevilla",
+  "Soria",
+  "Tarragona",
+  "Teruel",
+  "Toledo",
+  "Valencia",
+  "Valladolid",
+  "Vizcaya",
+  "Zamora",
+  "Zaragoza",
 ];
 
 const VALID_SEMANTIC_CATEGORIES = [
-  "definicion", "obligacion", "prohibicion", "limite_precio", "plazo",
-  "sancion", "excepcion", "procedimiento", "lista_entidades", "requisito",
-  "derecho", "actualizacion", "garantia", "otro"
+  "definicion",
+  "obligacion",
+  "prohibicion",
+  "limite_precio",
+  "plazo",
+  "sancion",
+  "excepcion",
+  "procedimiento",
+  "lista_entidades",
+  "requisito",
+  "derecho",
+  "actualizacion",
+  "garantia",
+  "otro",
 ];
 
-const VALID_RELATION_TYPES = [
-  "deroga", "modifica", "complementa", "amplia", "prorroga", "desarrolla", "interpreta"
-];
+const VALID_RELATION_TYPES = ["deroga", "modifica", "complementa", "amplia", "prorroga", "desarrolla", "interpreta"];
 
 // ============ TEXT EXTRACTION HELPERS ============
 
 async function extractTextFromUrl(url: string): Promise<string> {
   const response = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    },
   });
   if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status}`);
   const html = await response.text();
 
   // BOE-specific: extract the main legal text container
   let text = html;
-  
+
   // Try BOE-specific extraction using start/end markers (greedy, captures full content)
   const boeStartIdx = text.indexOf('id="textoxslt"');
   let boeExtracted = false;
-  
+
   if (boeStartIdx !== -1) {
     // Find the opening tag start
-    let tagStart = text.lastIndexOf('<div', boeStartIdx);
+    let tagStart = text.lastIndexOf("<div", boeStartIdx);
     if (tagStart !== -1) {
       // Find the content after the opening tag
-      const afterTag = text.indexOf('>', boeStartIdx);
+      const afterTag = text.indexOf(">", boeStartIdx);
       if (afterTag !== -1) {
         // Find closing: look for the pattern where the textoxslt div ends
         // We count nested divs to find the correct closing tag
         let depth = 1;
         let pos = afterTag + 1;
         while (pos < text.length && depth > 0) {
-          const nextOpen = text.indexOf('<div', pos);
-          const nextClose = text.indexOf('</div>', pos);
+          const nextOpen = text.indexOf("<div", pos);
+          const nextClose = text.indexOf("</div>", pos);
           if (nextClose === -1) break;
           if (nextOpen !== -1 && nextOpen < nextClose) {
             depth++;
@@ -85,7 +183,7 @@ async function extractTextFromUrl(url: string): Promise<string> {
       }
     }
   }
-  
+
   if (!boeExtracted) {
     // Generic: remove noise
     text = text
@@ -98,8 +196,7 @@ async function extractTextFromUrl(url: string): Promise<string> {
       .replace(/<!--[\s\S]*?-->/g, "");
 
     // Extract text from article/main if available
-    const articleMatch = text.match(/<article[\s\S]*?<\/article>/i) ||
-                         text.match(/<main[\s\S]*?<\/main>/i);
+    const articleMatch = text.match(/<article[\s\S]*?<\/article>/i) || text.match(/<main[\s\S]*?<\/main>/i);
     if (articleMatch) text = articleMatch[0];
   }
 
@@ -144,23 +241,30 @@ async function extractTextFromEpub(arrayBuffer: ArrayBuffer): Promise<string> {
   // Simple ZIP parsing - find local file headers (PK\x03\x04)
   let offset = 0;
   while (offset < bytes.length - 4) {
-    if (bytes[offset] === 0x50 && bytes[offset + 1] === 0x4B &&
-        bytes[offset + 2] === 0x03 && bytes[offset + 3] === 0x04) {
+    if (
+      bytes[offset] === 0x50 &&
+      bytes[offset + 1] === 0x4b &&
+      bytes[offset + 2] === 0x03 &&
+      bytes[offset + 3] === 0x04
+    ) {
       // Local file header
       const fnameLen = bytes[offset + 26] | (bytes[offset + 27] << 8);
       const extraLen = bytes[offset + 28] | (bytes[offset + 29] << 8);
-      const compSize = bytes[offset + 18] | (bytes[offset + 19] << 8) |
-                       (bytes[offset + 20] << 16) | (bytes[offset + 21] << 24);
-      const uncompSize = bytes[offset + 22] | (bytes[offset + 23] << 8) |
-                         (bytes[offset + 24] << 16) | (bytes[offset + 25] << 24);
+      const compSize =
+        bytes[offset + 18] | (bytes[offset + 19] << 8) | (bytes[offset + 20] << 16) | (bytes[offset + 21] << 24);
+      const uncompSize =
+        bytes[offset + 22] | (bytes[offset + 23] << 8) | (bytes[offset + 24] << 16) | (bytes[offset + 25] << 24);
       const compressionMethod = bytes[offset + 8] | (bytes[offset + 9] << 8);
 
       const fnameStart = offset + 30;
       const fname = decoder.decode(bytes.slice(fnameStart, fnameStart + fnameLen));
       const dataStart = fnameStart + fnameLen + extraLen;
 
-      if ((fname.endsWith(".html") || fname.endsWith(".xhtml") || fname.endsWith(".htm")) &&
-          !fname.includes("toc") && !fname.includes("nav")) {
+      if (
+        (fname.endsWith(".html") || fname.endsWith(".xhtml") || fname.endsWith(".htm")) &&
+        !fname.includes("toc") &&
+        !fname.includes("nav")
+      ) {
         if (compressionMethod === 0 && uncompSize > 0) {
           // Stored (not compressed)
           const content = decoder.decode(bytes.slice(dataStart, dataStart + uncompSize));
@@ -254,10 +358,15 @@ function parseJsonResponse(content: string): any {
 
 // ============ CHUNK PROCESSING PROMPT ============
 
-function buildChunkExtractionPrompt(docTitle: string, docType: string, docJurisdiction: string, docEntity: string): string {
+function buildChunkExtractionPrompt(
+  docTitle: string,
+  docType: string,
+  docJurisdiction: string,
+  docEntity: string,
+): string {
   return `Eres un asistente legal experto en normativa española especializado en derecho inmobiliario y arrendamientos.
 
-CONTEXTO: Estás procesando el documento "${docTitle}" (Tipo="${docType}", Jurisdicción="${docJurisdiction}", Entidad="${docEntity || 'No especificada'}").
+CONTEXTO: Estás procesando el documento "${docTitle}" (Tipo="${docType}", Jurisdicción="${docJurisdiction}", Entidad="${docEntity || "No especificada"}").
 Este documento se usa en un sistema RAG para analizar contratos de alquiler de vivienda.
 
 CRITERIO DE EXTRACCIÓN:
@@ -289,12 +398,12 @@ INSTRUCCIONES:
 - Máximo 50 fragmentos por bloque.
 - Si el bloque no tiene contenido relevante para alquiler/vivienda, devuelve {"chunks": []}
 
-Responde SOLO con JSON válido: { "chunks": [ ... ] }`;}
-
+Responde SOLO con JSON válido: { "chunks": [ ... ] }`;
+}
 
 function buildAnalysisPrompt(docTitle: string, allChunksSummary: string, effectiveDate?: string | null): string {
   return `Eres un asistente legal experto en normativa española.
-Analiza globalmente el documento "${docTitle}" (fecha de entrada en vigor: ${effectiveDate || 'desconocida'}) basándote en los fragmentos extraídos.
+Analiza globalmente el documento "${docTitle}" (fecha de entrada en vigor: ${effectiveDate || "desconocida"}) basándote en los fragmentos extraídos.
 
 Fragmentos del documento:
 ${allChunksSummary}
@@ -346,33 +455,47 @@ Responde SOLO con JSON válido:
 function validateAndNormalizeChunk(chunk: any, index: number, documentId: string, docJurisdiction: string) {
   const normalizedMunicipalities = (chunk.affected_municipalities || [])
     .map((m: string) => {
-      if (typeof m !== 'string') return null;
-      return m.trim().split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      if (typeof m !== "string") return null;
+      return m
+        .trim()
+        .split(" ")
+        .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
     })
     .filter((m: string | null) => m !== null && m.length > 1);
 
   const normalizedProvinces = (chunk.affected_provinces || [])
     .map((p: string) => {
-      if (typeof p !== 'string') return null;
-      const normalized = p.trim().split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-      return SPANISH_PROVINCES.some(prov => normalizeText(prov) === normalizeText(normalized)) ? normalized : null;
+      if (typeof p !== "string") return null;
+      const normalized = p
+        .trim()
+        .split(" ")
+        .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+      return SPANISH_PROVINCES.some((prov) => normalizeText(prov) === normalizeText(normalized)) ? normalized : null;
     })
     .filter((p: string | null) => p !== null);
 
-  const validScopes = ['estatal', 'autonomica', 'provincial', 'municipal'];
+  const validScopes = ["estatal", "autonomica", "provincial", "municipal"];
   const scope = validScopes.includes(chunk.territorial_scope)
     ? chunk.territorial_scope
-    : (normalizedMunicipalities.length > 0 ? 'municipal' :
-       normalizedProvinces.length > 0 ? 'provincial' :
-       docJurisdiction === 'estatal' ? 'estatal' : 'autonomica');
+    : normalizedMunicipalities.length > 0
+      ? "municipal"
+      : normalizedProvinces.length > 0
+        ? "provincial"
+        : docJurisdiction === "estatal"
+          ? "estatal"
+          : "autonomica";
 
-  const semanticCategory = VALID_SEMANTIC_CATEGORIES.includes(chunk.semantic_category) ? chunk.semantic_category : 'otro';
+  const semanticCategory = VALID_SEMANTIC_CATEGORIES.includes(chunk.semantic_category)
+    ? chunk.semantic_category
+    : "otro";
 
   const keyEntities = (chunk.key_entities || [])
-    .filter((e: any) => typeof e === 'string' && e.length > 0)
+    .filter((e: any) => typeof e === "string" && e.length > 0)
     .map((e: string) => e.toLowerCase().trim());
 
-  const appliesWhen = typeof chunk.applies_when === 'object' && chunk.applies_when !== null ? chunk.applies_when : {};
+  const appliesWhen = typeof chunk.applies_when === "object" && chunk.applies_when !== null ? chunk.applies_when : {};
 
   return {
     document_id: documentId,
@@ -391,54 +514,108 @@ function validateAndNormalizeChunk(chunk: any, index: number, documentId: string
 
 // ============ RELATION PROCESSING ============
 
-async function processRelations(
-  supabase: any,
-  documentId: string,
-  relations: any[],
-  allChunks: any[]
-) {
+async function processRelations(supabase: any, documentId: string, relations: any[], allChunks: any[]) {
   let supersededChunksCount = 0;
   const newArticleRefs = allChunks
     .filter((c: any) => c.article_reference)
     .map((c: any) => c.article_reference as string);
+
+  const uniqueArticleRefs = Array.from(
+    new Set(newArticleRefs.map((a) => String(a || "").trim()).filter((a) => a.length > 0)),
+  );
+
+  const { data: sourceDoc } = await supabase
+    .from("legal_documents")
+    .select("id, title, jurisdiction, territorial_entity, effective_date, supersedes_ids")
+    .eq("id", documentId)
+    .single();
+
+  const { data: candidateDocs } = await supabase
+    .from("legal_documents")
+    .select("id, title, jurisdiction, territorial_entity, effective_date")
+    .neq("id", documentId);
+
+  const seenRelationKeys = new Set<string>();
+  const sourceSupersedesIds = new Set<string>(Array.isArray(sourceDoc?.supersedes_ids) ? sourceDoc.supersedes_ids : []);
 
   for (const relation of relations) {
     if (!relation.type || !relation.target_title) continue;
     const relType = relation.type.toLowerCase();
     if (!VALID_RELATION_TYPES.includes(relType)) continue;
 
-    // Find matching target document
-    const searchTerm = relation.target_title.substring(0, 40);
-    const { data: matchingDocs } = await supabase
-      .from("legal_documents")
-      .select("id, title")
-      .neq("id", documentId)
-      .ilike("title", `%${searchTerm}%`);
+    const normalizedTargetTitle = String(relation.target_title || "").trim();
+    if (!normalizedTargetTitle) continue;
 
-    if (!matchingDocs || matchingDocs.length === 0) {
-      console.log(`No matching document found for relation: ${relation.target_title}`);
+    const rankedCandidates = (candidateDocs || [])
+      .map((doc: any) => ({
+        ...doc,
+        _score: scoreTitleMatch(normalizedTargetTitle, doc.title || ""),
+      }))
+      .filter((doc: any) => doc._score >= 120)
+      .sort((a: any, b: any) => b._score - a._score || String(a.title).localeCompare(String(b.title)));
+
+    if (rankedCandidates.length === 0) {
+      console.log(`No deterministic match found for relation target: ${normalizedTargetTitle}`);
       continue;
     }
 
-    const targetDoc = matchingDocs[0];
+    const targetDoc = rankedCandidates[0];
+    const relationKey = `${documentId}::${targetDoc.id}::${relType}`;
+    if (seenRelationKeys.has(relationKey)) continue;
+    seenRelationKeys.add(relationKey);
+
+    // Territorial hard validation for deroga/modifica between autonomous laws
+    if (
+      (relType === "deroga" || relType === "modifica") &&
+      sourceDoc?.jurisdiction === "autonomica" &&
+      targetDoc?.jurisdiction === "autonomica" &&
+      sourceDoc?.territorial_entity &&
+      targetDoc?.territorial_entity &&
+      normalizeText(sourceDoc.territorial_entity) !== normalizeText(targetDoc.territorial_entity)
+    ) {
+      console.log(`Skipping invalid territorial relation: "${sourceDoc?.title}" --${relType}--> "${targetDoc.title}"`);
+      continue;
+    }
+
+    // Temporal hard validation for deroga/modifica: source cannot be older than target
+    if (
+      (relType === "deroga" || relType === "modifica") &&
+      sourceDoc?.effective_date &&
+      targetDoc?.effective_date &&
+      new Date(sourceDoc.effective_date) < new Date(targetDoc.effective_date)
+    ) {
+      console.log(`Skipping invalid temporal relation: source older than target for ${relType}`);
+      continue;
+    }
+
+    const affectedArticles = Array.from(
+      new Set(
+        (relation.affected_articles || []).map((a: any) => String(a || "").trim()).filter((a: string) => a.length > 0),
+      ),
+    );
 
     // Insert relation record (include temporal_note in description)
-    await supabase.from("document_relations").upsert({
-      source_document_id: documentId,
-      target_document_id: targetDoc.id,
-      relation_type: relType,
-      affected_articles: relation.affected_articles || [],
-      description: relation.temporal_note
-        ? `${relation.description || ''}. Nota temporal: ${relation.temporal_note}`
-        : (relation.description || null),
-      detected_by: 'ai',
-    }, { onConflict: 'source_document_id,target_document_id,relation_type' });
+    await supabase.from("document_relations").upsert(
+      {
+        source_document_id: documentId,
+        target_document_id: targetDoc.id,
+        relation_type: relType,
+        affected_articles: affectedArticles,
+        description: relation.temporal_note
+          ? `${relation.description || ""}. Nota temporal: ${relation.temporal_note}`
+          : relation.description || null,
+        detected_by: "ai",
+      },
+      { onConflict: "source_document_id,target_document_id,relation_type" },
+    );
 
     // Process effects based on relation type
     if (relType === "deroga") {
       // If there's a temporal_note, the old doc still applies to some contracts - DON'T deactivate
       if (relation.temporal_note) {
-        console.log(`Deroga with temporal applicability: "${targetDoc.title}" stays active. Note: ${relation.temporal_note}`);
+        console.log(
+          `Deroga with temporal applicability: "${targetDoc.title}" stays active. Note: ${relation.temporal_note}`,
+        );
       } else {
         // Full supersede - mark all chunks as superseded
         const { data: oldChunks } = await supabase
@@ -451,7 +628,10 @@ async function processRelations(
           await supabase
             .from("legal_chunks")
             .update({ is_superseded: true, superseded_at: new Date().toISOString() })
-            .in("id", oldChunks.map((c: any) => c.id));
+            .in(
+              "id",
+              oldChunks.map((c: any) => c.id),
+            );
           supersededChunksCount += oldChunks.length;
 
           // Mark document as superseded
@@ -465,9 +645,8 @@ async function processRelations(
       }
     } else if (relType === "modifica") {
       // Partial supersede - only matching articles
-      const affectedArticles = relation.affected_articles || [];
       // Also use article refs from new chunks
-      const articlesToCheck = affectedArticles.length > 0 ? affectedArticles : newArticleRefs;
+      const articlesToCheck = affectedArticles.length > 0 ? affectedArticles : uniqueArticleRefs;
 
       for (const articleRef of articlesToCheck) {
         const { data: oldChunks } = await supabase
@@ -481,17 +660,18 @@ async function processRelations(
           await supabase
             .from("legal_chunks")
             .update({ is_superseded: true, superseded_at: new Date().toISOString() })
-            .in("id", oldChunks.map((c: any) => c.id));
+            .in(
+              "id",
+              oldChunks.map((c: any) => c.id),
+            );
           supersededChunksCount += oldChunks.length;
-          console.log(`Modifica: marked ${oldChunks.length} chunks of "${articleRef}" from "${targetDoc.title}" as superseded`);
+          console.log(
+            `Modifica: marked ${oldChunks.length} chunks of "${articleRef}" from "${targetDoc.title}" as superseded`,
+          );
         }
       }
 
-      // Save supersedes_ids reference
-      await supabase
-        .from("legal_documents")
-        .update({ supersedes_ids: [targetDoc.id] })
-        .eq("id", documentId);
+      sourceSupersedesIds.add(targetDoc.id);
     } else if (relType === "prorroga") {
       // Update expiration date
       if (relation.new_expiration_date) {
@@ -505,6 +685,11 @@ async function processRelations(
     // complementa, amplia, desarrolla, interpreta: just the relation record is enough
     console.log(`Relation created: ${documentId} --${relType}--> ${targetDoc.title}`);
   }
+
+  await supabase
+    .from("legal_documents")
+    .update({ supersedes_ids: Array.from(sourceSupersedesIds) })
+    .eq("id", documentId);
 
   return supersededChunksCount;
 }
@@ -587,9 +772,7 @@ serve(async (req) => {
       extractedText = await extractTextFromUrl(sourceUrl);
       console.log(`Extracted ${extractedText.length} characters from URL`);
     } else if (sourceType === "epub") {
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from("legal-docs")
-        .download(filePath);
+      const { data: fileData, error: downloadError } = await supabase.storage.from("legal-docs").download(filePath);
       if (downloadError) throw new Error(`Error downloading EPUB: ${downloadError.message}`);
       const arrayBuffer = await fileData.arrayBuffer();
       console.log(`Extracting text from EPUB...`);
@@ -597,9 +780,7 @@ serve(async (req) => {
       console.log(`Extracted ${extractedText.length} characters from EPUB`);
     } else {
       // PDF - download and check size
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from("legal-docs")
-        .download(filePath);
+      const { data: fileData, error: downloadError } = await supabase.storage.from("legal-docs").download(filePath);
       if (downloadError) throw new Error(`Error downloading PDF: ${downloadError.message}`);
       const arrayBuffer = await fileData.arrayBuffer();
       const fileSizeMB = arrayBuffer.byteLength / (1024 * 1024);
@@ -626,7 +807,7 @@ serve(async (req) => {
       .from("legal_chunks")
       .select("id, chunk_index")
       .eq("document_id", documentId);
-    
+
     const existingChunkCount = existingChunks?.length || 0;
     const isResume = existingChunkCount > 0;
     if (isResume) {
@@ -640,9 +821,15 @@ serve(async (req) => {
         const arrayBuffer = await fileData!.arrayBuffer();
         const base64 = arrayBufferToBase64(arrayBuffer);
 
-        const systemPrompt = buildChunkExtractionPrompt(docInfo.title, docInfo.type, docInfo.jurisdiction, docInfo.territorial_entity);
+        const systemPrompt = buildChunkExtractionPrompt(
+          docInfo.title,
+          docInfo.type,
+          docInfo.jurisdiction,
+          docInfo.territorial_entity,
+        );
 
-        await supabase.from("legal_documents")
+        await supabase
+          .from("legal_documents")
           .update({ processing_status: "processing (extrayendo texto del PDF...)" })
           .eq("id", documentId);
 
@@ -652,7 +839,10 @@ serve(async (req) => {
             {
               role: "user",
               content: [
-                { type: "text", text: `Procesa este documento legal: "${docInfo.title}". Extrae los fragmentos relevantes.` },
+                {
+                  type: "text",
+                  text: `Procesa este documento legal: "${docInfo.title}". Extrae los fragmentos relevantes.`,
+                },
                 { type: "image_url", image_url: { url: `data:application/pdf;base64,${base64}` } },
               ],
             },
@@ -662,22 +852,24 @@ serve(async (req) => {
           allChunks = parsed.chunks || parsed || [];
         } catch (visionError) {
           console.error("PDF vision failed:", visionError);
-          allChunks = [{
-            content: `Documento: ${docInfo.title}. Pendiente de procesamiento manual. Error: ${visionError instanceof Error ? visionError.message : 'unknown'}`,
-            article_reference: null,
-            section_title: docInfo.title,
-            semantic_category: "otro",
-            key_entities: [],
-            applies_when: {},
-            territorial_scope: docInfo.jurisdiction === 'estatal' ? 'estatal' : 'autonomica',
-            affected_municipalities: [],
-            affected_provinces: [],
-          }];
+          allChunks = [
+            {
+              content: `Documento: ${docInfo.title}. Pendiente de procesamiento manual. Error: ${visionError instanceof Error ? visionError.message : "unknown"}`,
+              article_reference: null,
+              section_title: docInfo.title,
+              semantic_category: "otro",
+              key_entities: [],
+              applies_when: {},
+              territorial_scope: docInfo.jurisdiction === "estatal" ? "estatal" : "autonomica",
+              affected_municipalities: [],
+              affected_provinces: [],
+            },
+          ];
         }
 
         // Insert chunks immediately for PDF vision
         const chunksToInsert = allChunks.map((chunk: any, index: number) =>
-          validateAndNormalizeChunk(chunk, index, documentId!, docInfo.jurisdiction)
+          validateAndNormalizeChunk(chunk, index, documentId!, docInfo.jurisdiction),
         );
         const { error: insertError } = await supabase.from("legal_chunks").insert(chunksToInsert);
         if (insertError) throw new Error(`Error inserting chunks: ${insertError.message}`);
@@ -688,7 +880,12 @@ serve(async (req) => {
       const blocks = splitTextIntoBlocks(extractedText, 80000);
       console.log(`Split text into ${blocks.length} blocks (from ${extractedText.length} chars)`);
 
-      const systemPrompt = buildChunkExtractionPrompt(docInfo.title, docInfo.type, docInfo.jurisdiction, docInfo.territorial_entity);
+      const systemPrompt = buildChunkExtractionPrompt(
+        docInfo.title,
+        docInfo.type,
+        docInfo.jurisdiction,
+        docInfo.territorial_entity,
+      );
       const EXTRACTION_MODEL = "google/gemini-2.5-flash";
 
       // Determine which block to start from based on existing chunks
@@ -696,7 +893,9 @@ serve(async (req) => {
       let startBlock = 0;
       if (isResume && savedResumeBlock) {
         startBlock = parseInt(savedResumeBlock[1]) - 1; // Convert 1-indexed to 0-indexed
-        console.log(`Resuming from block ${startBlock + 1}/${blocks.length} (had ${existingChunkCount} existing chunks)`);
+        console.log(
+          `Resuming from block ${startBlock + 1}/${blocks.length} (had ${existingChunkCount} existing chunks)`,
+        );
       }
 
       let globalChunkIndex = existingChunkCount; // Continue indexing from existing chunks
@@ -707,8 +906,11 @@ serve(async (req) => {
         // CHECK TIME LIMIT before starting a new block
         const elapsedMs = Date.now() - FUNCTION_START_TIME;
         if (elapsedMs > MAX_EXECUTION_MS) {
-          console.log(`Time limit reached (${Math.round(elapsedMs / 1000)}s). Stopping before block ${i + 1}/${blocks.length} to allow resume.`);
-          await supabase.from("legal_documents")
+          console.log(
+            `Time limit reached (${Math.round(elapsedMs / 1000)}s). Stopping before block ${i + 1}/${blocks.length} to allow resume.`,
+          );
+          await supabase
+            .from("legal_documents")
             .update({
               processing_status: "error",
               processing_error: `Tiempo límite alcanzado en bloque ${i + 1}/${blocks.length}. Pulsa "Reprocesar" para continuar desde aquí.`,
@@ -718,23 +920,32 @@ serve(async (req) => {
           break;
         }
 
-        await supabase.from("legal_documents")
+        await supabase
+          .from("legal_documents")
           .update({ processing_status: `processing (bloque ${i + 1}/${blocks.length})` })
           .eq("id", documentId);
 
-        console.log(`Processing block ${i + 1}/${blocks.length} (${blocks[i].length} chars) with flash [${Math.round(elapsedMs / 1000)}s elapsed]`);
+        console.log(
+          `Processing block ${i + 1}/${blocks.length} (${blocks[i].length} chars) with flash [${Math.round(elapsedMs / 1000)}s elapsed]`,
+        );
 
         try {
-          const aiContent = await callAI([
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Procesa este bloque (${i + 1} de ${blocks.length}) del documento "${docInfo.title}":\n\n${blocks[i]}` },
-          ], EXTRACTION_MODEL);
+          const aiContent = await callAI(
+            [
+              { role: "system", content: systemPrompt },
+              {
+                role: "user",
+                content: `Procesa este bloque (${i + 1} de ${blocks.length}) del documento "${docInfo.title}":\n\n${blocks[i]}`,
+              },
+            ],
+            EXTRACTION_MODEL,
+          );
 
           const parsed = parseJsonResponse(aiContent);
           const blockChunks = parsed.chunks || parsed || [];
           if (Array.isArray(blockChunks) && blockChunks.length > 0) {
             const chunksToInsert = blockChunks.map((chunk: any, index: number) =>
-              validateAndNormalizeChunk(chunk, globalChunkIndex + index, documentId!, docInfo.jurisdiction)
+              validateAndNormalizeChunk(chunk, globalChunkIndex + index, documentId!, docInfo.jurisdiction),
             );
             const { error: insertError } = await supabase.from("legal_chunks").insert(chunksToInsert);
             if (insertError) {
@@ -750,7 +961,8 @@ serve(async (req) => {
           }
         } catch (blockError) {
           console.error(`Error processing block ${i + 1}:`, blockError);
-          await supabase.from("legal_documents")
+          await supabase
+            .from("legal_documents")
             .update({
               processing_status: "error",
               processing_error: `Error en bloque ${i + 1}/${blocks.length}. Pulsa "Reprocesar" para continuar.`,
@@ -792,19 +1004,22 @@ serve(async (req) => {
     let supersededChunks = 0;
 
     try {
-      await supabase.from("legal_documents")
+      await supabase
+        .from("legal_documents")
         .update({ processing_status: "processing (análisis global...)" })
         .eq("id", documentId);
 
       // Build a summary of chunks for the global analysis
-      const chunksSummary = allChunks.slice(0, 40).map((c: any, i: number) =>
-        `[${i + 1}] ${c.article_reference || ''} ${c.section_title || ''}: ${(c.content || '').substring(0, 300)}...`
-      ).join("\n");
+      const chunksSummary = allChunks
+        .slice(0, 40)
+        .map(
+          (c: any, i: number) =>
+            `[${i + 1}] ${c.article_reference || ""} ${c.section_title || ""}: ${(c.content || "").substring(0, 300)}...`,
+        )
+        .join("\n");
 
       const analysisPrompt = buildAnalysisPrompt(docInfo.title, chunksSummary, docInfo.effective_date);
-      const analysisContent = await callAI([
-        { role: "user", content: analysisPrompt },
-      ], "google/gemini-2.5-flash");
+      const analysisContent = await callAI([{ role: "user", content: analysisPrompt }], "google/gemini-2.5-flash");
 
       const analysisResult = parseJsonResponse(analysisContent);
       const docAnalysis = analysisResult.document_analysis || analysisResult;
@@ -820,7 +1035,9 @@ serve(async (req) => {
 
       if (Object.keys(updateData).length > 0) {
         await supabase.from("legal_documents").update(updateData).eq("id", documentId);
-        console.log(`Global analysis saved: summary=${!!documentSummary}, keywords=${documentKeywords.length}, expiration=${docAnalysis.expiration_date || 'none'}`);
+        console.log(
+          `Global analysis saved: summary=${!!documentSummary}, keywords=${documentKeywords.length}, expiration=${docAnalysis.expiration_date || "none"}`,
+        );
       }
 
       // Process detected relations
@@ -836,7 +1053,8 @@ serve(async (req) => {
     }
 
     // Mark as completed
-    await supabase.from("legal_documents")
+    await supabase
+      .from("legal_documents")
       .update({
         processing_status: "completed",
         processing_completed_at: new Date().toISOString(),
@@ -878,9 +1096,9 @@ serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
