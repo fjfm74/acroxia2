@@ -17,13 +17,46 @@ const RATE_LIMIT_MAX = 5; // Max requests
 const RATE_LIMIT_WINDOW_HOURS = 1; // Time window in hours
 
 interface SendEmailRequest {
-  type: 'confirmation' | 'welcome' | 'password_reset' | 'password_changed' | 'analysis_completed' | 'low_credits' | 'contact';
+  type:
+    | "confirmation"
+    | "welcome"
+    | "password_reset"
+    | "password_changed"
+    | "analysis_completed"
+    | "low_credits"
+    | "contact";
   to: string;
   data: EmailData;
 }
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function sanitizeSubject(value: string): string {
+  return String(value || "")
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 180);
+}
+
+function htmlToPlainText(html: string): string {
+  return String(html || "")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|tr|br)>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n\s+\n/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 // Get client IP from request headers
@@ -33,25 +66,29 @@ function getClientIP(req: Request): string {
   if (forwarded) {
     return forwarded.split(",")[0].trim();
   }
-  
+
   const realIP = req.headers.get("x-real-ip");
   if (realIP) {
     return realIP;
   }
-  
+
   const cfIP = req.headers.get("cf-connecting-ip");
   if (cfIP) {
     return cfIP;
   }
-  
+
   return "unknown";
 }
 
 // Check rate limit for contact form submissions
-async function checkRateLimit(supabase: any, ip: string, endpoint: string): Promise<{ allowed: boolean; remaining: number }> {
+async function checkRateLimit(
+  supabase: any,
+  ip: string,
+  endpoint: string,
+): Promise<{ allowed: boolean; remaining: number }> {
   const windowStart = new Date();
   windowStart.setHours(windowStart.getHours() - RATE_LIMIT_WINDOW_HOURS);
-  
+
   // Count requests in the time window
   const { count, error } = await supabase
     .from("rate_limits")
@@ -59,28 +96,26 @@ async function checkRateLimit(supabase: any, ip: string, endpoint: string): Prom
     .eq("ip_address", ip)
     .eq("endpoint", endpoint)
     .gte("created_at", windowStart.toISOString());
-  
+
   if (error) {
     console.error("Rate limit check error:", error);
     // On error, allow the request but log it
     return { allowed: true, remaining: RATE_LIMIT_MAX };
   }
-  
+
   const currentCount = count || 0;
   const remaining = Math.max(0, RATE_LIMIT_MAX - currentCount);
-  
-  return { 
-    allowed: currentCount < RATE_LIMIT_MAX, 
-    remaining 
+
+  return {
+    allowed: currentCount < RATE_LIMIT_MAX,
+    remaining,
   };
 }
 
 // Record a request for rate limiting
 async function recordRequest(supabase: any, ip: string, endpoint: string): Promise<void> {
-  const { error } = await supabase
-    .from("rate_limits")
-    .insert({ ip_address: ip, endpoint: endpoint });
-  
+  const { error } = await supabase.from("rate_limits").insert({ ip_address: ip, endpoint: endpoint });
+
   if (error) {
     console.error("Failed to record rate limit:", error);
   }
@@ -95,19 +130,19 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON body" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     const { type, to, data }: SendEmailRequest = body as SendEmailRequest;
 
     if (!type || !to) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: type, to" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: "Missing required fields: type, to" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     if (type !== "contact") {
@@ -131,10 +166,10 @@ const handler = async (req: Request): Promise<Response> => {
           auth.userEmail &&
           normalizeEmail(auth.userEmail) !== normalizeEmail(to)
         ) {
-          return new Response(
-            JSON.stringify({ error: "Forbidden target email for password_changed template" }),
-            { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
-          );
+          return new Response(JSON.stringify({ error: "Forbidden target email for password_changed template" }), {
+            status: 403,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
         }
       } else {
         const auth = await authorizeRequest({
@@ -156,52 +191,56 @@ const handler = async (req: Request): Promise<Response> => {
     if (type === "contact") {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const clientIP = getClientIP(req);
-      
+
       const { allowed, remaining } = await checkRateLimit(supabase, clientIP, "contact_form");
-      
+
       if (!allowed) {
         console.log(`Rate limit exceeded for IP: ${clientIP}`);
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "Has enviado demasiados mensajes. Por favor, espera una hora antes de intentarlo de nuevo.",
-            rateLimited: true 
+            rateLimited: true,
           }),
-          { 
-            status: 429, 
-            headers: { 
+          {
+            status: 429,
+            headers: {
               "Content-Type": "application/json",
               "X-RateLimit-Limit": RATE_LIMIT_MAX.toString(),
               "X-RateLimit-Remaining": "0",
               "Retry-After": "3600",
-              ...corsHeaders 
-            } 
-          }
+              ...corsHeaders,
+            },
+          },
         );
       }
-      
+
       // Record this request
       await recordRequest(supabase, clientIP, "contact_form");
-      
+
       console.log(`Contact form from IP ${clientIP}, remaining: ${remaining - 1}`);
     }
 
     console.log(`Sending ${type} email to ${to}`);
 
     const template = getEmailTemplate(type, data);
+    const normalizedTo = normalizeEmail(to);
+    const subject = sanitizeSubject(template.subject);
+    const text = htmlToPlainText(template.html);
 
     // Send via Resend API directly
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         from: "ACROXIA <noreply@acroxia.com>",
-        to: [to],
+        to: [normalizedTo],
         reply_to: "contacto@acroxia.com",
-        subject: template.subject,
+        subject,
         html: template.html,
+        text,
       }),
     });
 
@@ -214,19 +253,19 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await response.json();
     console.log("Email sent successfully:", emailResponse);
 
-    return new Response(
-      JSON.stringify({ success: true, id: emailResponse.id }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ success: true, id: emailResponse.id }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   } catch (error: unknown) {
     console.error("Error sending email:", error);
-    
+
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 
