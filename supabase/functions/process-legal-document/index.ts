@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const ACTIVE_PROCESSING_STALE_MINUTES = 15;
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return base64Encode(buffer);
@@ -736,13 +737,32 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Read resume info BEFORE clearing it
+    // Read current processing state BEFORE updating it
     const { data: resumeInfo } = await supabase
       .from("legal_documents")
-      .select("processing_error")
+      .select("processing_error, processing_status, processing_started_at")
       .eq("id", documentId)
       .single();
     const savedResumeBlock = resumeInfo?.processing_error?.match(/bloque (\d+)\/(\d+)/);
+    const currentStatus = String(resumeInfo?.processing_status || "");
+    const isAlreadyProcessing = currentStatus.startsWith("processing");
+
+    if (isAlreadyProcessing) {
+      const startedAtMs = new Date(String(resumeInfo?.processing_started_at || "")).getTime();
+      const ageMs = Date.now() - startedAtMs;
+      if (Number.isFinite(startedAtMs) && ageMs < ACTIVE_PROCESSING_STALE_MINUTES * 60_000) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            skipped: true,
+            reason: "already processing",
+            message: "Este documento ya se está procesando. Espera unos minutos y recarga.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      console.log(`Detected stale processing state (${Math.round(ageMs / 1000)}s old). Taking ownership of run.`);
+    }
 
     // Set processing status
     await supabase
@@ -750,6 +770,7 @@ serve(async (req) => {
       .update({
         processing_status: "processing",
         processing_started_at: new Date().toISOString(),
+        processing_completed_at: null,
         processing_error: null,
       })
       .eq("id", documentId);
@@ -803,15 +824,43 @@ serve(async (req) => {
     let chunksInsertedInThisRun = 0;
 
     // Check for existing chunks from a previous partial run (resume support)
-    const { data: existingChunks } = await supabase
+    const { data: existingChunksRaw } = await supabase
       .from("legal_chunks")
-      .select("id, chunk_index")
-      .eq("document_id", documentId);
+      .select("id, chunk_index, content, article_reference, section_title, key_entities")
+      .eq("document_id", documentId)
+      .order("chunk_index", { ascending: true });
 
-    const existingChunkCount = existingChunks?.length || 0;
+    let existingChunks = existingChunksRaw || [];
+    let existingChunkCount = existingChunks.length;
+
+    if (existingChunkCount > 0 && !savedResumeBlock) {
+      console.warn(
+        `Found ${existingChunkCount} existing chunks without resumable marker. Cleaning stale partial state before reprocessing.`,
+      );
+      await supabase.from("legal_chunks").delete().eq("document_id", documentId);
+      await supabase
+        .from("document_relations")
+        .delete()
+        .or(`source_document_id.eq.${documentId},target_document_id.eq.${documentId}`);
+      await supabase
+        .from("legal_documents")
+        .update({ superseded_by_id: null, supersedes_ids: [], is_active: true })
+        .eq("id", documentId);
+      existingChunks = [];
+      existingChunkCount = 0;
+    }
+
     const isResume = existingChunkCount > 0;
     if (isResume) {
       console.log(`Resuming: found ${existingChunkCount} existing chunks from previous run`);
+      allChunks.push(
+        ...existingChunks.map((c: any) => ({
+          content: c.content,
+          article_reference: c.article_reference || null,
+          section_title: c.section_title || null,
+          key_entities: Array.isArray(c.key_entities) ? c.key_entities : [],
+        })),
+      );
     }
 
     if (usePdfVision) {
@@ -892,7 +941,8 @@ serve(async (req) => {
       // We track progress via processing_status which contains "bloque X/Y"
       let startBlock = 0;
       if (isResume && savedResumeBlock) {
-        startBlock = parseInt(savedResumeBlock[1]) - 1; // Convert 1-indexed to 0-indexed
+        const requestedStart = parseInt(savedResumeBlock[1]) - 1; // Convert 1-indexed to 0-indexed
+        startBlock = Math.max(0, Math.min(Number.isFinite(requestedStart) ? requestedStart : 0, blocks.length - 1));
         console.log(
           `Resuming from block ${startBlock + 1}/${blocks.length} (had ${existingChunkCount} existing chunks)`,
         );
