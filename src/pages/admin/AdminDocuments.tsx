@@ -438,10 +438,24 @@ const AdminDocuments = () => {
         toast({ title: "Reanudando procesamiento...", description: "Continuando desde donde se quedó..." });
       } else {
         // FULL REPROCESS: Delete everything and start fresh
-        await supabase.from("document_relations").delete().eq("source_document_id", doc.id);
+        // Remove both outbound and inbound relations to avoid stale graph artifacts
+        await supabase
+          .from("document_relations")
+          .delete()
+          .or(`source_document_id.eq.${doc.id},target_document_id.eq.${doc.id}`);
         await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
+        await supabase
+          .from("legal_documents")
+          .update({ superseded_by_id: null })
+          .eq("superseded_by_id", doc.id);
         await supabase.from("legal_documents")
-          .update({ processing_status: "pending", processing_error: null })
+          .update({
+            processing_status: "pending",
+            processing_error: null,
+            superseded_by_id: null,
+            supersedes_ids: [],
+            is_active: true,
+          })
           .eq("id", doc.id);
         toast({ title: "Reprocesando...", description: "El procesamiento puede tardar entre 1 y 3 minutos..." });
       }

@@ -18,6 +18,46 @@ function normalizeText(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+function normalizeLegalTitle(text: string): string {
+  return normalizeText(String(text || ""))
+    .replace(/[^\w\s/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function titleTokens(text: string): string[] {
+  return normalizeLegalTitle(text)
+    .split(" ")
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 3);
+}
+
+function scoreTitleMatch(targetTitle: string, candidateTitle: string): number {
+  const targetNorm = normalizeLegalTitle(targetTitle);
+  const candidateNorm = normalizeLegalTitle(candidateTitle);
+  if (!targetNorm || !candidateNorm) return 0;
+  if (targetNorm === candidateNorm) return 1000;
+
+  let score = 0;
+  if (candidateNorm.includes(targetNorm)) score += 500;
+  if (targetNorm.includes(candidateNorm)) score += 350;
+  if (candidateNorm.startsWith(targetNorm) || targetNorm.startsWith(candidateNorm)) score += 120;
+
+  const targetSet = new Set(titleTokens(targetNorm));
+  const candidateSet = new Set(titleTokens(candidateNorm));
+  if (targetSet.size > 0) {
+    let common = 0;
+    for (const token of targetSet) {
+      if (candidateSet.has(token)) common++;
+    }
+    score += Math.round((common / targetSet.size) * 300);
+  }
+
+  const lengthPenalty = Math.abs(candidateNorm.length - targetNorm.length);
+  score -= Math.min(60, Math.floor(lengthPenalty / 8));
+  return score;
+}
+
 const SPANISH_PROVINCES = [
   "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz",
   "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real",
@@ -402,32 +442,88 @@ async function processRelations(
     .filter((c: any) => c.article_reference)
     .map((c: any) => c.article_reference as string);
 
+  const uniqueArticleRefs = Array.from(new Set(
+    newArticleRefs
+      .map((a) => String(a || "").trim())
+      .filter((a) => a.length > 0),
+  ));
+
+  const { data: sourceDoc } = await supabase
+    .from("legal_documents")
+    .select("id, title, jurisdiction, territorial_entity, effective_date, supersedes_ids")
+    .eq("id", documentId)
+    .single();
+
+  const { data: candidateDocs } = await supabase
+    .from("legal_documents")
+    .select("id, title, jurisdiction, territorial_entity, effective_date")
+    .neq("id", documentId);
+
+  const seenRelationKeys = new Set<string>();
+  const sourceSupersedesIds = new Set<string>(Array.isArray(sourceDoc?.supersedes_ids) ? sourceDoc.supersedes_ids : []);
+
   for (const relation of relations) {
     if (!relation.type || !relation.target_title) continue;
     const relType = relation.type.toLowerCase();
     if (!VALID_RELATION_TYPES.includes(relType)) continue;
 
-    // Find matching target document
-    const searchTerm = relation.target_title.substring(0, 40);
-    const { data: matchingDocs } = await supabase
-      .from("legal_documents")
-      .select("id, title")
-      .neq("id", documentId)
-      .ilike("title", `%${searchTerm}%`);
+    const normalizedTargetTitle = String(relation.target_title || "").trim();
+    if (!normalizedTargetTitle) continue;
 
-    if (!matchingDocs || matchingDocs.length === 0) {
-      console.log(`No matching document found for relation: ${relation.target_title}`);
+    const rankedCandidates = (candidateDocs || [])
+      .map((doc: any) => ({
+        ...doc,
+        _score: scoreTitleMatch(normalizedTargetTitle, doc.title || ""),
+      }))
+      .filter((doc: any) => doc._score >= 120)
+      .sort((a: any, b: any) => (b._score - a._score) || String(a.title).localeCompare(String(b.title)));
+
+    if (rankedCandidates.length === 0) {
+      console.log(`No deterministic match found for relation target: ${normalizedTargetTitle}`);
       continue;
     }
 
-    const targetDoc = matchingDocs[0];
+    const targetDoc = rankedCandidates[0];
+    const relationKey = `${documentId}::${targetDoc.id}::${relType}`;
+    if (seenRelationKeys.has(relationKey)) continue;
+    seenRelationKeys.add(relationKey);
+
+    // Territorial hard validation for deroga/modifica between autonomous laws
+    if (
+      (relType === "deroga" || relType === "modifica") &&
+      sourceDoc?.jurisdiction === "autonomica" &&
+      targetDoc?.jurisdiction === "autonomica" &&
+      sourceDoc?.territorial_entity &&
+      targetDoc?.territorial_entity &&
+      normalizeText(sourceDoc.territorial_entity) !== normalizeText(targetDoc.territorial_entity)
+    ) {
+      console.log(`Skipping invalid territorial relation: "${sourceDoc?.title}" --${relType}--> "${targetDoc.title}"`);
+      continue;
+    }
+
+    // Temporal hard validation for deroga/modifica: source cannot be older than target
+    if (
+      (relType === "deroga" || relType === "modifica") &&
+      sourceDoc?.effective_date &&
+      targetDoc?.effective_date &&
+      new Date(sourceDoc.effective_date) < new Date(targetDoc.effective_date)
+    ) {
+      console.log(`Skipping invalid temporal relation: source older than target for ${relType}`);
+      continue;
+    }
+
+    const affectedArticles = Array.from(new Set(
+      (relation.affected_articles || [])
+        .map((a: any) => String(a || "").trim())
+        .filter((a: string) => a.length > 0),
+    ));
 
     // Insert relation record (include temporal_note in description)
     await supabase.from("document_relations").upsert({
       source_document_id: documentId,
       target_document_id: targetDoc.id,
       relation_type: relType,
-      affected_articles: relation.affected_articles || [],
+      affected_articles: affectedArticles,
       description: relation.temporal_note
         ? `${relation.description || ''}. Nota temporal: ${relation.temporal_note}`
         : (relation.description || null),
@@ -465,9 +561,8 @@ async function processRelations(
       }
     } else if (relType === "modifica") {
       // Partial supersede - only matching articles
-      const affectedArticles = relation.affected_articles || [];
       // Also use article refs from new chunks
-      const articlesToCheck = affectedArticles.length > 0 ? affectedArticles : newArticleRefs;
+      const articlesToCheck = affectedArticles.length > 0 ? affectedArticles : uniqueArticleRefs;
 
       for (const articleRef of articlesToCheck) {
         const { data: oldChunks } = await supabase
@@ -487,11 +582,7 @@ async function processRelations(
         }
       }
 
-      // Save supersedes_ids reference
-      await supabase
-        .from("legal_documents")
-        .update({ supersedes_ids: [targetDoc.id] })
-        .eq("id", documentId);
+      sourceSupersedesIds.add(targetDoc.id);
     } else if (relType === "prorroga") {
       // Update expiration date
       if (relation.new_expiration_date) {
@@ -505,6 +596,11 @@ async function processRelations(
     // complementa, amplia, desarrolla, interpreta: just the relation record is enough
     console.log(`Relation created: ${documentId} --${relType}--> ${targetDoc.title}`);
   }
+
+  await supabase
+    .from("legal_documents")
+    .update({ supersedes_ids: Array.from(sourceSupersedesIds) })
+    .eq("id", documentId);
 
   return supersededChunksCount;
 }
