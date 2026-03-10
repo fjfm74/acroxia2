@@ -1,6 +1,22 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
-import { Upload, FileText, Trash2, Filter, CheckCircle, XCircle, RefreshCw, Eye, AlertTriangle, LinkIcon, MoreVertical, Loader2, Clock, Globe, BookOpen } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  Trash2,
+  Filter,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Eye,
+  AlertTriangle,
+  LinkIcon,
+  MoreVertical,
+  Loader2,
+  Clock,
+  Globe,
+  BookOpen,
+} from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,13 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -35,11 +45,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,10 +106,25 @@ const documentTypes = [
 ];
 
 const comunidadesAutonomas = [
-  "Andalucía", "Aragón", "Asturias", "Baleares", "Canarias",
-  "Cantabria", "Castilla-La Mancha", "Castilla y León", "Cataluña",
-  "Comunidad Valenciana", "Extremadura", "Galicia", "La Rioja",
-  "Madrid", "Murcia", "Navarra", "País Vasco", "Ceuta", "Melilla"
+  "Andalucía",
+  "Aragón",
+  "Asturias",
+  "Baleares",
+  "Canarias",
+  "Cantabria",
+  "Castilla-La Mancha",
+  "Castilla y León",
+  "Cataluña",
+  "Comunidad Valenciana",
+  "Extremadura",
+  "Galicia",
+  "La Rioja",
+  "Madrid",
+  "Murcia",
+  "Navarra",
+  "País Vasco",
+  "Ceuta",
+  "Melilla",
 ];
 
 const jurisdictions = [
@@ -167,10 +188,7 @@ const AdminDocuments = () => {
 
   const fetchDocuments = useCallback(async () => {
     try {
-      let query = supabase
-        .from("legal_documents")
-        .select("*")
-        .order("created_at", { ascending: false });
+      let query = supabase.from("legal_documents").select("*").order("created_at", { ascending: false });
 
       if (selectedJurisdiction !== "all") {
         query = query.eq("jurisdiction", selectedJurisdiction as any);
@@ -187,15 +205,13 @@ const AdminDocuments = () => {
             .select("*", { count: "exact", head: true })
             .eq("document_id", doc.id);
           return { ...doc, chunks_count: count || 0 };
-        })
+        }),
       );
 
       setDocuments(docsWithCounts);
 
       // Fetch relations
-      const { data: relData } = await supabase
-        .from("document_relations")
-        .select("*");
+      const { data: relData } = await supabase.from("document_relations").select("*");
       if (relData) setRelations(relData as DocumentRelation[]);
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -212,7 +228,7 @@ const AdminDocuments = () => {
   // Polling: refresh every 3s if any document is pending/processing
   useEffect(() => {
     const hasProcessing = documents.some(
-      (d) => d.processing_status === "pending" || (d.processing_status && d.processing_status.startsWith("processing"))
+      (d) => d.processing_status === "pending" || (d.processing_status && d.processing_status.startsWith("processing")),
     );
 
     if (hasProcessing) {
@@ -237,12 +253,10 @@ const AdminDocuments = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validTypes = newDoc.source_type === "epub"
-      ? ["application/epub+zip"]
-      : ["application/pdf"];
+    const validTypes = newDoc.source_type === "epub" ? ["application/epub+zip"] : ["application/pdf"];
     const validExts = newDoc.source_type === "epub" ? [".epub"] : [".pdf"];
 
-    const hasValidExt = validExts.some(ext => file.name.toLowerCase().endsWith(ext));
+    const hasValidExt = validExts.some((ext) => file.name.toLowerCase().endsWith(ext));
 
     if (hasValidExt || validTypes.includes(file.type)) {
       setNewDoc({ ...newDoc, file });
@@ -255,7 +269,11 @@ const AdminDocuments = () => {
     }
   };
 
-  const [duplicateWarning, setDuplicateWarning] = useState<{ type: 'title' | 'url'; existingTitle: string; existingId: string } | null>(null);
+  const [duplicateWarning, setDuplicateWarning] = useState<{
+    type: "title" | "url";
+    existingTitle: string;
+    existingId: string;
+  } | null>(null);
   const [pendingUpload, setPendingUpload] = useState(false);
 
   const checkDuplicates = async (): Promise<boolean> => {
@@ -267,7 +285,7 @@ const AdminDocuments = () => {
       .limit(1);
 
     if (titleMatch && titleMatch.length > 0) {
-      setDuplicateWarning({ type: 'title', existingTitle: titleMatch[0].title, existingId: titleMatch[0].id });
+      setDuplicateWarning({ type: "title", existingTitle: titleMatch[0].title, existingId: titleMatch[0].id });
       return true;
     }
 
@@ -280,7 +298,7 @@ const AdminDocuments = () => {
         .limit(1);
 
       if (urlMatch && urlMatch.length > 0) {
-        setDuplicateWarning({ type: 'url', existingTitle: urlMatch[0].title, existingId: urlMatch[0].id });
+        setDuplicateWarning({ type: "url", existingTitle: urlMatch[0].title, existingId: urlMatch[0].id });
         return true;
       }
     }
@@ -318,9 +336,7 @@ const AdminDocuments = () => {
       // Upload file if not URL
       if (newDoc.source_type !== "url" && newDoc.file) {
         fileName = `${Date.now()}-${sanitizeFileName(newDoc.file.name)}`;
-        const { error: uploadError } = await supabase.storage
-          .from("legal-docs")
-          .upload(fileName, newDoc.file);
+        const { error: uploadError } = await supabase.storage.from("legal-docs").upload(fileName, newDoc.file);
         if (uploadError) throw uploadError;
       }
 
@@ -352,23 +368,32 @@ const AdminDocuments = () => {
 
       setDialogOpen(false);
       setNewDoc({
-        title: "", description: "", type: "ley", jurisdiction: "estatal",
-        territorial_entity: "", source: "", effective_date: "",
-        source_type: "pdf", source_url: "", file: null,
+        title: "",
+        description: "",
+        type: "ley",
+        jurisdiction: "estatal",
+        territorial_entity: "",
+        source: "",
+        effective_date: "",
+        source_type: "pdf",
+        source_url: "",
+        file: null,
       });
       fetchDocuments();
 
       // Fire-and-forget
-      supabase.functions.invoke("process-legal-document", {
-        body: {
-          documentId: docData.id,
-          filePath: fileName,
-          sourceType: newDoc.source_type,
-          sourceUrl: newDoc.source_type === "url" ? newDoc.source_url : null,
-        },
-      }).catch((err) => {
-        console.error("Edge function invocation error:", err);
-      });
+      supabase.functions
+        .invoke("process-legal-document", {
+          body: {
+            documentId: docData.id,
+            filePath: fileName,
+            sourceType: newDoc.source_type,
+            sourceUrl: newDoc.source_type === "url" ? newDoc.source_url : null,
+          },
+        })
+        .catch((err) => {
+          console.error("Edge function invocation error:", err);
+        });
     } catch (error: any) {
       console.error("Error uploading document:", error);
       toast({ title: "Error al subir", description: error.message, variant: "destructive" });
@@ -379,10 +404,7 @@ const AdminDocuments = () => {
 
   const toggleDocumentStatus = async (doc: LegalDocument) => {
     try {
-      const { error } = await supabase
-        .from("legal_documents")
-        .update({ is_active: !doc.is_active })
-        .eq("id", doc.id);
+      const { error } = await supabase.from("legal_documents").update({ is_active: !doc.is_active }).eq("id", doc.id);
       if (error) throw error;
       toast({
         title: doc.is_active ? "Documento desactivado" : "Documento activado",
@@ -399,10 +421,17 @@ const AdminDocuments = () => {
       // Clear FK references from other documents pointing to this one
       await supabase.from("legal_documents").update({ superseded_by_id: null }).eq("superseded_by_id", doc.id);
       // Clear relations, chunks, then the document
-      await supabase.from("document_relations").delete().or(`source_document_id.eq.${doc.id},target_document_id.eq.${doc.id}`);
+      await supabase
+        .from("document_relations")
+        .delete()
+        .or(`source_document_id.eq.${doc.id},target_document_id.eq.${doc.id}`);
       await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
       // Delete file from storage if exists
-      const { data: docData } = await supabase.from("legal_documents").select("file_path").eq("id", doc.id).maybeSingle();
+      const { data: docData } = await supabase
+        .from("legal_documents")
+        .select("file_path")
+        .eq("id", doc.id)
+        .maybeSingle();
       if (docData?.file_path) {
         await supabase.storage.from("legal-docs").remove([docData.file_path]);
       }
@@ -432,30 +461,42 @@ const AdminDocuments = () => {
 
       if (isTimeoutResume) {
         // RESUME: Do NOT delete chunks or processing_error - the edge function needs them
-        await supabase.from("legal_documents")
-          .update({ processing_status: "pending" })
-          .eq("id", doc.id);
+        await supabase.from("legal_documents").update({ processing_status: "pending" }).eq("id", doc.id);
         toast({ title: "Reanudando procesamiento...", description: "Continuando desde donde se quedó..." });
       } else {
         // FULL REPROCESS: Delete everything and start fresh
-        await supabase.from("document_relations").delete().eq("source_document_id", doc.id);
+        // Remove both outbound and inbound relations to avoid stale graph artifacts
+        await supabase
+          .from("document_relations")
+          .delete()
+          .or(`source_document_id.eq.${doc.id},target_document_id.eq.${doc.id}`);
         await supabase.from("legal_chunks").delete().eq("document_id", doc.id);
-        await supabase.from("legal_documents")
-          .update({ processing_status: "pending", processing_error: null })
+        await supabase.from("legal_documents").update({ superseded_by_id: null }).eq("superseded_by_id", doc.id);
+        await supabase
+          .from("legal_documents")
+          .update({
+            processing_status: "pending",
+            processing_error: null,
+            superseded_by_id: null,
+            supersedes_ids: [],
+            is_active: true,
+          })
           .eq("id", doc.id);
         toast({ title: "Reprocesando...", description: "El procesamiento puede tardar entre 1 y 3 minutos..." });
       }
 
       fetchDocuments();
 
-      supabase.functions.invoke("process-legal-document", {
-        body: {
-          documentId: doc.id,
-          filePath: docData.file_path,
-          sourceType: docData.source_type || "pdf",
-          sourceUrl: docData.source_url,
-        },
-      }).catch((err) => console.error("Reprocess error:", err));
+      supabase.functions
+        .invoke("process-legal-document", {
+          body: {
+            documentId: doc.id,
+            filePath: docData.file_path,
+            sourceType: docData.source_type || "pdf",
+            sourceUrl: docData.source_url,
+          },
+        })
+        .catch((err) => console.error("Reprocess error:", err));
     } catch (error: any) {
       toast({ title: "Error al reprocesar", description: error.message, variant: "destructive" });
     }
@@ -472,7 +513,9 @@ const AdminDocuments = () => {
       if (error) throw error;
       toast({
         title: "Reconciliación completada",
-        description: data?.message || `${data?.new_relations_found || 0} nuevas relaciones detectadas. ${data?.chunks_marked_superseded || 0} chunks obsoletos.`,
+        description:
+          data?.message ||
+          `${data?.new_relations_found || 0} nuevas relaciones detectadas. ${data?.chunks_marked_superseded || 0} chunks obsoletos.`,
       });
       fetchDocuments();
     } catch (err) {
@@ -486,14 +529,17 @@ const AdminDocuments = () => {
     jurisdictions.find((j) => j.value === value)?.label || value || "N/A";
 
   const getDocRelations = (docId: string) =>
-    relations.filter(r => r.source_document_id === docId || r.target_document_id === docId);
+    relations.filter((r) => r.source_document_id === docId || r.target_document_id === docId);
 
   const getRelationLabel = (rel: DocumentRelation, currentDocId: string) => {
     const isSource = rel.source_document_id === currentDocId;
     const otherDocId = isSource ? rel.target_document_id : rel.source_document_id;
-    const otherDoc = documents.find(d => d.id === otherDocId);
+    const otherDoc = documents.find((d) => d.id === otherDocId);
     const otherTitle = otherDoc?.title || "Desconocido";
-    const typeInfo = relationTypeLabels[rel.relation_type] || { label: rel.relation_type, color: "bg-muted text-muted-foreground" };
+    const typeInfo = relationTypeLabels[rel.relation_type] || {
+      label: rel.relation_type,
+      color: "bg-muted text-muted-foreground",
+    };
     return { label: typeInfo.label, color: typeInfo.color, otherTitle, isSource };
   };
 
@@ -523,10 +569,7 @@ const AdminDocuments = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <AdminLayout
-        title="Documentos Legales"
-        description="Gestiona la base de conocimiento legal para el sistema RAG"
-      >
+      <AdminLayout title="Documentos Legales" description="Gestiona la base de conocimiento legal para el sistema RAG">
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -537,7 +580,9 @@ const AdminDocuments = () => {
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 {jurisdictions.map((j) => (
-                  <SelectItem key={j.value} value={j.value}>{j.label}</SelectItem>
+                  <SelectItem key={j.value} value={j.value}>
+                    {j.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -603,21 +648,32 @@ const AdminDocuments = () => {
                     <div className="space-y-2">
                       <Label>Tipo</Label>
                       <Select value={newDoc.type} onValueChange={(value) => setNewDoc({ ...newDoc, type: value })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {documentTypes.map((t) => (
-                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                            <SelectItem key={t.value} value={t.value}>
+                              {t.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Jurisdicción</Label>
-                      <Select value={newDoc.jurisdiction} onValueChange={(value) => setNewDoc({ ...newDoc, jurisdiction: value, territorial_entity: "" })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={newDoc.jurisdiction}
+                        onValueChange={(value) => setNewDoc({ ...newDoc, jurisdiction: value, territorial_entity: "" })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {jurisdictions.map((j) => (
-                            <SelectItem key={j.value} value={j.value}>{j.label}</SelectItem>
+                            <SelectItem key={j.value} value={j.value}>
+                              {j.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -627,11 +683,18 @@ const AdminDocuments = () => {
                   {newDoc.jurisdiction === "autonomica" && (
                     <div className="space-y-2">
                       <Label>Comunidad Autónoma</Label>
-                      <Select value={newDoc.territorial_entity} onValueChange={(value) => setNewDoc({ ...newDoc, territorial_entity: value })}>
-                        <SelectTrigger><SelectValue placeholder="Selecciona una comunidad" /></SelectTrigger>
+                      <Select
+                        value={newDoc.territorial_entity}
+                        onValueChange={(value) => setNewDoc({ ...newDoc, territorial_entity: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una comunidad" />
+                        </SelectTrigger>
                         <SelectContent>
                           {comunidadesAutonomas.map((ca) => (
-                            <SelectItem key={ca} value={ca}>{ca}</SelectItem>
+                            <SelectItem key={ca} value={ca}>
+                              {ca}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -641,30 +704,56 @@ const AdminDocuments = () => {
                   {newDoc.jurisdiction === "provincial" && (
                     <div className="space-y-2">
                       <Label htmlFor="doc-province">Provincia</Label>
-                      <Input id="doc-province" value={newDoc.territorial_entity} onChange={(e) => setNewDoc({ ...newDoc, territorial_entity: e.target.value })} placeholder="Ej: Barcelona, Valencia..." />
+                      <Input
+                        id="doc-province"
+                        value={newDoc.territorial_entity}
+                        onChange={(e) => setNewDoc({ ...newDoc, territorial_entity: e.target.value })}
+                        placeholder="Ej: Barcelona, Valencia..."
+                      />
                     </div>
                   )}
 
                   {newDoc.jurisdiction === "local" && (
                     <div className="space-y-2">
                       <Label htmlFor="doc-municipality">Ayuntamiento</Label>
-                      <Input id="doc-municipality" value={newDoc.territorial_entity} onChange={(e) => setNewDoc({ ...newDoc, territorial_entity: e.target.value })} placeholder="Ej: Ayuntamiento de Madrid" />
+                      <Input
+                        id="doc-municipality"
+                        value={newDoc.territorial_entity}
+                        onChange={(e) => setNewDoc({ ...newDoc, territorial_entity: e.target.value })}
+                        placeholder="Ej: Ayuntamiento de Madrid"
+                      />
                     </div>
                   )}
 
                   <div className="space-y-2">
                     <Label htmlFor="doc-source">Fuente</Label>
-                    <Input id="doc-source" value={newDoc.source} onChange={(e) => setNewDoc({ ...newDoc, source: e.target.value })} placeholder="Ej: BOE, DOGC, etc." />
+                    <Input
+                      id="doc-source"
+                      value={newDoc.source}
+                      onChange={(e) => setNewDoc({ ...newDoc, source: e.target.value })}
+                      placeholder="Ej: BOE, DOGC, etc."
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="doc-date">Fecha efectiva</Label>
-                    <Input id="doc-date" type="date" value={newDoc.effective_date} onChange={(e) => setNewDoc({ ...newDoc, effective_date: e.target.value })} />
+                    <Input
+                      id="doc-date"
+                      type="date"
+                      value={newDoc.effective_date}
+                      onChange={(e) => setNewDoc({ ...newDoc, effective_date: e.target.value })}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="doc-description">Descripción</Label>
-                    <Textarea id="doc-description" value={newDoc.description} onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })} placeholder="Breve descripción del documento" rows={2} />
+                    <Textarea
+                      id="doc-description"
+                      value={newDoc.description}
+                      onChange={(e) => setNewDoc({ ...newDoc, description: e.target.value })}
+                      placeholder="Breve descripción del documento"
+                      rows={2}
+                    />
                   </div>
 
                   {/* Conditional: URL input or file input */}
@@ -681,20 +770,14 @@ const AdminDocuments = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Label htmlFor="doc-file">
-                        Archivo {newDoc.source_type === "epub" ? "EPUB" : "PDF"} *
-                      </Label>
+                      <Label htmlFor="doc-file">Archivo {newDoc.source_type === "epub" ? "EPUB" : "PDF"} *</Label>
                       <Input
                         id="doc-file"
                         type="file"
                         accept={newDoc.source_type === "epub" ? ".epub" : ".pdf"}
                         onChange={handleFileChange}
                       />
-                      {newDoc.file && (
-                        <p className="text-sm text-muted-foreground">
-                          Seleccionado: {newDoc.file.name}
-                        </p>
-                      )}
+                      {newDoc.file && <p className="text-sm text-muted-foreground">Seleccionado: {newDoc.file.name}</p>}
                     </div>
                   )}
                 </div>
@@ -706,17 +789,27 @@ const AdminDocuments = () => {
                       <div className="text-sm">
                         <p className="font-medium text-amber-800">Posible duplicado detectado</p>
                         <p className="text-amber-700">
-                          {duplicateWarning.type === 'title'
+                          {duplicateWarning.type === "title"
                             ? `Ya existe un documento con título similar: "${duplicateWarning.existingTitle}"`
                             : `Ya existe un documento con la misma URL: "${duplicateWarning.existingTitle}"`}
                         </p>
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">
-                      <Button variant="outline" size="sm" onClick={() => setDuplicateWarning(null)} className="rounded-full text-xs">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDuplicateWarning(null)}
+                        className="rounded-full text-xs"
+                      >
                         Cancelar
                       </Button>
-                      <Button size="sm" onClick={() => uploadDocument(true)} disabled={uploading} className="rounded-full text-xs">
+                      <Button
+                        size="sm"
+                        onClick={() => uploadDocument(true)}
+                        disabled={uploading}
+                        className="rounded-full text-xs"
+                      >
                         Subir de todos modos
                       </Button>
                     </div>
@@ -724,7 +817,14 @@ const AdminDocuments = () => {
                 )}
 
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => { setDialogOpen(false); setDuplicateWarning(null); }} className="rounded-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setDialogOpen(false);
+                      setDuplicateWarning(null);
+                    }}
+                    className="rounded-full"
+                  >
                     Cancelar
                   </Button>
                   <Button onClick={() => uploadDocument()} disabled={uploading} className="rounded-full">
@@ -743,7 +843,9 @@ const AdminDocuments = () => {
             <CardContent className="py-12 text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">No hay documentos legales todavía</p>
-              <Button variant="outline" onClick={() => setDialogOpen(true)}>Subir el primer documento</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(true)}>
+                Subir el primer documento
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -767,7 +869,8 @@ const AdminDocuments = () => {
                           {/* Processing status badge */}
                           {doc.processing_status === "pending" && (
                             <Badge variant="outline" className="bg-muted text-muted-foreground text-xs">
-                              <Clock className="h-3 w-3 mr-1" />Pendiente
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pendiente
                             </Badge>
                           )}
                           {doc.processing_status && doc.processing_status.startsWith("processing") && (
@@ -780,7 +883,8 @@ const AdminDocuments = () => {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="destructive" className="text-xs">
-                                  <AlertTriangle className="h-3 w-3 mr-1" />Error
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  Error
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs">
@@ -790,12 +894,14 @@ const AdminDocuments = () => {
                           )}
                           {doc.processing_status === "completed" && doc.chunks_count && doc.chunks_count > 0 && (
                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                              <CheckCircle className="h-3 w-3 mr-1" />Procesado
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Procesado
                             </Badge>
                           )}
                           {doc.superseded_by_id && (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
-                              <AlertTriangle className="h-3 w-3 mr-1" />Obsoleto
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              Obsoleto
                             </Badge>
                           )}
                         </div>
@@ -829,7 +935,9 @@ const AdminDocuments = () => {
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent className="max-w-xs">
-                                    <p className="font-medium">{isSource ? `${label}: ${otherTitle}` : `${label} por: ${otherTitle}`}</p>
+                                    <p className="font-medium">
+                                      {isSource ? `${label}: ${otherTitle}` : `${label} por: ${otherTitle}`}
+                                    </p>
                                     {rel.description && <p className="text-xs mt-1">{rel.description}</p>}
                                     {rel.affected_articles && rel.affected_articles.length > 0 && (
                                       <p className="text-xs mt-1">Artículos: {rel.affected_articles.join(", ")}</p>
@@ -845,7 +953,9 @@ const AdminDocuments = () => {
                           <p className="text-xs text-destructive mt-1">{doc.processing_error}</p>
                         )}
                         {doc.ai_summary && (
-                          <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2 italic">{doc.ai_summary}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2 italic">
+                            {doc.ai_summary}
+                          </p>
                         )}
                       </div>
 
@@ -858,25 +968,45 @@ const AdminDocuments = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setViewingDocId(doc.id); setViewingDocTitle(doc.title); }}>
-                              <Eye className="h-4 w-4 mr-2" />Ver chunks
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setViewingDocId(doc.id);
+                                setViewingDocTitle(doc.title);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ver chunks
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => reprocessDocument(doc)} disabled={!!isDocProcessing(doc)}>
-                              <RefreshCw className="h-4 w-4 mr-2" />Reprocesar
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Reprocesar
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleDocumentStatus(doc)}>
-                              {doc.is_active ? <><XCircle className="h-4 w-4 mr-2" />Desactivar</> : <><CheckCircle className="h-4 w-4 mr-2" />Activar</>}
+                              {doc.is_active ? (
+                                <>
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Desactivar
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Activar
+                                </>
+                              )}
                             </DropdownMenuItem>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                  <Trash2 className="h-4 w-4 mr-2" />Eliminar
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Eliminar
                                 </DropdownMenuItem>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
-                                  <AlertDialogDescription>Esta acción eliminará "{doc.title}" y todos sus fragmentos.</AlertDialogDescription>
+                                  <AlertDialogDescription>
+                                    Esta acción eliminará "{doc.title}" y todos sus fragmentos.
+                                  </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -890,23 +1020,43 @@ const AdminDocuments = () => {
 
                       {/* Desktop Actions */}
                       <div className="hidden lg:flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => { setViewingDocId(doc.id); setViewingDocTitle(doc.title); }} title="Ver chunks">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setViewingDocId(doc.id);
+                            setViewingDocTitle(doc.title);
+                          }}
+                          title="Ver chunks"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => reprocessDocument(doc)} title="Reprocesar" disabled={!!isDocProcessing(doc)}>
-                          <RefreshCw className={`h-4 w-4 ${doc.processing_status === "error" ? "text-destructive" : "text-muted-foreground"}`} />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => reprocessDocument(doc)}
+                          title="Reprocesar"
+                          disabled={!!isDocProcessing(doc)}
+                        >
+                          <RefreshCw
+                            className={`h-4 w-4 ${doc.processing_status === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                          />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => toggleDocumentStatus(doc)}>
                           {doc.is_active ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
-                              <AlertDialogDescription>Esta acción eliminará "{doc.title}" y todos sus fragmentos indexados.</AlertDialogDescription>
+                              <AlertDialogDescription>
+                                Esta acción eliminará "{doc.title}" y todos sus fragmentos indexados.
+                              </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -923,11 +1073,7 @@ const AdminDocuments = () => {
           </div>
         )}
 
-        <ChunkViewer
-          documentId={viewingDocId}
-          documentTitle={viewingDocTitle}
-          onClose={() => setViewingDocId(null)}
-        />
+        <ChunkViewer documentId={viewingDocId} documentTitle={viewingDocTitle} onClose={() => setViewingDocId(null)} />
       </AdminLayout>
     </>
   );
