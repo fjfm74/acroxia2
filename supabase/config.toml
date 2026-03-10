@@ -43,6 +43,8 @@ project_id = "vmloiamemddwxyyunphz"
     verify_jwt = false
   [functions.regenerate-sitemap]
     verify_jwt = false
+  [functions.resend-webhook]
+    verify_jwt = false
   [functions.schedule-daily-post]
     verify_jwt = false
   [functions.schedule-daily-post-landlord]
