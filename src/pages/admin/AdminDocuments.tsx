@@ -65,6 +65,7 @@ interface LegalDocument {
   type: string;
   jurisdiction: string | null;
   territorial_entity: string | null;
+  territorial_code?: string | null;
   source: string | null;
   effective_date: string | null;
   is_active: boolean;
@@ -127,6 +128,31 @@ const comunidadesAutonomas = [
   "Melilla",
 ];
 
+const AUTONOMICA_TERRITORIAL_CODE_MAP: Record<string, string> = {
+  andalucia: "ES-AN",
+  aragon: "ES-AR",
+  asturias: "ES-AS",
+  baleares: "ES-IB",
+  canarias: "ES-CN",
+  cantabria: "ES-CB",
+  "castilla-la mancha": "ES-CM",
+  "castilla la mancha": "ES-CM",
+  "castilla y leon": "ES-CL",
+  cataluna: "ES-CT",
+  catalunya: "ES-CT",
+  "comunidad valenciana": "ES-VC",
+  extremadura: "ES-EX",
+  galicia: "ES-GA",
+  "la rioja": "ES-RI",
+  madrid: "ES-MD",
+  murcia: "ES-MC",
+  navarra: "ES-NC",
+  "pais vasco": "ES-PV",
+  euskadi: "ES-PV",
+  ceuta: "ES-CE",
+  melilla: "ES-ML",
+};
+
 const jurisdictions = [
   { value: "estatal", label: "Estatal" },
   { value: "autonomica", label: "Autonómica" },
@@ -159,6 +185,14 @@ const sanitizeFileName = (fileName: string): string => {
     .replace(/[^a-zA-Z0-9._-]/g, "")
     .toLowerCase();
 };
+
+const normalizeEntityKey = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 
 const AdminDocuments = () => {
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
@@ -349,6 +383,21 @@ const AdminDocuments = () => {
     }
   };
 
+  const resolveTerritorialCode = async (entity: string): Promise<string | null> => {
+    const normalizedKey = normalizeEntityKey(entity);
+    const mapped = AUTONOMICA_TERRITORIAL_CODE_MAP[normalizedKey];
+    if (mapped) return mapped;
+
+    const { data, error } = await supabase.rpc("map_territorial_code", { p_entity: entity });
+    if (error) {
+      console.error("Error mapping territorial_code:", error);
+      return null;
+    }
+
+    const code = typeof data === "string" ? data.trim().toUpperCase() : "";
+    return /^ES-[A-Z]{2}$/.test(code) ? code : null;
+  };
+
   const uploadDocument = async (skipDuplicateCheck = false) => {
     if (!newDoc.title) {
       toast({ title: "Campos requeridos", description: "El título es obligatorio", variant: "destructive" });
@@ -376,6 +425,17 @@ const AdminDocuments = () => {
     let createdDocId: string | null = null;
     try {
       let fileName: string | null = null;
+      let territorialCode: string | null = null;
+
+      if (newDoc.jurisdiction === "autonomica") {
+        if (!newDoc.territorial_entity?.trim()) {
+          throw new Error("Selecciona la comunidad autónoma para documentos de jurisdicción autonómica");
+        }
+        territorialCode = await resolveTerritorialCode(newDoc.territorial_entity);
+        if (!territorialCode) {
+          throw new Error("No se pudo determinar el código territorial de la CCAA seleccionada");
+        }
+      }
 
       // Upload file if not URL
       if (newDoc.source_type !== "url" && newDoc.file) {
@@ -393,6 +453,7 @@ const AdminDocuments = () => {
           type: newDoc.type as any,
           jurisdiction: newDoc.jurisdiction as any,
           territorial_entity: newDoc.territorial_entity || null,
+          territorial_code: territorialCode,
           source: newDoc.source || null,
           effective_date: newDoc.effective_date || null,
           file_path: fileName,
