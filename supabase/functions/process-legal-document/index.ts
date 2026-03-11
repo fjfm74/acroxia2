@@ -33,6 +33,29 @@ function titleTokens(text: string): string[] {
     .filter((t) => t.length >= 3);
 }
 
+function extractLegalIdentifier(text: string): string | null {
+  const normalized = normalizeLegalTitle(text);
+  const patterns = [
+    /\bley\s+(\d+\/\d{2,4})\b/,
+    /\breal\s+decreto\s*-\s*ley\s+(\d+\/\d{2,4})\b/,
+    /\breal\s+decreto\s+(\d+\/\d{2,4})\b/,
+    /\bdecreto\s*-\s*ley\s+(\d+\/\d{2,4})\b/,
+    /\bdecreto\s+(\d+\/\d{2,4})\b/,
+    /\borden\s+([a-z]{2,6}\/\d+\/\d{2,4})\b/,
+    /\bresolucion\s+(\d+\/\d{2,4})\b/,
+    /\bsentencia\s+(\d+\/\d{2,4})\b/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (match?.[1]) {
+      return match[1].replace(/\s+/g, "").toUpperCase();
+    }
+  }
+
+  return null;
+}
+
 function scoreTitleMatch(targetTitle: string, candidateTitle: string): number {
   const targetNorm = normalizeLegalTitle(targetTitle);
   const candidateNorm = normalizeLegalTitle(candidateTitle);
@@ -52,6 +75,16 @@ function scoreTitleMatch(targetTitle: string, candidateTitle: string): number {
       if (candidateSet.has(token)) common++;
     }
     score += Math.round((common / targetSet.size) * 300);
+  }
+
+  const targetId = extractLegalIdentifier(targetTitle);
+  const candidateId = extractLegalIdentifier(candidateTitle);
+  if (targetId && candidateId) {
+    if (targetId === candidateId) {
+      score += 600;
+    } else {
+      score -= 300;
+    }
   }
 
   const lengthPenalty = Math.abs(candidateNorm.length - targetNorm.length);
@@ -484,7 +517,24 @@ async function processRelations(
       continue;
     }
 
-    const targetDoc = rankedCandidates[0];
+    const topCandidate = rankedCandidates[0];
+    const secondCandidate = rankedCandidates[1];
+    const targetIdentifier = extractLegalIdentifier(normalizedTargetTitle);
+    const topIdentifier = extractLegalIdentifier(topCandidate.title || "");
+    const hasExactIdentifierMatch = !!targetIdentifier && targetIdentifier === topIdentifier;
+
+    if (
+      secondCandidate &&
+      Math.abs(topCandidate._score - secondCandidate._score) < 35 &&
+      !hasExactIdentifierMatch
+    ) {
+      console.log(
+        `Ambiguous relation target match skipped: "${normalizedTargetTitle}" top="${topCandidate.title}" (${topCandidate._score}) second="${secondCandidate.title}" (${secondCandidate._score})`,
+      );
+      continue;
+    }
+
+    const targetDoc = topCandidate;
     const relationKey = `${documentId}::${targetDoc.id}::${relType}`;
     if (seenRelationKeys.has(relationKey)) continue;
     seenRelationKeys.add(relationKey);
