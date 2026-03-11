@@ -593,10 +593,17 @@ const handler = async (req: Request): Promise<Response> => {
             subject,
             html: emailHtml,
             text: emailText,
+            tags: [
+              { name: "source", value: "blog_newsletter" },
+              { name: "post_id", value: String(post.id) },
+              { name: "audience", value: String(post.audience) },
+            ],
             headers: {
               "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
               "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
               "List-ID": "ACROXIA Blog <blog.acroxia.com>",
+              "X-Acroxia-Post-Id": String(post.id),
+              "X-Acroxia-Audience": String(post.audience),
             },
           });
 
@@ -613,10 +620,19 @@ const handler = async (req: Request): Promise<Response> => {
               subject: `ACROXIA Blog | ${subject}`.slice(0, 190),
               html: fallbackEmail.html,
               text: fallbackEmail.text,
+              tags: [
+                { name: "source", value: "blog_newsletter" },
+                { name: "post_id", value: String(post.id) },
+                { name: "audience", value: String(post.audience) },
+                { name: "fallback", value: "true" },
+              ],
               headers: {
                 "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
                 "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
                 "List-ID": "ACROXIA Blog <blog.acroxia.com>",
+                "X-Acroxia-Post-Id": String(post.id),
+                "X-Acroxia-Audience": String(post.audience),
+                "X-Acroxia-Fallback": "true",
               },
             });
           }
