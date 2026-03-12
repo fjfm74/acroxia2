@@ -1,13 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { AlertTriangle, Lock, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackConversion } from "@/lib/analytics";
+import { getOrCreateSessionId } from "@/lib/session";
 
 const STORAGE_KEY = "acroxia_exit_intent_shown";
 
@@ -59,7 +54,7 @@ const ExitIntentCapture = () => {
 
     setLoading(true);
     try {
-      const sessionId = localStorage.getItem("acroxia_session_id") || crypto.randomUUID();
+      const sessionId = getOrCreateSessionId();
       const urlParams = new URLSearchParams(window.location.search);
 
       await supabase.from("leads").insert({
@@ -116,9 +111,7 @@ const ExitIntentCapture = () => {
             <AlertTriangle className="h-5 w-5" />
             <span className="text-sm font-medium">Antes de irte…</span>
           </div>
-          <DialogTitle className="font-serif text-2xl">
-            Tu contrato podría tener cláusulas ilegales
-          </DialogTitle>
+          <DialogTitle className="font-serif text-2xl">Tu contrato podría tener cláusulas ilegales</DialogTitle>
           <DialogDescription>
             Recibe gratis las 5 cláusulas abusivas más comunes en contratos de alquiler en 2026.
           </DialogDescription>
