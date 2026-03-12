@@ -1,15 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const resendApiKey = Deno.env.get('RESEND_API_KEY');
-const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const resendApiKey = Deno.env.get("RESEND_API_KEY");
+const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
 // Retry configuration
 const MAX_RETRIES = 2;
@@ -17,15 +17,24 @@ const RETRY_DELAY_MS = 5000;
 
 // Helper function to sleep
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Helper function to send error alerts
 async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${supabaseServiceKey}`,
+  };
+  const internalKey = Deno.env.get("EDGE_INTERNAL_KEY");
+  if (internalKey) {
+    headers["x-internal-key"] = internalKey;
+  }
+
   try {
     await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         process: "schedule-daily-post-landlord",
         processName: "Generación Blog Propietarios",
@@ -42,13 +51,13 @@ async function sendErrorAlert(error: string, context: Record<string, any>): Prom
 // Robust JSON sanitization
 function sanitizeJsonString(rawContent: string): string {
   const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return '';
-  
+  if (!jsonMatch) return "";
+
   let json = jsonMatch[0];
-  
+
   // Remove problematic control characters
-  json = json.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-  
+  json = json.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+
   return json;
 }
 
@@ -74,10 +83,8 @@ function parseAiResponse(content: string, fallbackCategory: string): PostData {
       const parsed = JSON.parse(sanitized);
       if (parsed.title && parsed.content) {
         // Truncate title to 60 chars if needed
-        const title = parsed.title.length > 60 
-          ? parsed.title.substring(0, 57) + '...' 
-          : parsed.title;
-        
+        const title = parsed.title.length > 60 ? parsed.title.substring(0, 57) + "..." : parsed.title;
+
         // Extract and validate FAQs
         const faqs: FAQ[] = (parsed.faqs || [])
           .filter((faq: any) => faq?.question && faq?.answer)
@@ -86,7 +93,7 @@ function parseAiResponse(content: string, fallbackCategory: string): PostData {
             question: String(faq.question).substring(0, 200),
             answer: String(faq.answer).substring(0, 500),
           }));
-        
+
         return {
           title,
           excerpt: parsed.excerpt || parsed.title,
@@ -97,31 +104,29 @@ function parseAiResponse(content: string, fallbackCategory: string): PostData {
       }
     }
   } catch (e) {
-    console.log('Direct JSON parse failed, trying regex extraction...');
+    console.log("Direct JSON parse failed, trying regex extraction...");
   }
-  
+
   // Strategy 2: Regex extraction field by field
   const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
   const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
   const categoryMatch = content.match(/"category"\s*:\s*"([^"]+)"/);
-  
+
   // For content, use a more flexible pattern
   const contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)(?:"\s*[,}])/);
-  
+
   if (!titleMatch) {
-    throw new Error('Could not extract title from AI response');
+    throw new Error("Could not extract title from AI response");
   }
-  
+
   // Truncate title to 60 chars
-  const title = titleMatch[1].length > 60 
-    ? titleMatch[1].substring(0, 57) + '...' 
-    : titleMatch[1];
-  
+  const title = titleMatch[1].length > 60 ? titleMatch[1].substring(0, 57) + "..." : titleMatch[1];
+
   return {
     title,
     excerpt: excerptMatch?.[1] || titleMatch[1],
     category: categoryMatch?.[1] || fallbackCategory,
-    content: contentMatch?.[1]?.replace(/\\n/g, '\n').replace(/\\"/g, '"') || '',
+    content: contentMatch?.[1]?.replace(/\\n/g, "\n").replace(/\\"/g, '"') || "",
     faqs: [], // Regex fallback doesn't extract FAQs
   };
 }
@@ -145,23 +150,23 @@ const TITLE_FORMATS = [
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
     .trim();
 }
 
 async function generateImage(title: string, excerpt: string, category: string): Promise<string | null> {
   if (!lovableApiKey) {
-    console.log('LOVABLE_API_KEY not configured, skipping image generation');
+    console.log("LOVABLE_API_KEY not configured, skipping image generation");
     return null;
   }
 
   try {
-    console.log('Generating image for landlord post...');
-    
+    console.log("Generating image for landlord post...");
+
     const imagePrompt = `Create a professional, clean editorial photograph for a Spanish real estate blog article.
 
 Topic: "${title}"
@@ -184,7 +189,7 @@ Ultra high resolution.`;
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${lovableApiKey}`,
+        Authorization: `Bearer ${lovableApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -196,7 +201,7 @@ Ultra high resolution.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Image generation error:', response.status, errorText);
+      console.error("Image generation error:", response.status, errorText);
       return null;
     }
 
@@ -204,49 +209,44 @@ Ultra high resolution.`;
     const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageUrl) {
-      console.error('No image URL in response');
+      console.error("No image URL in response");
       return null;
     }
 
     // Extract base64 data
     const base64Match = imageUrl.match(/^data:image\/(\w+);base64,(.+)$/);
     if (!base64Match) {
-      console.error('Invalid image data format');
+      console.error("Invalid image data format");
       return null;
     }
 
     const imageFormat = base64Match[1];
     const base64Data = base64Match[2];
-    
+
     // Decode base64 to binary
-    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-    
+    const binaryData = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+
     // Upload to Supabase Storage
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const fileName = `blog-landlord-${Date.now()}.${imageFormat}`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('blog-images')
-      .upload(fileName, binaryData, {
-        contentType: `image/${imageFormat}`,
-        upsert: false,
-      });
+
+    const { error: uploadError } = await supabase.storage.from("blog-images").upload(fileName, binaryData, {
+      contentType: `image/${imageFormat}`,
+      upsert: false,
+    });
 
     if (uploadError) {
-      console.error('Error uploading image:', uploadError);
+      console.error("Error uploading image:", uploadError);
       return null;
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('blog-images')
-      .getPublicUrl(fileName);
+    const { data: urlData } = supabase.storage.from("blog-images").getPublicUrl(fileName);
 
-    console.log('Image generated and uploaded:', urlData.publicUrl);
+    console.log("Image generated and uploaded:", urlData.publicUrl);
     return urlData.publicUrl;
-
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error("Error generating image:", error);
     return null;
   }
 }
@@ -258,22 +258,26 @@ async function sendNewsletterNotification(postId: string): Promise<{ sent: numbe
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`[schedule-daily-post-landlord] Triggering newsletter for post: ${postId} (attempt ${attempt}/${MAX_RETRIES})`);
-      
+      console.log(
+        `[schedule-daily-post-landlord] Triggering newsletter for post: ${postId} (attempt ${attempt}/${MAX_RETRIES})`,
+      );
+
       const response = await fetch(`${supabaseUrl}/functions/v1/send-blog-notification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseServiceKey}`
+          Authorization: `Bearer ${supabaseServiceKey}`,
         },
-        body: JSON.stringify({ postId })
+        body: JSON.stringify({ postId }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[schedule-daily-post-landlord] Newsletter failed (attempt ${attempt}): HTTP ${response.status} - ${errorText}`);
+        console.error(
+          `[schedule-daily-post-landlord] Newsletter failed (attempt ${attempt}): HTTP ${response.status} - ${errorText}`,
+        );
         if (attempt < MAX_RETRIES) {
-          await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
           continue;
         }
         return { sent: 0, errors: 1 };
@@ -285,7 +289,7 @@ async function sendNewsletterNotification(postId: string): Promise<{ sent: numbe
     } catch (error) {
       console.error(`[schedule-daily-post-landlord] Newsletter error (attempt ${attempt}):`, error);
       if (attempt < MAX_RETRIES) {
-        await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
         continue;
       }
       return { sent: 0, errors: 1 };
@@ -297,14 +301,14 @@ async function sendNewsletterNotification(postId: string): Promise<{ sent: numbe
 // Send confirmation email (post already published)
 async function sendConfirmationEmail(
   post: { id: string; title: string; excerpt: string; category: string; image: string | null; slug: string },
-  newsletterStats: { sent: number; errors: number }
+  newsletterStats: { sent: number; errors: number },
 ): Promise<void> {
   if (!resendApiKey) {
-    console.log('RESEND_API_KEY not configured, skipping email');
+    console.log("RESEND_API_KEY not configured, skipping email");
     return;
   }
 
-  const siteUrl = 'https://acroxia.com';
+  const siteUrl = "https://acroxia.com";
   const postUrl = `${siteUrl}/blog/${post.slug}`;
   const adminUrl = `${siteUrl}/admin/blog`;
 
@@ -344,14 +348,14 @@ async function sendConfirmationEmail(
     </div>
     
     <div class="content">
-      ${post.image ? `<img src="${post.image}" alt="Imagen destacada" class="featured-image">` : ''}
+      ${post.image ? `<img src="${post.image}" alt="Imagen destacada" class="featured-image">` : ""}
       
       <span class="category">${post.category} • Propietarios</span>
       <h2 class="post-title">${post.title}</h2>
       <p class="excerpt">${post.excerpt}</p>
       
       <div class="stats">
-        <p class="stats-text">📧 Newsletter enviado a <strong>${newsletterStats.sent}</strong> suscriptor${newsletterStats.sent !== 1 ? 'es' : ''}</p>
+        <p class="stats-text">📧 Newsletter enviado a <strong>${newsletterStats.sent}</strong> suscriptor${newsletterStats.sent !== 1 ? "es" : ""}</p>
       </div>
       
       <div class="actions">
@@ -369,16 +373,16 @@ async function sendConfirmationEmail(
 </html>`;
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: 'ACROXIA <noreply@acroxia.com>',
-        to: ['nuriafrancis@gmail.com'],
-        reply_to: 'contacto@acroxia.com',
+        from: "ACROXIA <noreply@acroxia.com>",
+        to: ["nuriafrancis@gmail.com"],
+        reply_to: "contacto@acroxia.com",
         subject: `✅ Post publicado: ${post.title}`,
         html: emailHtml,
       }),
@@ -386,26 +390,33 @@ async function sendConfirmationEmail(
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Error sending confirmation email:', error);
+      console.error("Error sending confirmation email:", error);
     } else {
-      console.log('[schedule-daily-post-landlord] Confirmation email sent');
+      console.log("[schedule-daily-post-landlord] Confirmation email sent");
     }
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("Error sending email:", error);
   }
 }
 
 // Main generation function with retry logic
-async function generateBlogPostWithRetries(supabase: any, leastUsedCategory: string, existingPosts: any[]): Promise<PostData> {
-  const currentDate = new Date().toLocaleDateString('es-ES', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+async function generateBlogPostWithRetries(
+  supabase: any,
+  leastUsedCategory: string,
+  existingPosts: any[],
+): Promise<PostData> {
+  const currentDate = new Date().toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
-  const existingTopicsContext = existingPosts?.length 
-    ? `\n\nTEMAS YA CUBIERTOS (no repetir):\n${existingPosts.slice(0, 20).map((p: any) => `- ${p.title}`).join('\n')}`
-    : '';
+  const existingTopicsContext = existingPosts?.length
+    ? `\n\nTEMAS YA CUBIERTOS (no repetir):\n${existingPosts
+        .slice(0, 20)
+        .map((p: any) => `- ${p.title}`)
+        .join("\n")}`
+    : "";
 
   const systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España, especializado en ayudar a PROPIETARIOS y ARRENDADORES.
 
@@ -419,10 +430,10 @@ Tu audiencia son PROPIETARIOS que quieren:
 - Gestionar correctamente fianzas y garantías adicionales
 - Estar al día de la normativa vigente
 
-CATEGORÍAS VÁLIDAS: ${LANDLORD_CATEGORIES.join(', ')}
+CATEGORÍAS VÁLIDAS: ${LANDLORD_CATEGORIES.join(", ")}
 PRIORIZA la categoría "${leastUsedCategory}" que tiene menos contenido.
 
-FORMATOS DE TÍTULO SUGERIDOS: ${TITLE_FORMATS.join(' | ')}
+FORMATOS DE TÍTULO SUGERIDOS: ${TITLE_FORMATS.join(" | ")}
 
 TÍTULO (OBLIGATORIO - CRÍTICO):
 - MÁXIMO 55 CARACTERES (Google trunca títulos largos en SERPs)
@@ -481,18 +492,18 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
       }
 
       console.log(`Attempt ${attempt + 1}: Calling Lovable AI Gateway for landlord post...`);
-      
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
+
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${lovableApiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${lovableApiKey}`,
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: "google/gemini-2.5-flash",
           messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
           ],
           temperature: 0.8,
           max_tokens: 4000,
@@ -508,17 +519,17 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
       const content = aiResponse.choices[0]?.message?.content;
 
       if (!content) {
-        throw new Error('No content received from AI');
+        throw new Error("No content received from AI");
       }
 
       console.log(`Attempt ${attempt + 1}: AI response received, parsing...`);
 
       // Parse with robust fallback
       const postData = parseAiResponse(content, leastUsedCategory);
-      
+
       // Validate required fields
       if (!postData.title || !postData.content) {
-        throw new Error('Missing required fields in AI response');
+        throw new Error("Missing required fields in AI response");
       }
 
       // Validate category
@@ -526,44 +537,43 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
 
       console.log(`Attempt ${attempt + 1}: Successfully parsed post: "${postData.title}"`);
       return postData;
-
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
-      
+
       if (attempt === MAX_RETRIES) {
-        console.error('All retry attempts exhausted');
+        console.error("All retry attempts exhausted");
         break;
       }
     }
   }
 
-  throw lastError || new Error('All retry attempts failed');
+  throw lastError || new Error("All retry attempts failed");
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting daily landlord blog post generation...');
-    
+    console.log("Starting daily landlord blog post generation...");
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Obtener posts existentes de propietarios para evitar duplicados
     const { data: existingPosts } = await supabase
-      .from('blog_posts')
-      .select('title, category')
-      .eq('audience', 'propietario')
-      .order('created_at', { ascending: false })
+      .from("blog_posts")
+      .select("title, category")
+      .eq("audience", "propietario")
+      .order("created_at", { ascending: false })
       .limit(50);
 
     const existingTitles = existingPosts?.map((p: any) => p.title.toLowerCase()) || [];
 
     // Contar posts por categoría para balancear
     const categoryCounts: Record<string, number> = {};
-    LANDLORD_CATEGORIES.forEach(cat => categoryCounts[cat] = 0);
+    LANDLORD_CATEGORIES.forEach((cat) => (categoryCounts[cat] = 0));
     existingPosts?.forEach((post: any) => {
       if (categoryCounts[post.category] !== undefined) {
         categoryCounts[post.category]++;
@@ -571,9 +581,10 @@ serve(async (req) => {
     });
 
     // Encontrar categoría con menos posts
-    const leastUsedCategory = LANDLORD_CATEGORIES.reduce((min, cat) => 
-      (categoryCounts[cat] || 0) < (categoryCounts[min] || 0) ? cat : min
-    , LANDLORD_CATEGORIES[0]);
+    const leastUsedCategory = LANDLORD_CATEGORIES.reduce(
+      (min, cat) => ((categoryCounts[cat] || 0) < (categoryCounts[min] || 0) ? cat : min),
+      LANDLORD_CATEGORIES[0],
+    );
 
     console.log(`Least used category for landlords: ${leastUsedCategory}`);
 
@@ -582,31 +593,31 @@ serve(async (req) => {
 
     // Check for duplicate title
     if (existingTitles.includes(postData.title.toLowerCase())) {
-      console.log('Duplicate title detected, modifying...');
+      console.log("Duplicate title detected, modifying...");
       postData.title = `${postData.title} (actualizado ${new Date().getFullYear()})`;
     }
 
     const slug = generateSlug(postData.title);
 
     // Generate image for the post
-    console.log('Generating image for post...');
+    console.log("Generating image for post...");
     const imageUrl = await generateImage(postData.title, postData.excerpt || postData.title, postData.category);
 
     // Insert blog post as PUBLISHED (not draft) with audience = 'propietario'
     const { data: newPost, error: insertError } = await supabase
-      .from('blog_posts')
+      .from("blog_posts")
       .insert({
         title: postData.title,
         slug: slug,
         excerpt: postData.excerpt || postData.title,
         content: postData.content,
         category: postData.category,
-        status: 'published',
+        status: "published",
         published_at: new Date().toISOString(),
         read_time: `${Math.ceil(postData.content.split(/\s+/).length / 200)} min`,
-        keywords: ['propietarios', 'arrendadores', 'alquiler', 'LAU', postData.category.toLowerCase()],
+        keywords: ["propietarios", "arrendadores", "alquiler", "LAU", postData.category.toLowerCase()],
         meta_description: postData.excerpt?.substring(0, 160) || postData.title,
-        audience: 'propietario',
+        audience: "propietario",
         image: imageUrl,
         faqs: postData.faqs || [],
       })
@@ -614,25 +625,25 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error('Error inserting blog post:', insertError);
+      console.error("Error inserting blog post:", insertError);
       throw insertError;
     }
 
-    console.log('Landlord blog post published:', newPost.id, 'with image:', imageUrl ? 'yes' : 'no');
+    console.log("Landlord blog post published:", newPost.id, "with image:", imageUrl ? "yes" : "no");
 
     // Create scheduled post entry for audit
     const { data: scheduledPost, error: scheduleError } = await supabase
-      .from('scheduled_posts')
+      .from("scheduled_posts")
       .insert({
         blog_post_id: newPost.id,
-        status: 'auto_published',
+        status: "auto_published",
         approved_at: new Date().toISOString(),
       })
       .select()
       .single();
 
     if (scheduleError) {
-      console.error('Error creating scheduled post:', scheduleError);
+      console.error("Error creating scheduled post:", scheduleError);
       // Don't throw - post is already published
     }
 
@@ -641,31 +652,34 @@ serve(async (req) => {
 
     // Send confirmation email
     await sendConfirmationEmail(
-      { 
-        id: newPost.id, 
-        title: newPost.title, 
+      {
+        id: newPost.id,
+        title: newPost.title,
         excerpt: newPost.excerpt,
         category: newPost.category,
         image: imageUrl,
         slug: slug,
-      }, 
-      newsletterStats
+      },
+      newsletterStats,
     );
 
     // Update email sent timestamp only if at least one newsletter was actually delivered
     if (scheduledPost && newsletterStats.sent > 0) {
       await supabase
-        .from('scheduled_posts')
+        .from("scheduled_posts")
         .update({ email_sent_at: new Date().toISOString() })
-        .eq('id', scheduledPost.id);
+        .eq("id", scheduledPost.id);
     } else if (scheduledPost) {
-      console.warn('[schedule-daily-post-landlord] Newsletter produced no successful deliveries; email_sent_at left null', newsletterStats);
+      console.warn(
+        "[schedule-daily-post-landlord] Newsletter produced no successful deliveries; email_sent_at left null",
+        newsletterStats,
+      );
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Landlord blog post published automatically',
+        message: "Landlord blog post published automatically",
         post: {
           id: newPost.id,
           title: newPost.title,
@@ -675,22 +689,21 @@ serve(async (req) => {
         },
         newsletter: newsletterStats,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error in schedule-daily-post-landlord:', error);
-    
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error in schedule-daily-post-landlord:", error);
+
     // Send alert email only after all retries have failed
     await sendErrorAlert(errorMessage, {
       attempted_at: new Date().toISOString(),
       total_attempts: MAX_RETRIES + 1,
     });
-    
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
