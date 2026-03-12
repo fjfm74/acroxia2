@@ -10,10 +10,22 @@ const corsHeaders = {
 // Helper function to send error alerts
 async function sendErrorAlert(error: string, context: Record<string, any>): Promise<void> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (supabaseServiceKey) {
+    headers["Authorization"] = `Bearer ${supabaseServiceKey}`;
+  }
+  const internalKey = Deno.env.get("EDGE_INTERNAL_KEY");
+  if (internalKey) {
+    headers["x-internal-key"] = internalKey;
+  }
+
   try {
     await fetch(`${supabaseUrl}/functions/v1/send-alert-email`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         process: "send-nurturing-emails",
         processName: "Emails de Nurturing",
@@ -38,8 +50,8 @@ interface Lead {
 
 // Generate secure token for unsubscribe validation
 function generateUnsubscribeToken(email: string, secret: string): string {
-  const data = email + ':' + secret.slice(0, 8);
-  return btoa(data).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const data = email + ":" + secret.slice(0, 8);
+  return btoa(data).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -57,7 +69,7 @@ serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const now = new Date();
-    
+
     // Calculate date thresholds
     const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
@@ -107,7 +119,7 @@ serve(async (req: Request) => {
       try {
         const token = generateUnsubscribeToken(lead.email, supabaseServiceKey);
         const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
-        
+
         const emailTemplate = getEmailTemplate("nurturing_tips", {
           email: lead.email,
           analysisId: lead.analysis_id,
@@ -118,7 +130,7 @@ serve(async (req: Request) => {
         const emailResponse = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${resendApiKey}`,
+            Authorization: `Bearer ${resendApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -160,7 +172,7 @@ serve(async (req: Request) => {
       try {
         const token = generateUnsubscribeToken(lead.email, supabaseServiceKey);
         const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
-        
+
         const emailTemplate = getEmailTemplate("nurturing_offer", {
           email: lead.email,
           analysisId: lead.analysis_id,
@@ -171,7 +183,7 @@ serve(async (req: Request) => {
         const emailResponse = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${resendApiKey}`,
+            Authorization: `Bearer ${resendApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -230,18 +242,15 @@ serve(async (req: Request) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error in send-nurturing-emails:", error);
-    
+
     // Send alert email to admin if there's a critical error
     await sendErrorAlert(errorMessage, {
       attempted_at: new Date().toISOString(),
     });
-    
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+
+    return new Response(JSON.stringify({ success: false, error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
