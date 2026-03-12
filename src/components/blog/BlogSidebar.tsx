@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import BlogSubscriptionForm from "./BlogSubscriptionForm";
 import { trackConversion } from "@/lib/analytics";
+import { getOrCreateSessionId } from "@/lib/session";
 
 interface BlogSidebarProps {
   selectedAudience?: "inquilino" | "propietario";
@@ -20,14 +21,14 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
   const [leadSent, setLeadSent] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
   const { data: popularPosts = [], isLoading } = useQuery({
-    queryKey: ['popular-posts', selectedAudience],
+    queryKey: ["popular-posts", selectedAudience],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('blog_posts')
-        .select('slug, title')
-        .eq('status', 'published')
-        .eq('audience', selectedAudience)
-        .order('published_at', { ascending: false })
+        .from("blog_posts")
+        .select("slug, title")
+        .eq("status", "published")
+        .eq("audience", selectedAudience)
+        .order("published_at", { ascending: false })
         .limit(3);
 
       if (error) throw error;
@@ -36,18 +37,18 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
   });
 
   const { data: categories = [] } = useQuery({
-    queryKey: ['blog-categories', selectedAudience],
+    queryKey: ["blog-categories", selectedAudience],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('blog_posts')
-        .select('category')
-        .eq('status', 'published')
-        .eq('audience', selectedAudience);
+        .from("blog_posts")
+        .select("category")
+        .eq("status", "published")
+        .eq("audience", selectedAudience);
 
       if (error) throw error;
-      
+
       // Get unique categories
-      const uniqueCategories = [...new Set(data.map(post => post.category))];
+      const uniqueCategories = [...new Set(data.map((post) => post.category))];
       return uniqueCategories;
     },
   });
@@ -78,7 +79,7 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
     if (!leadEmail) return;
     setLeadLoading(true);
     try {
-      const sessionId = localStorage.getItem("acroxia_session_id") || crypto.randomUUID();
+      const sessionId = getOrCreateSessionId();
       await supabase.from("leads").insert({
         email: leadEmail,
         session_id: sessionId,
@@ -100,15 +101,11 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
         <div className="w-12 h-12 rounded-xl bg-background/10 flex items-center justify-center mb-4">
           <CtaIcon className="w-6 h-6" />
         </div>
-        <h3 className="font-serif text-xl font-semibold mb-3">
-          {cta.title}
-        </h3>
-        <p className="text-background/70 text-sm mb-6 leading-relaxed">
-          {cta.description}
-        </p>
-        <Button 
-          asChild 
-          variant="secondary" 
+        <h3 className="font-serif text-xl font-semibold mb-3">{cta.title}</h3>
+        <p className="text-background/70 text-sm mb-6 leading-relaxed">{cta.description}</p>
+        <Button
+          asChild
+          variant="secondary"
           className="w-full rounded-full bg-background text-foreground hover:bg-background/90"
         >
           <Link to={cta.buttonLink}>
@@ -120,9 +117,7 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
 
       {/* Popular Posts */}
       <div className="bg-muted rounded-2xl p-6">
-        <h3 className="font-medium text-foreground mb-4">
-          Artículos populares
-        </h3>
+        <h3 className="font-medium text-foreground mb-4">Artículos populares</h3>
         {isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-4 w-full" />
@@ -133,7 +128,7 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
           <ul className="space-y-4">
             {popularPosts.map((post, index) => (
               <li key={index}>
-                <Link 
+                <Link
                   to={`/blog/${post.slug}`}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors block"
                 >
@@ -143,9 +138,7 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            No hay artículos disponibles todavía.
-          </p>
+          <p className="text-sm text-muted-foreground">No hay artículos disponibles todavía.</p>
         )}
       </div>
 
@@ -154,9 +147,7 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
         <div className="w-10 h-10 rounded-xl bg-foreground/10 flex items-center justify-center mb-3">
           <BookOpen className="w-5 h-5 text-foreground" />
         </div>
-        <h3 className="font-medium text-foreground mb-2">
-          Guía gratuita
-        </h3>
+        <h3 className="font-medium text-foreground mb-2">Guía gratuita</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Las 5 cláusulas ilegales más comunes en contratos de alquiler en 2026.
         </p>
@@ -191,24 +182,17 @@ const BlogSidebar = ({ selectedAudience = "inquilino" }: BlogSidebarProps) => {
 
       {/* Categories */}
       <div className="bg-background border border-border rounded-2xl p-6">
-        <h3 className="font-medium text-foreground mb-4">
-          Categorías
-        </h3>
+        <h3 className="font-medium text-foreground mb-4">Categorías</h3>
         {categories.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
-              <span 
-                key={cat}
-                className="text-xs bg-muted text-muted-foreground px-3 py-1.5 rounded-full"
-              >
+              <span key={cat} className="text-xs bg-muted text-muted-foreground px-3 py-1.5 rounded-full">
                 {cat}
               </span>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            No hay categorías disponibles.
-          </p>
+          <p className="text-sm text-muted-foreground">No hay categorías disponibles.</p>
         )}
       </div>
     </aside>
