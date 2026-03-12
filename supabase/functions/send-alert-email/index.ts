@@ -1,10 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { authorizeRequest, authErrorResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-key",
 };
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const ADMIN_EMAIL = "nuriafrancis@gmail.com";
 const SITE_URL = "https://acroxia.com";
 
@@ -12,12 +15,34 @@ interface AlertPayload {
   process: string;
   processName?: string;
   error: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
-function formatContextDetails(context: Record<string, any>): string {
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatContextValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return escapeHtml(value);
+  }
+
+  try {
+    return escapeHtml(JSON.stringify(value));
+  } catch {
+    return escapeHtml(String(value));
+  }
+}
+
+function formatContextDetails(context: Record<string, unknown>): string {
   if (!context || Object.keys(context).length === 0) return "";
-  
+
   const items = Object.entries(context)
     .filter(([_, value]) => value !== undefined && value !== null)
     .map(([key, value]) => {
@@ -25,10 +50,11 @@ function formatContextDetails(context: Record<string, any>): string {
         .replace(/_/g, " ")
         .replace(/([A-Z])/g, " $1")
         .toLowerCase()
-        .replace(/^\w/, c => c.toUpperCase());
-      return `<li style="margin-bottom: 8px;"><strong>${formattedKey}:</strong> ${value}</li>`;
+        .replace(/^\w/, (c) => c.toUpperCase());
+
+      return `<li style="margin-bottom: 8px;"><strong>${escapeHtml(formattedKey)}:</strong> ${formatContextValue(value)}</li>`;
     });
-  
+
   return items.length > 0 ? `<ul style="margin: 0; padding-left: 20px;">${items.join("")}</ul>` : "";
 }
 
@@ -54,7 +80,8 @@ function generateAlertEmailHTML(payload: AlertPayload): string {
 
   const contextDetails = formatContextDetails(payload.context || {});
   const manualUrl = getManualExecutionUrl(payload.process);
-  const processDisplayName = payload.processName || payload.process;
+  const processDisplayName = escapeHtml((payload.processName || payload.process).trim());
+  const safeError = escapeHtml(payload.error).replace(/\n/g, "<br />");
 
   return `
 <!DOCTYPE html>
@@ -96,15 +123,19 @@ function generateAlertEmailHTML(payload: AlertPayload): string {
       </div>
       
       <div class="error-message">
-        ${payload.error}
+        ${safeError}
       </div>
       
-      ${contextDetails ? `
+      ${
+        contextDetails
+          ? `
       <div class="details-section">
         <h3>Detalles adicionales:</h3>
         ${contextDetails}
       </div>
-      ` : ""}
+      `
+          : ""
+      }
       
       <div class="actions">
         <a href="${SITE_URL}/admin" class="btn btn-primary">Ir al Panel Admin</a>
@@ -127,26 +158,56 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Missing Supabase environment variables");
+      return new Response(JSON.stringify({ success: false, error: "Missing Supabase configuration" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    
+
     if (!resendApiKey) {
       console.error("RESEND_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ success: false, error: "Email service not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ success: false, error: "Email service not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const payload: AlertPayload = await req.json();
-    
-    if (!payload.process || !payload.error) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Missing required fields: process, error" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    let payload: AlertPayload;
+    try {
+      payload = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ success: false, error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    console.log(`Sending alert email for process: ${payload.process}`);
+    const auth = await authorizeRequest({
+      req,
+      supabaseUrl: SUPABASE_URL,
+      supabaseServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
+      body: payload as Record<string, unknown>,
+      allowInternalKey: true,
+      allowServiceRoleToken: true,
+      allowAdminUser: true,
+    });
+
+    if (!auth.ok) {
+      return authErrorResponse(auth, corsHeaders);
+    }
+
+    if (!payload.process?.trim() || !payload.error?.trim()) {
+      return new Response(JSON.stringify({ success: false, error: "Missing required fields: process, error" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log(`Sending alert email for process: ${payload.process}. Auth mode: ${auth.mode}`);
     console.log(`Error: ${payload.error}`);
 
     const emailHtml = generateAlertEmailHTML(payload);
@@ -156,7 +217,7 @@ serve(async (req: Request): Promise<Response> => {
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${resendApiKey}`,
+        Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -171,26 +232,25 @@ serve(async (req: Request): Promise<Response> => {
     if (!emailResponse.ok) {
       const errorData = await emailResponse.text();
       console.error("Failed to send alert email:", errorData);
-      return new Response(
-        JSON.stringify({ success: false, error: "Failed to send email", details: errorData }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ success: false, error: "Failed to send email", details: errorData }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const result = await emailResponse.json();
     console.log("Alert email sent successfully:", result.id);
 
-    return new Response(
-      JSON.stringify({ success: true, emailId: result.id }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
+    return new Response(JSON.stringify({ success: true, emailId: result.id }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in send-alert-email:", error);
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ success: false, error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
