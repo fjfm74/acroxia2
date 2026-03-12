@@ -9,9 +9,18 @@ import { Label } from "@/components/ui/label";
 import { AlertTriangle, Lock, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackConversion } from "@/lib/analytics";
-import { getOrCreateSessionId } from "@/lib/session";
 
 const STORAGE_KEY = "acroxia_exit_intent_shown";
+const SESSION_KEY = "acroxia_session_id";
+
+const getOrCreateSessionId = () => {
+  let sessionId = localStorage.getItem(SESSION_KEY);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem(SESSION_KEY, sessionId);
+  }
+  return sessionId;
+};
 
 const ExitIntentCapture = () => {
   const { toast } = useToast();
