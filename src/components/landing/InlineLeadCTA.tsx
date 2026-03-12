@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, Users } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 import { trackConversion } from "@/lib/analytics";
+import { getOrCreateSessionId } from "@/lib/session";
 
 const InlineLeadCTA = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const InlineLeadCTA = () => {
 
     setLoading(true);
     try {
-      const sessionId = localStorage.getItem("acroxia_session_id") || crypto.randomUUID();
+      const sessionId = getOrCreateSessionId();
 
       await supabase.from("leads").insert({
         email,
@@ -50,9 +51,7 @@ const InlineLeadCTA = () => {
               <Users className="h-4 w-4" />
               <span>+2.800 inquilinos ya analizaron su contrato</span>
             </div>
-            <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">
-              ¿Tu contrato es legal?
-            </h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">¿Tu contrato es legal?</h2>
             <p className="text-muted-foreground mb-8">
               Descúbrelo en menos de 2 minutos. Introduce tu email y analiza tu contrato gratis.
             </p>
@@ -74,9 +73,7 @@ const InlineLeadCTA = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </form>
-            <p className="text-xs text-muted-foreground mt-3">
-              Sin registro previo · 100% confidencial
-            </p>
+            <p className="text-xs text-muted-foreground mt-3">Sin registro previo · 100% confidencial</p>
           </div>
         </FadeIn>
       </div>
