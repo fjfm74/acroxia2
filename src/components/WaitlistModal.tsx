@@ -1,24 +1,12 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bell, CheckCircle, Lock, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackConversion } from "@/lib/analytics";
@@ -32,13 +20,7 @@ interface WaitlistModalProps {
   analysisId?: string;
 }
 
-const WaitlistModal = ({
-  open,
-  onOpenChange,
-  planName,
-  source = "waitlist",
-  analysisId,
-}: WaitlistModalProps) => {
+const WaitlistModal = ({ open, onOpenChange, planName, source = "waitlist", analysisId }: WaitlistModalProps) => {
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,11 +45,19 @@ const WaitlistModal = ({
       return;
     }
     if (!userType) {
-      toast({ title: "Selecciona tu perfil", description: "Necesitamos saber qué tipo de cliente eres.", variant: "destructive" });
+      toast({
+        title: "Selecciona tu perfil",
+        description: "Necesitamos saber qué tipo de cliente eres.",
+        variant: "destructive",
+      });
       return;
     }
     if (!gdprConsent) {
-      toast({ title: "Consentimiento requerido", description: "Debes aceptar la política de privacidad.", variant: "destructive" });
+      toast({
+        title: "Consentimiento requerido",
+        description: "Debes aceptar la política de privacidad.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -79,32 +69,36 @@ const WaitlistModal = ({
 
       // Save to purchase_intents if we have an analysisId
       if (analysisId) {
-        await supabase.from("purchase_intents").insert({
+        const { error: purchaseIntentError } = await supabase.from("purchase_intents").insert({
           analysis_id: analysisId,
           email: normalizedEmail,
           amount_cents: 0,
           currency: "eur",
           status: "waitlist",
         });
+        if (purchaseIntentError) throw purchaseIntentError;
       }
 
       // Save lead
-      await supabase.from("leads").insert({
+      const { error: leadError } = await supabase.from("leads").insert({
         email: normalizedEmail,
         source: source,
         contract_status: userType,
       });
+      if (leadError) throw leadError;
 
       // Save to marketing_contacts if marketing consent
       if (marketingConsent) {
-        await supabase.from("marketing_contacts").insert({
+        const { error: marketingError } = await supabase.from("marketing_contacts").insert({
           email: normalizedEmail,
           contact_name: normalizedName,
-          segment: userType === "profesional" ? "profesional" : userType === "propietario" ? "propietario" : "inquilino",
+          segment:
+            userType === "profesional" ? "profesional" : userType === "propietario" ? "propietario" : "inquilino",
           source: "waitlist",
           consent_type: "explicit",
           consent_details: `Waitlist ${planName || "general"} - marketing consent`,
         });
+        if (marketingError) throw marketingError;
       }
 
       trackConversion("lead_captured", {
@@ -114,18 +108,9 @@ const WaitlistModal = ({
         marketing_consent: marketingConsent,
       });
 
-      // Send admin notification email
-      supabase.functions.invoke("send-alert-email", {
-        body: {
-          process: "Waitlist Signup",
-          error: `Nuevo registro en waitlist: ${normalizedName} (${normalizedEmail}) - Perfil: ${userType} - Plan: ${planName || "general"} - Fuente: ${source}`,
-          context: { name: normalizedName, email: normalizedEmail, userType, planName, source, marketingConsent },
-        },
-      }).catch((err) => console.error("Alert email error:", err));
-
       setSuccess(true);
       toast({ title: "¡Te has unido a la lista!", description: "Te avisaremos cuando estemos listos." });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Waitlist error:", error);
       toast({ title: "Error", description: "No se pudo guardar. Inténtalo de nuevo.", variant: "destructive" });
     } finally {
@@ -143,9 +128,13 @@ const WaitlistModal = ({
             </div>
             <DialogTitle className="font-serif text-2xl mb-2">¡Estás en la lista!</DialogTitle>
             <DialogDescription className="mb-6">
-              Te avisaremos a <strong>{email}</strong> en cuanto {planName ? `el plan "${planName}"` : "la plataforma"} esté disponible.
+              Te avisaremos a <strong>{email}</strong> en cuanto {planName ? `el plan "${planName}"` : "la plataforma"}{" "}
+              esté disponible.
             </DialogDescription>
-            <Button onClick={() => onOpenChange(false)} className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full">
+            <Button
+              onClick={() => onOpenChange(false)}
+              className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
+            >
               Entendido
             </Button>
           </div>
@@ -234,7 +223,10 @@ const WaitlistModal = ({
               checked={marketingConsent}
               onCheckedChange={(checked) => setMarketingConsent(checked === true)}
             />
-            <Label htmlFor="waitlist-marketing" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+            <Label
+              htmlFor="waitlist-marketing"
+              className="text-xs text-muted-foreground leading-relaxed cursor-pointer"
+            >
               Acepto recibir comunicaciones comerciales y novedades de ACROXIA por email.
             </Label>
           </div>
