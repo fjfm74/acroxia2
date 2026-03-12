@@ -9,7 +9,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import BlogSubscriptionForm from "./BlogSubscriptionForm";
 import { trackConversion } from "@/lib/analytics";
-import { getOrCreateSessionId } from "@/lib/session";
+
+const SESSION_KEY = "acroxia_session_id";
+
+const getOrCreateSessionId = () => {
+  let sessionId = localStorage.getItem(SESSION_KEY);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem(SESSION_KEY, sessionId);
+  }
+  return sessionId;
+};
 
 interface BlogSidebarProps {
   selectedAudience?: "inquilino" | "propietario";
