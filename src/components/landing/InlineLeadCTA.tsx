@@ -7,7 +7,17 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, Users } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 import { trackConversion } from "@/lib/analytics";
-import { getOrCreateSessionId } from "@/lib/session";
+
+const SESSION_KEY = "acroxia_session_id";
+
+const getOrCreateSessionId = () => {
+  let sessionId = localStorage.getItem(SESSION_KEY);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem(SESSION_KEY, sessionId);
+  }
+  return sessionId;
+};
 
 const InlineLeadCTA = () => {
   const navigate = useNavigate();
