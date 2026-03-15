@@ -1,0 +1,2 @@
+ALTER TABLE public.scheduled_posts DROP CONSTRAINT scheduled_posts_status_check;
+ALTER TABLE public.scheduled_posts ADD CONSTRAINT scheduled_posts_status_check CHECK (status = ANY (ARRAY['pending_approval'::text, 'approved'::text, 'rejected'::text, 'auto_published'::text]));
