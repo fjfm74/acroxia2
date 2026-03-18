@@ -1,0 +1,1 @@
+UPDATE blog_posts SET image = 'https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/blog-images/blog-certificado-energetico-2026.jpg', updated_at = now() WHERE id = '05066e08-ca1e-43e2-ace8-1be1ed045202';
