@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -560,8 +560,45 @@ serve(async (req) => {
     console.log("Starting daily landlord blog post generation...");
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const now = new Date();
+    const startOfTodayUtc = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    ).toISOString();
 
-    // Obtener posts existentes de propietarios para evitar duplicados
+    // Idempotencia: evitar más de un post automático de propietarios por día
+    const { data: todayLandlordPost, error: todayPostError } = await supabase
+      .from("blog_posts")
+      .select("id, title, slug, created_at")
+      .eq("audience", "propietario")
+      .gte("created_at", startOfTodayUtc)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (todayPostError) {
+      console.error("Error checking today's landlord post:", todayPostError);
+      throw todayPostError;
+    }
+
+    if (todayLandlordPost) {
+      console.log("Daily landlord post already exists, skipping generation:", todayLandlordPost.id);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          alreadyPublished: true,
+          message: "Landlord daily post already exists for today",
+          post: {
+            id: todayLandlordPost.id,
+            title: todayLandlordPost.title,
+            slug: todayLandlordPost.slug,
+            created_at: todayLandlordPost.created_at,
+          },
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Obtener posts existentes de propietarios para evitar títulos/temas duplicados
     const { data: existingPosts } = await supabase
       .from("blog_posts")
       .select("title, category")
