@@ -145,14 +145,26 @@ const Terminos = () => {
             Los precios vigentes están disponibles en nuestra página de precios. Nos reservamos el derecho de modificar los precios con un preaviso de 30 días a los usuarios registrados.
           </p>
 
-          <h3 className="font-semibold text-foreground mt-6 mb-3">6.3. Facturación</h3>
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.3. Procesamiento de pagos</h3>
+          <p className="mb-4 leading-relaxed">
+            Nuestro proceso de compra es gestionado por nuestro revendedor online Paddle.com. Paddle.com es el Merchant of Record (comerciante registrado) de todos nuestros pedidos. Paddle gestiona todas las consultas de atención al cliente relacionadas con pagos, facturación, impuestos y devoluciones. Para más información, consulta los{" "}
+            <a href="https://www.paddle.com/legal/checkout-buyer-terms" target="_blank" rel="noopener noreferrer" className="underline text-foreground hover:text-foreground/70">
+              Términos del Comprador de Paddle
+            </a>.
+          </p>
+
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.4. Facturación</h3>
           <p className="mb-4 leading-relaxed">
             Las suscripciones se facturan de forma anticipada según el período seleccionado (mensual o anual). Los créditos no utilizados no son reembolsables ni transferibles entre períodos de facturación, salvo que se indique lo contrario en la oferta comercial.
           </p>
 
-          <h3 className="font-semibold text-foreground mt-6 mb-3">6.4. Derecho de desistimiento</h3>
+          <h3 className="font-semibold text-foreground mt-6 mb-3">6.5. Derecho de desistimiento</h3>
           <p className="leading-relaxed">
-            De conformidad con la normativa de consumidores, dispones de 14 días naturales desde la contratación para ejercer tu derecho de desistimiento, siempre que no hayas utilizado el servicio. Una vez iniciado el análisis de un contrato, se considera que has aceptado la prestación del servicio y no procederá el reembolso por ese análisis específico.
+            De conformidad con la normativa de consumidores, dispones de 14 días naturales desde la contratación para ejercer tu derecho de desistimiento, siempre que no hayas utilizado el servicio. Una vez iniciado el análisis de un contrato, se considera que has aceptado la prestación del servicio y no procederá el reembolso por ese análisis específico. Los reembolsos son gestionados por Paddle. Para solicitar un reembolso, visita{" "}
+            <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="underline text-foreground hover:text-foreground/70">
+              paddle.net
+            </a>{" "}
+            o contacta con nuestro equipo de soporte.
           </p>
         </section>
 

@@ -9,7 +9,7 @@ const Desistimiento = () => {
 (Este formulario debe cumplimentarse y enviarse solo si desea desistir del contrato)
 
 A la atención de:
-ACROXIA TECH S.L.
+ACROXIA
 Email: legal@acroxia.com
 
 Por la presente comunico que desisto del contrato de prestación del siguiente servicio:
