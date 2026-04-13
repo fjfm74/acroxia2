@@ -35,6 +35,9 @@ interface AnalysisResult {
 const FreeResultPreview = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const perspective = searchParams.get("perspectiva") === "propietario" ? "landlord" : "tenant";
+  
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,10 @@ const FreeResultPreview = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const { user } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+
+  const isLandlord = perspective === "landlord";
+  const priceId = isLandlord ? "propietario_unico_price" : "analisis_unico_price";
+  const priceDisplay = isLandlord ? "29,00€" : "14,99€";
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -349,7 +356,7 @@ const FreeResultPreview = () => {
                           Accede al análisis detallado de todas las cláusulas con recomendaciones personalizadas.
                         </p>
                         <div className="text-3xl font-bold text-foreground mb-1">
-                          14,99€
+                          {priceDisplay}
                         </div>
                         <p className="text-xs text-muted-foreground mb-4">
                           Pago único · Sin suscripción
@@ -360,10 +367,10 @@ const FreeResultPreview = () => {
                         onClick={async () => {
                           try {
                             await openCheckout({
-                              priceId: "analisis_unico_price",
+                              priceId,
                               quantity: 1,
                               customerEmail: user?.email,
-                              customData: { userId: user?.id || "", analysisId: id || "" },
+                              customData: { userId: user?.id || "", analysisId: id || "", perspective },
                               successUrl: `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
                             });
                           } catch (err) {
