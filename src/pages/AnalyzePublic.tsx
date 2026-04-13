@@ -178,40 +178,29 @@ const AnalyzePublic = () => {
       if (uploadError) throw uploadError;
 
       setProgress(30);
-      setAnalysisStep("Creando registro...");
-
-      // Create anonymous analysis record
-      const { data: analysis, error: analysisRecordError } = await supabase
-        .from("anonymous_analyses")
-        .insert({
-          session_id: sessionId,
-          file_name: file.name,
-          file_path: filePath,
-        })
-        .select()
-        .single();
-
-      if (analysisRecordError) throw analysisRecordError;
+      setAnalysisStep("Analizando contrato...");
 
       setUploading(false);
       setAnalyzing(true);
       setProgress(50);
       setAnalysisStep("Extrayendo texto del documento...");
 
-      // Call public analysis edge function
+      // Call public analysis edge function (it creates the record internally)
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-contract-public",
         {
           body: { 
-            analysisId: analysis.id, 
             filePath, 
             fileType: file.type,
-            sessionId 
+            sessionId,
+            fileName: file.name,
           },
         }
       );
 
       if (analysisError) throw analysisError;
+      
+      const analysisId = analysisData?.analysisId;
 
       // Stop gradual progress and jump to completion
       if (progressIntervalRef.current) {
