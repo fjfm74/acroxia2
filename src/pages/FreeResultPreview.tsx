@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import LeadCaptureModal from "@/components/LeadCaptureModal";
-import PaymentPlaceholder from "@/components/PaymentPlaceholder";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import { 
   CheckCircle, AlertTriangle, XCircle, Lock, Clock, 
-  FileText, Shield, ArrowRight, Sparkles, Users 
+  FileText, Shield, ArrowRight, Sparkles, Users, Loader2
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -37,8 +39,9 @@ const FreeResultPreview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const { user } = useAuth();
+  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -354,12 +357,35 @@ const FreeResultPreview = () => {
                       </div>
                       
                       <Button 
-                        onClick={() => setShowPaymentModal(true)}
+                        onClick={async () => {
+                          try {
+                            await openCheckout({
+                              priceId: "analisis_unico_price",
+                              quantity: 1,
+                              customerEmail: user?.email,
+                              customData: { userId: user?.id || "", analysisId: id || "" },
+                              successUrl: `${window.location.origin}/dashboard?checkout=success`,
+                            });
+                          } catch (err) {
+                            console.error("Checkout error:", err);
+                            toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
+                          }
+                        }}
+                        disabled={checkoutLoading}
                         className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
                         size="lg"
                       >
-                        Desbloquear informe
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        {checkoutLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Cargando...
+                          </>
+                        ) : (
+                          <>
+                            Desbloquear informe
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </>
+                        )}
                       </Button>
 
                       <ul className="text-sm space-y-2 text-muted-foreground">
@@ -428,11 +454,6 @@ const FreeResultPreview = () => {
         suspiciousCount={result.suspicious_clauses}
       />
 
-      <PaymentPlaceholder
-        open={showPaymentModal}
-        onOpenChange={setShowPaymentModal}
-        analysisId={id!}
-      />
     </>
   );
 };
