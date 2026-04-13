@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Check, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
-import WaitlistModal from "@/components/WaitlistModal";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -17,9 +18,10 @@ const plans = [
       "Checklist de cumplimiento legal",
       "Descarga en PDF",
     ],
-    cta: "Unirme a la lista",
+    cta: "Comprar ahora",
     highlighted: false,
     badge: undefined as string | undefined,
+    priceId: "propietario_unico_price",
   },
   {
     name: "Propietario Pro",
@@ -34,15 +36,34 @@ const plans = [
       "Detección de zona tensionada",
       "Historial completo",
     ],
-    cta: "Unirme a la lista",
+    cta: "Suscribirme",
     highlighted: true,
     badge: "Recomendado para +3 inmuebles",
+    priceId: "propietario_pro_yearly",
   },
 ];
 
 const LandlordPricing = () => {
-  const [waitlistOpen, setWaitlistOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("");
+  const { user } = useAuth();
+  const { openCheckout, loading } = usePaddleCheckout();
+
+  const handlePlanClick = async (plan: typeof plans[0]) => {
+    if (!user) {
+      toast.error("Inicia sesión para continuar con la compra");
+      return;
+    }
+
+    try {
+      await openCheckout({
+        priceId: plan.priceId,
+        customerEmail: user.email || undefined,
+        customData: { userId: user.id },
+        successUrl: `${window.location.origin}/propietario/contratos?checkout=success`,
+      });
+    } catch (error) {
+      toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
+    }
+  };
 
   return (
     <section className="py-24 bg-muted">
@@ -105,14 +126,15 @@ const LandlordPricing = () => {
                 </ul>
 
                 <Button
-                  onClick={() => { setSelectedPlan(plan.name); setWaitlistOpen(true); }}
+                  onClick={() => handlePlanClick(plan)}
+                  disabled={loading}
                   className={`w-full rounded-full font-medium ${
                     plan.highlighted
                       ? "bg-charcoal text-cream hover:bg-charcoal/90"
                       : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
                   }`}
                 >
-                  {plan.cta}
+                  {loading ? "Cargando..." : plan.cta}
                 </Button>
               </div>
             </FadeIn>
@@ -130,13 +152,6 @@ const LandlordPricing = () => {
           </div>
         </FadeIn>
       </div>
-
-      <WaitlistModal
-        open={waitlistOpen}
-        onOpenChange={setWaitlistOpen}
-        planName={selectedPlan}
-        source="pricing_landlord"
-      />
     </section>
   );
 };
