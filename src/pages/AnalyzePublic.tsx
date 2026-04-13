@@ -213,7 +213,7 @@ const AnalyzePublic = () => {
 
       // Track free analysis completed
       trackConversion('free_analysis_completed', {
-        analysis_id: analysis.id,
+        analysis_id: analysisId,
         session_id: sessionId,
         duration_seconds: Math.round((Date.now() - startTime) / 1000),
       });
@@ -225,7 +225,7 @@ const AnalyzePublic = () => {
 
       // Navigate to preview results
       setTimeout(() => {
-        navigate(`/resultado-previo/${analysis.id}`);
+        navigate(`/resultado-previo/${analysisId}`);
       }, 1000);
 
     } catch (error: any) {
