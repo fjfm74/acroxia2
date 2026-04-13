@@ -385,7 +385,7 @@ serve(async (req) => {
             language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
           },
         })
-        .eq("id", analysisId);
+        .eq("id", effectiveAnalysisId);
 
       return new Response(
         JSON.stringify({
@@ -454,7 +454,7 @@ serve(async (req) => {
     const { error: updateError } = await supabase
       .from("anonymous_analyses")
       .update({ analysis_result: analysisResult })
-      .eq("id", analysisId);
+      .eq("id", effectiveAnalysisId);
 
     if (updateError) {
       console.error("Error updating analysis:", updateError);
@@ -464,7 +464,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        analysisId,
+        analysisId: effectiveAnalysisId,
         preview: {
           total_clauses: analysisResult.total_clauses,
           valid_clauses: analysisResult.valid_clauses,
