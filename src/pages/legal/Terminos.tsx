@@ -25,7 +25,7 @@ const Terminos = () => {
             1. Aceptación de los Términos
           </h2>
           <p className="mb-4 leading-relaxed">
-            Al acceder y utilizar los servicios de ACROXIA (el "Servicio"), proporcionados por ACROXIA TECH S.L. ("ACROXIA", "nosotros" o "nuestro"), aceptas quedar vinculado por estos Términos y Condiciones ("Términos"). Si no estás de acuerdo con alguna parte de estos Términos, no podrás acceder al Servicio.
+            Al acceder y utilizar los servicios de ACROXIA (el "Servicio"), proporcionados por ACROXIA ("nosotros" o "nuestro"), aceptas quedar vinculado por estos Términos y Condiciones ("Términos"). Si no estás de acuerdo con alguna parte de estos Términos, no podrás acceder al Servicio.
           </p>
           <p className="leading-relaxed">
             Estos Términos se aplican a todos los visitantes, usuarios y otras personas que accedan o utilicen el Servicio.
