@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
-import WaitlistModal from "@/components/WaitlistModal";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -20,6 +21,7 @@ const plans = [
     cta: "Escanear contrato gratis",
     highlighted: false,
     isFree: true,
+    priceId: "",
   },
   {
     name: "Análisis Único",
@@ -34,10 +36,11 @@ const plans = [
       "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
     ],
-    cta: "Unirme a la lista",
+    cta: "Comprar análisis",
     highlighted: true,
     badge: "Recomendado",
     isFree: false,
+    priceId: "analisis_unico_price",
   },
   {
     name: "Pack Comparador",
@@ -52,20 +55,35 @@ const plans = [
       "Cláusulas potencialmente ilegales destacadas",
       "Recomendaciones personalizadas",
     ],
-    cta: "Unirme a la lista",
+    cta: "Comprar pack",
     highlighted: false,
     isFree: false,
+    priceId: "pack_comparador_price",
   },
 ];
 
 const B2CPricing = () => {
-  const [waitlistOpen, setWaitlistOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("");
+  const { user } = useAuth();
+  const { openCheckout, loading } = usePaddleCheckout();
 
-  const handlePlanClick = (plan: typeof plans[0]) => {
-    if (plan.isFree) return; // Free plan links directly
-    setSelectedPlan(plan.name);
-    setWaitlistOpen(true);
+  const handlePlanClick = async (plan: typeof plans[0]) => {
+    if (plan.isFree) return;
+
+    if (!user) {
+      toast.error("Inicia sesión para continuar con la compra");
+      return;
+    }
+
+    try {
+      await openCheckout({
+        priceId: plan.priceId,
+        customerEmail: user.email || undefined,
+        customData: { userId: user.id },
+        successUrl: `${window.location.origin}/analizar?checkout=success`,
+      });
+    } catch (error) {
+      toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
+    }
   };
 
   return (
@@ -139,13 +157,14 @@ const B2CPricing = () => {
                 ) : (
                   <Button
                     onClick={() => handlePlanClick(plan)}
+                    disabled={loading}
                     className={`w-full rounded-full font-medium ${
                       plan.highlighted
                         ? "bg-charcoal text-cream hover:bg-charcoal/90"
                         : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
                     }`}
                   >
-                    {plan.cta}
+                    {loading ? "Cargando..." : plan.cta}
                   </Button>
                 )}
               </div>
@@ -153,13 +172,6 @@ const B2CPricing = () => {
           ))}
         </div>
       </div>
-
-      <WaitlistModal
-        open={waitlistOpen}
-        onOpenChange={setWaitlistOpen}
-        planName={selectedPlan}
-        source="pricing_b2c"
-      />
     </section>
   );
 };

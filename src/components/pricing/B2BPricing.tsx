@@ -1,8 +1,9 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Building2 } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
-import WaitlistModal from "@/components/WaitlistModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { toast } from "sonner";
 
 const b2bPlans = [
   {
@@ -21,6 +22,7 @@ const b2bPlans = [
     upsell: null as string | null,
     badge: "Más popular" as string | null,
     highlighted: true,
+    priceId: "profesional_monthly",
   },
   {
     icon: Building2,
@@ -37,12 +39,31 @@ const b2bPlans = [
     upsell: "Sin límite mensual de análisis" as string | null,
     badge: null as string | null,
     highlighted: false,
+    priceId: "profesional_plus_monthly",
   },
 ];
 
 const B2BPricing = () => {
-  const [waitlistOpen, setWaitlistOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("");
+  const { user } = useAuth();
+  const { openCheckout, loading } = usePaddleCheckout();
+
+  const handlePlanClick = async (plan: typeof b2bPlans[0]) => {
+    if (!user) {
+      toast.error("Inicia sesión para continuar con la compra");
+      return;
+    }
+
+    try {
+      await openCheckout({
+        priceId: plan.priceId,
+        customerEmail: user.email || undefined,
+        customData: { userId: user.id },
+        successUrl: `${window.location.origin}/pro?checkout=success`,
+      });
+    } catch (error) {
+      toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
+    }
+  };
 
   return (
     <section className="py-24 bg-charcoal">
@@ -120,23 +141,17 @@ const B2BPricing = () => {
                 </ul>
 
                 <Button
-                  onClick={() => { setSelectedPlan(plan.name); setWaitlistOpen(true); }}
+                  onClick={() => handlePlanClick(plan)}
+                  disabled={loading}
                   className="w-full rounded-full bg-cream text-charcoal hover:bg-cream/90 font-medium"
                 >
-                  Unirme a la lista
+                  {loading ? "Cargando..." : "Suscribirme"}
                 </Button>
               </div>
             </FadeIn>
           ))}
         </div>
       </div>
-
-      <WaitlistModal
-        open={waitlistOpen}
-        onOpenChange={setWaitlistOpen}
-        planName={selectedPlan}
-        source="pricing_b2b"
-      />
     </section>
   );
 };
