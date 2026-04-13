@@ -163,7 +163,7 @@ const breadcrumbItems = [
               <FadeIn delay={0.3}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button size="lg" className="rounded-full px-8" asChild>
-                    <Link to="/contacto">
+                    <Link to="/registro">
                       Contratar Plan Profesional
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -326,7 +326,7 @@ const breadcrumbItems = [
                       variant={plan.highlighted ? "secondary" : "default"}
                       asChild
                     >
-                      <Link to="/contacto">Contratar</Link>
+                      <Link to="/registro">Contratar</Link>
                     </Button>
                   </div>
                 </FadeIn>
@@ -372,7 +372,7 @@ const breadcrumbItems = [
                   className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
                   asChild
                 >
-                  <Link to="/contacto">
+                  <Link to="/registro">
                     Contratar ahora
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
