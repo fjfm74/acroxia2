@@ -50,7 +50,7 @@ const HeroSection = () => {
             </div>
             
             <div className="hero-animate hero-animate-delay-4 flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted-foreground">
-              <span>✓ Preview gratuito sin registro</span>
+              <span>✓ Preview gratuito en 2 minutos</span>
               <span>✓ Resultado en 2 minutos</span>
               <span>✓ Basado en la LAU 2026</span>
             </div>

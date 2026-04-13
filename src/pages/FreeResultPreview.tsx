@@ -359,7 +359,7 @@ const FreeResultPreview = () => {
                           {priceDisplay}
                         </div>
                         <p className="text-xs text-muted-foreground mb-4">
-                          Pago único · Sin suscripción
+                          Pago único · Incluye registro gratuito
                         </p>
                       </div>
                       

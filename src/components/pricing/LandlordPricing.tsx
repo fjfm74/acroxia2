@@ -11,7 +11,7 @@ const plans = [
     name: "Propietario",
     price: "29",
     period: "",
-    description: "Pago único por contrato",
+    description: "Pago único · Incluye cuenta gratuita",
     features: [
       "1 análisis completo de contrato",
       "Generador de contrato adaptado a la LAU",

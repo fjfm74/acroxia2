@@ -83,7 +83,7 @@ const InlineLeadCTA = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </form>
-            <p className="text-xs text-muted-foreground mt-3">Sin registro previo · 100% confidencial</p>
+            <p className="text-xs text-muted-foreground mt-3">100% confidencial · Basado en la LAU 2026</p>
           </div>
         </FadeIn>
       </div>
