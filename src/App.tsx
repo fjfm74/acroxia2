@@ -12,6 +12,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import ProfessionalRoute from "./components/auth/ProfessionalRoute";
 import LandlordRoute from "./components/auth/LandlordRoute";
+import { PaymentTestModeBanner } from "./components/PaymentTestModeBanner";
 
 // Critical page - loaded eagerly (landing page)
 import Index from "./pages/Index";
@@ -122,6 +123,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <PaymentTestModeBanner />
             <ScrollToTop />
             <PageViewTracker />
             <Routes>
