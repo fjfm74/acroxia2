@@ -364,7 +364,7 @@ const FreeResultPreview = () => {
                               quantity: 1,
                               customerEmail: user?.email,
                               customData: { userId: user?.id || "", analysisId: id || "" },
-                              successUrl: `${window.location.origin}/dashboard?checkout=success`,
+                              successUrl: `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
                             });
                           } catch (err) {
                             console.error("Checkout error:", err);

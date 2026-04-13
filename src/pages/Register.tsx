@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthForm from "@/components/auth/AuthForm";
@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import FadeIn from "@/components/animations/FadeIn";
-import { CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, CreditCard } from "lucide-react";
 
 const benefits = [
   "1 análisis de contrato gratis",
@@ -17,6 +18,8 @@ const benefits = [
 
 const Register = () => {
   const { user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const isFromCheckout = searchParams.get("checkout") === "success";
 
   if (!loading && user) {
     return <Navigate to="/dashboard" replace />;
@@ -64,10 +67,21 @@ const Register = () => {
                 <CardHeader className="space-y-1 text-center">
                   <CardTitle className="font-serif text-3xl">Crear cuenta</CardTitle>
                   <CardDescription>
-                    Regístrate gratis y recibe 1 análisis incluido
+                    {isFromCheckout 
+                      ? "Crea tu cuenta para acceder a tu informe completo"
+                      : "Regístrate gratis y recibe 1 análisis incluido"
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {isFromCheckout && (
+                    <Alert className="mb-4 border-green-500/50 bg-green-50">
+                      <CreditCard className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-800">
+                        <strong>¡Pago completado!</strong> Crea tu cuenta para acceder al informe completo y tus créditos de análisis.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   <AuthForm mode="register" />
                   
                   <p className="mt-6 text-center text-sm text-muted-foreground">
