@@ -107,7 +107,8 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
 }
 
 async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
-  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  const uint8 = new Uint8Array(buffer);
+  const result = await mammoth.extractRawText({ buffer: uint8 });
   return result.value;
 }
 
