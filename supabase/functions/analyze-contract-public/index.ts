@@ -295,9 +295,9 @@ serve(async (req) => {
   }
 
   try {
-    const { analysisId, filePath, fileType, sessionId } = await req.json();
+    const { analysisId, filePath, fileType, sessionId, fileName } = await req.json();
 
-    if (!analysisId || !filePath) {
+    if (!filePath) {
       throw new Error("Faltan parámetros requeridos");
     }
 
@@ -307,7 +307,24 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`Processing public analysis: ${analysisId}, file: ${filePath}`);
+    // Create anonymous analysis record if not provided
+    let effectiveAnalysisId = analysisId;
+    if (!effectiveAnalysisId) {
+      const { data: newAnalysis, error: insertError } = await supabase
+        .from("anonymous_analyses")
+        .insert({
+          session_id: sessionId || "unknown",
+          file_name: fileName || "unknown",
+          file_path: filePath,
+        })
+        .select("id")
+        .single();
+
+      if (insertError) throw new Error(`Error creating analysis record: ${insertError.message}`);
+      effectiveAnalysisId = newAnalysis.id;
+    }
+
+    console.log(`Processing public analysis: ${effectiveAnalysisId}, file: ${filePath}`);
 
     // Download file from storage
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
@@ -368,7 +385,7 @@ serve(async (req) => {
             language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
           },
         })
-        .eq("id", analysisId);
+        .eq("id", effectiveAnalysisId);
 
       return new Response(
         JSON.stringify({
@@ -437,7 +454,7 @@ serve(async (req) => {
     const { error: updateError } = await supabase
       .from("anonymous_analyses")
       .update({ analysis_result: analysisResult })
-      .eq("id", analysisId);
+      .eq("id", effectiveAnalysisId);
 
     if (updateError) {
       console.error("Error updating analysis:", updateError);
@@ -447,7 +464,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        analysisId,
+        analysisId: effectiveAnalysisId,
         preview: {
           total_clauses: analysisResult.total_clauses,
           valid_clauses: analysisResult.valid_clauses,
