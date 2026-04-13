@@ -187,7 +187,11 @@ const Privacidad = () => {
             Tus datos personales podrán ser comunicados a:
           </p>
           <ul className="list-disc list-inside space-y-2 ml-4">
-            <li><strong className="text-foreground">Proveedores de servicios:</strong> Empresas que nos prestan servicios de hosting, procesamiento de pagos, envío de emails y análisis.</li>
+            <li><strong className="text-foreground">Paddle.com (Merchant of Record):</strong> Paddle actúa como comerciante registrado para la venta de nuestros productos y servicios, gestionando pagos, facturación, impuestos y devoluciones. Paddle puede recibir datos como tu nombre, email y dirección de facturación necesarios para procesar las transacciones. Consulta la{" "}
+              <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="underline text-foreground hover:text-foreground/70">política de privacidad de Paddle</a>.
+            </li>
+            <li><strong className="text-foreground">Proveedores de servicios:</strong> Empresas que nos prestan servicios de hosting, envío de emails y análisis.</li>
+            <li><strong className="text-foreground">Asesores profesionales:</strong> Asesores legales y contables cuando sea necesario.</li>
             <li><strong className="text-foreground">Autoridades competentes:</strong> Cuando sea requerido por ley o para proteger nuestros derechos legales.</li>
           </ul>
           <p className="mt-4 leading-relaxed">
