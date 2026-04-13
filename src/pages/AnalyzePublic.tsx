@@ -30,6 +30,8 @@ const getSessionId = (): string => {
 const AnalyzePublic = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialPerspective = searchParams.get("perspectiva") === "propietario" ? "landlord" : "tenant";
   
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -39,6 +41,7 @@ const AnalyzePublic = () => {
   const [analysisStep, setAnalysisStep] = useState("");
   const [acceptedThirdPartyData, setAcceptedThirdPartyData] = useState(false);
   const [sessionId] = useState(getSessionId);
+  const [perspective, setPerspective] = useState<"tenant" | "landlord">(initialPerspective);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Estimated analysis duration in seconds (based on logs: 30-90s, avg ~60s)
@@ -194,6 +197,7 @@ const AnalyzePublic = () => {
             fileType: file.type,
             sessionId,
             fileName: file.name,
+            perspective,
           },
         }
       );
@@ -223,9 +227,9 @@ const AnalyzePublic = () => {
         description: "Tu contrato ha sido analizado. Revisa los resultados.",
       });
 
-      // Navigate to preview results
+      // Navigate to preview results with perspective
       setTimeout(() => {
-        navigate(`/resultado-previo/${analysisId}`);
+        navigate(`/resultado-previo/${analysisId}?perspectiva=${perspective === "landlord" ? "propietario" : "inquilino"}`);
       }, 1000);
 
     } catch (error: any) {
@@ -287,6 +291,30 @@ const AnalyzePublic = () => {
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                   Descubre si tu contrato de alquiler contiene cláusulas que podrían ser ilegales o abusivas según la LAU.
                 </p>
+
+                {/* Perspective selector */}
+                <div className="flex justify-center gap-3 mt-6">
+                  <button
+                    onClick={() => setPerspective("tenant")}
+                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
+                      perspective === "tenant"
+                        ? "bg-foreground text-background"
+                        : "bg-muted text-muted-foreground hover:bg-muted-foreground/10"
+                    }`}
+                  >
+                    Soy inquilino
+                  </button>
+                  <button
+                    onClick={() => setPerspective("landlord")}
+                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
+                      perspective === "landlord"
+                        ? "bg-foreground text-background"
+                        : "bg-muted text-muted-foreground hover:bg-muted-foreground/10"
+                    }`}
+                  >
+                    Soy propietario
+                  </button>
+                </div>
               </div>
             </FadeIn>
 

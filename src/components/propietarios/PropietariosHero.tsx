@@ -31,7 +31,7 @@ const PropietariosHero = () => {
                 <Link to="/registro">Ver planes para propietarios</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="rounded-full px-8">
-                <Link to="/analizar-gratis">Analizar mi contrato</Link>
+                <Link to="/analizar-gratis?perspectiva=propietario">Analizar mi contrato</Link>
               </Button>
             </div>
           </FadeIn>

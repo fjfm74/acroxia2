@@ -21,7 +21,7 @@ const PropietariosCTA = () => {
               size="lg" 
               className="rounded-full px-8"
             >
-              <Link to="/analizar-gratis">
+              <Link to="/analizar-gratis?perspectiva=propietario">
                 Analizar mi contrato gratis
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>

@@ -245,29 +245,18 @@ function splitContractCoreAndAnnexes(text: string): { coreText: string; annexTex
   };
 }
 
-// Simplified system prompt for public analysis
-function buildSystemPrompt(): string {
-  return `Eres un experto en derecho inmobiliario español especializado en contratos de alquiler de vivienda habitual.
-El contrato puede estar en español o catalán. Debes interpretar equivalencias legales entre ambos idiomas.
+// Dynamic system prompt based on perspective
+function buildSystemPrompt(perspective: "tenant" | "landlord"): string {
+  const commonIntro = `Eres un experto en derecho inmobiliario español especializado en contratos de alquiler de vivienda habitual.
+El contrato puede estar en español o catalán. Debes interpretar equivalencias legales entre ambos idiomas.`;
 
-Tu tarea es analizar el contrato proporcionado e identificar cláusulas que puedan ser:
-- ILEGALES: Contravienen directamente la LAU u otra normativa aplicable
-- SOSPECHOSAS: Podrían ser abusivas o perjudiciales para el inquilino
-- LEGALES: Conformes a la normativa vigente
-
+  const commonLegalFrame = `
 MARCO LEGAL DE REFERENCIA:
 - Ley 29/1994 de Arrendamientos Urbanos (LAU)
 - Ley 12/2023 por el derecho a la vivienda
-- Real Decreto-ley 7/2019
+- Real Decreto-ley 7/2019`;
 
-PUNTOS CRÍTICOS A REVISAR:
-1. Fianza: Máximo 1 mensualidad + 2 de garantías adicionales
-2. Duración: Mínimo 5 años (persona física) o 7 años (jurídica)
-3. Honorarios inmobiliaria: A cargo del arrendador si es empresa
-4. Actualización renta: Índice oficial, no IPC libre
-5. Obras y reparaciones: Conservación a cargo del propietario
-6. Penalizaciones: Máximo 1 mes por año restante de contrato
-
+  const commonFormat = `
 FORMATO DE RESPUESTA (JSON estricto):
 {
   "total_clauses": número,
@@ -287,6 +276,44 @@ FORMATO DE RESPUESTA (JSON estricto):
 }
 
 Analiza de forma rigurosa pero concisa. Prioriza las cláusulas más problemáticas.`;
+
+  if (perspective === "landlord") {
+    return `${commonIntro}
+
+Tu tarea es analizar el contrato proporcionado DESDE LA PERSPECTIVA DEL PROPIETARIO/ARRENDADOR e identificar:
+- ILEGALES: Cláusulas que incumplen la LAU y podrían ser anuladas judicialmente, dejando al propietario desprotegido
+- SOSPECHOSAS: Cláusulas que podrían generar problemas legales al propietario o que faltan y deberían incluirse
+- LEGALES: Conformes a la normativa vigente y que protegen adecuadamente al arrendador
+${commonLegalFrame}
+
+PUNTOS CRÍTICOS A REVISAR PARA EL PROPIETARIO:
+1. Fianza: ¿Se ha establecido correctamente la fianza legal (1 mes) más garantías adicionales (máx. 2 meses)?
+2. Duración: ¿Se respeta la duración mínima obligatoria? ¿Está bien redactada la prórroga?
+3. Actualización de renta: ¿Se incluye un índice de actualización válido y correcto?
+4. Cláusula de obras: ¿Se delimita claramente qué obras corresponden a cada parte?
+5. Penalización por desistimiento: ¿Se incluye la penalización legal a favor del propietario?
+6. Suministros e impuestos: ¿Se establece quién asume cada gasto?
+7. Cláusulas protectoras ausentes: ¿Falta alguna cláusula que el propietario debería incluir?
+${commonFormat}`;
+  }
+
+  // Default: tenant perspective
+  return `${commonIntro}
+
+Tu tarea es analizar el contrato proporcionado e identificar cláusulas que puedan ser:
+- ILEGALES: Contravienen directamente la LAU u otra normativa aplicable
+- SOSPECHOSAS: Podrían ser abusivas o perjudiciales para el inquilino
+- LEGALES: Conformes a la normativa vigente
+${commonLegalFrame}
+
+PUNTOS CRÍTICOS A REVISAR:
+1. Fianza: Máximo 1 mensualidad + 2 de garantías adicionales
+2. Duración: Mínimo 5 años (persona física) o 7 años (jurídica)
+3. Honorarios inmobiliaria: A cargo del arrendador si es empresa
+4. Actualización renta: Índice oficial, no IPC libre
+5. Obras y reparaciones: Conservación a cargo del propietario
+6. Penalizaciones: Máximo 1 mes por año restante de contrato
+${commonFormat}`;
 }
 
 serve(async (req) => {
@@ -295,7 +322,8 @@ serve(async (req) => {
   }
 
   try {
-    const { analysisId, filePath, fileType, sessionId, fileName } = await req.json();
+    const { analysisId, filePath, fileType, sessionId, fileName, perspective: rawPerspective } = await req.json();
+    const perspective = rawPerspective === "landlord" ? "landlord" : "tenant";
 
     if (!filePath) {
       throw new Error("Faltan parámetros requeridos");
@@ -402,7 +430,7 @@ serve(async (req) => {
     }
 
     // Call AI for analysis
-    const systemPrompt = buildSystemPrompt();
+    const systemPrompt = buildSystemPrompt(perspective);
 
     const { coreText, annexText } = splitContractCoreAndAnnexes(contractText);
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
