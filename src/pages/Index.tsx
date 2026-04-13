@@ -86,7 +86,7 @@ const Index = () => {
     <>
       <SEOHead
         title="Analiza tu Contrato de Alquiler con IA en 2 min | ACROXIA"
-        description="¿Tu contrato de alquiler es legal? Descúbrelo gratis en 2 minutos con IA. Detectamos cláusulas abusivas según la LAU 2026. Sin registro."
+        description="¿Tu contrato de alquiler es legal? Descúbrelo gratis en 2 minutos con IA. Detectamos cláusulas abusivas según la LAU 2026. 100% confidencial."
         canonical="https://acroxia.com/"
         keywords="analizar contrato alquiler, cláusulas abusivas alquiler, derechos inquilino España, LAU 2026, IA legal, contrato arrendamiento"
         jsonLd={[organizationSchema, websiteSchema, softwareAppSchema, howToSchema]}

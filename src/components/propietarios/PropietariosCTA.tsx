@@ -14,7 +14,7 @@ const PropietariosCTA = () => {
             </h2>
             <p className="text-muted-foreground text-lg mb-10">
               Sube tu contrato y descubre si cumple con la normativa vigente. 
-              Preview gratuito sin registro.
+              Preview gratuito en 2 minutos.
             </p>
             <Button 
               asChild 
