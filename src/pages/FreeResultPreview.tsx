@@ -39,6 +39,7 @@ const FreeResultPreview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
   const { user } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
 
