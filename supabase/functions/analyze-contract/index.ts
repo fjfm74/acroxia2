@@ -1428,34 +1428,19 @@ ${sanitizedContractText.substring(0, 4000)}`,
     // Update contract status
     await supabase.from("contracts").update({ status: "completed" }).eq("id", contractId);
 
-    // Deduct credit - skip for admin users
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(token);
-      if (user) {
-        // Check if user is admin
-        const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
-
-        if (isAdmin) {
-          console.log(`Admin user ${user.id} - no credit deducted`);
-        } else {
-          // Decrement credits directly using service_role (bypasses RLS)
-          // First get current credits, then decrement
-          const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
-
-          if (profile && profile.credits > 0) {
-            await supabase
-              .from("profiles")
-              .update({ credits: profile.credits - 1 })
-              .eq("id", user.id);
-            console.log(`Credit deducted for user ${user.id}`);
-          } else {
-            console.log(`User ${user.id} has no credits to deduct`);
-          }
-        }
+    // Deduct credit - skip for admin users (user and isAdmin already validated above)
+    if (isAdmin) {
+      console.log(`Admin user ${user.id} - no credit deducted`);
+    } else {
+      const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
+      if (profile && profile.credits > 0) {
+        await supabase
+          .from("profiles")
+          .update({ credits: profile.credits - 1 })
+          .eq("id", user.id);
+        console.log(`Credit deducted for user ${user.id}`);
+      } else {
+        console.log(`User ${user.id} has no credits to deduct`);
       }
     }
 
