@@ -947,7 +947,14 @@ serve(async (req) => {
   }
 
   try {
-    const { contractId, filePath, fileType: mimeType } = await req.json();
+    // --- Authentication: require valid JWT ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "No autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -956,6 +963,43 @@ serve(async (req) => {
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Token inválido" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { contractId, filePath, fileType: mimeType } = await req.json();
+
+    // --- Ownership check: verify the contract belongs to this user ---
+    // Check in contracts table first, then landlord_contracts
+    const { data: ownedContract } = await supabase
+      .from("contracts")
+      .select("id")
+      .eq("id", contractId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const { data: ownedLandlordContract } = await supabase
+      .from("landlord_contracts")
+      .select("id")
+      .eq("id", contractId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    // Allow admins to bypass ownership check
+    const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
+
+    if (!ownedContract && !ownedLandlordContract && !isAdmin) {
+      return new Response(JSON.stringify({ error: "No tienes acceso a este contrato" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Download file
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
