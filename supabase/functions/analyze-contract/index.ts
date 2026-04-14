@@ -947,7 +947,14 @@ serve(async (req) => {
   }
 
   try {
-    const { contractId, filePath, fileType: mimeType } = await req.json();
+    // --- Authentication: require valid JWT ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "No autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -956,6 +963,43 @@ serve(async (req) => {
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Token inválido" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { contractId, filePath, fileType: mimeType } = await req.json();
+
+    // --- Ownership check: verify the contract belongs to this user ---
+    // Check in contracts table first, then landlord_contracts
+    const { data: ownedContract } = await supabase
+      .from("contracts")
+      .select("id")
+      .eq("id", contractId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const { data: ownedLandlordContract } = await supabase
+      .from("landlord_contracts")
+      .select("id")
+      .eq("id", contractId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    // Allow admins to bypass ownership check
+    const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
+
+    if (!ownedContract && !ownedLandlordContract && !isAdmin) {
+      return new Response(JSON.stringify({ error: "No tienes acceso a este contrato" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Download file
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
@@ -1384,34 +1428,19 @@ ${sanitizedContractText.substring(0, 4000)}`,
     // Update contract status
     await supabase.from("contracts").update({ status: "completed" }).eq("id", contractId);
 
-    // Deduct credit - skip for admin users
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(token);
-      if (user) {
-        // Check if user is admin
-        const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
-
-        if (isAdmin) {
-          console.log(`Admin user ${user.id} - no credit deducted`);
-        } else {
-          // Decrement credits directly using service_role (bypasses RLS)
-          // First get current credits, then decrement
-          const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
-
-          if (profile && profile.credits > 0) {
-            await supabase
-              .from("profiles")
-              .update({ credits: profile.credits - 1 })
-              .eq("id", user.id);
-            console.log(`Credit deducted for user ${user.id}`);
-          } else {
-            console.log(`User ${user.id} has no credits to deduct`);
-          }
-        }
+    // Deduct credit - skip for admin users (user and isAdmin already validated above)
+    if (isAdmin) {
+      console.log(`Admin user ${user.id} - no credit deducted`);
+    } else {
+      const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
+      if (profile && profile.credits > 0) {
+        await supabase
+          .from("profiles")
+          .update({ credits: profile.credits - 1 })
+          .eq("id", user.id);
+        console.log(`Credit deducted for user ${user.id}`);
+      } else {
+        console.log(`User ${user.id} has no credits to deduct`);
       }
     }
 
