@@ -299,7 +299,10 @@ const AnalyzePublic = () => {
                 {/* Perspective selector */}
                 <div className="flex justify-center gap-3 mt-6">
                   <button
-                    onClick={() => setPerspective("tenant")}
+                    onClick={() => {
+                      setPerspective("tenant");
+                      localStorage.setItem("acroxia_user_type", "inquilino");
+                    }}
                     className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
                       perspective === "tenant"
                         ? "bg-foreground text-background"
@@ -309,7 +312,10 @@ const AnalyzePublic = () => {
                     Soy inquilino
                   </button>
                   <button
-                    onClick={() => setPerspective("landlord")}
+                    onClick={() => {
+                      setPerspective("landlord");
+                      localStorage.setItem("acroxia_user_type", "propietario");
+                    }}
                     className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
                       perspective === "landlord"
                         ? "bg-foreground text-background"

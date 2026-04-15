@@ -344,6 +344,7 @@ serve(async (req) => {
           session_id: sessionId || "unknown",
           file_name: fileName || "unknown",
           file_path: filePath,
+          contract_status: perspective === "landlord" ? "propietario" : "inquilino",
         })
         .select("id")
         .single();
@@ -468,10 +469,12 @@ serve(async (req) => {
     }
 
     const analysisResult = JSON.parse(jsonMatch[0]);
+    analysisResult.perspective = perspective;
     analysisResult.contract_metadata = {
       ...(analysisResult.contract_metadata || {}),
       detected_language: languageDetection.detectedLanguage,
       language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
+      perspective,
     };
 
     console.log(

@@ -36,7 +36,7 @@ const FreeResultPreview = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
-  const perspective = searchParams.get("perspectiva") === "propietario" ? "landlord" : "tenant";
+  const urlPerspective = searchParams.get("perspectiva") === "propietario" ? "landlord" : "tenant";
   
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
