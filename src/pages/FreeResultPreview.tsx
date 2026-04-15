@@ -36,7 +36,7 @@ const FreeResultPreview = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
-  const perspective = searchParams.get("perspectiva") === "propietario" ? "landlord" : "tenant";
+  const urlPerspective = searchParams.get("perspectiva") === "propietario" ? "landlord" : "tenant";
   
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -46,9 +46,12 @@ const FreeResultPreview = () => {
   const { user } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
 
+  // Derive perspective: prefer analysis_result.perspective, then URL param
+  const perspective = (analysis?.analysis_result?.perspective as string) || urlPerspective;
   const isLandlord = perspective === "landlord";
   const priceId = isLandlord ? "propietario_unico_price" : "analisis_unico_price";
   const priceDisplay = isLandlord ? "29,00€" : "14,99€";
+  const perspectiveLabel = isLandlord ? "Análisis para propietario" : "Análisis para inquilino";
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -200,12 +203,17 @@ const FreeResultPreview = () => {
             <FadeIn>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-2">
+                   <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-2">
                     Resultado del análisis
                   </h1>
-                  <p className="text-muted-foreground">
-                    {analysis.file_name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-muted-foreground">
+                      {analysis.file_name}
+                    </p>
+                    <Badge variant={isLandlord ? "default" : "secondary"} className="text-xs">
+                      {perspectiveLabel}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
                   <Clock className="h-5 w-5" />
