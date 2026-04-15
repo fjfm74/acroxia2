@@ -136,9 +136,10 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           email: validatedEmail,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: "https://acroxia.com/verificado",
             data: {
               full_name: validatedName,
+              user_type: userType,
             },
           },
         });
