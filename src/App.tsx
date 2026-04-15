@@ -27,6 +27,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const EmailVerified = lazy(() => import("./pages/EmailVerified"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const DashboardLandlord = lazy(() => import("./pages/DashboardLandlord"));
@@ -142,6 +143,7 @@ const App = () => (
               <Route path="/registro" element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
               <Route path="/recuperar-contrasena" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
               <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+              <Route path="/verificado" element={<Suspense fallback={<PageLoader />}><EmailVerified /></Suspense>} />
               
               {/* Protected user routes */}
               <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></ProtectedRoute>} />
