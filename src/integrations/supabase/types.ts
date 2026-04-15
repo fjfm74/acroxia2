@@ -69,6 +69,8 @@ export type Database = {
           file_name: string
           file_path: string | null
           id: string
+          paddle_transaction_id: string | null
+          paid: boolean
           session_id: string
         }
         Insert: {
@@ -81,6 +83,8 @@ export type Database = {
           file_name: string
           file_path?: string | null
           id?: string
+          paddle_transaction_id?: string | null
+          paid?: boolean
           session_id: string
         }
         Update: {
@@ -93,6 +97,8 @@ export type Database = {
           file_name?: string
           file_path?: string | null
           id?: string
+          paddle_transaction_id?: string | null
+          paid?: boolean
           session_id?: string
         }
         Relationships: []
@@ -1714,6 +1720,8 @@ export type Database = {
           file_name: string
           file_path: string | null
           id: string
+          paddle_transaction_id: string | null
+          paid: boolean
           session_id: string
         }[]
         SetofOptions: {
