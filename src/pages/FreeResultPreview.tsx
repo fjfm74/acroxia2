@@ -366,12 +366,23 @@ const FreeResultPreview = () => {
                       <Button 
                         onClick={async () => {
                           try {
+                            // Save return URL for post-registration redirect
+                            localStorage.setItem("acroxia_return_url", `/resultado-previo/${id}`);
+                            
                             await openCheckout({
                               priceId,
                               quantity: 1,
-                              customerEmail: user?.email,
-                              customData: { userId: user?.id || "", analysisId: id || "", perspective },
-                              successUrl: `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
+                              customerEmail: user?.email || analysis?.email || undefined,
+                              customData: { 
+                                userId: user?.id || "", 
+                                analysisId: id || "", 
+                                perspective,
+                                sessionId: localStorage.getItem("acroxia_session_id") || "",
+                                userType: localStorage.getItem("acroxia_user_type") || "inquilino",
+                              },
+                              successUrl: user 
+                                ? `${window.location.origin}/resultado/${id}` 
+                                : `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
                             });
                           } catch (err) {
                             console.error("Checkout error:", err);
