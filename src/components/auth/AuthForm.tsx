@@ -254,7 +254,11 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           .eq("id", data.user.id)
           .single();
 
-        const redirectPath = await getPostAuthRedirect(data.user.id, profileData?.user_type || null, fromPath);
+        const redirectPath = await getPostAuthRedirect(
+          data.user.id,
+          (profileData?.user_type as UserType) || null,
+          fromPath,
+        );
         navigate(redirectPath);
       }
     } catch (error: any) {
