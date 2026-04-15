@@ -113,47 +113,118 @@ async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
 }
 
 async function handleTransactionCompleted(data: any, env: PaddleEnv) {
-  // Handle one-time purchases: add credits
   const userId = data.customData?.userId;
-  if (!userId) {
-    console.log('Transaction completed without userId:', data.id);
-    return;
-  }
+  const analysisId = data.customData?.analysisId;
+  const sessionId = data.customData?.sessionId;
+  const transactionId = data.id;
 
-  // Check if this is a subscription transaction (ignore - handled by subscription events)
+  // Skip subscription transactions
   if (data.subscriptionId) {
-    console.log('Subscription transaction, skipping credit logic:', data.id);
+    console.log('Subscription transaction, skipping credit logic:', transactionId);
     return;
   }
 
-  // One-time purchase: add credits based on product
-  const item = data.items?.[0];
-  const productId = item?.price?.importMeta?.externalId || item?.price?.productId || '';
+  // Mark anonymous analysis as paid
+  if (analysisId) {
+    const { error: paidError } = await supabase
+      .from('anonymous_analyses')
+      .update({ paid: true, paddle_transaction_id: transactionId })
+      .eq('id', analysisId);
 
-  // Map price IDs to product IDs for credit lookup
-  const priceToProduct: Record<string, string> = {
-    'analisis_unico_price': 'analisis_unico',
-    'pack_comparador_price': 'pack_comparador',
-    'propietario_unico_price': 'propietario_unico',
-  };
+    if (paidError) {
+      console.error('Error marking analysis as paid:', paidError);
+    } else {
+      console.log(`Analysis ${analysisId} marked as paid, tx: ${transactionId}`);
+    }
 
-  const resolvedProductId = priceToProduct[productId] || productId;
-  const creditsToAdd = CREDIT_MAP[resolvedProductId];
+    // Record in purchase_intents
+    const customerEmail = data.customData?.userType || '';
+    await supabase.from('purchase_intents').insert({
+      email: customerEmail || 'unknown@paddle.checkout',
+      analysis_id: analysisId,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    });
+  }
 
-  if (creditsToAdd) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', userId)
-      .single();
+  // If user is logged in, add credits
+  if (userId) {
+    const item = data.items?.[0];
+    const productId = item?.price?.importMeta?.externalId || item?.price?.productId || '';
 
-    const currentCredits = profile?.credits || 0;
+    const priceToProduct: Record<string, string> = {
+      'analisis_unico_price': 'analisis_unico',
+      'pack_comparador_price': 'pack_comparador',
+      'propietario_unico_price': 'propietario_unico',
+    };
 
-    await supabase
-      .from('profiles')
-      .update({ credits: currentCredits + creditsToAdd })
-      .eq('id', userId);
+    const resolvedProductId = priceToProduct[productId] || productId;
+    const creditsToAdd = CREDIT_MAP[resolvedProductId];
 
-    console.log(`Added ${creditsToAdd} credits to user ${userId}, product: ${resolvedProductId}, env: ${env}`);
+    if (creditsToAdd) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', userId)
+        .single();
+
+      const currentCredits = profile?.credits || 0;
+
+      await supabase
+        .from('profiles')
+        .update({ credits: currentCredits + creditsToAdd })
+        .eq('id', userId);
+
+      console.log(`Added ${creditsToAdd} credits to user ${userId}, product: ${resolvedProductId}, env: ${env}`);
+    }
+
+    // If user exists and analysis exists, link it automatically
+    if (analysisId) {
+      const { data: analysisData } = await supabase
+        .from('anonymous_analyses')
+        .select('*')
+        .eq('id', analysisId)
+        .is('converted_to_user_id', null)
+        .single();
+
+      if (analysisData) {
+        // Mark as converted
+        await supabase
+          .from('anonymous_analyses')
+          .update({ converted_to_user_id: userId })
+          .eq('id', analysisId);
+
+        // Create contract
+        const { data: contract } = await supabase
+          .from('contracts')
+          .insert({
+            user_id: userId,
+            file_name: analysisData.file_name,
+            file_path: analysisData.file_path || '',
+            status: 'completed',
+          })
+          .select()
+          .single();
+
+        if (contract && analysisData.analysis_result) {
+          const report = analysisData.analysis_result as any;
+          const clauses = report?.clauses || [];
+
+          await supabase.from('analysis_results').insert({
+            contract_id: contract.id,
+            full_report: report,
+            total_clauses: clauses.length,
+            valid_clauses: report?.summary?.valid_count ?? clauses.filter((c: any) => c.type === 'valid').length,
+            suspicious_clauses: report?.summary?.suspicious_count ?? clauses.filter((c: any) => c.type === 'suspicious').length,
+            illegal_clauses: report?.summary?.illegal_count ?? clauses.filter((c: any) => c.type === 'illegal').length,
+            summary: report?.summary?.executive_summary || '',
+          });
+        }
+
+        console.log(`Linked analysis ${analysisId} to user ${userId}`);
+      }
+    }
+  } else {
+    console.log('Transaction completed without userId:', transactionId, 'analysisId:', analysisId);
   }
 }
