@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { checkUserIsAdmin } from "@/hooks/useIsAdmin";
+import { checkUserIsLandlord } from "@/hooks/useIsLandlord";
 import { trackConversion, identifyUser } from "@/lib/analytics";
 import { emailSchema, passwordSchema, fullNameSchema } from "@/lib/validations";
 
@@ -17,6 +18,39 @@ interface AuthFormProps {
 }
 
 type UserType = "inquilino" | "propietario" | "profesional";
+
+/**
+ * Determina la ruta de destino segun el tipo de usuario y sus roles.
+ * Prioridad: returnUrl guardada > from state > ruta por tipo de usuario > /dashboard
+ */
+const getPostAuthRedirect = async (
+  userId: string,
+  userType: UserType | null,
+  fromPath: string | null,
+): Promise<string> => {
+  // 1. Si hay una URL de retorno guardada (ej: venia de un analisis pre-pago)
+  const returnUrl = localStorage.getItem("acroxia_return_url");
+  if (returnUrl) {
+    localStorage.removeItem("acroxia_return_url");
+    return returnUrl;
+  }
+
+  // 2. Si venia de una pagina protegida, volver ahi
+  if (fromPath && fromPath !== "/login" && fromPath !== "/registro") {
+    return fromPath;
+  }
+
+  // 3. Redirigir segun tipo de usuario / roles
+  const isAdmin = await checkUserIsAdmin(userId);
+  if (isAdmin) return "/admin";
+
+  const isLandlord = await checkUserIsLandlord(userId);
+  if (isLandlord || userType === "propietario") return "/propietario";
+
+  if (userType === "profesional") return "/pro";
+
+  return "/dashboard";
+};
 
 const AuthForm = ({ mode }: AuthFormProps) => {
   const [email, setEmail] = useState("");
@@ -28,7 +62,11 @@ const AuthForm = ({ mode }: AuthFormProps) => {
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  // Leer la pagina de origen si viene de un ProtectedRoute
+  const fromPath = (location.state as any)?.from?.pathname || null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +76,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
       toast({
-        title: "Email inválido",
+        title: "Email invalido",
         description: emailResult.error.errors[0].message,
         variant: "destructive",
       });
@@ -51,7 +89,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
     const passwordResult = passwordSchema.safeParse(password);
     if (!passwordResult.success) {
       toast({
-        title: "Contraseña inválida",
+        title: "Contrasena invalida",
         description: passwordResult.error.errors[0].message,
         variant: "destructive",
       });
@@ -65,7 +103,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         const nameResult = fullNameSchema.safeParse(fullName);
         if (!nameResult.success) {
           toast({
-            title: "Nombre inválido",
+            title: "Nombre invalido",
             description: nameResult.error.errors[0].message,
             variant: "destructive",
           });
@@ -76,8 +114,8 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
         if (!acceptedTerms) {
           toast({
-            title: "Términos requeridos",
-            description: "Debes aceptar los Términos y la Política de Privacidad para continuar.",
+            title: "Terminos requeridos",
+            description: "Debes aceptar los Terminos y la Politica de Privacidad para continuar.",
             variant: "destructive",
           });
           setLoading(false);
@@ -110,7 +148,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         // Save terms acceptance timestamp, user type, marketing consent and log consent
         if (data.user) {
           const now = new Date().toISOString();
-          
+
           // Update profile with acceptance timestamps and user segmentation
           await supabase
             .from("profiles")
@@ -122,6 +160,19 @@ const AuthForm = ({ mode }: AuthFormProps) => {
               marketing_consent_at: marketingConsent ? now : null,
             })
             .eq("id", data.user.id);
+
+          // Crear rol en user_roles segun tipo de usuario
+          if (userType === "propietario") {
+            await supabase.from("user_roles").insert({
+              user_id: data.user.id,
+              role: "landlord",
+            });
+          } else if (userType === "profesional") {
+            await supabase.from("user_roles").insert({
+              user_id: data.user.id,
+              role: "professional",
+            });
+          }
 
           // Log terms and privacy consent in audit log
           await supabase.from("consent_logs").insert({
@@ -155,8 +206,8 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         }
 
         // Track sign_up conversion
-        trackConversion('sign_up', {
-          method: 'email',
+        trackConversion("sign_up", {
+          method: "email",
           user_id: data.user?.id,
           user_type: userType,
         });
@@ -165,11 +216,17 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         }
 
         toast({
-          title: "¡Cuenta creada!",
+          title: "Cuenta creada!",
           description: "Tu cuenta ha sido creada exitosamente. Ya puedes acceder.",
         });
 
-        navigate("/dashboard");
+        // Redirigir segun tipo de usuario
+        if (data.user) {
+          const redirectPath = await getPostAuthRedirect(data.user.id, userType, fromPath);
+          navigate(redirectPath);
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: validatedEmail,
@@ -179,25 +236,31 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         if (error) throw error;
 
         // Track login conversion
-        trackConversion('login', {
-          method: 'email',
+        trackConversion("login", {
+          method: "email",
           user_id: data.user.id,
         });
         identifyUser(data.user.id);
 
         toast({
-          title: "¡Bienvenido!",
-          description: "Has iniciado sesión correctamente.",
+          title: "Bienvenido!",
+          description: "Has iniciado sesion correctamente.",
         });
 
-        // Check if user is admin and redirect accordingly
-        const isAdmin = await checkUserIsAdmin(data.user.id);
-        navigate(isAdmin ? "/admin" : "/dashboard");
+        // Obtener user_type del perfil para decidir ruta
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", data.user.id)
+          .single();
+
+        const redirectPath = await getPostAuthRedirect(data.user.id, profileData?.user_type || null, fromPath);
+        navigate(redirectPath);
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Ha ocurrido un error. Inténtalo de nuevo.",
+        description: error.message || "Ha ocurrido un error. Intentalo de nuevo.",
         variant: "destructive",
       });
     } finally {
@@ -216,7 +279,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Error al iniciar sesión con Google.",
+        description: error.message || "Error al iniciar sesion con Google.",
         variant: "destructive",
       });
       setLoading(false);
@@ -234,7 +297,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Error al iniciar sesión con Apple.",
+        description: error.message || "Error al iniciar sesion con Apple.",
         variant: "destructive",
       });
       setLoading(false);
@@ -265,7 +328,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Correo electrónico</Label>
+        <Label htmlFor="email">Correo electronico</Label>
         <Input
           id="email"
           type="email"
@@ -279,13 +342,13 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Contraseña</Label>
+          <Label htmlFor="password">Contrasena</Label>
           {mode === "login" && (
-            <Link 
-              to="/recuperar-contrasena" 
+            <Link
+              to="/recuperar-contrasena"
               className="text-sm text-muted-foreground hover:text-foreground hover:underline"
             >
-              ¿Olvidaste tu contraseña?
+              Olvidaste tu contrasena?
             </Link>
           )}
         </div>
@@ -342,13 +405,13 @@ const AuthForm = ({ mode }: AuthFormProps) => {
               className="mt-1"
             />
             <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-              He leído y acepto los{" "}
+              He leido y acepto los{" "}
               <Link to="/terminos" className="text-primary hover:underline" target="_blank">
-                Términos y Condiciones
+                Terminos y Condiciones
               </Link>{" "}
               y la{" "}
               <Link to="/privacidad" className="text-primary hover:underline" target="_blank">
-                Política de Privacidad
+                Politica de Privacidad
               </Link>
             </Label>
           </div>
@@ -362,19 +425,20 @@ const AuthForm = ({ mode }: AuthFormProps) => {
               className="mt-1"
             />
             <Label htmlFor="marketing" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-              Acepto recibir comunicaciones comerciales y novedades de ACROXIA por email. Puedo darme de baja en cualquier momento.
+              Acepto recibir comunicaciones comerciales y novedades de ACROXIA por email. Puedo darme de baja en
+              cualquier momento.
             </Label>
           </div>
         </>
       )}
 
-      <Button 
-        type="submit" 
-        className="w-full" 
+      <Button
+        type="submit"
+        className="w-full"
         disabled={loading || (mode === "register" && (!acceptedTerms || !userType))}
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+        {mode === "login" ? "Iniciar sesion" : "Crear cuenta"}
       </Button>
 
       <div className="relative">
@@ -382,17 +446,11 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">O continúa con</span>
+          <span className="bg-card px-2 text-muted-foreground">O continua con</span>
         </div>
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={handleGoogleSignIn}
-        disabled={loading}
-      >
+      <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -414,13 +472,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         Google
       </Button>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={handleAppleSignIn}
-        disabled={loading}
-      >
+      <Button type="button" variant="outline" className="w-full" onClick={handleAppleSignIn} disabled={loading}>
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
           <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
         </svg>
