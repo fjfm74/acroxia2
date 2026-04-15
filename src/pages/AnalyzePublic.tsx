@@ -41,7 +41,11 @@ const AnalyzePublic = () => {
   const [analysisStep, setAnalysisStep] = useState("");
   const [acceptedThirdPartyData, setAcceptedThirdPartyData] = useState(false);
   const [sessionId] = useState(getSessionId);
-  const [perspective, setPerspective] = useState<"tenant" | "landlord">(initialPerspective);
+  const [perspective, setPerspective] = useState<"tenant" | "landlord">(() => {
+    const saved = localStorage.getItem("acroxia_user_type");
+    if (saved === "propietario") return "landlord";
+    return initialPerspective;
+  });
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Estimated analysis duration in seconds (based on logs: 30-90s, avg ~60s)
