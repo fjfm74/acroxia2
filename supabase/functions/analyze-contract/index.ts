@@ -46,8 +46,8 @@ const CA_LANGUAGE_PATTERNS: RegExp[] = [
   /\bcl[àa]usula\b/gi,
   /\bpr[òo]rroga\b/gi,
   /\bdesistiment\b/gi,
-  /\bcertificat d['’]efici[èe]ncia energ[èe]tica\b/gi,
-  /\bc[èe]dula d['’]habitabilitat\b/gi,
+  /\bcertificat d['']efici[èe]ncia energ[èe]tica\b/gi,
+  /\bc[èe]dula d['']habitabilitat\b/gi,
   /\brenda\b/gi,
   /\bdespeses\b/gi,
 ];
@@ -437,8 +437,7 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
 }
 
 async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
-  const uint8 = new Uint8Array(buffer);
-  const result = await mammoth.extractRawText({ buffer: uint8 });
+  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
   return result.value;
 }
 
@@ -543,11 +542,11 @@ function splitContractCoreAndAnnexes(text: string): { coreText: string; annexTex
     /\banexo(?:s)?\b/i,
     /\bannex(?:os)?\b/i,
     /c[ée]dula\s+de\s+habitabilidad/i,
-    /c[èe]dula\s+d['’]habitabilitat/i,
+    /c[èe]dula\s+d['']habitabilitat/i,
     /licencia\s+de\s+(?:primera|segunda)\s+ocupaci[oó]n/i,
     /llic[eè]ncia\s+de\s+(?:primera|segona)\s+ocupaci[oó]/i,
     /certificado\s+de\s+eficiencia\s+energ[ée]tica/i,
-    /certificat\s+d['’]efici[èe]ncia\s+energ[èe]tica/i,
+    /certificat\s+d['']efici[èe]ncia\s+energ[èe]tica/i,
     /etiqueta\s+energ[ée]tica/i,
   ];
 
@@ -577,13 +576,13 @@ function splitContractCoreAndAnnexes(text: string): { coreText: string; annexTex
 function detectRequiredDocumentSignals(text: string): RequiredDocSignals {
   const lower = text.toLowerCase();
   const hasCedulaHabitabilidad =
-    /c[ée]dula\s+de\s+habitabilidad/.test(lower) || /c[èe]dula\s+d['’]habitabilitat/.test(lower);
+    /c[ée]dula\s+de\s+habitabilidad/.test(lower) || /c[èe]dula\s+d['']habitabilitat/.test(lower);
   const hasOccupancyLicense =
     /licencia\s+de\s+(?:primera|segunda)\s+ocupaci[oó]n/.test(lower) ||
     /llic[eè]ncia\s+de\s+(?:primera|segona)\s+ocupaci[oó]/.test(lower);
   const hasEnergyCertificate =
     /certificado\s+de\s+eficiencia\s+energ[ée]tica/.test(lower) ||
-    /certificat\s+d['’]efici[èe]ncia\s+energ[èe]tica/.test(lower) ||
+    /certificat\s+d['']efici[èe]ncia\s+energ[èe]tica/.test(lower) ||
     /etiqueta\s+energ[ée]tica/.test(lower) ||
     /etiqueta\s+energ[èe]tica/.test(lower) ||
     /\bcee\b/.test(lower);
@@ -623,18 +622,18 @@ INSTRUCCIONES OBLIGATORIAS:
 2. Si el municipio ESTÁ en zona tensionada:
    - OBLIGATORIO: Añade una cláusula con category: "RENTA Y ACTUALIZACIONES"
    - Clasifícala como type: "suspicious" (NO "illegal", porque no podemos calcular el precio máximo automáticamente)
-   - En "explanation": Indica que el inmueble se encuentra en una zona de mercado residencial tensionado 
-     y que la renta puede estar sujeta a límites legales que dependen de factores específicos 
+   - En "explanation": Indica que el inmueble se encuentra en una zona de mercado residencial tensionado
+     y que la renta puede estar sujeta a límites legales que dependen de factores específicos
      (características del inmueble, año de construcción, superficie útil, etc.)
    - En "recommendation": Incluir SIEMPRE este texto exacto:
      "Verifique la renta máxima aplicable a este inmueble en el Sistema Estatal de Referencia de Precios: https://serpavi.mivau.gob.es/"
    - En "negotiation_tip": Explicar que pueden solicitar al propietario justificación del precio conforme al índice de referencia
-3. IMPORTANTE: NO podemos determinar automáticamente si la renta es abusiva porque el cálculo 
+3. IMPORTANTE: NO podemos determinar automáticamente si la renta es abusiva porque el cálculo
    requiere parámetros que no están en el contrato (año construcción, superficie útil, calidades, etc.)
 `
     : `
 No se encontró información específica de zonas tensionadas en la base de datos.
-Si la renta parece muy elevada para la zona, indica en "recommendation" que puede verificarse 
+Si la renta parece muy elevada para la zona, indica en "recommendation" que puede verificarse
 la aplicabilidad de límites de renta en: https://serpavi.mivau.gob.es/
 `
 }
@@ -842,7 +841,7 @@ REGLAS DE ORO (OBLIGATORIAS)
 10. VERIFICACIÓN OBLIGATORIA DE REQUISITOS DOCUMENTALES: Comprueba SIEMPRE si el contrato menciona la cédula de habitabilidad (o licencia de primera/segunda ocupación según CCAA) y el certificado de eficiencia energética. Si NO aparecen mencionados en el contrato, DEBES generar una cláusula por cada documento ausente con category "ESTADO DE LA VIVIENDA E INVENTARIO", type "suspicious", risk_level 7, explicando que son documentos legalmente obligatorios que el arrendador debe entregar antes de la firma. Referencias: Art. 25.2 LAU y normativa autonómica (cédula de habitabilidad), RD 235/2013 (certificado energético). Esta verificación es OBLIGATORIA en TODOS los análisis.`;
 }
 
-// Construir prompt para guía de negociación amigable (documento para el usuario)
+// Construir prompt para guia de negociacion (documento para el usuario)
 function buildNegotiationGuidePrompt(problematicClauses: any[], summary: any): string {
   const clausesList = problematicClauses
     .map(
@@ -858,21 +857,24 @@ ${i + 1}. CLAUSULA: "${c.original_text || c.text}"
 
   return `IDENTIDAD Y TONO
 ================
-Eres un amigo cercano que entiende de alquileres y quiere ayudar. Este documento es PARA EL USUARIO (inquilino), no para el propietario. Es una guia personal, como si le explicaras las cosas tomando un cafe.
+Eres un asesor profesional y cercano que explica las cosas con claridad. Este documento es PARA EL USUARIO (inquilino), no para el propietario. Es una guia practica y accesible.
 
 TONO OBLIGATORIO:
-- Muy cercano y coloquial, como un amigo de confianza
-- Cero formalidades legales o amenazantes
-- Explicaciones simples, como si hablaras con alguien sin conocimientos legales
+- Profesional pero accesible, como un buen asesor que se preocupa por ti
+- Trato de usted NO: usa "tu" en todo momento, pero con respeto
+- Explicaciones claras y directas, sin jerga legal innecesaria
 - Enfoque practico: que significa esto para ti y que puedes hacer
-- Usa "tu" en todo momento
+- PROHIBIDO usar jerga o expresiones excesivamente coloquiales (por ejemplo: colega, tio, mola, chaval o similares)
+- PROHIBIDO: tono condescendiente o paternalista
 
 REGLAS DE FORMATO ESTRICTAS:
 - NO uses emojis bajo ninguna circunstancia (ni en titulos ni en texto)
 - NO uses caracteres especiales como numeros en circulos (1, 2, 3)
 - Usa solo numeros normales: 1., 2., 3.
-- Para enfasis usa comillas simples o MAYUSCULAS, no asteriscos dobles
+- NO uses asteriscos dobles (**texto**) para negrita. Para enfasis usa comillas simples o MAYUSCULAS
+- NO uses asteriscos simples (*texto*) para cursiva
 - Escribe tildes normales (a, e, i, o, u) - evita caracteres unicode raros
+- Los titulos con # deben ser texto plano sin emojis, signos de exclamacion ni interrogacion
 
 CLAUSULAS PROBLEMATICAS DETECTADAS
 ==================================
@@ -886,11 +888,11 @@ CONTEXTO DEL ANALISIS
 ESTRUCTURA DEL DOCUMENTO (OBLIGATORIO)
 ======================================
 
-# Hola! Aqui tienes tu resumen
+# Resumen de tu contrato
 
 ## Lo que hemos encontrado
 
-[1-2 parrafos muy breves y cercanos explicando la situacion general. Ejemplo: "Hemos revisado tu contrato y hay ${problematicClauses.length} cosillas que estaria bien que comentaras con el propietario. Nada del otro mundo, pero mejor tenerlo claro antes de firmar, no crees?"]
+[1-2 parrafos breves y claros explicando la situacion general. Ejemplo: "Hemos revisado tu contrato y hemos detectado ${problematicClauses.length} puntos que conviene revisar antes de firmar. A continuacion te explicamos cada uno y que opciones tienes."]
 
 ---
 
@@ -904,10 +906,10 @@ Que pone en el contrato:
 "[Extracto breve de la clausula, simplificado si es muy largo]"
 
 Por que es importante:
-[Explicacion en 1-2 frases muy simples. Ejemplo: "Esto significa que si te vas antes de tiempo, tendrias que pagar X meses. La ley dice que solo puede ser 1 mes como maximo."]
+[Explicacion en 1-2 frases claras. Ejemplo: "Esto significa que si te vas antes de tiempo, tendrias que pagar X meses. Sin embargo, la ley establece que solo puede ser 1 mes como maximo."]
 
 Que puedes hacer:
-[Sugerencia practica y amable. Ejemplo: "Podrias comentarle al propietario que ajuste esta parte. Algo como: 'Oye, he visto esto y creo que podriamos ponerlo de otra forma...'"]
+[Sugerencia practica y respetuosa. Ejemplo: "Puedes comentarle al propietario que este punto no se ajusta a la normativa vigente y proponer una redaccion alternativa. Por ejemplo: 'He revisado el contrato y creo que podriamos ajustar esta clausula para que sea conforme a la ley.'"]
 
 ---
 
@@ -919,26 +921,25 @@ Que puedes hacer:
 
 [3-4 consejos muy breves y practicos, en formato lista:]
 
-- Elige un buen momento: Mejor cuando el propietario no este agobiado
-- Lleva el contrato: Asi podeis revisar los puntos juntos
-- Manten el buen rollo: La idea es llegar a un acuerdo, no discutir
-- Apunta los cambios: Si acordais modificar algo, que quede por escrito
+- Elige un buen momento: Busca un momento tranquilo para hablar con el propietario
+- Lleva el contrato: Asi podeis revisar los puntos juntos sobre el documento
+- Manten un tono constructivo: El objetivo es llegar a un acuerdo beneficioso para ambas partes
+- Deja constancia por escrito: Si acordais modificar algo, aseguraos de que quede reflejado en el contrato
 
 ---
 
-## Si no os poneis de acuerdo
+## Si no llegais a un acuerdo
 
-[2-3 frases tranquilizadoras sobre que hacer si la negociacion no funciona. Tono calmado, sin alarmar:]
+[2-3 frases tranquilizadoras sobre que hacer si la negociacion no funciona. Tono calmado y profesional:]
 
-No pasa nada si no llegais a un acuerdo en todo. Puedes valorar si el piso te compensa igualmente, o consultar con una asociacion de inquilinos de tu zona (suelen ayudar gratis).
-
----
-
-Este resumen es orientativo. Si tienes dudas importantes, siempre puedes consultar con un profesional.
+Si no conseguis acordar todos los puntos, puedes valorar si el piso te compensa igualmente o buscar otras opciones. Tambien puedes consultar con una asociacion de inquilinos de tu zona, que suelen ofrecer orientacion gratuita.
 
 ---
-Generado con carino por ACROXIA
-Esta guia tiene caracter informativo. Para asesoramiento legal vinculante, consulta con un abogado colegiado.`;
+
+Este resumen tiene caracter orientativo e informativo. Para asesoramiento legal vinculante, consulta con un abogado colegiado.
+
+---
+Generado por ACROXIA - Analisis de contratos con IA`;
 }
 
 serve(async (req) => {
@@ -947,14 +948,7 @@ serve(async (req) => {
   }
 
   try {
-    // --- Authentication: require valid JWT ---
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "No autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { contractId, filePath, fileType: mimeType } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -963,43 +957,6 @@ serve(async (req) => {
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Token inválido" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { contractId, filePath, fileType: mimeType } = await req.json();
-
-    // --- Ownership check: verify the contract belongs to this user ---
-    // Check in contracts table first, then landlord_contracts
-    const { data: ownedContract } = await supabase
-      .from("contracts")
-      .select("id")
-      .eq("id", contractId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    const { data: ownedLandlordContract } = await supabase
-      .from("landlord_contracts")
-      .select("id")
-      .eq("id", contractId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    // Allow admins to bypass ownership check
-    const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
-
-    if (!ownedContract && !ownedLandlordContract && !isAdmin) {
-      return new Response(JSON.stringify({ error: "No tienes acceso a este contrato" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     // Download file
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
@@ -1402,7 +1359,7 @@ ${sanitizedContractText.substring(0, 4000)}`,
             },
             {
               role: "user",
-              content: `Genera una guía de negociación amigable y práctica para el inquilino. Incluye todos los puntos problemáticos detectados con scripts de conversación naturales y consejos prácticos. El tono debe ser cercano, como si fueras un amigo con conocimientos legales.`,
+              content: `Genera una guia de negociacion clara y practica para el inquilino. Incluye todos los puntos problematicos detectados con sugerencias de conversacion y consejos practicos. El tono debe ser profesional pero accesible, sin jerga legal innecesaria. No uses expresiones coloquiales como "colega", "tio" o similares. No uses emojis ni asteriscos para negrita. Los titulos con # deben ser texto plano.`,
             },
           ],
         }),
@@ -1428,19 +1385,34 @@ ${sanitizedContractText.substring(0, 4000)}`,
     // Update contract status
     await supabase.from("contracts").update({ status: "completed" }).eq("id", contractId);
 
-    // Deduct credit - skip for admin users (user and isAdmin already validated above)
-    if (isAdmin) {
-      console.log(`Admin user ${user.id} - no credit deducted`);
-    } else {
-      const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
-      if (profile && profile.credits > 0) {
-        await supabase
-          .from("profiles")
-          .update({ credits: profile.credits - 1 })
-          .eq("id", user.id);
-        console.log(`Credit deducted for user ${user.id}`);
-      } else {
-        console.log(`User ${user.id} has no credits to deduct`);
+    // Deduct credit - skip for admin users
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const {
+        data: { user },
+      } = await supabase.auth.getUser(token);
+      if (user) {
+        // Check if user is admin
+        const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
+
+        if (isAdmin) {
+          console.log(`Admin user ${user.id} - no credit deducted`);
+        } else {
+          // Decrement credits directly using service_role (bypasses RLS)
+          // First get current credits, then decrement
+          const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
+
+          if (profile && profile.credits > 0) {
+            await supabase
+              .from("profiles")
+              .update({ credits: profile.credits - 1 })
+              .eq("id", user.id);
+            console.log(`Credit deducted for user ${user.id}`);
+          } else {
+            console.log(`User ${user.id} has no credits to deduct`);
+          }
+        }
       }
     }
 
