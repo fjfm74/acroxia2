@@ -16,11 +16,12 @@ type Audience = "inquilino" | "propietario";
 const Blog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const audienceFromUrl = searchParams.get("audiencia") as Audience | null;
-  
+  const categoryFromUrl = searchParams.get("categoria");
+
   // null = no seleccionado aún, mostrará posts de ambas audiencias
   const [selectedAudience, setSelectedAudience] = useState<Audience | null>(
-    audienceFromUrl && ["inquilino", "propietario"].includes(audienceFromUrl) 
-      ? audienceFromUrl 
+    audienceFromUrl && ["inquilino", "propietario"].includes(audienceFromUrl)
+      ? audienceFromUrl
       : null
   );
 
@@ -31,6 +32,24 @@ const Blog = () => {
     }
   }, [audienceFromUrl]);
 
+  // Query para posts filtrados por CATEGORÍA (prioritaria sobre audiencia)
+  const { data: categoryPosts = [], isLoading: isLoadingCategory } = useQuery({
+    queryKey: ['blog-posts-category', categoryFromUrl],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('status', 'published')
+        .eq('category', categoryFromUrl!)
+        .or('noindex.is.null,noindex.eq.false')
+        .order('published_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!categoryFromUrl,
+  });
+
   // Query para posts filtrados por audiencia
   const { data: filteredPosts = [], isLoading: isLoadingFiltered } = useQuery({
     queryKey: ['blog-posts-filtered', selectedAudience],
@@ -40,12 +59,13 @@ const Blog = () => {
         .select('*')
         .eq('status', 'published')
         .eq('audience', selectedAudience!)
+        .or('noindex.is.null,noindex.eq.false')
         .order('published_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!selectedAudience,
+    enabled: !!selectedAudience && !categoryFromUrl,
   });
 
   // Query para TODOS los posts recientes (para crawlers y vista por defecto)
@@ -56,17 +76,26 @@ const Blog = () => {
         .from('blog_posts')
         .select('*')
         .eq('status', 'published')
+        .or('noindex.is.null,noindex.eq.false')
         .order('published_at', { ascending: false })
         .limit(12);
 
       if (error) throw error;
       return data;
     },
-    enabled: !selectedAudience,
+    enabled: !selectedAudience && !categoryFromUrl,
   });
 
-  const posts = selectedAudience ? filteredPosts : recentPosts;
-  const isLoading = selectedAudience ? isLoadingFiltered : isLoadingRecent;
+  const posts = categoryFromUrl
+    ? categoryPosts
+    : selectedAudience
+      ? filteredPosts
+      : recentPosts;
+  const isLoading = categoryFromUrl
+    ? isLoadingCategory
+    : selectedAudience
+      ? isLoadingFiltered
+      : isLoadingRecent;
   const [featuredPost, ...otherPosts] = posts;
 
   // Separar posts por audiencia para vista sin filtro
@@ -102,21 +131,43 @@ const Blog = () => {
   };
 
   const currentSeo = selectedAudience ? seoData[selectedAudience] : seoData.default;
-  // Canonical siempre a /blog sin query strings para evitar duplicados
-  const canonicalUrl = "https://acroxia.com/blog";
+  // Canonical: si hay categoría usa la URL con categoría; si no, /blog limpio
+  const canonicalUrl = categoryFromUrl
+    ? `https://acroxia.com/blog?categoria=${encodeURIComponent(categoryFromUrl)}`
+    : "https://acroxia.com/blog";
+
+  // Título dinámico para vista por categoría
+  const categoryTitle = categoryFromUrl
+    ? `Artículos sobre ${categoryFromUrl} | Blog ACROXIA`
+    : null;
+  const categoryDescription = categoryFromUrl
+    ? `Guías y artículos sobre ${categoryFromUrl} en el contexto del alquiler en España. Información legal actualizada 2026.`
+    : null;
 
   return (
     <>
       <SEOHead
-        title={selectedAudience ? currentSeo.title : "Blog sobre Alquiler en España | Guías Legales 2026 | ACROXIA"}
-        description={selectedAudience ? currentSeo.description : "Artículos y guías prácticas sobre derechos del inquilino, cláusulas abusivas, fianzas, IRAV 2026 y normativa de alquiler en España. Actualizado semanalmente."}
+        title={
+          categoryTitle
+            ? categoryTitle
+            : selectedAudience
+              ? currentSeo.title
+              : "Blog sobre Alquiler en España | Guías Legales 2026 | ACROXIA"
+        }
+        description={
+          categoryDescription
+            ? categoryDescription
+            : selectedAudience
+              ? currentSeo.description
+              : "Artículos y guías prácticas sobre derechos del inquilino, cláusulas abusivas, fianzas, IRAV 2026 y normativa de alquiler en España. Actualizado semanalmente."
+        }
         canonical={canonicalUrl}
         keywords={currentSeo.keywords}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          "name": currentSeo.title,
-          "description": currentSeo.description,
+          "name": categoryTitle || currentSeo.title,
+          "description": categoryDescription || currentSeo.description,
           "url": canonicalUrl,
           "mainEntity": {
             "@type": "Blog",
@@ -135,25 +186,50 @@ const Blog = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main>
-          <BlogHero 
-            selectedAudience={selectedAudience}
-            onSelectAudience={handleSelectAudience}
-            onResetAudience={handleResetAudience}
-          />
-          
-          {/* Breadcrumbs solo si hay audiencia seleccionada */}
-          {selectedAudience && (
-            <Breadcrumbs 
+          {!categoryFromUrl && (
+            <BlogHero
+              selectedAudience={selectedAudience}
+              onSelectAudience={handleSelectAudience}
+              onResetAudience={handleResetAudience}
+            />
+          )}
+
+          {/* Hero específico para vista por categoría */}
+          {categoryFromUrl && (
+            <section className="bg-muted py-16">
+              <div className="container mx-auto px-6 text-center">
+                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  Categoría
+                </span>
+                <h1 className="font-serif text-4xl md:text-5xl font-semibold text-foreground mt-3">
+                  Artículos sobre {categoryFromUrl}
+                </h1>
+                <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+                  {categoryDescription}
+                </p>
+              </div>
+            </section>
+          )}
+
+          {/* Breadcrumbs */}
+          {(selectedAudience || categoryFromUrl) && (
+            <Breadcrumbs
               items={[
                 { label: "Blog", href: "/blog" },
-                { label: selectedAudience === "inquilino" ? "Inquilinos" : "Propietarios" }
-              ]} 
+                {
+                  label: categoryFromUrl
+                    ? categoryFromUrl
+                    : selectedAudience === "inquilino"
+                      ? "Inquilinos"
+                      : "Propietarios"
+                }
+              ]}
               className="pt-6 pb-4"
             />
           )}
-          
-          {/* Vista con audiencia seleccionada */}
-          {selectedAudience && (
+
+          {/* Vista con filtro (audiencia o categoría) */}
+          {(selectedAudience || categoryFromUrl) && (
             <section className="py-8 bg-background">
               <div className="container mx-auto px-6">
                 <div className="grid lg:grid-cols-3 gap-12">
@@ -211,9 +287,11 @@ const Blog = () => {
                     ) : (
                       <div className="text-center py-12">
                         <p className="text-muted-foreground">
-                          {selectedAudience === "inquilino" 
-                            ? "No hay artículos para inquilinos todavía."
-                            : "No hay artículos para propietarios todavía."
+                          {categoryFromUrl
+                            ? `No hay artículos en la categoría "${categoryFromUrl}" todavía.`
+                            : selectedAudience === "inquilino"
+                              ? "No hay artículos para inquilinos todavía."
+                              : "No hay artículos para propietarios todavía."
                           }
                         </p>
                       </div>
@@ -232,7 +310,7 @@ const Blog = () => {
           )}
 
           {/* Vista por defecto: Posts de AMBAS audiencias para crawlers */}
-          {!selectedAudience && (
+          {!selectedAudience && !categoryFromUrl && (
             <section className="py-12 bg-background">
               <div className="container mx-auto px-6">
                 {isLoading ? (
