@@ -46,6 +46,7 @@ const EmailVerified = () => {
       <SEOHead
         title="Cuenta verificada | ACROXIA"
         description="Tu email ha sido verificado correctamente. Accede a todas las funcionalidades de ACROXIA."
+        canonical="https://acroxia.com/verificado"
         noindex
       />
 
