@@ -23,8 +23,8 @@ Disallow: /admin/
 Disallow: /pro/
 Disallow: /propietario/
 
-# Sitemap canónico
-Sitemap: https://acroxia.com/sitemap.xml
+# Sitemap canónico (Edge Function dinámica)
+Sitemap: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/sitemap
 
 # Archivos para LLMs
 # Versión estática: /llms.txt y /llms-full.txt
