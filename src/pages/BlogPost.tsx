@@ -254,6 +254,7 @@ const BlogPost = () => {
         ogImage={post.image || "https://acroxia.com/og-image.jpg"}
         ogType="article"
         noindex={post.noindex === true}
+        robots={post.noindex === true ? "noindex, follow" : "index, follow"}
         keywords={post.keywords?.join(", ") || ""}
         jsonLd={jsonLdSchemas}
         articleMeta={{
