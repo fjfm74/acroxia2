@@ -72,6 +72,7 @@ export type Database = {
           paddle_transaction_id: string | null
           paid: boolean
           session_id: string
+          user_type: string | null
         }
         Insert: {
           analysis_result?: Json | null
@@ -86,6 +87,7 @@ export type Database = {
           paddle_transaction_id?: string | null
           paid?: boolean
           session_id: string
+          user_type?: string | null
         }
         Update: {
           analysis_result?: Json | null
@@ -100,6 +102,7 @@ export type Database = {
           paddle_transaction_id?: string | null
           paid?: boolean
           session_id?: string
+          user_type?: string | null
         }
         Relationships: []
       }
@@ -641,6 +644,7 @@ export type Database = {
           file_name: string
           file_path: string
           file_size: number | null
+          full_access: boolean | null
           id: string
           internal_notes: string | null
           organization_id: string | null
@@ -655,6 +659,7 @@ export type Database = {
           file_name: string
           file_path: string
           file_size?: number | null
+          full_access?: boolean | null
           id?: string
           internal_notes?: string | null
           organization_id?: string | null
@@ -669,6 +674,7 @@ export type Database = {
           file_name?: string
           file_path?: string
           file_size?: number | null
+          full_access?: boolean | null
           id?: string
           internal_notes?: string | null
           organization_id?: string | null
@@ -971,6 +977,13 @@ export type Database = {
           utm_source?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "admin_paid_unlinked_analyses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_analysis_id_fkey"
             columns: ["analysis_id"]
@@ -1373,6 +1386,7 @@ export type Database = {
           currency: string | null
           email: string
           id: string
+          paddle_transaction_id: string | null
           status: string | null
           stripe_session_id: string | null
         }
@@ -1384,6 +1398,7 @@ export type Database = {
           currency?: string | null
           email: string
           id?: string
+          paddle_transaction_id?: string | null
           status?: string | null
           stripe_session_id?: string | null
         }
@@ -1395,10 +1410,18 @@ export type Database = {
           currency?: string | null
           email?: string
           id?: string
+          paddle_transaction_id?: string | null
           status?: string | null
           stripe_session_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_intents_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "admin_paid_unlinked_analyses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_intents_analysis_id_fkey"
             columns: ["analysis_id"]
@@ -1702,7 +1725,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_paid_unlinked_analyses: {
+        Row: {
+          amount_cents: number | null
+          converted_to_user_id: string | null
+          created_at: string | null
+          email: string | null
+          file_name: string | null
+          id: string | null
+          paddle_transaction_id: string | null
+          paid: boolean | null
+          payment_status: string | null
+          session_id: string | null
+          user_type: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
@@ -1723,6 +1761,7 @@ export type Database = {
           paddle_transaction_id: string | null
           paid: boolean
           session_id: string
+          user_type: string | null
         }[]
         SetofOptions: {
           from: "*"
