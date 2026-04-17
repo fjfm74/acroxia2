@@ -58,7 +58,12 @@ const AuthForm = ({ mode }: AuthFormProps) => {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [userType, setUserType] = useState<UserType | null>(null);
+  const savedUserType = localStorage.getItem("acroxia_user_type") as UserType | null;
+  const [userType, setUserType] = useState<UserType | null>(
+    savedUserType && ["inquilino", "propietario", "profesional"].includes(savedUserType)
+      ? savedUserType
+      : null
+  );
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
