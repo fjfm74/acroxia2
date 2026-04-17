@@ -383,6 +383,7 @@ export type Database = {
           image: string | null
           keywords: string[] | null
           meta_description: string | null
+          noindex: boolean | null
           published_at: string | null
           read_time: string
           slug: string
@@ -406,6 +407,7 @@ export type Database = {
           image?: string | null
           keywords?: string[] | null
           meta_description?: string | null
+          noindex?: boolean | null
           published_at?: string | null
           read_time?: string
           slug: string
@@ -429,6 +431,7 @@ export type Database = {
           image?: string | null
           keywords?: string[] | null
           meta_description?: string | null
+          noindex?: boolean | null
           published_at?: string | null
           read_time?: string
           slug?: string
