@@ -125,19 +125,28 @@ Deno.serve(async (req) => {
 ${urlsXml}
 </urlset>`;
 
-    // Guardar en sitemap_cache
-    const { error: updateError } = await supabase
+    // Guardar en sitemap_cache (UPSERT - garantiza que siempre haya 1 fila)
+    // Borrar todas las filas existentes y luego insertar la nueva
+    const { error: deleteError } = await supabase
       .from("sitemap_cache")
-      .update({
+      .delete()
+      .gte("generated_at", "1900-01-01");
+
+    if (deleteError) {
+      console.error("Error clearing sitemap cache:", deleteError);
+    }
+
+    const { error: insertError } = await supabase
+      .from("sitemap_cache")
+      .insert({
         content: sitemap,
         generated_at: new Date().toISOString(),
-      })
-      .neq("id", "00000000-0000-0000-0000-000000000000");
+      });
 
-    if (updateError) {
-      console.error("Error updating sitemap cache:", updateError);
+    if (insertError) {
+      console.error("Error inserting sitemap cache:", insertError);
       return new Response(
-        JSON.stringify({ error: "Failed to update sitemap cache" }),
+        JSON.stringify({ error: "Failed to insert sitemap cache", details: insertError.message }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
