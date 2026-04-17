@@ -8,38 +8,41 @@ const corsHeaders = {
 
 const SITE_URL = "https://acroxia.com";
 
-// Rutas estáticas con prioridades y fechas de última modificación
+const today = () => new Date().toISOString().split("T")[0];
+
+// Rutas estáticas con prioridades (lastmod dinámico = hoy)
 const staticRoutes = [
-  { loc: "/", priority: "1.0", changefreq: "weekly", lastmod: "2026-02-01" },
-  { loc: "/precios", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-15" },
-  { loc: "/faq", priority: "0.7", changefreq: "monthly", lastmod: "2026-01-20" },
-  { loc: "/blog", priority: "0.9", changefreq: "daily", lastmod: null }, // dynamic
-  { loc: "/contacto", priority: "0.7", changefreq: "monthly", lastmod: "2026-01-08" },
-  { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/propietarios", priority: "0.9", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/impago-alquiler-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/zonas-tensionadas-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/deposito-fianza-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/fin-contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly", lastmod: "2026-02-01" },
-  { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-15" },
-  { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly", lastmod: "2026-01-15" },
-  { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly", lastmod: "2026-01-30" },
-  { loc: "/login", priority: "0.3", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/registro", priority: "0.3", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/privacidad", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/terminos", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/cookies", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/accesibilidad", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/desistimiento", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
-  { loc: "/transparencia-ia", priority: "0.2", changefreq: "yearly", lastmod: "2026-01-08" },
+  { loc: "/", priority: "1.0", changefreq: "weekly" },
+  { loc: "/precios", priority: "0.8", changefreq: "monthly" },
+  { loc: "/faq", priority: "0.7", changefreq: "monthly" },
+  { loc: "/blog", priority: "0.9", changefreq: "daily" },
+  { loc: "/contacto", priority: "0.7", changefreq: "monthly" },
+  { loc: "/clausulas-abusivas-alquiler", priority: "0.9", changefreq: "monthly" },
+  { loc: "/devolucion-fianza-alquiler", priority: "0.9", changefreq: "monthly" },
+  { loc: "/subida-alquiler-2026", priority: "0.9", changefreq: "monthly" },
+  { loc: "/propietarios", priority: "0.9", changefreq: "monthly" },
+  { loc: "/contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
+  { loc: "/impago-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
+  { loc: "/zonas-tensionadas-propietarios", priority: "0.8", changefreq: "monthly" },
+  { loc: "/deposito-fianza-propietarios", priority: "0.8", changefreq: "monthly" },
+  { loc: "/fin-contrato-alquiler-propietarios", priority: "0.8", changefreq: "monthly" },
+  { loc: "/profesionales/inmobiliarias", priority: "0.8", changefreq: "monthly" },
+  { loc: "/profesionales/gestorias", priority: "0.8", changefreq: "monthly" },
+  { loc: "/analizar-gratis", priority: "0.9", changefreq: "weekly" },
+  { loc: "/glosario", priority: "0.8", changefreq: "monthly" },
+  { loc: "/calculadora-irav", priority: "0.8", changefreq: "monthly" },
+  { loc: "/login", priority: "0.3", changefreq: "yearly" },
+  { loc: "/registro", priority: "0.3", changefreq: "yearly" },
+  { loc: "/aviso-legal", priority: "0.2", changefreq: "yearly" },
+  { loc: "/privacidad", priority: "0.2", changefreq: "yearly" },
+  { loc: "/terminos", priority: "0.2", changefreq: "yearly" },
+  { loc: "/cookies", priority: "0.2", changefreq: "yearly" },
+  { loc: "/accesibilidad", priority: "0.2", changefreq: "yearly" },
+  { loc: "/desistimiento", priority: "0.2", changefreq: "yearly" },
+  { loc: "/transparencia-ia", priority: "0.2", changefreq: "yearly" },
 ];
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -49,7 +52,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Intentar leer del caché primero
+    // Intentar caché primero
     const { data: cache, error: cacheError } = await supabase
       .from("sitemap_cache")
       .select("content, generated_at")
@@ -66,42 +69,42 @@ Deno.serve(async (req) => {
 
     console.log("Cache miss or empty, generating sitemap dynamically...");
 
-    // Fallback: generar dinámicamente si no hay caché
-    // Obtener posts del blog publicados
+    // Posts publicados e indexables
     const { data: posts, error } = await supabase
       .from("blog_posts")
-      .select("slug, updated_at, published_at")
+      .select("slug, category, updated_at, published_at, noindex")
       .eq("status", "published")
+      .or("noindex.is.null,noindex.eq.false")
       .order("published_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching blog posts:", error);
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const todayStr = today();
 
-    // Generar URLs estáticas con fechas de modificación reales
+    // URLs estáticas
     let urlsXml = staticRoutes
       .map(
         (route) => `
   <url>
     <loc>${SITE_URL}${route.loc}</loc>
-    <lastmod>${route.lastmod || today}</lastmod>
+    <lastmod>${todayStr}</lastmod>
     <changefreq>${route.changefreq}</changefreq>
     <priority>${route.priority}</priority>
   </url>`
       )
       .join("");
 
-    // Añadir URLs de blog posts
+    // Blog posts
     if (posts && posts.length > 0) {
       const blogUrlsXml = posts
         .map((post) => {
           const lastmod = post.updated_at
             ? new Date(post.updated_at).toISOString().split("T")[0]
             : post.published_at
-            ? new Date(post.published_at).toISOString().split("T")[0]
-            : today;
+              ? new Date(post.published_at).toISOString().split("T")[0]
+              : todayStr;
 
           return `
   <url>
@@ -114,6 +117,25 @@ Deno.serve(async (req) => {
         .join("");
 
       urlsXml += blogUrlsXml;
+
+      // Páginas de categoría (1 URL por categoría con ≥1 post indexable)
+      const categories = Array.from(
+        new Set(posts.map((p) => p.category).filter(Boolean))
+      );
+      const categoryUrlsXml = categories
+        .map((category) => {
+          const encoded = encodeURIComponent(category as string);
+          return `
+  <url>
+    <loc>${SITE_URL}/blog?categoria=${encoded}</loc>
+    <lastmod>${todayStr}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>`;
+        })
+        .join("");
+
+      urlsXml += categoryUrlsXml;
     }
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

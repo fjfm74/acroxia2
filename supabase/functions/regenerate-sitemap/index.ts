@@ -40,7 +40,6 @@ const staticRoutes = [
 ];
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -52,11 +51,12 @@ Deno.serve(async (req) => {
 
     console.log("Regenerating sitemap...");
 
-    // Obtener posts del blog publicados
+    // Posts publicados e indexables
     const { data: posts, error: postsError } = await supabase
       .from("blog_posts")
-      .select("slug, updated_at, published_at")
+      .select("slug, category, updated_at, published_at, noindex")
       .eq("status", "published")
+      .or("noindex.is.null,noindex.eq.false")
       .order("published_at", { ascending: false });
 
     if (postsError) {
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Generar URLs estáticas
+    // URLs estáticas
     let urlsXml = staticRoutes
       .map(
         (route) => `
@@ -78,15 +78,15 @@ Deno.serve(async (req) => {
       )
       .join("");
 
-    // Añadir URLs de blog posts
+    // Blog posts
     if (posts && posts.length > 0) {
       const blogUrlsXml = posts
         .map((post) => {
           const lastmod = post.updated_at
             ? new Date(post.updated_at).toISOString().split("T")[0]
             : post.published_at
-            ? new Date(post.published_at).toISOString().split("T")[0]
-            : today;
+              ? new Date(post.published_at).toISOString().split("T")[0]
+              : today;
 
           return `
   <url>
@@ -99,6 +99,25 @@ Deno.serve(async (req) => {
         .join("");
 
       urlsXml += blogUrlsXml;
+
+      // Páginas de categoría (1 URL por categoría con ≥1 post indexable)
+      const categories = Array.from(
+        new Set(posts.map((p) => p.category).filter(Boolean))
+      );
+      const categoryUrlsXml = categories
+        .map((category) => {
+          const encoded = encodeURIComponent(category as string);
+          return `
+  <url>
+    <loc>${SITE_URL}/blog?categoria=${encoded}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>`;
+        })
+        .join("");
+
+      urlsXml += categoryUrlsXml;
     }
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -109,45 +128,45 @@ ${urlsXml}
     // Guardar en sitemap_cache
     const { error: updateError } = await supabase
       .from("sitemap_cache")
-      .update({ 
+      .update({
         content: sitemap,
-        generated_at: new Date().toISOString()
+        generated_at: new Date().toISOString(),
       })
-      .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all rows
+      .neq("id", "00000000-0000-0000-0000-000000000000");
 
     if (updateError) {
       console.error("Error updating sitemap cache:", updateError);
       return new Response(
         JSON.stringify({ error: "Failed to update sitemap cache" }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
 
-    console.log(`Sitemap regenerated successfully with ${posts?.length || 0} blog posts`);
+    console.log(`Sitemap regenerated with ${posts?.length || 0} indexable blog posts`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: "Sitemap regenerated",
         blogPostsCount: posts?.length || 0,
         staticRoutesCount: staticRoutes.length,
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       }),
-      { 
+      {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200 
+        status: 200,
       }
     );
   } catch (error) {
     console.error("Error regenerating sitemap:", error);
     return new Response(
       JSON.stringify({ error: "Error regenerating sitemap" }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
