@@ -74,12 +74,12 @@ Deno.serve(async (req) => {
 
     const todayStr = new Date().toISOString().split("T")[0];
 
-    // Posts publicados e indexables (excluye noindex = true)
+    // Posts publicados e indexables
     const { data: posts, error: postsError } = await supabase
       .from("blog_posts")
       .select("slug, category, updated_at, published_at")
       .eq("status", "published")
-      .or("noindex.is.null,noindex.eq.false")
+      .eq("noindex", false)
       .order("published_at", { ascending: false });
 
     if (postsError) {
