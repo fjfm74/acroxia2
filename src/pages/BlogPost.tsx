@@ -156,7 +156,12 @@ const BlogPost = () => {
     "headline": post.title,
     "description": post.meta_description || post.excerpt,
     "image": post.image || "https://acroxia.com/og-image.jpg",
-    "author": {
+    "author": post.author ? {
+      "@type": "Person",
+      "name": post.author.name,
+      "url": `https://acroxia.com/autor/${post.author.slug}`,
+      "jobTitle": post.author.role
+    } : {
       "@type": "Organization",
       "name": "ACROXIA",
       "url": "https://acroxia.com"
@@ -248,6 +253,7 @@ const BlogPost = () => {
         canonical={`https://acroxia.com/blog/${post.slug}`}
         ogImage={post.image || "https://acroxia.com/og-image.jpg"}
         ogType="article"
+        noindex={post.noindex === true}
         keywords={post.keywords?.join(", ") || ""}
         jsonLd={jsonLdSchemas}
         articleMeta={{
@@ -275,14 +281,17 @@ const BlogPost = () => {
             <div className="container mx-auto px-6">
               <div className="max-w-4xl mx-auto text-center">
                 <FadeIn>
-                  <span className="inline-block bg-background text-foreground text-sm font-medium px-4 py-1.5 rounded-full mb-6">
+                  <Link
+                    to={`/blog?categoria=${encodeURIComponent(post.category)}`}
+                    className="inline-block bg-background text-foreground text-sm font-medium px-4 py-1.5 rounded-full mb-6 hover:bg-foreground hover:text-background transition-colors"
+                  >
                     {post.category}
-                  </span>
+                  </Link>
                 </FadeIn>
                 <FadeIn delay={0.1}>
-                  <p className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6 leading-tight" role="doc-subtitle">
+                  <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6 leading-tight">
                     {post.title}
-                  </p>
+                  </h1>
                 </FadeIn>
                 <FadeIn delay={0.2}>
                   <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
@@ -322,13 +331,13 @@ const BlogPost = () => {
                         alt="ACROXIA" 
                         className="w-5 h-5 rounded-full object-contain bg-foreground p-0.5" 
                       />
-                      Por equipo ACROXIA
+                      Por {post.author?.name || "Equipo ACROXIA"}
                     </span>
                   </div>
                 </FadeIn>
                 <FadeIn delay={0.25}>
                   <p className="text-xs text-muted-foreground/70 mt-3">
-                    Contenido revisado por profesionales de ACROXIA
+                    Contenido revisado por {post.author?.name || "profesionales de ACROXIA"}
                   </p>
                 </FadeIn>
               </div>
@@ -390,6 +399,7 @@ const BlogPost = () => {
                     ">
                       <ReactMarkdown
                         components={{
+                          h1: ({ children }) => <h2>{children}</h2>,
                           h2: ({ children }) => {
                             const text = String(children);
                             const id = text
