@@ -15,6 +15,7 @@ interface SEOHeadProps {
   ogImage?: string;
   ogType?: string;
   noindex?: boolean;
+  robots?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   articleMeta?: ArticleMeta;
   keywords?: string;
@@ -27,10 +28,13 @@ const SEOHead = ({
   ogImage = "https://acroxia.com/og-image.jpg",
   ogType = "website",
   noindex = false,
+  robots,
   jsonLd,
   articleMeta,
   keywords,
 }: SEOHeadProps) => {
+  // Prioridad: prop `robots` explícita > flag `noindex` > default "index, follow"
+  const robotsContent = robots ?? (noindex === true ? "noindex, follow" : "index, follow");
   const jsonLdArray = jsonLd
     ? Array.isArray(jsonLd) ? jsonLd : [jsonLd]
     : [];
@@ -41,7 +45,8 @@ const SEOHead = ({
       <title>{title}</title>
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
-      <meta name="robots" content={noindex ? "noindex, follow" : "index, follow"} />
+      <meta name="robots" content={robotsContent} />
+      <meta name="googlebot" content={robotsContent} />
       <link rel="canonical" href={canonical} />
       <link rel="alternate" hrefLang="es-ES" href={canonical} />
       <link rel="alternate" hrefLang="x-default" href={canonical} />
