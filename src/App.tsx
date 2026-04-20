@@ -1,3 +1,4 @@
+// Build marker: force rebuild to restore react-helmet-async in bundle (2026-04-20)
 import { useEffect, Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
