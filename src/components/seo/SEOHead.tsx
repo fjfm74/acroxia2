@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 
 interface ArticleMeta {
   author?: string;
@@ -21,6 +21,29 @@ interface SEOHeadProps {
   keywords?: string;
 }
 
+// Helper: upsert meta tag by name or property
+const setMeta = (attr: "name" | "property", key: string, value: string) => {
+  let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", value);
+};
+
+const setLink = (rel: string, href: string, hreflang?: string) => {
+  const selector = hreflang ? `link[rel="${rel}"][hreflang="${hreflang}"]` : `link[rel="${rel}"]:not([hreflang])`;
+  let el = document.querySelector(selector) as HTMLLinkElement | null;
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", rel);
+    if (hreflang) el.setAttribute("hreflang", hreflang);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+};
+
 const SEOHead = ({
   title,
   description,
@@ -33,59 +56,62 @@ const SEOHead = ({
   articleMeta,
   keywords,
 }: SEOHeadProps) => {
-  // Prioridad: prop `robots` explícita > flag `noindex` > default "index, follow"
   const robotsContent = robots ?? (noindex === true ? "noindex, follow" : "index, follow");
-  const jsonLdArray = jsonLd
-    ? Array.isArray(jsonLd) ? jsonLd : [jsonLd]
-    : [];
 
-  return (
-    <Helmet>
-      <html lang="es-ES" />
-      <title>{title}</title>
-      <meta name="description" content={description} />
-      {keywords && <meta name="keywords" content={keywords} />}
-      <meta name="robots" content={robotsContent} />
-      <meta name="googlebot" content={robotsContent} />
-      <link rel="canonical" href={canonical} />
-      <link rel="alternate" hrefLang="es-ES" href={canonical} />
-      <link rel="alternate" hrefLang="x-default" href={canonical} />
+  useEffect(() => {
+    document.documentElement.lang = "es-ES";
+    document.title = title;
 
-      {/* Open Graph */}
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:url" content={canonical} />
-      <meta property="og:type" content={ogType} />
-      <meta property="og:image" content={ogImage} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta property="og:locale" content="es_ES" />
-      <meta property="og:site_name" content="ACROXIA" />
+    setMeta("name", "description", description);
+    setMeta("name", "robots", robotsContent);
+    setMeta("name", "googlebot", robotsContent);
+    if (keywords) setMeta("name", "keywords", keywords);
 
-      {/* Twitter Cards */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:site" content="@acroxia" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage} />
+    setLink("canonical", canonical);
+    setLink("alternate", canonical, "es-ES");
+    setLink("alternate", canonical, "x-default");
 
-      {/* Article meta */}
-      {articleMeta?.author && <meta property="article:author" content={articleMeta.author} />}
-      {articleMeta?.datePublished && <meta property="article:published_time" content={articleMeta.datePublished} />}
-      {articleMeta?.dateModified && <meta property="article:modified_time" content={articleMeta.dateModified} />}
-      {articleMeta?.section && <meta property="article:section" content={articleMeta.section} />}
-      {articleMeta?.tags?.map((tag, i) => (
-        <meta key={i} property="article:tag" content={tag} />
-      ))}
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:url", canonical);
+    setMeta("property", "og:type", ogType);
+    setMeta("property", "og:image", ogImage);
+    setMeta("property", "og:image:width", "1200");
+    setMeta("property", "og:image:height", "630");
+    setMeta("property", "og:locale", "es_ES");
+    setMeta("property", "og:site_name", "ACROXIA");
 
-      {/* JSON-LD */}
-      {jsonLdArray.map((schema, index) => (
-        <script key={index} type="application/ld+json">
-          {JSON.stringify(schema)}
-        </script>
-      ))}
-    </Helmet>
-  );
+    setMeta("name", "twitter:card", "summary_large_image");
+    setMeta("name", "twitter:site", "@acroxia");
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+    setMeta("name", "twitter:image", ogImage);
+
+    if (articleMeta?.author) setMeta("property", "article:author", articleMeta.author);
+    if (articleMeta?.datePublished) setMeta("property", "article:published_time", articleMeta.datePublished);
+    if (articleMeta?.dateModified) setMeta("property", "article:modified_time", articleMeta.dateModified);
+    if (articleMeta?.section) setMeta("property", "article:section", articleMeta.section);
+
+    document.querySelectorAll('script[data-seo-ld="true"]').forEach((s) => s.remove());
+    const jsonLdArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+    jsonLdArray.forEach((schema) => {
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.setAttribute("data-seo-ld", "true");
+      script.textContent = JSON.stringify(schema);
+      document.head.appendChild(script);
+    });
+
+    document.querySelectorAll('meta[property="article:tag"]').forEach((m) => m.remove());
+    articleMeta?.tags?.forEach((tag) => {
+      const m = document.createElement("meta");
+      m.setAttribute("property", "article:tag");
+      m.setAttribute("content", tag);
+      document.head.appendChild(m);
+    });
+  }, [title, description, canonical, ogImage, ogType, robotsContent, keywords, articleMeta, jsonLd]);
+
+  return null;
 };
 
 export default SEOHead;

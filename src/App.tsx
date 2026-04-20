@@ -5,7 +5,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { trackPageView } from "@/lib/analytics";
 import ScrollToTop from "./components/ScrollToTop";
@@ -118,17 +117,16 @@ const PageViewTracker = () => {
 };
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PaymentTestModeBanner />
-            <ScrollToTop />
-            <PageViewTracker />
-            <Routes>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <PaymentTestModeBanner />
+          <ScrollToTop />
+          <PageViewTracker />
+          <Routes>
               {/* Critical route - no suspense wrapper needed */}
               <Route path="/" element={<Index />} />
               
@@ -215,20 +213,19 @@ const App = () => (
               
               {/* 404 */}
               <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
-            </Routes>
-            
-            {/* Non-critical components loaded after main content */}
-            <Suspense fallback={null}>
-              <CookieBanner />
-            </Suspense>
-            <Suspense fallback={null}>
-              <ChatContainer />
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+          </Routes>
+          
+          {/* Non-critical components loaded after main content */}
+          <Suspense fallback={null}>
+            <CookieBanner />
+          </Suspense>
+          <Suspense fallback={null}>
+            <ChatContainer />
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;
