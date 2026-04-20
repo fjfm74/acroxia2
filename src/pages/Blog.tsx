@@ -131,7 +131,8 @@ const Blog = () => {
   };
 
   const currentSeo = selectedAudience ? seoData[selectedAudience] : seoData.default;
-  // Canonical: si hay categoría usa la URL con categoría; si no, /blog limpio
+  // Canonical: SIEMPRE /blog limpio cuando hay filtro de audiencia (es duplicado de /blog).
+  // Solo las páginas de categoría tienen canonical propio (contenido distinto).
   const canonicalUrl = categoryFromUrl
     ? `https://acroxia.com/blog?categoria=${encodeURIComponent(categoryFromUrl)}`
     : "https://acroxia.com/blog";
