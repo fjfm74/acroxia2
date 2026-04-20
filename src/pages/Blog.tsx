@@ -164,6 +164,7 @@ const Blog = () => {
         }
         canonical={canonicalUrl}
         keywords={currentSeo.keywords}
+        noindex={!!selectedAudience && !categoryFromUrl}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
