@@ -160,6 +160,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Track previous email_confirmed_at to detect verification transition (null -> timestamp)
+  const prevEmailConfirmedAtRef = useRef<string | null | undefined>(undefined);
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
@@ -188,6 +191,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setSession(null);
     setProfile(null);
+    prevEmailConfirmedAtRef.current = undefined;
   };
 
   useEffect(() => {
@@ -199,18 +203,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
+        const currentConfirmedAt = (session.user as any).email_confirmed_at ?? null;
+        const prevConfirmedAt = prevEmailConfirmedAtRef.current;
+        // Detect freshly verified email: previously null/undefined, now a timestamp
+        const justVerified =
+          (prevConfirmedAt === null || prevConfirmedAt === undefined) && !!currentConfirmedAt;
+
         // Use setTimeout to avoid potential race conditions
         setTimeout(async () => {
           const profileData = await fetchProfile(session.user.id);
           setProfile(profileData);
 
-          // Vincular analisis anonimos en login o registro
-          if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+          // Reconciliar en login, en USER_UPDATED, o cuando detectamos verificacion de email
+          if (event === "SIGNED_IN" || event === "USER_UPDATED" || justVerified) {
+            if (justVerified) {
+              console.log("[reconcile] disparado por verificacion de email recien confirmada");
+            }
             await linkAnonymousAnalyses(session.user.id, session.user.email || "");
           }
         }, 0);
+
+        prevEmailConfirmedAtRef.current = currentConfirmedAt;
       } else {
         setProfile(null);
+        prevEmailConfirmedAtRef.current = undefined;
       }
 
       setLoading(false);
@@ -222,6 +238,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
+        prevEmailConfirmedAtRef.current = (session.user as any).email_confirmed_at ?? null;
         fetchProfile(session.user.id).then(setProfile);
       }
 
