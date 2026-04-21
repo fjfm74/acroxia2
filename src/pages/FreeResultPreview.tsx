@@ -57,35 +57,57 @@ const FreeResultPreview = () => {
   const perspectiveLabel = isLandlord ? "Análisis para propietario" : "Análisis para inquilino";
 
   useEffect(() => {
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
     const fetchAnalysis = async () => {
       if (!id) return;
 
       try {
-        // Use secure RPC function that validates UUID-based access
         const { data, error: fetchError } = await supabase
           .rpc("get_anonymous_analysis", { analysis_uuid: id });
 
         if (fetchError) throw fetchError;
-        
-        // RPC returns an array, get the first result
+
         const analysisData = Array.isArray(data) ? data[0] : data;
-        
+
         if (!analysisData) {
-          setError("Este análisis ha expirado o no existe.");
+          if (!cancelled) setError("Este análisis ha expirado o no existe.");
+          return;
+        }
+
+        if (cancelled) return;
+
+        // Already paid + contract linked → redirect to full report
+        if (analysisData.paid === true && analysisData.converted_contract_id) {
+          navigate(`/resultado/${analysisData.converted_contract_id}`, { replace: true });
           return;
         }
 
         setAnalysis(analysisData);
+
+        // Paid but contract not yet linked → poll
+        if (analysisData.paid === true && !analysisData.converted_contract_id) {
+          setWaitingForContract(true);
+          pollTimer = setTimeout(fetchAnalysis, 3000);
+        } else {
+          setWaitingForContract(false);
+        }
       } catch (err: any) {
         console.error("Error fetching analysis:", err);
-        setError("No se pudo cargar el análisis.");
+        if (!cancelled) setError("No se pudo cargar el análisis.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchAnalysis();
-  }, [id]);
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, [id, navigate]);
 
   // Countdown timer
   useEffect(() => {
