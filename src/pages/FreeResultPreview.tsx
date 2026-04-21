@@ -43,8 +43,11 @@ const FreeResultPreview = () => {
   const [error, setError] = useState<string | null>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const [waitingForContract, setWaitingForContract] = useState(false);
   const { user } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+
+  const isPaid = analysis?.paid === true;
 
   // Derive perspective: prefer analysis_result.perspective, then URL param
   const perspective = (analysis?.analysis_result?.perspective as string) || urlPerspective;
@@ -54,35 +57,57 @@ const FreeResultPreview = () => {
   const perspectiveLabel = isLandlord ? "Análisis para propietario" : "Análisis para inquilino";
 
   useEffect(() => {
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
     const fetchAnalysis = async () => {
       if (!id) return;
 
       try {
-        // Use secure RPC function that validates UUID-based access
         const { data, error: fetchError } = await supabase
           .rpc("get_anonymous_analysis", { analysis_uuid: id });
 
         if (fetchError) throw fetchError;
-        
-        // RPC returns an array, get the first result
+
         const analysisData = Array.isArray(data) ? data[0] : data;
-        
+
         if (!analysisData) {
-          setError("Este análisis ha expirado o no existe.");
+          if (!cancelled) setError("Este análisis ha expirado o no existe.");
+          return;
+        }
+
+        if (cancelled) return;
+
+        // Already paid + contract linked → redirect to full report
+        if (analysisData.paid === true && analysisData.converted_contract_id) {
+          navigate(`/resultado/${analysisData.converted_contract_id}`, { replace: true });
           return;
         }
 
         setAnalysis(analysisData);
+
+        // Paid but contract not yet linked → poll
+        if (analysisData.paid === true && !analysisData.converted_contract_id) {
+          setWaitingForContract(true);
+          pollTimer = setTimeout(fetchAnalysis, 3000);
+        } else {
+          setWaitingForContract(false);
+        }
       } catch (err: any) {
         console.error("Error fetching analysis:", err);
-        setError("No se pudo cargar el análisis.");
+        if (!cancelled) setError("No se pudo cargar el análisis.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchAnalysis();
-  }, [id]);
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, [id, navigate]);
 
   // Countdown timer
   useEffect(() => {
@@ -108,16 +133,16 @@ const FreeResultPreview = () => {
     return () => clearInterval(interval);
   }, [analysis?.expires_at]);
 
-  // Auto-show lead capture modal after 15 seconds
+  // Auto-show lead capture modal after 15 seconds (skip if already paid)
   useEffect(() => {
-    if (!analysis || analysis.email) return;
-    
+    if (!analysis || analysis.email || isPaid) return;
+
     const timer = setTimeout(() => {
       setShowLeadModal(true);
     }, 15000);
 
     return () => clearTimeout(timer);
-  }, [analysis]);
+  }, [analysis, isPaid]);
 
   if (loading) {
     return (
@@ -351,110 +376,133 @@ const FreeResultPreview = () => {
 
               {/* Sidebar CTAs */}
               <div className="lg:col-span-1 space-y-6">
-                {/* Unlock Full Report CTA */}
-                <FadeIn delay={0.2}>
-                  <Card className="border-2 border-primary">
-                    <CardContent className="pt-6 space-y-4">
-                      <div className="text-center">
-                        <Sparkles className="h-10 w-10 text-primary mx-auto mb-3" />
-                        <h3 className="font-serif text-xl font-semibold mb-2">
-                          Informe completo
+                {isPaid ? (
+                  /* Paid: waiting for contract link */
+                  <FadeIn delay={0.2}>
+                    <Card className="border-2 border-green-600">
+                      <CardContent className="pt-6 text-center space-y-4">
+                        <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
+                        <h3 className="font-serif text-xl font-semibold">
+                          Pago recibido
                         </h3>
-                        <p className="text-muted-foreground text-sm mb-4">
-                          Accede al análisis detallado de todas las cláusulas con recomendaciones personalizadas.
+                        <p className="text-sm text-muted-foreground">
+                          {waitingForContract
+                            ? "Estamos preparando tu informe…"
+                            : "Redirigiendo a tu informe…"}
                         </p>
-                        <div className="text-3xl font-bold text-foreground mb-1">
-                          {priceDisplay}
+                        <div className="flex justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
-                        <p className="text-xs text-muted-foreground mb-4">
-                          Pago único · Incluye registro gratuito
-                        </p>
-                      </div>
-                      
-                      <Button 
-                        onClick={async () => {
-                          try {
-                            // Save return URL for post-registration redirect
-                            localStorage.setItem("acroxia_return_url", `/resultado-previo/${id}`);
-                            
-                            await openCheckout({
-                              priceId,
-                              quantity: 1,
-                              customerEmail: user?.email || analysis?.email || undefined,
-                              customData: { 
-                                userId: user?.id || "", 
-                                analysisId: id || "", 
-                                perspective,
-                                sessionId: localStorage.getItem("acroxia_session_id") || "",
-                                userType: localStorage.getItem("acroxia_user_type") || "inquilino",
-                              },
-                              successUrl: user 
-                                ? `${window.location.origin}/resultado/${id}` 
-                                : `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
-                            });
-                          } catch (err) {
-                            console.error("Checkout error:", err);
-                            toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
-                          }
-                        }}
-                        disabled={checkoutLoading}
-                        className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
-                        size="lg"
-                      >
-                        {checkoutLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Cargando...
-                          </>
-                        ) : (
-                          <>
-                            Desbloquear informe
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </>
-                        )}
-                      </Button>
+                      </CardContent>
+                    </Card>
+                  </FadeIn>
+                ) : (
+                  <>
+                    {/* Unlock Full Report CTA */}
+                    <FadeIn delay={0.2}>
+                      <Card className="border-2 border-primary">
+                        <CardContent className="pt-6 space-y-4">
+                          <div className="text-center">
+                            <Sparkles className="h-10 w-10 text-primary mx-auto mb-3" />
+                            <h3 className="font-serif text-xl font-semibold mb-2">
+                              Informe completo
+                            </h3>
+                            <p className="text-muted-foreground text-sm mb-4">
+                              Accede al análisis detallado de todas las cláusulas con recomendaciones personalizadas.
+                            </p>
+                            <div className="text-3xl font-bold text-foreground mb-1">
+                              {priceDisplay}
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-4">
+                              Pago único · Incluye registro gratuito
+                            </p>
+                          </div>
 
-                      <ul className="text-sm space-y-2 text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Análisis de todas las cláusulas
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Consejos de negociación
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Referencias legales verificadas
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Carta de reclamación (si aplica)
-                        </li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </FadeIn>
+                          <Button
+                            onClick={async () => {
+                              try {
+                                localStorage.setItem("acroxia_return_url", `/resultado-previo/${id}`);
 
-                {/* Email Reminder Option */}
-                <FadeIn delay={0.3}>
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                      <h3 className="font-medium mb-2">¿Quieres que te avisemos?</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Te enviaremos un recordatorio antes de que expire tu análisis.
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowLeadModal(true)}
-                        className="w-full"
-                      >
-                        Recibir recordatorio
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </FadeIn>
+                                await openCheckout({
+                                  priceId,
+                                  quantity: 1,
+                                  customerEmail: user?.email || analysis?.email || undefined,
+                                  customData: {
+                                    userId: user?.id || "",
+                                    analysisId: id || "",
+                                    perspective,
+                                    sessionId: localStorage.getItem("acroxia_session_id") || "",
+                                    userType: localStorage.getItem("acroxia_user_type") || "inquilino",
+                                  },
+                                  successUrl: user
+                                    ? `${window.location.origin}/resultado/${id}`
+                                    : `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
+                                });
+                              } catch (err) {
+                                console.error("Checkout error:", err);
+                                toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
+                              }
+                            }}
+                            disabled={checkoutLoading}
+                            className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
+                            size="lg"
+                          >
+                            {checkoutLoading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Cargando...
+                              </>
+                            ) : (
+                              <>
+                                Desbloquear informe
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                              </>
+                            )}
+                          </Button>
+
+                          <ul className="text-sm space-y-2 text-muted-foreground">
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              Análisis de todas las cláusulas
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              Consejos de negociación
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              Referencias legales verificadas
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              Carta de reclamación (si aplica)
+                            </li>
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    </FadeIn>
+
+                    {/* Email Reminder Option */}
+                    <FadeIn delay={0.3}>
+                      <Card>
+                        <CardContent className="pt-6 text-center">
+                          <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                          <h3 className="font-medium mb-2">¿Quieres que te avisemos?</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Te enviaremos un recordatorio antes de que expire tu análisis.
+                          </p>
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowLeadModal(true)}
+                            className="w-full"
+                          >
+                            Recibir recordatorio
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </FadeIn>
+                  </>
+                )}
 
                 {/* Social Proof */}
                 <FadeIn delay={0.4}>

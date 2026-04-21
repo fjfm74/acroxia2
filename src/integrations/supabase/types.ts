@@ -652,6 +652,7 @@ export type Database = {
           internal_notes: string | null
           organization_id: string | null
           property_address: string | null
+          source_analysis_id: string | null
           status: Database["public"]["Enums"]["contract_status"]
           updated_at: string
           user_id: string
@@ -667,6 +668,7 @@ export type Database = {
           internal_notes?: string | null
           organization_id?: string | null
           property_address?: string | null
+          source_analysis_id?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
           user_id: string
@@ -682,6 +684,7 @@ export type Database = {
           internal_notes?: string | null
           organization_id?: string | null
           property_address?: string | null
+          source_analysis_id?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
           user_id?: string
@@ -692,6 +695,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_source_analysis_id_fkey"
+            columns: ["source_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "admin_paid_unlinked_analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_source_analysis_id_fkey"
+            columns: ["source_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_analyses"
             referencedColumns: ["id"]
           },
         ]
@@ -1752,26 +1769,15 @@ export type Database = {
       get_anonymous_analysis: {
         Args: { analysis_uuid: string }
         Returns: {
-          analysis_result: Json | null
-          contract_status: string | null
-          converted_to_user_id: string | null
-          created_at: string | null
-          email: string | null
-          expires_at: string | null
+          analysis_result: Json
+          converted_contract_id: string
+          converted_to_user_id: string
+          email: string
+          expires_at: string
           file_name: string
-          file_path: string | null
           id: string
-          paddle_transaction_id: string | null
           paid: boolean
-          session_id: string
-          user_type: string | null
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "anonymous_analyses"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       get_user_organization: { Args: { _user_id: string }; Returns: string }
       has_active_subscription: {
