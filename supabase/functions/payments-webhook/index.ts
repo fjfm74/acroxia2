@@ -6,11 +6,12 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-// Credit map for one-time purchases
+// Credit map for one-time purchases.
+// Análisis Único (inquilino 14,99€ y propietario 29€) NO añaden créditos:
+// dan acceso al informe específico mediante source_analysis_id, no crédito reutilizable.
+// Solo packs de créditos reales deben aparecer aquí.
 const CREDIT_MAP: Record<string, number> = {
-  'analisis_unico': 1,
   'pack_comparador': 3,
-  'propietario_unico': 1,
 };
 
 Deno.serve(async (req) => {
