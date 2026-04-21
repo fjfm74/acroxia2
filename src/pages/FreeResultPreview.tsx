@@ -133,16 +133,16 @@ const FreeResultPreview = () => {
     return () => clearInterval(interval);
   }, [analysis?.expires_at]);
 
-  // Auto-show lead capture modal after 15 seconds
+  // Auto-show lead capture modal after 15 seconds (skip if already paid)
   useEffect(() => {
-    if (!analysis || analysis.email) return;
-    
+    if (!analysis || analysis.email || isPaid) return;
+
     const timer = setTimeout(() => {
       setShowLeadModal(true);
     }, 15000);
 
     return () => clearTimeout(timer);
-  }, [analysis]);
+  }, [analysis, isPaid]);
 
   if (loading) {
     return (
