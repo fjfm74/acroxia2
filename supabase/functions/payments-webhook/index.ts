@@ -6,11 +6,12 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-// Credit map for one-time purchases
+// Credit map for one-time purchases.
+// Análisis Único (inquilino 14,99€ y propietario 29€) NO añaden créditos:
+// dan acceso al informe específico mediante source_analysis_id, no crédito reutilizable.
+// Solo packs de créditos reales deben aparecer aquí.
 const CREDIT_MAP: Record<string, number> = {
-  'analisis_unico': 1,
   'pack_comparador': 3,
-  'propietario_unico': 1,
 };
 
 Deno.serve(async (req) => {
@@ -115,7 +116,6 @@ async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
 async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const userId = data.customData?.userId;
   const analysisId = data.customData?.analysisId;
-  const sessionId = data.customData?.sessionId;
   const transactionId = data.id;
 
   // Skip subscription transactions
@@ -124,7 +124,7 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     return;
   }
 
-  // Mark anonymous analysis as paid
+  // Mark anonymous analysis as paid (idempotent)
   if (analysisId) {
     const { error: paidError } = await supabase
       .from('anonymous_analyses')
@@ -147,84 +147,108 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     });
   }
 
-  // If user is logged in, add credits
-  if (userId) {
-    const item = data.items?.[0];
-    const productId = item?.price?.importMeta?.externalId || item?.price?.productId || '';
-
-    const priceToProduct: Record<string, string> = {
-      'analisis_unico_price': 'analisis_unico',
-      'pack_comparador_price': 'pack_comparador',
-      'propietario_unico_price': 'propietario_unico',
-    };
-
-    const resolvedProductId = priceToProduct[productId] || productId;
-    const creditsToAdd = CREDIT_MAP[resolvedProductId];
-
-    if (creditsToAdd) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', userId)
-        .single();
-
-      const currentCredits = profile?.credits || 0;
-
-      await supabase
-        .from('profiles')
-        .update({ credits: currentCredits + creditsToAdd })
-        .eq('id', userId);
-
-      console.log(`Added ${creditsToAdd} credits to user ${userId}, product: ${resolvedProductId}, env: ${env}`);
-    }
-
-    // If user exists and analysis exists, link it automatically
-    if (analysisId) {
-      const { data: analysisData } = await supabase
-        .from('anonymous_analyses')
-        .select('*')
-        .eq('id', analysisId)
-        .is('converted_to_user_id', null)
-        .single();
-
-      if (analysisData) {
-        // Mark as converted
-        await supabase
-          .from('anonymous_analyses')
-          .update({ converted_to_user_id: userId })
-          .eq('id', analysisId);
-
-        // Create contract
-        const { data: contract } = await supabase
-          .from('contracts')
-          .insert({
-            user_id: userId,
-            file_name: analysisData.file_name,
-            file_path: analysisData.file_path || '',
-            status: 'completed',
-          })
-          .select()
-          .single();
-
-        if (contract && analysisData.analysis_result) {
-          const report = analysisData.analysis_result as any;
-          const clauses = report?.clauses || [];
-
-          await supabase.from('analysis_results').insert({
-            contract_id: contract.id,
-            full_report: report,
-            total_clauses: clauses.length,
-            valid_clauses: report?.summary?.valid_count ?? clauses.filter((c: any) => c.type === 'valid').length,
-            suspicious_clauses: report?.summary?.suspicious_count ?? clauses.filter((c: any) => c.type === 'suspicious').length,
-            illegal_clauses: report?.summary?.illegal_count ?? clauses.filter((c: any) => c.type === 'illegal').length,
-            summary: report?.summary?.executive_summary || '',
-          });
-        }
-
-        console.log(`Linked analysis ${analysisId} to user ${userId}`);
-      }
-    }
-  } else {
-    console.log('Transaction completed without userId:', transactionId, 'analysisId:', analysisId);
+  // No userId: anonymous payment before registration.
+  // Analysis is marked paid; contract will be created when the user registers.
+  if (!userId) {
+    console.log('Transaction completed without userId (anonymous purchase):', transactionId, 'analysisId:', analysisId);
+    return;
   }
+
+  // Add credits ONLY for credit-pack products (not for single-analysis purchases).
+  const item = data.items?.[0];
+  const productId = item?.price?.importMeta?.externalId || item?.price?.productId || '';
+
+  const priceToProduct: Record<string, string> = {
+    'pack_comparador_price': 'pack_comparador',
+  };
+
+  const resolvedProductId = priceToProduct[productId] || productId;
+  const creditsToAdd = CREDIT_MAP[resolvedProductId];
+
+  if (creditsToAdd) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
+      .single();
+
+    const currentCredits = profile?.credits || 0;
+
+    await supabase
+      .from('profiles')
+      .update({ credits: currentCredits + creditsToAdd })
+      .eq('id', userId);
+
+    console.log(`Added ${creditsToAdd} credits to user ${userId}, product: ${resolvedProductId}, env: ${env}`);
+  }
+
+  // Link analysis to user and create contract (idempotent via source_analysis_id).
+  if (!analysisId) return;
+
+  // Idempotency check: skip if a contract already exists for this analysis.
+  const { data: existingContract } = await supabase
+    .from('contracts')
+    .select('id')
+    .eq('source_analysis_id', analysisId)
+    .maybeSingle();
+
+  if (existingContract) {
+    console.log(`Contract already exists for analysis ${analysisId} (id: ${existingContract.id}), skipping insert`);
+    return;
+  }
+
+  const { data: analysisData } = await supabase
+    .from('anonymous_analyses')
+    .select('*')
+    .eq('id', analysisId)
+    .single();
+
+  if (!analysisData) {
+    console.error(`Analysis ${analysisId} not found when linking to user ${userId}`);
+    return;
+  }
+
+  // Mark as converted (only if not already)
+  if (!analysisData.converted_to_user_id) {
+    await supabase
+      .from('anonymous_analyses')
+      .update({ converted_to_user_id: userId })
+      .eq('id', analysisId);
+  }
+
+  // Create contract linked to the original anonymous analysis
+  const { data: contract, error: contractError } = await supabase
+    .from('contracts')
+    .insert({
+      user_id: userId,
+      file_name: analysisData.file_name,
+      file_path: analysisData.file_path || '',
+      status: 'completed',
+      source_analysis_id: analysisId,
+      full_access: true,
+    })
+    .select()
+    .single();
+
+  if (contractError) {
+    console.error('Error creating contract:', contractError);
+    return;
+  }
+
+  if (contract && analysisData.analysis_result) {
+    const report = analysisData.analysis_result as any;
+    const clauses = report?.clauses || [];
+
+    await supabase.from('analysis_results').insert({
+      contract_id: contract.id,
+      full_report: report,
+      total_clauses: clauses.length,
+      valid_clauses: report?.summary?.valid_count ?? clauses.filter((c: any) => c.type === 'valid').length,
+      suspicious_clauses: report?.summary?.suspicious_count ?? clauses.filter((c: any) => c.type === 'suspicious').length,
+      illegal_clauses: report?.summary?.illegal_count ?? clauses.filter((c: any) => c.type === 'illegal').length,
+      summary: report?.summary?.executive_summary || '',
+    });
+  }
+
+  console.log(`Linked analysis ${analysisId} to user ${userId} (contract: ${contract.id})`);
 }
