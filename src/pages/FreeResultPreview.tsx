@@ -43,8 +43,11 @@ const FreeResultPreview = () => {
   const [error, setError] = useState<string | null>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const [waitingForContract, setWaitingForContract] = useState(false);
   const { user } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+
+  const isPaid = analysis?.paid === true;
 
   // Derive perspective: prefer analysis_result.perspective, then URL param
   const perspective = (analysis?.analysis_result?.perspective as string) || urlPerspective;
