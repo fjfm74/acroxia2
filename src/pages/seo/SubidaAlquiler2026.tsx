@@ -7,16 +7,21 @@ import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import RelatedTenantGuides from "@/components/seo/RelatedTenantGuides";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const comparativaIndices = [
-  { indice: "IRAV 2026", valor: "~2,2%", descripcion: "Índice de Referencia de Arrendamientos de Vivienda", aplica: true },
-  { indice: "IPC general", valor: "~3,5%", descripcion: "Ya no aplica para alquileres de vivienda habitual", aplica: false },
+  {
+    indice: "IRAV marzo 2026",
+    valor: "2,47%",
+    descripcion: "Índice de Referencia de Arrendamientos de Vivienda (último publicado por el INE)",
+    aplica: true,
+  },
+  {
+    indice: "IPC general",
+    valor: "~3,5%",
+    descripcion: "Ya no aplica para alquileres de vivienda habitual",
+    aplica: false,
+  },
   { indice: "Tope 2024", valor: "3%", descripcion: "Límite temporal que ya no está vigente", aplica: false },
   { indice: "Tope 2023", valor: "2%", descripcion: "Límite temporal que ya no está vigente", aplica: false },
 ];
@@ -24,22 +29,26 @@ const comparativaIndices = [
 const queHacer = [
   {
     situacion: "El casero quiere subir más del IRAV",
-    accion: "Es ilegal. Según la Disposición final 6ª de la Ley 12/2023, la actualización no puede superar el índice de referencia (IRAV).",
+    accion:
+      "Es ilegal. Según la Disposición final 6ª de la Ley 12/2023, la actualización no puede superar el índice de referencia (IRAV).",
     legal: false,
   },
   {
     situacion: "No te avisan con 1 mes de antelación",
-    accion: "La subida no aplica ese mes. El art. 18.2 de la LAU exige notificación por escrito con un mes de antelación a la mensualidad en que deba surtir efecto.",
+    accion:
+      "La subida no aplica ese mes. El art. 18.2 de la LAU exige notificación por escrito con un mes de antelación a la mensualidad en que deba surtir efecto.",
     legal: false,
   },
   {
     situacion: "Aplican IPC en lugar de IRAV",
-    accion: "Incorrecto. Desde 2026, el art. 18 de la LAU establece el IRAV como límite máximo para actualizaciones de renta en contratos de vivienda.",
+    accion:
+      "Incorrecto. Desde 2026, el art. 18 de la LAU establece el IRAV como límite máximo para actualizaciones de renta en contratos de vivienda.",
     legal: false,
   },
   {
-    situacion: "El contrato dice \"subida según IPC\"",
-    accion: "Prevalece la ley. Aunque el contrato diga IPC, si este es superior al IRAV, se aplica el límite del IRAV (norma imperativa de protección al inquilino).",
+    situacion: 'El contrato dice "subida según IPC"',
+    accion:
+      "Prevalece la ley. Aunque el contrato diga IPC, si este es superior al IRAV, se aplica el límite del IRAV (norma imperativa de protección al inquilino).",
     legal: true,
   },
 ];
@@ -47,35 +56,43 @@ const queHacer = [
 const faqs = [
   {
     question: "¿Cuánto puede subir mi alquiler en 2026?",
-    answer: "Máximo el IRAV (~2,2%). La Disposición final 6ª de la Ley de Vivienda 12/2023 establece que desde 2025 se aplicará un nuevo índice de referencia inferior a la evolución del IPC para evitar subidas desproporcionadas."
+    answer:
+      "Máximo el IRAV. El último valor publicado por el INE es el de marzo 2026: 2,47%. La Disposición final 6ª de la Ley de Vivienda 12/2023 establece que desde 2025 se aplica este nuevo índice de referencia, inferior a la evolución del IPC, para evitar subidas desproporcionadas.",
   },
   {
     question: "¿Qué es el IRAV y cómo funciona?",
-    answer: "Es el Índice de Referencia de Arrendamientos de Vivienda, publicado por el INE (Disp. Adicional 1ª Ley 12/2023). Sustituye al IPC como tope máximo en las revisiones anuales para garantizar estabilidad."
+    answer:
+      "Es el Índice de Referencia de Arrendamientos de Vivienda, publicado por el INE (Disp. Adicional 1ª Ley 12/2023). Sustituye al IPC como tope máximo en las revisiones anuales para garantizar estabilidad.",
   },
   {
     question: "¿El IRAV aplica a todos los contratos de alquiler?",
-    answer: "Aplica a todos los contratos de arrendamiento de vivienda habitual sujetos a la LAU 29/1994. No aplica a locales, oficinas o alquiler de temporada (art. 3 LAU)."
+    answer:
+      "Aplica a todos los contratos de arrendamiento de vivienda habitual sujetos a la LAU 29/1994. No aplica a locales, oficinas o alquiler de temporada (art. 3 LAU).",
   },
   {
     question: "¿Con cuánto tiempo deben avisarme de la subida?",
-    answer: "Mínimo 1 mes. El art. 18.2 de la LAU exige que el arrendador notifique la actualización por escrito, indicando el porcentaje aplicado, con un mes de antelación al pago de la nueva mensualidad."
+    answer:
+      "Mínimo 1 mes. El art. 18.2 de la LAU exige que el arrendador notifique la actualización por escrito, indicando el porcentaje aplicado, con un mes de antelación al pago de la nueva mensualidad.",
   },
   {
-    question: "Mi contrato dice \"subida según IPC\", ¿qué aplica?",
-    answer: "El menor de los dos: IPC o IRAV. Si el contrato pacta IPC, se aplicará este salvo que supere al IRAV, en cuyo caso opera el tope legal del IRAV como norma imperativa (art. 18.1 LAU modificado)."
+    question: 'Mi contrato dice "subida según IPC", ¿qué aplica?',
+    answer:
+      "El menor de los dos: IPC o IRAV. Si el contrato pacta IPC, se aplicará este salvo que supere al IRAV, en cuyo caso opera el tope legal del IRAV como norma imperativa (art. 18.1 LAU modificado).",
   },
   {
     question: "¿Qué diferencia hay entre IRAV e IPC?",
-    answer: "El IPC mide la inflación general; el IRAV es específico para vivienda. La Ley 12/2023 introdujo el IRAV para desvincular el alquiler de elementos volátiles como la energía, buscando un índice más estable."
+    answer:
+      "El IPC mide la inflación general; el IRAV es específico para vivienda. La Ley 12/2023 introdujo el IRAV para desvincular el alquiler de elementos volátiles como la energía, buscando un índice más estable.",
   },
   {
     question: "¿Pueden subirme el alquiler fuera de la actualización anual?",
-    answer: "No. El art. 18.1 de la LAU establece que la renta solo puede revisarse anualmente en la fecha de cada vigencia del contrato, no en cualquier momento."
+    answer:
+      "No. El art. 18.1 de la LAU establece que la renta solo puede revisarse anualmente en la fecha de cada vigencia del contrato, no en cualquier momento.",
   },
   {
     question: "¿Qué hago si la subida es abusiva?",
-    answer: "Paga la renta anterior más la subida legal (IRAV) y notifícalo por burofax. El impago parcial podría ser causa de desahucio, pero pagar lo que corresponde legalmente no (art. 17 LAU)."
+    answer:
+      "Paga la renta anterior más la subida legal (IRAV) y notifícalo por burofax. El impago parcial podría ser causa de desahucio, pero pagar lo que corresponde legalmente no (art. 17 LAU).",
   },
 ];
 
@@ -84,95 +101,92 @@ const SubidaAlquiler2026 = () => {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "@id": "https://acroxia.com/subida-alquiler-2026",
-    "name": "Subida de Alquiler 2026 - IRAV y Límites Legales",
-    "description": "Guía completa sobre la subida de alquiler en 2026. IRAV actual, límites legales, cómo calcular la subida y qué hacer si es abusiva.",
-    "url": "https://acroxia.com/subida-alquiler-2026",
-    "datePublished": "2026-01-01",
-    "dateModified": "2026-02-09",
-    "inLanguage": "es-ES",
-    "publisher": {
+    name: "Subida de Alquiler 2026 - IRAV y Límites Legales",
+    description:
+      "Último IRAV publicado (marzo 2026): 2,47%. Límites legales a la subida del alquiler en España, cómo calcular la actualización según la LAU y qué hacer si la subida es abusiva.",
+    url: "https://acroxia.com/subida-alquiler-2026",
+    datePublished: "2026-01-01",
+    dateModified: "2026-04-21",
+    inLanguage: "es-ES",
+    publisher: {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      name: "ACROXIA",
+      url: "https://acroxia.com",
     },
-    "isPartOf": {
+    isPartOf: {
       "@type": "WebSite",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      name: "ACROXIA",
+      url: "https://acroxia.com",
     },
-    "mainEntity": {
+    mainEntity: {
       "@type": "Article",
-      "@id": "https://acroxia.com/subida-alquiler-2026#article"
-    }
+      "@id": "https://acroxia.com/subida-alquiler-2026#article",
+    },
   };
 
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": faqs.map(faq => ({
+    mainEntity: faqs.map((faq) => ({
       "@type": "Question",
-      "name": faq.question,
-      "acceptedAnswer": {
+      name: faq.question,
+      acceptedAnswer: {
         "@type": "Answer",
-        "text": faq.answer
-      }
-    }))
+        text: faq.answer,
+      },
+    })),
   };
 
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
     "@id": "https://acroxia.com/subida-alquiler-2026#article",
-    "headline": "Subida de Alquiler 2026: IRAV, Límites Legales y Cómo Calcularla",
-    "description": "¿Cuánto puede subir tu alquiler en 2026? El IRAV limita la subida al 2,2%. Guía completa sobre límites legales y cómo reclamar subidas abusivas.",
-    "datePublished": "2026-01-01",
-    "dateModified": "2026-02-09",
-    "author": {
+    headline: "IRAV 2026: último valor publicado 2,47% (marzo) y cómo afecta a la subida del alquiler",
+    description:
+      "El IRAV de marzo 2026 es 2,47%, el último dato publicado por el INE. Cómo se aplica al alquiler, cómo calcular la subida según la LAU y qué hacer si la actualización es abusiva.",
+    datePublished: "2026-01-01",
+    dateModified: "2026-04-21",
+    author: {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      name: "ACROXIA",
+      url: "https://acroxia.com",
     },
-    "publisher": {
+    publisher: {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com",
-      "logo": {
+      name: "ACROXIA",
+      url: "https://acroxia.com",
+      logo: {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/acroxia-logo.png"
-      }
+        url: "https://acroxia.com/acroxia-logo.png",
+      },
     },
-    "mainEntityOfPage": {
+    mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": "https://acroxia.com/subida-alquiler-2026"
+      "@id": "https://acroxia.com/subida-alquiler-2026",
     },
-    "speakable": {
+    speakable: {
       "@type": "SpeakableSpecification",
-      "cssSelector": ["h1", ".speakable-summary"]
+      cssSelector: ["h1", ".speakable-summary"],
     },
-    "inLanguage": "es-ES"
+    inLanguage: "es-ES",
   };
 
   return (
     <>
       <SEOHead
-        title="Subida Alquiler 2026: Límites IRAV y Zonas Tensionadas | ACROXIA"
-        description="¿Cuánto puede subir tu alquiler en 2026? Guía completa sobre el IRAV, límites en zonas tensionadas y tus derechos como inquilino ante una subida de renta."
+        title="IRAV marzo 2026: 2,47% — Subida máxima alquiler | ACROXIA"
+        description="Último IRAV publicado (marzo 2026): 2,47%. Cuánto puede subirte el alquiler según la LAU y qué hacer si la subida supera el índice legal."
         canonical="https://acroxia.com/subida-alquiler-2026"
         ogType="article"
-        keywords="subida alquiler 2026, IRAV 2026, límite subida alquiler, actualización renta, cuánto puede subir alquiler, IPC alquiler 2026"
-        articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-02-09" }}
+        keywords="IRAV marzo 2026, IRAV 2026, subida alquiler 2026, límite subida alquiler, actualización renta, índice arrendamientos vivienda"
+        articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-04-21" }}
         jsonLd={[pageSchema, faqSchema, articleSchema]}
       />
 
       <div className="min-h-screen bg-background">
         <Header />
-        <Breadcrumbs 
-          items={[
-            { label: "Guías para Inquilinos", href: "/faq" },
-            { label: "Subida Alquiler 2026" }
-          ]} 
-        />
-        
+        <Breadcrumbs items={[{ label: "Guías para Inquilinos", href: "/faq" }, { label: "Subida Alquiler 2026" }]} />
+
         {/* Hero Section */}
         <section className="pb-20 bg-muted">
           <div className="container mx-auto px-6">
@@ -180,28 +194,30 @@ const SubidaAlquiler2026 = () => {
               <FadeIn>
                 <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
                   <TrendingUp className="w-4 h-4" />
-                  Actualizado enero 2026
+                  Último IRAV publicado: marzo 2026
                 </div>
               </FadeIn>
               <FadeIn delay={0.1}>
                 <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground mb-6 leading-tight">
-                  Subida de Alquiler 2026
+                  IRAV marzo 2026: 2,47%
                 </h1>
               </FadeIn>
               <FadeIn delay={0.2}>
                 {/* TL;DR Speakable Summary */}
                 <div className="speakable-summary bg-background/60 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-border">
                   <p className="text-lg text-foreground font-medium">
-                    <strong>Resumen rápido:</strong> En 2026, la subida máxima del alquiler es el IRAV (aproximadamente 2,2%). 
-                    Este índice ha sustituido al IPC para vivienda habitual. El propietario debe avisarte con 1 mes 
-                    de antelación y no puede aplicar subidas superiores aunque el contrato mencione el IPC.
+                    <strong>Resumen rápido:</strong> El último IRAV publicado por el INE es el de{" "}
+                    <strong>marzo 2026: 2,47%</strong>. Esta es la subida máxima legal para contratos de alquiler de
+                    vivienda habitual que se actualicen con ese índice. Sustituye al IPC. El propietario debe avisarte
+                    por escrito con 1 mes de antelación y no puede aplicar subidas superiores aunque el contrato
+                    mencione el IPC.
                   </p>
                 </div>
               </FadeIn>
               <FadeIn delay={0.25}>
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
                   <Calendar className="w-4 h-4" />
-                  <span>Última actualización: enero 2026</span>
+                  <span>Actualizado: 21 de abril de 2026</span>
                 </div>
               </FadeIn>
               <FadeIn delay={0.3}>
@@ -232,14 +248,20 @@ const SubidaAlquiler2026 = () => {
                 <div className="bg-gradient-to-br from-blue-50 to-green-50 border border-blue-100 rounded-3xl p-8 md:p-12 text-center mb-16">
                   <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-blue-700 mb-6">
                     <Calendar className="w-4 h-4" />
-                    IRAV Enero 2026
+                    IRAV marzo 2026
                   </div>
-                  <div className="text-6xl md:text-7xl font-serif font-bold text-foreground mb-4">
-                    2,2%
-                  </div>
-                  <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                    Subida máxima permitida para la actualización anual de tu contrato de alquiler de vivienda habitual
+                  <div className="text-6xl md:text-7xl font-serif font-bold text-foreground mb-4">2,47%</div>
+                  <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-6">
+                    Subida máxima permitida para la actualización anual de tu contrato de alquiler de vivienda habitual,
+                    según el último dato publicado por el INE.
                   </p>
+                  <div className="bg-white/70 border border-blue-100 rounded-2xl p-4 text-sm text-muted-foreground max-w-2xl mx-auto text-left">
+                    <p>
+                      <strong className="text-foreground">¿Buscabas el IRAV de abril 2026?</strong> Aún no está
+                      publicado. El INE actualiza el IRAV mensualmente; en cuanto salga el dato de abril, esta página se
+                      actualizará. Mientras tanto, el último valor vigente es el de <strong>marzo 2026 (2,47%)</strong>.
+                    </p>
+                  </div>
                 </div>
               </FadeIn>
 
@@ -252,11 +274,11 @@ const SubidaAlquiler2026 = () => {
               <div className="space-y-4">
                 {comparativaIndices.map((item, index) => (
                   <FadeIn key={index} delay={0.1 + index * 0.05}>
-                    <div className={`flex items-center justify-between p-5 rounded-xl border ${
-                      item.aplica 
-                        ? "bg-green-50 border-green-100" 
-                        : "bg-muted/50 border-border"
-                    }`}>
+                    <div
+                      className={`flex items-center justify-between p-5 rounded-xl border ${
+                        item.aplica ? "bg-green-50 border-green-100" : "bg-muted/50 border-border"
+                      }`}
+                    >
                       <div className="flex items-center gap-4">
                         {item.aplica ? (
                           <CheckCircle2 className="w-6 h-6 text-green-600" />
@@ -268,9 +290,11 @@ const SubidaAlquiler2026 = () => {
                           <p className="text-sm text-muted-foreground">{item.descripcion}</p>
                         </div>
                       </div>
-                      <div className={`text-2xl font-serif font-bold ${
-                        item.aplica ? "text-green-700" : "text-muted-foreground"
-                      }`}>
+                      <div
+                        className={`text-2xl font-serif font-bold ${
+                          item.aplica ? "text-green-700" : "text-muted-foreground"
+                        }`}
+                      >
                         {item.valor}
                       </div>
                     </div>
@@ -295,9 +319,9 @@ const SubidaAlquiler2026 = () => {
                   <FadeIn key={index} delay={index * 0.1}>
                     <div className="p-6 bg-background rounded-2xl border border-border">
                       <div className="flex items-start gap-4">
-                        <AlertTriangle className={`w-6 h-6 flex-shrink-0 ${
-                          item.legal ? "text-amber-500" : "text-red-500"
-                        }`} />
+                        <AlertTriangle
+                          className={`w-6 h-6 flex-shrink-0 ${item.legal ? "text-amber-500" : "text-red-500"}`}
+                        />
                         <div>
                           <h3 className="font-semibold text-foreground mb-2">{item.situacion}</h3>
                           <p className="text-muted-foreground">{item.accion}</p>
@@ -313,12 +337,18 @@ const SubidaAlquiler2026 = () => {
                 <div className="mt-12 p-6 bg-background rounded-2xl border border-border">
                   <h3 className="font-semibold text-foreground mb-3">¿Otras cláusulas problemáticas en tu contrato?</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Si además de subidas abusivas detectas otras irregularidades, consulta nuestra guía completa sobre 
-                    <Link to="/clausulas-abusivas-alquiler" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
+                    Si además de subidas abusivas detectas otras irregularidades, consulta nuestra guía completa sobre
+                    <Link
+                      to="/clausulas-abusivas-alquiler"
+                      className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80"
+                    >
                       cláusulas abusivas en contratos de alquiler
                     </Link>
                     para conocer todos tus derechos. Si tu contrato está por terminar, revisa también la guía sobre
-                    <Link to="/devolucion-fianza-alquiler" className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80">
+                    <Link
+                      to="/devolucion-fianza-alquiler"
+                      className="text-foreground underline underline-offset-4 mx-1 hover:text-foreground/80"
+                    >
                       devolución de fianza
                     </Link>
                     y los plazos legales para recuperarla.
@@ -341,22 +371,30 @@ const SubidaAlquiler2026 = () => {
               </FadeIn>
               <FadeIn delay={0.1}>
                 <p className="text-background/70 text-lg mb-8">
-                  Analiza tu contrato con nuestra IA y descubre si las cláusulas de actualización 
-                  de renta cumplen con la normativa o podrían ser contrarias a ella.
+                  Analiza tu contrato con nuestra IA y descubre si las cláusulas de actualización de renta cumplen con
+                  la normativa o podrían ser contrarias a ella.
                 </p>
               </FadeIn>
               <FadeIn delay={0.2}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild size="lg" variant="secondary" className="rounded-full px-8 bg-background text-foreground hover:bg-background/90">
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="secondary"
+                    className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
+                  >
                     <Link to="/analizar-gratis">
                       Analizar mi contrato gratis
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="ghost" className="rounded-full px-8 text-background border border-background/20 hover:bg-background/10">
-                    <Link to="/faq">
-                      Ver más preguntas frecuentes
-                    </Link>
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="ghost"
+                    className="rounded-full px-8 text-background border border-background/20 hover:bg-background/10"
+                  >
+                    <Link to="/faq">Ver más preguntas frecuentes</Link>
                   </Button>
                 </div>
               </FadeIn>
@@ -401,11 +439,42 @@ const SubidaAlquiler2026 = () => {
               <FadeIn>
                 <h2 className="font-serif text-2xl font-semibold text-foreground mb-6">En resumen</h2>
                 <ul className="space-y-3 text-muted-foreground">
-                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Desde 2026, la subida máxima del alquiler es el <strong>IRAV (~2,2%)</strong>, que sustituye al IPC (Disposición final 6ª Ley 12/2023).</span></li>
-                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El propietario debe avisar con al menos <strong>1 mes</strong> de antelación a la fecha de actualización (art. 18 LAU).</span></li>
-                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>Aunque el contrato diga "subida según IPC", <strong>la ley prevalece</strong> y limita al IRAV (art. 18 LAU modificado).</span></li>
-                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>En <strong>zonas tensionadas</strong>, la renta de nuevos contratos está además limitada al SERPAVI (art. 17.7 LAU).</span></li>
-                  <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" /><span>El IRAV lo publica mensualmente el <strong>INE</strong> en ine.es y es obligatorio para todos los contratos de vivienda habitual.</span></li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" />
+                    <span>
+                      El último <strong>IRAV publicado es el de marzo 2026: 2,47%</strong>. Es el tope para la
+                      actualización anual del alquiler de vivienda habitual; sustituye al IPC (Disposición final 6ª Ley
+                      12/2023).
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" />
+                    <span>
+                      El propietario debe avisar con al menos <strong>1 mes</strong> de antelación a la fecha de
+                      actualización (art. 18 LAU).
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" />
+                    <span>
+                      Aunque el contrato diga "subida según IPC", <strong>la ley prevalece</strong> y limita al IRAV
+                      (art. 18 LAU modificado).
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" />
+                    <span>
+                      En <strong>zonas tensionadas</strong>, la renta de nuevos contratos está además limitada al
+                      SERPAVI (art. 17.7 LAU).
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" />
+                    <span>
+                      El IRAV lo publica mensualmente el <strong>INE</strong> en ine.es y es obligatorio para todos los
+                      contratos de vivienda habitual.
+                    </span>
+                  </li>
                 </ul>
               </FadeIn>
             </div>
@@ -417,9 +486,9 @@ const SubidaAlquiler2026 = () => {
           <div className="container mx-auto px-6">
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-sm text-muted-foreground">
-                <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal. 
-                El valor del IRAV debe consultarse en la web oficial del INE. ACROXIA es una herramienta de análisis 
-                que ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
+                <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal.
+                El valor del IRAV debe consultarse en la web oficial del INE. ACROXIA es una herramienta de análisis que
+                ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
               </p>
             </div>
           </div>
