@@ -128,20 +128,24 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
 
   // Mark anonymous analysis as paid (idempotent)
   if (analysisId) {
-    const { error: paidError } = await supabase
-      .from("anonymous_analyses")
-      .update({ paid: true, paddle_transaction_id: transactionId })
-      .eq("id", analysisId);
+    // Extract customer email first so we can persist it on anonymous_analyses
+    // (required by Fix 4 linkAnonymousAnalyses to match by email after registration).
+    const customerEmail = data.customData?.email || data.customer?.email || data.customerEmail || "";
+    const normalizedEmail = customerEmail.trim().toLowerCase();
+
+    const updates: Record<string, unknown> = {
+      paid: true,
+      paddle_transaction_id: transactionId,
+    };
+    if (normalizedEmail) updates.email = normalizedEmail;
+
+    const { error: paidError } = await supabase.from("anonymous_analyses").update(updates).eq("id", analysisId);
 
     if (paidError) {
       console.error("Error marking analysis as paid:", paidError);
     } else {
-      console.log(`Analysis ${analysisId} marked as paid, tx: ${transactionId}`);
+      console.log(`Analysis ${analysisId} marked as paid, tx: ${transactionId}, email: ${normalizedEmail || "(none)"}`);
     }
-
-    // Extract customer email from customData (sent by the checkout front-end) with
-    // fallbacks to Paddle's expanded customer object or top-level customerEmail if present.
-    const customerEmail = data.customData?.email || data.customer?.email || data.customerEmail || "";
 
     // Record in purchase_intents
     await supabase.from("purchase_intents").insert({
