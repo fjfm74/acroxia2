@@ -72,9 +72,9 @@ const linkAnonymousAnalyses = async (userId: string, userEmail: string) => {
     }
 
     if (!analyses || analyses.length === 0) {
-      console.log(`[reconcile] ningun analisis pendiente de reconciliar (email=${normalizedEmail})`);
-      localStorage.removeItem("acroxia_session_id");
-      localStorage.removeItem("acroxia_user_type");
+      console.log(
+        `[reconcile] ningun analisis pendiente de reconciliar (email=${normalizedEmail}) — conservo session_id para reintentar en proximo SIGNED_IN/USER_UPDATED`,
+      );
       return;
     }
 
@@ -90,7 +90,7 @@ const linkAnonymousAnalyses = async (userId: string, userEmail: string) => {
 
       if (existingContract) {
         console.log(
-          `[reconcile] contract ya existente (${existingContract.id}) para analysis ${analysis.id}, solo actualizo converted_to_user_id`
+          `[reconcile] contract ya existente (${existingContract.id}) para analysis ${analysis.id}, solo actualizo converted_to_user_id`,
         );
         await supabase
           .from("anonymous_analyses")
@@ -132,8 +132,7 @@ const linkAnonymousAnalyses = async (userId: string, userEmail: string) => {
           valid_clauses: report?.summary?.valid_count ?? clauses.filter((c: any) => c.type === "valid").length,
           suspicious_clauses:
             report?.summary?.suspicious_count ?? clauses.filter((c: any) => c.type === "suspicious").length,
-          illegal_clauses:
-            report?.summary?.illegal_count ?? clauses.filter((c: any) => c.type === "illegal").length,
+          illegal_clauses: report?.summary?.illegal_count ?? clauses.filter((c: any) => c.type === "illegal").length,
           summary: report?.summary?.executive_summary || "",
         });
       }
@@ -206,8 +205,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const currentConfirmedAt = (session.user as any).email_confirmed_at ?? null;
         const prevConfirmedAt = prevEmailConfirmedAtRef.current;
         // Detect freshly verified email: previously null/undefined, now a timestamp
-        const justVerified =
-          (prevConfirmedAt === null || prevConfirmedAt === undefined) && !!currentConfirmedAt;
+        const justVerified = (prevConfirmedAt === null || prevConfirmedAt === undefined) && !!currentConfirmedAt;
 
         // Use setTimeout to avoid potential race conditions
         setTimeout(async () => {
