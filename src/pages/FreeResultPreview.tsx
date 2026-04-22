@@ -13,9 +13,18 @@ import LeadCaptureModal from "@/components/LeadCaptureModal";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { 
-  CheckCircle, AlertTriangle, XCircle, Lock, Clock, 
-  FileText, Shield, ArrowRight, Sparkles, Users, Loader2
+import {
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  Lock,
+  Clock,
+  FileText,
+  Shield,
+  ArrowRight,
+  Sparkles,
+  Users,
+  Loader2,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -37,7 +46,7 @@ const FreeResultPreview = () => {
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
   const urlPerspective = searchParams.get("perspectiva") === "propietario" ? "landlord" : "tenant";
-  
+
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +73,7 @@ const FreeResultPreview = () => {
       if (!id) return;
 
       try {
-        const { data, error: fetchError } = await supabase
-          .rpc("get_anonymous_analysis", { analysis_uuid: id });
+        const { data, error: fetchError } = await supabase.rpc("get_anonymous_analysis", { analysis_uuid: id });
 
         if (fetchError) throw fetchError;
 
@@ -188,9 +196,12 @@ const FreeResultPreview = () => {
   };
 
   // Calculate risk score (0-10)
-  const riskScore = Math.min(10, Math.round(
-    (result.illegal_clauses * 3 + result.suspicious_clauses * 1.5) / Math.max(result.total_clauses, 1) * 10
-  ));
+  const riskScore = Math.min(
+    10,
+    Math.round(
+      ((result.illegal_clauses * 3 + result.suspicious_clauses * 1.5) / Math.max(result.total_clauses, 1)) * 10,
+    ),
+  );
 
   // Get recommendation based on risk
   const getRecommendation = () => {
@@ -228,13 +239,11 @@ const FreeResultPreview = () => {
             <FadeIn>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                   <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-2">
+                  <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-2">
                     Resultado del análisis
                   </h1>
                   <div className="flex items-center gap-2">
-                    <p className="text-muted-foreground">
-                      {analysis.file_name}
-                    </p>
+                    <p className="text-muted-foreground">{analysis.file_name}</p>
                     <Badge variant={isLandlord ? "default" : "secondary"} className="text-xs">
                       {perspectiveLabel}
                     </Badge>
@@ -242,9 +251,7 @@ const FreeResultPreview = () => {
                 </div>
                 <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
                   <Clock className="h-5 w-5" />
-                  <span className="text-sm font-medium">
-                    Disponible: {timeRemaining}
-                  </span>
+                  <span className="text-sm font-medium">Disponible: {timeRemaining}</span>
                 </div>
               </div>
             </FadeIn>
@@ -264,17 +271,25 @@ const FreeResultPreview = () => {
                     <CardContent>
                       <div className="flex items-center gap-6">
                         <div className="relative">
-                          <div className={`
+                          <div
+                            className={`
                             w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold
-                            ${riskScore >= 7 ? 'bg-red-100 text-red-600' : 
-                              riskScore >= 4 ? 'bg-amber-100 text-amber-600' : 
-                              'bg-green-100 text-green-600'}
-                          `}>
+                            ${
+                              riskScore >= 7
+                                ? "bg-red-100 text-red-600"
+                                : riskScore >= 4
+                                  ? "bg-amber-100 text-amber-600"
+                                  : "bg-green-100 text-green-600"
+                            }
+                          `}
+                          >
                             {riskScore}/10
                           </div>
                         </div>
                         <div className="flex-1">
-                          <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${recommendation.bg} ${recommendation.color}`}>
+                          <div
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${recommendation.bg} ${recommendation.color}`}
+                          >
                             {recommendation.text}
                           </div>
                           <p className="text-sm text-muted-foreground">
@@ -299,18 +314,22 @@ const FreeResultPreview = () => {
                           <p className="font-medium text-foreground">{result.valid_clauses} cláusulas correctas</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50">
                         <AlertTriangle className="w-5 h-5 text-amber-600" />
                         <div className="flex-1">
-                          <p className="font-medium text-foreground">{result.suspicious_clauses} cláusulas sospechosas</p>
+                          <p className="font-medium text-foreground">
+                            {result.suspicious_clauses} cláusulas sospechosas
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50">
                         <XCircle className="w-5 h-5 text-red-600" />
                         <div className="flex-1">
-                          <p className="font-medium text-foreground">{result.illegal_clauses} cláusulas potencialmente ilegales</p>
+                          <p className="font-medium text-foreground">
+                            {result.illegal_clauses} cláusulas potencialmente ilegales
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -334,8 +353,12 @@ const FreeResultPreview = () => {
                         exampleClauses.map((clause, index) => (
                           <div key={index} className="relative border rounded-lg p-4 overflow-hidden">
                             <div className="flex items-start gap-3 mb-2">
-                              {clause.type === "legal" && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />}
-                              {clause.type === "suspicious" && <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />}
+                              {clause.type === "legal" && (
+                                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                              )}
+                              {clause.type === "suspicious" && (
+                                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                              )}
                               {clause.type === "illegal" && <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
                               <div>
                                 <p className="font-medium text-foreground">{clause.category}</p>
@@ -344,7 +367,7 @@ const FreeResultPreview = () => {
                                 </p>
                               </div>
                             </div>
-                            
+
                             {/* Blur overlay */}
                             <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-2">
                               <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -382,13 +405,9 @@ const FreeResultPreview = () => {
                     <Card className="border-2 border-green-600">
                       <CardContent className="pt-6 text-center space-y-4">
                         <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
-                        <h3 className="font-serif text-xl font-semibold">
-                          Pago recibido
-                        </h3>
+                        <h3 className="font-serif text-xl font-semibold">Pago recibido</h3>
                         <p className="text-sm text-muted-foreground">
-                          {waitingForContract
-                            ? "Estamos preparando tu informe…"
-                            : "Redirigiendo a tu informe…"}
+                          {waitingForContract ? "Estamos preparando tu informe…" : "Redirigiendo a tu informe…"}
                         </p>
                         <div className="flex justify-center">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -404,18 +423,12 @@ const FreeResultPreview = () => {
                         <CardContent className="pt-6 space-y-4">
                           <div className="text-center">
                             <Sparkles className="h-10 w-10 text-primary mx-auto mb-3" />
-                            <h3 className="font-serif text-xl font-semibold mb-2">
-                              Informe completo
-                            </h3>
+                            <h3 className="font-serif text-xl font-semibold mb-2">Informe completo</h3>
                             <p className="text-muted-foreground text-sm mb-4">
                               Accede al análisis detallado de todas las cláusulas con recomendaciones personalizadas.
                             </p>
-                            <div className="text-3xl font-bold text-foreground mb-1">
-                              {priceDisplay}
-                            </div>
-                            <p className="text-xs text-muted-foreground mb-4">
-                              Pago único · Incluye registro gratuito
-                            </p>
+                            <div className="text-3xl font-bold text-foreground mb-1">{priceDisplay}</div>
+                            <p className="text-xs text-muted-foreground mb-4">Pago único · Incluye registro gratuito</p>
                           </div>
 
                           <Button
@@ -433,6 +446,7 @@ const FreeResultPreview = () => {
                                     perspective,
                                     sessionId: localStorage.getItem("acroxia_session_id") || "",
                                     userType: localStorage.getItem("acroxia_user_type") || "inquilino",
+                                    email: user?.email || analysis?.email || "",
                                   },
                                   successUrl: user
                                     ? `${window.location.origin}/resultado/${id}`
@@ -491,11 +505,7 @@ const FreeResultPreview = () => {
                           <p className="text-sm text-muted-foreground mb-4">
                             Te enviaremos un recordatorio antes de que expire tu análisis.
                           </p>
-                          <Button
-                            variant="outline"
-                            onClick={() => setShowLeadModal(true)}
-                            className="w-full"
-                          >
+                          <Button variant="outline" onClick={() => setShowLeadModal(true)} className="w-full">
                             Recibir recordatorio
                           </Button>
                         </CardContent>
@@ -520,14 +530,13 @@ const FreeResultPreview = () => {
       </div>
 
       {/* Modals */}
-      <LeadCaptureModal 
-        open={showLeadModal} 
+      <LeadCaptureModal
+        open={showLeadModal}
         onOpenChange={setShowLeadModal}
         analysisId={id!}
         illegalCount={result.illegal_clauses}
         suspiciousCount={result.suspicious_clauses}
       />
-
     </>
   );
 };
