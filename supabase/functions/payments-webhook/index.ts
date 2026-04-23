@@ -128,9 +128,34 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
 
   // Mark anonymous analysis as paid (idempotent)
   if (analysisId) {
-    // Extract customer email first so we can persist it on anonymous_analyses
-    // (required by Fix 4 linkAnonymousAnalyses to match by email after registration).
-    const customerEmail = data.customData?.email || data.customer?.email || data.customerEmail || "";
+    // Extract customer email with Paddle API fallback.
+    // Anonymous checkouts don't populate data.customer inline — Paddle only sends
+    // customer_id — so we fetch the customer object ourselves when email is empty.
+    let customerEmail = data.customData?.email || data.customer?.email || data.customerEmail || "";
+
+    if (!customerEmail) {
+      const paddleCustomerId = data.customer_id || data.customerId;
+      if (paddleCustomerId) {
+        try {
+          const paddleEnv = Deno.env.get("PADDLE_ENV") || "sandbox";
+          const paddleApiBase = paddleEnv === "live" ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
+          const paddleKey = Deno.env.get("PADDLE_API_KEY") || "";
+          const resp = await fetch(`${paddleApiBase}/customers/${paddleCustomerId}`, {
+            headers: { Authorization: `Bearer ${paddleKey}` },
+          });
+          if (resp.ok) {
+            const json = await resp.json();
+            customerEmail = json.data?.email || "";
+            console.log(`Fetched customer email from Paddle API: ${customerEmail}`);
+          } else {
+            console.error(`Paddle customer fetch failed: ${resp.status} ${resp.statusText}`);
+          }
+        } catch (e) {
+          console.error("Error fetching customer from Paddle:", e);
+        }
+      }
+    }
+
     const normalizedEmail = customerEmail.trim().toLowerCase();
 
     const updates: Record<string, unknown> = {
