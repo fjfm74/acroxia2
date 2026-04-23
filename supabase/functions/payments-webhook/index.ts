@@ -137,18 +137,18 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       const paddleCustomerId = data.customer_id || data.customerId;
       if (paddleCustomerId) {
         try {
-          const paddleEnv = Deno.env.get("PADDLE_ENV") || "sandbox";
-          const paddleApiBase = paddleEnv === "live" ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
-          const paddleKey = Deno.env.get("PADDLE_API_KEY") || "";
+          const paddleApiBase = env === "live" ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
+          const paddleKey =
+            env === "live" ? Deno.env.get("PADDLE_LIVE_API_KEY") || "" : Deno.env.get("PADDLE_SANDBOX_API_KEY") || "";
           const resp = await fetch(`${paddleApiBase}/customers/${paddleCustomerId}`, {
             headers: { Authorization: `Bearer ${paddleKey}` },
           });
           if (resp.ok) {
             const json = await resp.json();
             customerEmail = json.data?.email || "";
-            console.log(`Fetched customer email from Paddle API: ${customerEmail}`);
+            console.log(`Fetched customer email from Paddle API (env=${env}): ${customerEmail}`);
           } else {
-            console.error(`Paddle customer fetch failed: ${resp.status} ${resp.statusText}`);
+            console.error(`Paddle customer fetch failed (env=${env}): ${resp.status} ${resp.statusText}`);
           }
         } catch (e) {
           console.error("Error fetching customer from Paddle:", e);
