@@ -18,6 +18,7 @@ import { PaymentTestModeBanner } from "./components/PaymentTestModeBanner";
 import Index from "./pages/Index";
 
 // Lazy loaded pages - split by route
+const VerificacionPendiente = lazy(() => import("./pages/VerificacionPendiente"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Contacto = lazy(() => import("./pages/Contacto"));
