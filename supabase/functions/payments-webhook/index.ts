@@ -1,3 +1,4 @@
+// redeploy 2026-05-04: force Lovable to redeploy this Edge Function (no functional change)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhook, EventName, type PaddleEnv } from "../_shared/paddle.ts";
 
