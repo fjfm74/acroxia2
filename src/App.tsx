@@ -127,94 +127,568 @@ const App = () => (
           <ScrollToTop />
           <PageViewTracker />
           <Routes>
-              {/* Critical route - no suspense wrapper needed */}
-              <Route path="/" element={<Index />} />
-              
-              {/* Public pages */}
-              <Route path="/precios" element={<Suspense fallback={<PageLoader />}><Pricing /></Suspense>} />
-              <Route path="/faq" element={<Suspense fallback={<PageLoader />}><FAQ /></Suspense>} />
-              <Route path="/contacto" element={<Suspense fallback={<PageLoader />}><Contacto /></Suspense>} />
-              <Route path="/blog" element={<Suspense fallback={<PageLoader />}><Blog /></Suspense>} />
-              <Route path="/blog/:slug" element={<Suspense fallback={<PageLoader />}><BlogPost /></Suspense>} />
-              
-              {/* Auth pages */}
-              <Route path="/login" element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
-              <Route path="/registro" element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
-              <Route path="/recuperar-contrasena" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
-              <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
-              <Route path="/verificado" element={<Suspense fallback={<PageLoader />}><EmailVerified /></Suspense>} />
-              
-              {/* Protected user routes */}
-              <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></ProtectedRoute>} />
-              <Route path="/inquilino" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></ProtectedRoute>} />
-              <Route path="/perfil" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Profile /></Suspense></ProtectedRoute>} />
-              <Route path="/analizar" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Analyze /></Suspense></ProtectedRoute>} />
-              <Route path="/resultado/:id" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><AnalysisResult /></Suspense></ProtectedRoute>} />
-              
-              {/* Public analysis routes */}
-              <Route path="/analizar-gratis" element={<Suspense fallback={<PageLoader />}><AnalyzePublic /></Suspense>} />
-              <Route path="/resultado-previo/:id" element={<Suspense fallback={<PageLoader />}><FreeResultPreview /></Suspense>} />
-              
-              {/* Landlord Routes */}
-              <Route path="/propietario" element={<LandlordRoute><Suspense fallback={<PageLoader />}><DashboardLandlord /></Suspense></LandlordRoute>} />
-              <Route path="/propietario/analizar" element={<LandlordRoute><Suspense fallback={<PageLoader />}><AnalyzeLandlordPage /></Suspense></LandlordRoute>} />
-              <Route path="/propietario/contratos" element={<LandlordRoute><Suspense fallback={<PageLoader />}><MyContractsPage /></Suspense></LandlordRoute>} />
-              <Route path="/propietario/crear-contrato" element={<LandlordRoute><Suspense fallback={<PageLoader />}><CreateContractLandlordPage /></Suspense></LandlordRoute>} />
-              
-              {/* Professional Routes */}
-              <Route path="/pro" element={<ProfessionalRoute><Suspense fallback={<PageLoader />}><DashboardPro /></Suspense></ProfessionalRoute>} />
-              <Route path="/pro/configuracion" element={<ProfessionalRoute><Suspense fallback={<PageLoader />}><SettingsPage /></Suspense></ProfessionalRoute>} />
-              <Route path="/pro/crear-contrato" element={<ProfessionalRoute><Suspense fallback={<PageLoader />}><CreateContractPage /></Suspense></ProfessionalRoute>} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></AdminRoute>} />
-              <Route path="/admin/blog" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBlog /></Suspense></AdminRoute>} />
-              <Route path="/admin/blog/nuevo" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBlogNew /></Suspense></AdminRoute>} />
-              <Route path="/admin/blog/editar/:id" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBlogEdit /></Suspense></AdminRoute>} />
-              <Route path="/admin/social" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminSocial /></Suspense></AdminRoute>} />
-              <Route path="/admin/social/nuevo" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminSocialNew /></Suspense></AdminRoute>} />
-              <Route path="/admin/social/editar/:id" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminSocialEdit /></Suspense></AdminRoute>} />
-              <Route path="/admin/documentos" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminDocuments /></Suspense></AdminRoute>} />
-              <Route path="/admin/usuarios" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminUsers /></Suspense></AdminRoute>} />
-              <Route path="/admin/boe" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminBOE /></Suspense></AdminRoute>} />
-              <Route path="/admin/marketing" element={<AdminRoute><Suspense fallback={<PageLoader />}><AdminContactsCRM /></Suspense></AdminRoute>} />
-              
-              {/* Legal pages */}
-              <Route path="/aviso-legal" element={<Suspense fallback={<PageLoader />}><AvisoLegal /></Suspense>} />
-              <Route path="/privacidad" element={<Suspense fallback={<PageLoader />}><Privacidad /></Suspense>} />
-              <Route path="/terminos" element={<Suspense fallback={<PageLoader />}><Terminos /></Suspense>} />
-              <Route path="/cookies" element={<Suspense fallback={<PageLoader />}><Cookies /></Suspense>} />
-              <Route path="/transparencia-ia" element={<Suspense fallback={<PageLoader />}><TransparenciaIA /></Suspense>} />
-              <Route path="/desistimiento" element={<Suspense fallback={<PageLoader />}><Desistimiento /></Suspense>} />
-              <Route path="/accesibilidad" element={<Suspense fallback={<PageLoader />}><Accesibilidad /></Suspense>} />
-              
-              {/* SEO pages */}
-              <Route path="/glosario" element={<Suspense fallback={<PageLoader />}><Glosario /></Suspense>} />
-              <Route path="/calculadora-irav" element={<Suspense fallback={<PageLoader />}><CalculadoraIRAV /></Suspense>} />
-              <Route path="/clausulas-abusivas-alquiler" element={<Suspense fallback={<PageLoader />}><ClausulasAbusivas /></Suspense>} />
-              <Route path="/devolucion-fianza-alquiler" element={<Suspense fallback={<PageLoader />}><DevolucionFianza /></Suspense>} />
-              <Route path="/subida-alquiler-2026" element={<Suspense fallback={<PageLoader />}><SubidaAlquiler2026 /></Suspense>} />
-              <Route path="/contrato-alquiler-propietarios" element={<Suspense fallback={<PageLoader />}><ContratoAlquilerPropietarios /></Suspense>} />
-              <Route path="/impago-alquiler-propietarios" element={<Suspense fallback={<PageLoader />}><ImpagoAlquilerPropietarios /></Suspense>} />
-              <Route path="/zonas-tensionadas-propietarios" element={<Suspense fallback={<PageLoader />}><ZonasTensionadasPropietarios /></Suspense>} />
-              <Route path="/deposito-fianza-propietarios" element={<Suspense fallback={<PageLoader />}><DepositoFianzaPropietarios /></Suspense>} />
-              <Route path="/fin-contrato-alquiler-propietarios" element={<Suspense fallback={<PageLoader />}><FinContratoAlquilerPropietarios /></Suspense>} />
-              
-              {/* Professional landing pages */}
-              <Route path="/profesionales/inmobiliarias" element={<Suspense fallback={<PageLoader />}><Inmobiliarias /></Suspense>} />
-              <Route path="/profesionales/gestorias" element={<Suspense fallback={<PageLoader />}><Gestorias /></Suspense>} />
-              <Route path="/propietarios" element={<Suspense fallback={<PageLoader />}><Propietarios /></Suspense>} />
-              
-              {/* Utility pages */}
-              <Route path="/aprobar-post/:token" element={<Suspense fallback={<PageLoader />}><AprobarPost /></Suspense>} />
-              <Route path="/unsubscribe" element={<Suspense fallback={<PageLoader />}><Unsubscribe /></Suspense>} />
-              <Route path="/confirmar-blog" element={<Suspense fallback={<PageLoader />}><ConfirmBlogSubscription /></Suspense>} />
-              <Route path="/blog/unsubscribe" element={<Suspense fallback={<PageLoader />}><UnsubscribeBlog /></Suspense>} />
-              
-              {/* 404 */}
-              <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
+            {/* Critical route - no suspense wrapper needed */}
+            <Route path="/" element={<Index />} />
+
+            {/* Public pages */}
+            <Route
+              path="/precios"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Pricing />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/faq"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <FAQ />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/contacto"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Contacto />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/blog"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Blog />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/blog/:slug"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <BlogPost />
+                </Suspense>
+              }
+            />
+
+            {/* Auth pages */}
+            <Route
+              path="/login"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Login />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/registro"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Register />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/recuperar-contrasena"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ForgotPassword />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ResetPassword />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/verificado"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <EmailVerified />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/verificacion-pendiente"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <VerificacionPendiente />
+                </Suspense>
+              }
+            />
+
+            {/* Protected user routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <Dashboard />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inquilino"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <Dashboard />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/perfil"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <Profile />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analizar"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <Analyze />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resultado/:id"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AnalysisResult />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Public analysis routes */}
+            <Route
+              path="/analizar-gratis"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AnalyzePublic />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/resultado-previo/:id"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <FreeResultPreview />
+                </Suspense>
+              }
+            />
+
+            {/* Landlord Routes */}
+            <Route
+              path="/propietario"
+              element={
+                <LandlordRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardLandlord />
+                  </Suspense>
+                </LandlordRoute>
+              }
+            />
+            <Route
+              path="/propietario/analizar"
+              element={
+                <LandlordRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AnalyzeLandlordPage />
+                  </Suspense>
+                </LandlordRoute>
+              }
+            />
+            <Route
+              path="/propietario/contratos"
+              element={
+                <LandlordRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <MyContractsPage />
+                  </Suspense>
+                </LandlordRoute>
+              }
+            />
+            <Route
+              path="/propietario/crear-contrato"
+              element={
+                <LandlordRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <CreateContractLandlordPage />
+                  </Suspense>
+                </LandlordRoute>
+              }
+            />
+
+            {/* Professional Routes */}
+            <Route
+              path="/pro"
+              element={
+                <ProfessionalRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardPro />
+                  </Suspense>
+                </ProfessionalRoute>
+              }
+            />
+            <Route
+              path="/pro/configuracion"
+              element={
+                <ProfessionalRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <SettingsPage />
+                  </Suspense>
+                </ProfessionalRoute>
+              }
+            />
+            <Route
+              path="/pro/crear-contrato"
+              element={
+                <ProfessionalRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <CreateContractPage />
+                  </Suspense>
+                </ProfessionalRoute>
+              }
+            />
+
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminDashboard />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/blog"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminBlog />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/blog/nuevo"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminBlogNew />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/blog/editar/:id"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminBlogEdit />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/social"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminSocial />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/social/nuevo"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminSocialNew />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/social/editar/:id"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminSocialEdit />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/documentos"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminDocuments />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/usuarios"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminUsers />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/boe"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminBOE />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing"
+              element={
+                <AdminRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminContactsCRM />
+                  </Suspense>
+                </AdminRoute>
+              }
+            />
+
+            {/* Legal pages */}
+            <Route
+              path="/aviso-legal"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AvisoLegal />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/privacidad"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Privacidad />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/terminos"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Terminos />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/cookies"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Cookies />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/transparencia-ia"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TransparenciaIA />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/desistimiento"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Desistimiento />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/accesibilidad"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Accesibilidad />
+                </Suspense>
+              }
+            />
+
+            {/* SEO pages */}
+            <Route
+              path="/glosario"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Glosario />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/calculadora-irav"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <CalculadoraIRAV />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/clausulas-abusivas-alquiler"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ClausulasAbusivas />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/devolucion-fianza-alquiler"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <DevolucionFianza />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/subida-alquiler-2026"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <SubidaAlquiler2026 />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/contrato-alquiler-propietarios"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ContratoAlquilerPropietarios />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/impago-alquiler-propietarios"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ImpagoAlquilerPropietarios />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/zonas-tensionadas-propietarios"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ZonasTensionadasPropietarios />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/deposito-fianza-propietarios"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <DepositoFianzaPropietarios />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/fin-contrato-alquiler-propietarios"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <FinContratoAlquilerPropietarios />
+                </Suspense>
+              }
+            />
+
+            {/* Professional landing pages */}
+            <Route
+              path="/profesionales/inmobiliarias"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Inmobiliarias />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/profesionales/gestorias"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Gestorias />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/propietarios"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Propietarios />
+                </Suspense>
+              }
+            />
+
+            {/* Utility pages */}
+            <Route
+              path="/aprobar-post/:token"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AprobarPost />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/unsubscribe"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Unsubscribe />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/confirmar-blog"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ConfirmBlogSubscription />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/blog/unsubscribe"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <UnsubscribeBlog />
+                </Suspense>
+              }
+            />
+
+            {/* 404 */}
+            <Route
+              path="*"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <NotFound />
+                </Suspense>
+              }
+            />
           </Routes>
-          
+
           {/* Non-critical components loaded after main content */}
           <Suspense fallback={null}>
             <CookieBanner />
