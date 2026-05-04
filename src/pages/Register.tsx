@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthForm from "@/components/auth/AuthForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, CreditCard } from "lucide-react";
 
 const benefits = [
-  "1 análisis de contrato gratis",
+  "Análisis con inteligencia artificial",
   "Detección de cláusulas ilegales",
   "Referencias legales específicas",
   "Cartas de reclamación automáticas",
@@ -20,6 +22,39 @@ const Register = () => {
   const { user, loading } = useAuth();
   const [searchParams] = useSearchParams();
   const isFromCheckout = searchParams.get("checkout") === "success";
+  const analysisId = searchParams.get("analysisId");
+
+  const [prefilledEmail, setPrefilledEmail] = useState<string>("");
+  const [emailLookupTried, setEmailLookupTried] = useState(false);
+
+  // Si venimos del checkout con un analysisId, intentamos obtener el email
+  // que se guardo en anonymous_analyses para precargarlo en el form de registro.
+  useEffect(() => {
+    if (!analysisId || prefilledEmail || emailLookupTried) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc("get_anonymous_analysis", { analysis_uuid: analysisId });
+        if (cancelled) return;
+        if (error) {
+          console.warn("[Register] no se pudo cargar email del analisis:", error);
+          return;
+        }
+        const row = Array.isArray(data) ? data[0] : data;
+        const emailFromAnalysis = (row as any)?.email;
+        if (emailFromAnalysis && typeof emailFromAnalysis === "string") {
+          setPrefilledEmail(emailFromAnalysis);
+        }
+      } finally {
+        if (!cancelled) setEmailLookupTried(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [analysisId, prefilledEmail, emailLookupTried]);
 
   if (!loading && user) {
     return <Navigate to="/dashboard" replace />;
@@ -29,10 +64,16 @@ const Register = () => {
     <>
       <Helmet>
         <title>Crear Cuenta Gratis | ACROXIA</title>
-        <meta name="description" content="Crea tu cuenta gratuita en ACROXIA y recibe 1 análisis de contrato gratis. Protege tus derechos como inquilino." />
+        <meta
+          name="description"
+          content="Crea tu cuenta gratuita en ACROXIA y accede al análisis completo de tu contrato. Protege tus derechos como inquilino."
+        />
         <link rel="canonical" href="https://acroxia.com/registro" />
         <meta property="og:title" content="Crear Cuenta Gratis | ACROXIA" />
-        <meta property="og:description" content="Regístrate y recibe 1 análisis de contrato gratis. Detecta cláusulas abusivas con IA." />
+        <meta
+          property="og:description"
+          content="Regístrate y accede al análisis completo de tu contrato. Detecta cláusulas abusivas con IA."
+        />
         <meta property="og:url" content="https://acroxia.com/registro" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
@@ -40,14 +81,12 @@ const Register = () => {
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 flex items-center justify-center py-20 px-4 bg-muted">
           <div className="w-full max-w-4xl grid md:grid-cols-2 gap-8 items-center">
             <FadeIn>
               <div className="hidden md:block space-y-6">
-                <h1 className="font-serif text-4xl font-semibold text-charcoal">
-                  Protege tus derechos como inquilino
-                </h1>
+                <h1 className="font-serif text-4xl font-semibold text-charcoal">Protege tus derechos como inquilino</h1>
                 <p className="text-charcoal/70">
                   Únete a miles de inquilinos que ya protegen sus contratos con inteligencia artificial.
                 </p>
@@ -67,10 +106,9 @@ const Register = () => {
                 <CardHeader className="space-y-1 text-center">
                   <CardTitle className="font-serif text-3xl">Crear cuenta</CardTitle>
                   <CardDescription>
-                    {isFromCheckout 
+                    {isFromCheckout
                       ? "Crea tu cuenta para acceder a tu informe completo"
-                      : "Regístrate gratis y recibe 1 análisis incluido"
-                    }
+                      : "Regístrate gratis y accede al análisis completo de tus contratos"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -78,12 +116,13 @@ const Register = () => {
                     <Alert className="mb-4 border-green-500/50 bg-green-50">
                       <CreditCard className="h-4 w-4 text-green-600" />
                       <AlertDescription className="text-green-800">
-                        <strong>¡Pago completado!</strong> Crea tu cuenta para acceder al informe completo y tus créditos de análisis.
+                        <strong>¡Pago completado!</strong> Crea tu cuenta para acceder al informe completo.
+                        {prefilledEmail && <> Hemos prerrellenado tu email para vincular el pago con tu cuenta.</>}
                       </AlertDescription>
                     </Alert>
                   )}
-                  <AuthForm mode="register" />
-                  
+                  <AuthForm mode="register" prefilledEmail={prefilledEmail} />
+
                   <p className="mt-6 text-center text-sm text-muted-foreground">
                     ¿Ya tienes cuenta?{" "}
                     <Link to="/login" className="text-primary hover:underline font-medium">
