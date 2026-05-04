@@ -1711,6 +1711,10 @@ export type Database = {
           territorial_scope: string
         }[]
       }
+      set_anonymous_analysis_email: {
+        Args: { p_analysis_id: string; p_email: string }
+        Returns: boolean
+      }
       update_anonymous_analysis_email: {
         Args: {
           analysis_uuid: string
