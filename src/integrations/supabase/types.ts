@@ -1618,6 +1618,14 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
+      link_paid_anonymous_to_user: {
+        Args: { p_session_id?: string }
+        Returns: {
+          analysis_id: string
+          contract_id: string
+          was_already_linked: boolean
+        }[]
+      }
       map_territorial_code: { Args: { p_entity: string }; Returns: string }
       search_legal_chunks:
         | {
