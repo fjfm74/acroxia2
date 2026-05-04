@@ -22,6 +22,15 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
+// Shape devuelto por la RPC link_paid_anonymous_to_user.
+// Tipado manual: los tipos auto-generados de Supabase aun no conocen esta RPC
+// hasta que se regenere src/integrations/supabase/types.ts.
+type LinkPaidAnonymousResult = {
+  analysis_id: string;
+  contract_id: string;
+  was_already_linked: boolean;
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -53,7 +62,8 @@ const linkAnonymousAnalyses = async (userId: string, userEmail: string) => {
       return;
     }
 
-    const { data: linked, error: rpcError } = await supabase.rpc("link_paid_anonymous_to_user", {
+    // Cast del nombre de la RPC porque types.ts auto-generado aun no la incluye.
+    const { data, error: rpcError } = await supabase.rpc("link_paid_anonymous_to_user" as any, {
       p_session_id: sessionId || null,
     });
 
@@ -62,7 +72,9 @@ const linkAnonymousAnalyses = async (userId: string, userEmail: string) => {
       return;
     }
 
-    if (!linked || linked.length === 0) {
+    const linked = (data ?? []) as LinkPaidAnonymousResult[];
+
+    if (linked.length === 0) {
       console.log(
         `[reconcile] ningun analisis pendiente de reconciliar (user ${userId}, email=${normalizedEmail}) — conservo session_id para reintentar en proximo SIGNED_IN/USER_UPDATED`,
       );
