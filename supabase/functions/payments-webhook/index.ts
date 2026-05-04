@@ -1,13 +1,9 @@
-// redeploy 2026-05-04: force Lovable to redeploy this Edge Function (no functional change)
+// redeploy 2026-05-04 v2: clause.type 'legal' (no 'valid'); recount valid_clauses
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhook, EventName, type PaddleEnv } from "../_shared/paddle.ts";
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-// Credit map for one-time purchases.
-// Análisis Único (inquilino 14,99€ y propietario 29€) NO añaden créditos:
-// dan acceso al informe específico mediante source_analysis_id, no crédito reutilizable.
-// Solo packs de créditos reales deben aparecer aquí.
 const CREDIT_MAP: Record<string, number> = {
   pack_comparador: 3,
 };
@@ -121,17 +117,12 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const analysisId = data.customData?.analysisId;
   const transactionId = data.id;
 
-  // Skip subscription transactions
   if (data.subscriptionId) {
     console.log("Subscription transaction, skipping credit logic:", transactionId);
     return;
   }
 
-  // Mark anonymous analysis as paid (idempotent)
   if (analysisId) {
-    // Extract customer email with Paddle API fallback.
-    // Anonymous checkouts don't populate data.customer inline — Paddle only sends
-    // customer_id — so we fetch the customer object ourselves when email is empty.
     let customerEmail = data.customData?.email || data.customer?.email || data.customerEmail || "";
 
     if (!customerEmail) {
@@ -173,7 +164,6 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       console.log(`Analysis ${analysisId} marked as paid, tx: ${transactionId}, email: ${normalizedEmail || "(none)"}`);
     }
 
-    // Record in purchase_intents
     await supabase.from("purchase_intents").insert({
       email: customerEmail || "unknown@paddle.checkout",
       analysis_id: analysisId,
@@ -182,14 +172,11 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     });
   }
 
-  // No userId: anonymous payment before registration.
-  // Analysis is marked paid; contract will be created when the user registers.
   if (!userId) {
     console.log("Transaction completed without userId (anonymous purchase):", transactionId, "analysisId:", analysisId);
     return;
   }
 
-  // Add credits ONLY for credit-pack products (not for single-analysis purchases).
   const item = data.items?.[0];
   const productId = item?.price?.importMeta?.externalId || item?.price?.productId || "";
 
@@ -213,10 +200,8 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     console.log(`Added ${creditsToAdd} credits to user ${userId}, product: ${resolvedProductId}, env: ${env}`);
   }
 
-  // Link analysis to user and create contract (idempotent via source_analysis_id).
   if (!analysisId) return;
 
-  // Idempotency check: skip if a contract already exists for this analysis.
   const { data: existingContract } = await supabase
     .from("contracts")
     .select("id")
@@ -235,12 +220,10 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     return;
   }
 
-  // Mark as converted (only if not already)
   if (!analysisData.converted_to_user_id) {
     await supabase.from("anonymous_analyses").update({ converted_to_user_id: userId }).eq("id", analysisId);
   }
 
-  // Create contract linked to the original anonymous analysis
   const { data: contract, error: contractError } = await supabase
     .from("contracts")
     .insert({
@@ -267,10 +250,10 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       contract_id: contract.id,
       full_report: report,
       total_clauses: clauses.length,
-      valid_clauses: report?.summary?.valid_count ?? clauses.filter((c: any) => c.type === "valid").length,
-      suspicious_clauses:
-        report?.summary?.suspicious_count ?? clauses.filter((c: any) => c.type === "suspicious").length,
-      illegal_clauses: report?.summary?.illegal_count ?? clauses.filter((c: any) => c.type === "illegal").length,
+      // Bug K fix: el AI emite 'legal' (no 'valid'); soportamos ambos por compatibilidad.
+      valid_clauses: clauses.filter((c: any) => c.type === "legal" || c.type === "valid").length,
+      suspicious_clauses: clauses.filter((c: any) => c.type === "suspicious").length,
+      illegal_clauses: clauses.filter((c: any) => c.type === "illegal").length,
       summary: report?.summary?.executive_summary || "",
     });
   }
