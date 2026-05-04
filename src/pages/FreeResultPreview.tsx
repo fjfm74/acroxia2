@@ -8,7 +8,6 @@ import FadeIn from "@/components/animations/FadeIn";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import LeadCaptureModal from "@/components/LeadCaptureModal";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +24,7 @@ import {
   Sparkles,
   Users,
   Loader2,
+  Mail,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -53,12 +53,13 @@ const FreeResultPreview = () => {
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [waitingForContract, setWaitingForContract] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
   const { user } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
 
   const isPaid = analysis?.paid === true;
+  const isEmailVerified = !!(user as any)?.email_confirmed_at;
 
-  // Derive perspective: prefer analysis_result.perspective, then URL param
   const perspective = (analysis?.analysis_result?.perspective as string) || urlPerspective;
   const isLandlord = perspective === "landlord";
   const priceId = isLandlord ? "propietario_unico_price" : "analisis_unico_price";
@@ -86,7 +87,6 @@ const FreeResultPreview = () => {
 
         if (cancelled) return;
 
-        // Already paid + contract linked → redirect to full report
         if (analysisData.paid === true && analysisData.converted_contract_id) {
           navigate(`/resultado/${analysisData.converted_contract_id}`, { replace: true });
           return;
@@ -94,7 +94,6 @@ const FreeResultPreview = () => {
 
         setAnalysis(analysisData);
 
-        // Paid but contract not yet linked → poll
         if (analysisData.paid === true && !analysisData.converted_contract_id) {
           setWaitingForContract(true);
           pollTimer = setTimeout(fetchAnalysis, 3000);
@@ -117,7 +116,6 @@ const FreeResultPreview = () => {
     };
   }, [id, navigate]);
 
-  // Countdown timer
   useEffect(() => {
     if (!analysis?.expires_at) return;
 
@@ -141,7 +139,6 @@ const FreeResultPreview = () => {
     return () => clearInterval(interval);
   }, [analysis?.expires_at]);
 
-  // Auto-show lead capture modal after 15 seconds (skip if already paid)
   useEffect(() => {
     if (!analysis || analysis.email || isPaid) return;
 
@@ -151,6 +148,23 @@ const FreeResultPreview = () => {
 
     return () => clearTimeout(timer);
   }, [analysis, isPaid]);
+
+  const handleResendVerificationEmail = async () => {
+    if (!user?.email) return;
+    setResendingEmail(true);
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: user.email,
+      });
+      if (resendError) throw resendError;
+      toast.success("Email de verificación reenviado. Revisa tu bandeja de entrada.");
+    } catch (err: any) {
+      toast.error(err?.message || "No se pudo reenviar el email. Inténtalo de nuevo.");
+    } finally {
+      setResendingEmail(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -195,7 +209,6 @@ const FreeResultPreview = () => {
     illegal_clauses: 0,
   };
 
-  // Calculate risk score (0-10)
   const riskScore = Math.min(
     10,
     Math.round(
@@ -203,7 +216,6 @@ const FreeResultPreview = () => {
     ),
   );
 
-  // Get recommendation based on risk
   const getRecommendation = () => {
     if (result.illegal_clauses >= 2) {
       return { text: "No firmes sin negociar", color: "text-red-600", bg: "bg-red-50" };
@@ -219,8 +231,88 @@ const FreeResultPreview = () => {
 
   const recommendation = getRecommendation();
 
-  // Get example clauses (max 3, partially hidden)
   const exampleClauses = (result.clauses || []).slice(0, 3);
+
+  // Render del estado pagado en la sidebar.
+  // 3 ramas:
+  //   a) sin user logado     -> CTA crear cuenta
+  //   b) user con email NO verificado -> aviso verificar email + reenviar
+  //   c) user verificado     -> spinner "preparando" (polling activo)
+  const renderPaidSidebar = () => {
+    if (!user) {
+      return (
+        <Card className="border-2 border-green-600">
+          <CardContent className="pt-6 text-center space-y-4">
+            <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
+            <h3 className="font-serif text-xl font-semibold">Pago recibido</h3>
+            <p className="text-sm text-muted-foreground">
+              Crea una cuenta para acceder a tu informe completo. Usa el mismo email del pago.
+            </p>
+            <Button asChild className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full">
+              <Link to={`/registro?checkout=success&analysisId=${id}`}>
+                Crear cuenta
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              ¿Ya tienes cuenta?{" "}
+              <Link to={`/login`} className="underline hover:no-underline">
+                Inicia sesión
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (!isEmailVerified) {
+      return (
+        <Card className="border-2 border-amber-500">
+          <CardContent className="pt-6 text-center space-y-4">
+            <Mail className="h-10 w-10 text-amber-600 mx-auto" />
+            <h3 className="font-serif text-xl font-semibold">Verifica tu email</h3>
+            <p className="text-sm text-muted-foreground">
+              Hemos enviado un email a <strong>{user.email}</strong>. Haz clic en el enlace de verificación para acceder
+              a tu informe completo.
+            </p>
+            <Button
+              variant="outline"
+              onClick={handleResendVerificationEmail}
+              disabled={resendingEmail}
+              className="w-full"
+            >
+              {resendingEmail ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Reenviando...
+                </>
+              ) : (
+                "Reenviar email de verificación"
+              )}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Tu pago está confirmado. Solo falta verificar el email para acceder.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card className="border-2 border-green-600">
+        <CardContent className="pt-6 text-center space-y-4">
+          <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
+          <h3 className="font-serif text-xl font-semibold">Pago recibido</h3>
+          <p className="text-sm text-muted-foreground">
+            {waitingForContract ? "Estamos preparando tu informe…" : "Redirigiendo a tu informe…"}
+          </p>
+          <div className="flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <>
@@ -235,7 +327,6 @@ const FreeResultPreview = () => {
 
         <main className="flex-1 bg-muted pt-28 pb-12">
           <div className="container mx-auto px-6 max-w-4xl">
-            {/* Header with urgency */}
             <FadeIn>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
@@ -257,9 +348,7 @@ const FreeResultPreview = () => {
             </FadeIn>
 
             <div className="grid lg:grid-cols-3 gap-8">
-              {/* Main Results Column */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Risk Score Card */}
                 <FadeIn delay={0.1}>
                   <Card>
                     <CardHeader>
@@ -301,7 +390,6 @@ const FreeResultPreview = () => {
                   </Card>
                 </FadeIn>
 
-                {/* Clause Summary */}
                 <FadeIn delay={0.2}>
                   <Card>
                     <CardHeader>
@@ -336,7 +424,6 @@ const FreeResultPreview = () => {
                   </Card>
                 </FadeIn>
 
-                {/* Example Clauses (blurred) */}
                 <FadeIn delay={0.3}>
                   <Card>
                     <CardHeader>
@@ -368,7 +455,6 @@ const FreeResultPreview = () => {
                               </div>
                             </div>
 
-                            {/* Blur overlay */}
                             <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-2">
                               <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Lock className="h-3 w-3" /> Desbloquea para ver el análisis completo
@@ -383,7 +469,6 @@ const FreeResultPreview = () => {
                         </div>
                       )}
 
-                      {/* Locked clauses indicator */}
                       {result.total_clauses > 3 && (
                         <div className="flex items-center justify-center gap-2 py-4 border-t text-muted-foreground">
                           <Lock className="h-4 w-4" />
@@ -397,27 +482,11 @@ const FreeResultPreview = () => {
                 </FadeIn>
               </div>
 
-              {/* Sidebar CTAs */}
               <div className="lg:col-span-1 space-y-6">
                 {isPaid ? (
-                  /* Paid: waiting for contract link */
-                  <FadeIn delay={0.2}>
-                    <Card className="border-2 border-green-600">
-                      <CardContent className="pt-6 text-center space-y-4">
-                        <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
-                        <h3 className="font-serif text-xl font-semibold">Pago recibido</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {waitingForContract ? "Estamos preparando tu informe…" : "Redirigiendo a tu informe…"}
-                        </p>
-                        <div className="flex justify-center">
-                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </FadeIn>
+                  <FadeIn delay={0.2}>{renderPaidSidebar()}</FadeIn>
                 ) : (
                   <>
-                    {/* Unlock Full Report CTA */}
                     <FadeIn delay={0.2}>
                       <Card className="border-2 border-primary">
                         <CardContent className="pt-6 space-y-4">
@@ -496,7 +565,6 @@ const FreeResultPreview = () => {
                       </Card>
                     </FadeIn>
 
-                    {/* Email Reminder Option */}
                     <FadeIn delay={0.3}>
                       <Card>
                         <CardContent className="pt-6 text-center">
@@ -514,7 +582,6 @@ const FreeResultPreview = () => {
                   </>
                 )}
 
-                {/* Social Proof */}
                 <FadeIn delay={0.4}>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Users className="h-5 w-5" />
@@ -529,7 +596,6 @@ const FreeResultPreview = () => {
         <Footer />
       </div>
 
-      {/* Modals */}
       <LeadCaptureModal
         open={showLeadModal}
         onOpenChange={setShowLeadModal}
