@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -15,32 +15,26 @@ import { emailSchema, passwordSchema, fullNameSchema } from "@/lib/validations";
 
 interface AuthFormProps {
   mode: "login" | "register";
+  prefilledEmail?: string;
 }
 
 type UserType = "inquilino" | "propietario" | "profesional";
 
-/**
- * Determina la ruta de destino segun el tipo de usuario y sus roles.
- * Prioridad: returnUrl guardada > from state > ruta por tipo de usuario > /dashboard
- */
 const getPostAuthRedirect = async (
   userId: string,
   userType: UserType | null,
   fromPath: string | null,
 ): Promise<string> => {
-  // 1. Si hay una URL de retorno guardada (ej: venia de un analisis pre-pago)
   const returnUrl = localStorage.getItem("acroxia_return_url");
   if (returnUrl) {
     localStorage.removeItem("acroxia_return_url");
     return returnUrl;
   }
 
-  // 2. Si venia de una pagina protegida, volver ahi
   if (fromPath && fromPath !== "/login" && fromPath !== "/registro") {
     return fromPath;
   }
 
-  // 3. Redirigir segun tipo de usuario / roles
   const isAdmin = await checkUserIsAdmin(userId);
   if (isAdmin) return "/admin";
 
@@ -52,17 +46,15 @@ const getPostAuthRedirect = async (
   return "/dashboard";
 };
 
-const AuthForm = ({ mode }: AuthFormProps) => {
-  const [email, setEmail] = useState("");
+const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
+  const [email, setEmail] = useState(prefilledEmail || "");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const savedUserType = localStorage.getItem("acroxia_user_type") as UserType | null;
   const [userType, setUserType] = useState<UserType | null>(
-    savedUserType && ["inquilino", "propietario", "profesional"].includes(savedUserType)
-      ? savedUserType
-      : null
+    savedUserType && ["inquilino", "propietario", "profesional"].includes(savedUserType) ? savedUserType : null,
   );
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -70,14 +62,21 @@ const AuthForm = ({ mode }: AuthFormProps) => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Leer la pagina de origen si viene de un ProtectedRoute
+  // Si prefilledEmail llega despues del primer render (por la RPC asincrona),
+  // actualiza el campo solo si el usuario no ha empezado a escribir todavia.
+  useEffect(() => {
+    if (prefilledEmail && !email) {
+      setEmail(prefilledEmail);
+    }
+  }, [prefilledEmail, email]);
+
   const fromPath = (location.state as any)?.from?.pathname || null;
+  const isEmailPrefilled = mode === "register" && !!prefilledEmail && email === prefilledEmail;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validate email with Zod
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
       toast({
@@ -90,7 +89,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
     }
     const validatedEmail = emailResult.data;
 
-    // Validate password with Zod
     const passwordResult = passwordSchema.safeParse(password);
     if (!passwordResult.success) {
       toast({
@@ -104,7 +102,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
     try {
       if (mode === "register") {
-        // Validate full name for registration
         const nameResult = fullNameSchema.safeParse(fullName);
         if (!nameResult.success) {
           toast({
@@ -151,11 +148,9 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
         if (error) throw error;
 
-        // Save terms acceptance timestamp, user type, marketing consent and log consent
         if (data.user) {
           const now = new Date().toISOString();
 
-          // Update profile with acceptance timestamps and user segmentation
           await supabase
             .from("profiles")
             .update({
@@ -167,7 +162,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
             })
             .eq("id", data.user.id);
 
-          // Crear rol en user_roles segun tipo de usuario
           if (userType === "propietario") {
             await supabase.from("user_roles").insert({
               user_id: data.user.id,
@@ -180,7 +174,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
             });
           }
 
-          // Log terms and privacy consent in audit log
           await supabase.from("consent_logs").insert({
             user_id: data.user.id,
             consent_type: "terms_and_privacy",
@@ -195,7 +188,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
             },
           });
 
-          // Log marketing consent separately if accepted
           if (marketingConsent) {
             await supabase.from("consent_logs").insert({
               user_id: data.user.id,
@@ -211,7 +203,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           }
         }
 
-        // Track sign_up conversion
         trackConversion("sign_up", {
           method: "email",
           user_id: data.user?.id,
@@ -226,7 +217,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           description: "Tu cuenta ha sido creada exitosamente. Ya puedes acceder.",
         });
 
-        // Redirigir segun tipo de usuario
         if (data.user) {
           const redirectPath = await getPostAuthRedirect(data.user.id, userType, fromPath);
           navigate(redirectPath);
@@ -241,7 +231,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
         if (error) throw error;
 
-        // Track login conversion
         trackConversion("login", {
           method: "email",
           user_id: data.user.id,
@@ -253,7 +242,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           description: "Has iniciado sesion correctamente.",
         });
 
-        // Obtener user_type del perfil para decidir ruta
         const { data: profileData } = await supabase
           .from("profiles")
           .select("user_type")
@@ -348,6 +336,12 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           required
           className="bg-background"
         />
+        {isEmailPrefilled && (
+          <p className="text-xs text-muted-foreground">
+            Hemos prerrellenado tu email del pago. Si quieres usar otro distinto, edítalo aquí (asegúrate de que sea el
+            mismo del pago para vincular tu informe).
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -385,7 +379,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
       {mode === "register" && (
         <>
-          {/* User Type Selector */}
           <div className="space-y-3">
             <Label>Soy principalmente...</Label>
             <div className="flex flex-wrap gap-2">
@@ -406,7 +399,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
             </div>
           </div>
 
-          {/* Terms and Privacy Checkbox */}
           <div className="flex items-start gap-3">
             <Checkbox
               id="terms"
@@ -426,7 +418,6 @@ const AuthForm = ({ mode }: AuthFormProps) => {
             </Label>
           </div>
 
-          {/* Marketing Consent Checkbox (optional) */}
           <div className="flex items-start gap-3">
             <Checkbox
               id="marketing"
