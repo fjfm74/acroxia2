@@ -11,15 +11,15 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  FileText, 
-  Download, 
-  Loader2, 
-  ShieldCheck, 
+import {
+  ArrowLeft,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  FileText,
+  Download,
+  Loader2,
+  ShieldCheck,
   ShieldAlert,
   Info,
   Scale,
@@ -28,7 +28,7 @@ import {
   Building2,
   User,
   Bot,
-  MessageSquareHeart
+  MessageSquareHeart,
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -110,12 +110,14 @@ const AnalysisResult = () => {
 
       const { data, error } = await supabase
         .from("analysis_results")
-        .select(`
+        .select(
+          `
           *,
           contracts (
             file_name
           )
-        `)
+        `,
+        )
         .eq("contract_id", id)
         .single();
 
@@ -132,39 +134,41 @@ const AnalysisResult = () => {
 
   const handleDownloadGuide = () => {
     if (!analysis?.full_report?.generated_letter) return;
-    
-    const fileName = analysis.contracts?.file_name?.replace(/\.pdf$/i, '') || 'contrato';
+
+    const fileName = analysis.contracts?.file_name?.replace(/\.pdf$/i, "") || "contrato";
     let guideContent = analysis.full_report.generated_letter;
-    
+
     // Clean problematic characters
     const cleanText = (text: string): string => {
-      return text
-        // Remove emojis and special unicode characters
-        .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
-        .replace(/[\u{2600}-\u{26FF}]/gu, '')
-        .replace(/[\u{2700}-\u{27BF}]/gu, '')
-        .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
-        .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
-        .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')
-        // Remove circled numbers
-        .replace(/[\u{2460}-\u{24FF}]/gu, '')
-        .replace(/[\u{2776}-\u{277F}]/gu, '')
-        .replace(/1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|🔟/g, '')
-        // Remove other problematic characters
-        .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
-        .replace(/[\u{200B}-\u{200D}]/gu, '')
-        .replace(/[\u{FEFF}]/gu, '')
-        // Normalize quotes and dashes
-        .replace(/[""]/g, '"')
-        .replace(/['']/g, "'")
-        .replace(/[—–]/g, '-')
-        // Remove any remaining non-printable characters except newlines
-        .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, '')
-        .trim();
+      return (
+        text
+          // Remove emojis and special unicode characters
+          .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
+          .replace(/[\u{2600}-\u{26FF}]/gu, "")
+          .replace(/[\u{2700}-\u{27BF}]/gu, "")
+          .replace(/[\u{1F600}-\u{1F64F}]/gu, "")
+          .replace(/[\u{1F680}-\u{1F6FF}]/gu, "")
+          .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, "")
+          // Remove circled numbers
+          .replace(/[\u{2460}-\u{24FF}]/gu, "")
+          .replace(/[\u{2776}-\u{277F}]/gu, "")
+          .replace(/1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|🔟/g, "")
+          // Remove other problematic characters
+          .replace(/[\u{FE00}-\u{FE0F}]/gu, "")
+          .replace(/[\u{200B}-\u{200D}]/gu, "")
+          .replace(/[\u{FEFF}]/gu, "")
+          // Normalize quotes and dashes
+          .replace(/[""]/g, '"')
+          .replace(/['']/g, "'")
+          .replace(/[—–]/g, "-")
+          // Remove any remaining non-printable characters except newlines
+          .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, "")
+          .trim()
+      );
     };
-    
+
     guideContent = cleanText(guideContent);
-    
+
     // Create PDF with jsPDF
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -172,7 +176,7 @@ const AnalysisResult = () => {
     const margin = 20;
     const maxWidth = pageWidth - margin * 2;
     let yPosition = margin;
-    
+
     // Helper to check page break
     const checkPageBreak = (neededSpace: number = 15) => {
       if (yPosition > pageHeight - margin - neededSpace) {
@@ -180,16 +184,21 @@ const AnalysisResult = () => {
         yPosition = margin;
       }
     };
-    
+
     // Helper function to add text with word wrap and page breaks
-    const addText = (text: string, fontSize: number, isBold = false, color: [number, number, number] = [31, 29, 27]) => {
+    const addText = (
+      text: string,
+      fontSize: number,
+      isBold = false,
+      color: [number, number, number] = [31, 29, 27],
+    ) => {
       doc.setFontSize(fontSize);
       doc.setFont("helvetica", isBold ? "bold" : "normal");
       doc.setTextColor(color[0], color[1], color[2]);
-      
+
       const lines = doc.splitTextToSize(text, maxWidth);
       const lineHeight = fontSize * 0.45;
-      
+
       for (const line of lines) {
         checkPageBreak();
         doc.text(line, margin, yPosition);
@@ -197,17 +206,17 @@ const AnalysisResult = () => {
       }
       yPosition += 2;
     };
-    
+
     // Helper to render text with inline bold (handles **text** patterns)
     const addTextWithInlineBold = (text: string, fontSize: number) => {
       // First clean any remaining markdown
       const cleanedText = text
-        .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold markers but keep text
-        .replace(/\*([^*]+)\*/g, '$1');      // Remove italic markers
-      
+        .replace(/\*\*([^*]+)\*\*/g, "$1") // Remove bold markers but keep text
+        .replace(/\*([^*]+)\*/g, "$1"); // Remove italic markers
+
       addText(cleanedText, fontSize, false);
     };
-    
+
     // Header - friendly design
     doc.setFillColor(31, 29, 27);
     doc.rect(0, 0, pageWidth, 40, "F");
@@ -222,53 +231,53 @@ const AnalysisResult = () => {
     doc.setTextColor(180, 180, 180);
     doc.text("Archivo: " + fileName.substring(0, 50), margin, 36);
     yPosition = 55;
-    
+
     // Process the markdown-like content
-    const lines = guideContent.split('\n');
-    
+    const lines = guideContent.split("\n");
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
-      
+
       if (!trimmedLine) {
         yPosition += 3;
         continue;
       }
-      
+
       // Handle headers
-      if (trimmedLine.startsWith('# ')) {
+      if (trimmedLine.startsWith("# ")) {
         yPosition += 8;
         checkPageBreak(20);
-        const headerText = trimmedLine.replace('# ', '').replace(/[!?]/g, '');
+        const headerText = trimmedLine.replace("# ", "").replace(/[!?]/g, "");
         addText(headerText, 18, true, [31, 29, 27]);
         yPosition += 4;
-      } else if (trimmedLine.startsWith('## ')) {
+      } else if (trimmedLine.startsWith("## ")) {
         yPosition += 6;
         checkPageBreak(15);
-        const headerText = trimmedLine.replace('## ', '');
+        const headerText = trimmedLine.replace("## ", "");
         addText(headerText, 14, true, [31, 29, 27]);
         yPosition += 3;
-      } else if (trimmedLine.startsWith('### ')) {
+      } else if (trimmedLine.startsWith("### ")) {
         yPosition += 5;
         checkPageBreak(12);
-        const headerText = trimmedLine.replace('### ', '').replace('Punto ', '');
+        const headerText = trimmedLine.replace("### ", "").replace("Punto ", "");
         // Add a subtle background for section headers
         doc.setFillColor(245, 243, 240);
         doc.rect(margin - 2, yPosition - 5, maxWidth + 4, 8, "F");
         addText(headerText, 11, true, [60, 60, 60]);
         yPosition += 2;
-      } else if (trimmedLine.startsWith('> ')) {
+      } else if (trimmedLine.startsWith("> ")) {
         // Blockquote styling with beige background
         checkPageBreak(20);
-        const quoteText = cleanText(trimmedLine.replace('> ', '').replace(/"/g, ''));
+        const quoteText = cleanText(trimmedLine.replace("> ", "").replace(/"/g, ""));
         doc.setFontSize(10);
         const quoteLines = doc.splitTextToSize(quoteText, maxWidth - 14);
         const quoteHeight = quoteLines.length * 5 + 8;
-        
+
         doc.setFillColor(252, 250, 245);
         doc.setDrawColor(220, 210, 190);
         doc.rect(margin, yPosition - 2, maxWidth, quoteHeight, "FD");
-        
+
         doc.setFont("helvetica", "italic");
         doc.setTextColor(80, 75, 70);
         let qY = yPosition + 4;
@@ -277,21 +286,21 @@ const AnalysisResult = () => {
           qY += 5;
         }
         yPosition += quoteHeight + 4;
-      } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+      } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
         // Bullet points
         checkPageBreak(10);
-        let bulletText = trimmedLine.replace(/^[-*]\s/, '');
+        let bulletText = trimmedLine.replace(/^[-*]\s/, "");
         // Clean bold markers from bullet text
-        bulletText = bulletText.replace(/\*\*([^*]+)\*\*/g, '$1');
-        
+        bulletText = bulletText.replace(/\*\*([^*]+)\*\*/g, "$1");
+
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(31, 29, 27);
-        
+
         // Draw bullet
         doc.setFillColor(31, 29, 27);
         doc.circle(margin + 2, yPosition - 1.5, 1, "F");
-        
+
         const bulletLines = doc.splitTextToSize(bulletText, maxWidth - 12);
         for (let j = 0; j < bulletLines.length; j++) {
           checkPageBreak();
@@ -299,7 +308,7 @@ const AnalysisResult = () => {
           yPosition += 5;
         }
         yPosition += 2;
-      } else if (trimmedLine.startsWith('---')) {
+      } else if (trimmedLine.startsWith("---")) {
         // Horizontal rule - visual separator
         yPosition += 4;
         checkPageBreak();
@@ -311,10 +320,10 @@ const AnalysisResult = () => {
         // Numbered list
         checkPageBreak();
         addTextWithInlineBold(trimmedLine, 10);
-      } else if (trimmedLine.includes(':') && trimmedLine.length < 80 && !trimmedLine.includes('"')) {
+      } else if (trimmedLine.includes(":") && trimmedLine.length < 80 && !trimmedLine.includes('"')) {
         // Likely a label line (e.g., "Que pone en el contrato:")
         checkPageBreak();
-        const labelText = trimmedLine.replace(/:/g, ':');
+        const labelText = trimmedLine.replace(/:/g, ":");
         addText(labelText, 10, true, [50, 50, 50]);
       } else {
         // Regular paragraph
@@ -322,7 +331,7 @@ const AnalysisResult = () => {
         addTextWithInlineBold(trimmedLine, 10);
       }
     }
-    
+
     // Footer on all pages
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
@@ -331,9 +340,13 @@ const AnalysisResult = () => {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(150, 150, 150);
       doc.text("Generado con ACROXIA - Pagina " + i + " de " + totalPages, margin, pageHeight - 10);
-      doc.text(new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }), pageWidth - margin - 45, pageHeight - 10);
+      doc.text(
+        new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" }),
+        pageWidth - margin - 45,
+        pageHeight - 10,
+      );
     }
-    
+
     doc.save("guia-negociacion-" + fileName + ".pdf");
   };
 
@@ -365,25 +378,46 @@ const AnalysisResult = () => {
 
   const getRiskBadge = (level: number | undefined) => {
     if (!level) return null;
-    
+
     if (level <= 3) {
-      return <Badge variant="outline" className="border-green-500 text-green-700">Riesgo {level}/10</Badge>;
+      return (
+        <Badge variant="outline" className="border-green-500 text-green-700">
+          Riesgo {level}/10
+        </Badge>
+      );
     } else if (level <= 6) {
-      return <Badge variant="outline" className="border-amber-500 text-amber-700">Riesgo {level}/10</Badge>;
+      return (
+        <Badge variant="outline" className="border-amber-500 text-amber-700">
+          Riesgo {level}/10
+        </Badge>
+      );
     } else if (level <= 8) {
-      return <Badge variant="outline" className="border-orange-500 text-orange-700">Riesgo {level}/10</Badge>;
+      return (
+        <Badge variant="outline" className="border-orange-500 text-orange-700">
+          Riesgo {level}/10
+        </Badge>
+      );
     } else {
-      return <Badge variant="outline" className="border-red-500 text-red-700">Riesgo {level}/10</Badge>;
+      return (
+        <Badge variant="outline" className="border-red-500 text-red-700">
+          Riesgo {level}/10
+        </Badge>
+      );
     }
   };
 
   const getOverallRiskColor = (risk: string | undefined) => {
     switch (risk) {
-      case "bajo": return "text-green-600";
-      case "medio": return "text-amber-600";
-      case "alto": return "text-orange-600";
-      case "critico": return "text-red-600";
-      default: return "text-muted-foreground";
+      case "bajo":
+        return "text-green-600";
+      case "medio":
+        return "text-amber-600";
+      case "alto":
+        return "text-orange-600";
+      case "critico":
+        return "text-red-600";
+      default:
+        return "text-muted-foreground";
     }
   };
 
@@ -470,16 +504,17 @@ const AnalysisResult = () => {
 
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="font-serif text-3xl font-semibold text-charcoal">
-                    Resultado del análisis
-                  </h1>
+                  <h1 className="font-serif text-3xl font-semibold text-charcoal">Resultado del análisis</h1>
                   <p className="text-charcoal/70 mt-1 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     {analysis.contracts?.file_name}
                   </p>
                 </div>
                 {analysis.full_report?.generated_letter && (
-                  <Button onClick={handleDownloadGuide} className="bg-foreground text-background hover:bg-foreground/90">
+                  <Button
+                    onClick={handleDownloadGuide}
+                    className="bg-foreground text-background hover:bg-foreground/90"
+                  >
                     <MessageSquareHeart className="mr-2 h-4 w-4" />
                     Descargar guía de negociación
                   </Button>
@@ -491,9 +526,9 @@ const AnalysisResult = () => {
                 <Bot className="h-4 w-4 text-blue-600" />
                 <AlertTitle className="text-blue-800">Contenido generado por Inteligencia Artificial</AlertTitle>
                 <AlertDescription className="text-blue-700">
-                  Este análisis ha sido generado automáticamente por un sistema de IA y tiene carácter 
-                  <strong> meramente informativo</strong>. No constituye asesoramiento legal profesional. 
-                  Para decisiones legales importantes, te recomendamos consultar con un abogado colegiado.{" "}
+                  Este análisis ha sido generado automáticamente por un sistema de IA y tiene carácter
+                  <strong> meramente informativo</strong>. No constituye asesoramiento legal profesional. Para
+                  decisiones legales importantes, te recomendamos consultar con un abogado colegiado.{" "}
                   <Link to="/transparencia-ia" className="underline hover:no-underline">
                     Más información sobre nuestra IA
                   </Link>
@@ -551,7 +586,7 @@ const AnalysisResult = () => {
             )}
 
             {/* Risk Score */}
-            {typeof riskScore === 'number' && (
+            {typeof riskScore === "number" && (
               <FadeIn delay={0.08}>
                 <Card className="mb-6">
                   <CardHeader className="pb-2">
@@ -563,21 +598,31 @@ const AnalysisResult = () => {
                   <CardContent>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className={`text-2xl font-bold ${
-                          riskScore <= 3 ? "text-green-600" :
-                          riskScore <= 6 ? "text-amber-600" :
-                          riskScore <= 8 ? "text-orange-600" : "text-red-600"
-                        }`}>
+                        <span
+                          className={`text-2xl font-bold ${
+                            riskScore <= 3
+                              ? "text-green-600"
+                              : riskScore <= 6
+                                ? "text-amber-600"
+                                : riskScore <= 8
+                                  ? "text-orange-600"
+                                  : "text-red-600"
+                          }`}
+                        >
                           {riskScore}/10
                         </span>
                         {summary?.recommendation && getRecommendationBadge(summary.recommendation)}
                       </div>
-                      <Progress 
-                        value={riskScore * 10} 
+                      <Progress
+                        value={riskScore * 10}
                         className={`h-2 ${
-                          riskScore <= 3 ? "[&>div]:bg-green-500" :
-                          riskScore <= 6 ? "[&>div]:bg-amber-500" :
-                          riskScore <= 8 ? "[&>div]:bg-orange-500" : "[&>div]:bg-red-500"
+                          riskScore <= 3
+                            ? "[&>div]:bg-green-500"
+                            : riskScore <= 6
+                              ? "[&>div]:bg-amber-500"
+                              : riskScore <= 8
+                                ? "[&>div]:bg-orange-500"
+                                : "[&>div]:bg-red-500"
                         }`}
                       />
                     </div>
@@ -665,7 +710,7 @@ const AnalysisResult = () => {
                   <p className="text-charcoal/80 leading-relaxed">
                     {summary?.executive_summary || analysis.summary || analysis.full_report?.overall_assessment}
                   </p>
-                  
+
                   {summary?.legal_disclaimer && (
                     <div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted p-3 rounded-md">
                       <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -702,13 +747,9 @@ const AnalysisResult = () => {
                           <div className="flex items-center gap-3 text-left flex-1 min-w-0">
                             {getClauseIcon(clause.type)}
                             <div className="flex-1 min-w-0">
-                              <span className="font-medium line-clamp-1">
-                                {clause.title || clause.text}
-                              </span>
+                              <span className="font-medium line-clamp-1">{clause.title || clause.text}</span>
                               {clause.category && (
-                                <span className="text-xs text-muted-foreground block">
-                                  {clause.category}
-                                </span>
+                                <span className="text-xs text-muted-foreground block">{clause.category}</span>
                               )}
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
@@ -736,35 +777,47 @@ const AnalysisResult = () => {
                             <h4 className="font-medium mb-1">Explicación</h4>
                             <p className="text-charcoal/70">{clause.explanation}</p>
                           </div>
-                          
-                          {/* Legal Reference - Enhanced */}
-                          {(clause.legal_reference || clause.legalReference) && (
-                            <div>
-                              <h4 className="font-medium mb-1 flex items-center gap-2">
-                                <Scale className="h-4 w-4" />
-                                Referencia legal
-                                {clause.legal_reference && getVerificationIcon(clause.legal_reference.verified)}
-                              </h4>
-                              <div className="bg-muted p-3 rounded-md space-y-1">
-                                <p className="text-charcoal/70 font-mono text-sm">
-                                  {clause.legal_reference?.full_citation || clause.legalReference}
-                                </p>
-                                {clause.legal_reference?.verified === false && clause.legal_reference.verification_note && (
-                                  <p className="text-xs text-amber-600 flex items-center gap-1">
-                                    <Info className="h-3 w-3" />
-                                    {clause.legal_reference.verification_note}
-                                  </p>
-                                )}
-                                {clause.legal_reference?.verified === true && (
-                                  <p className="text-xs text-green-600 flex items-center gap-1">
-                                    <ShieldCheck className="h-3 w-3" />
-                                    Verificado en base de datos ACROXIA
-                                  </p>
-                                )}
+
+                          {/* Legal Reference - Enhanced (tolerante a string u objeto) */}
+                          {(() => {
+                            const ref: any = clause.legal_reference;
+                            const refIsString = typeof ref === "string";
+                            const refIsObject = !!ref && !refIsString && typeof ref === "object";
+                            const citation = refIsString
+                              ? ref
+                              : refIsObject
+                                ? ref.full_citation || ref.article || ref.law || null
+                                : null;
+                            const finalCitation = citation || clause.legalReference || null;
+                            if (!finalCitation) return null;
+                            const verified = refIsObject ? ref.verified : undefined;
+                            const verificationNote = refIsObject ? ref.verification_note : undefined;
+                            return (
+                              <div>
+                                <h4 className="font-medium mb-1 flex items-center gap-2">
+                                  <Scale className="h-4 w-4" />
+                                  Referencia legal
+                                  {refIsObject && getVerificationIcon(verified)}
+                                </h4>
+                                <div className="bg-muted p-3 rounded-md space-y-1">
+                                  <p className="text-charcoal/70 font-mono text-sm">{finalCitation}</p>
+                                  {verified === false && verificationNote && (
+                                    <p className="text-xs text-amber-600 flex items-center gap-1">
+                                      <Info className="h-3 w-3" />
+                                      {verificationNote}
+                                    </p>
+                                  )}
+                                  {verified === true && (
+                                    <p className="text-xs text-green-600 flex items-center gap-1">
+                                      <ShieldCheck className="h-3 w-3" />
+                                      Verificado en base de datos ACROXIA
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          
+                            );
+                          })()}
+
                           {/* Recommendation */}
                           {clause.recommendation && (
                             <div>
