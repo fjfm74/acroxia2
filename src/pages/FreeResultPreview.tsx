@@ -8,6 +8,16 @@ import FadeIn from "@/components/animations/FadeIn";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import LeadCaptureModal from "@/components/LeadCaptureModal";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,6 +64,12 @@ const FreeResultPreview = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [waitingForContract, setWaitingForContract] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
+
+  // Email gate pre-checkout
+  const [emailGateOpen, setEmailGateOpen] = useState(false);
+  const [emailGateValue, setEmailGateValue] = useState("");
+  const [emailGateLoading, setEmailGateLoading] = useState(false);
+
   const { user } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
 
@@ -75,16 +91,13 @@ const FreeResultPreview = () => {
 
       try {
         const { data, error: fetchError } = await supabase.rpc("get_anonymous_analysis", { analysis_uuid: id });
-
         if (fetchError) throw fetchError;
 
         const analysisData = Array.isArray(data) ? data[0] : data;
-
         if (!analysisData) {
           if (!cancelled) setError("Este análisis ha expirado o no existe.");
           return;
         }
-
         if (cancelled) return;
 
         if (analysisData.paid === true && analysisData.converted_contract_id) {
@@ -118,22 +131,18 @@ const FreeResultPreview = () => {
 
   useEffect(() => {
     if (!analysis?.expires_at) return;
-
     const updateTimer = () => {
       const now = new Date();
       const expires = new Date(analysis.expires_at);
       const diff = expires.getTime() - now.getTime();
-
       if (diff <= 0) {
         setTimeRemaining("Expirado");
         return;
       }
-
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       setTimeRemaining(`${hours}h ${minutes}m`);
     };
-
     updateTimer();
     const interval = setInterval(updateTimer, 60000);
     return () => clearInterval(interval);
@@ -141,11 +150,7 @@ const FreeResultPreview = () => {
 
   useEffect(() => {
     if (!analysis || analysis.email || isPaid) return;
-
-    const timer = setTimeout(() => {
-      setShowLeadModal(true);
-    }, 15000);
-
+    const timer = setTimeout(() => setShowLeadModal(true), 15000);
     return () => clearTimeout(timer);
   }, [analysis, isPaid]);
 
@@ -153,16 +158,77 @@ const FreeResultPreview = () => {
     if (!user?.email) return;
     setResendingEmail(true);
     try {
-      const { error: resendError } = await supabase.auth.resend({
-        type: "signup",
-        email: user.email,
-      });
+      const { error: resendError } = await supabase.auth.resend({ type: "signup", email: user.email });
       if (resendError) throw resendError;
       toast.success("Email de verificación reenviado. Revisa tu bandeja de entrada.");
     } catch (err: any) {
-      toast.error(err?.message || "No se pudo reenviar el email. Inténtalo de nuevo.");
+      toast.error(err?.message || "No se pudo reenviar el email.");
     } finally {
       setResendingEmail(false);
+    }
+  };
+
+  const launchCheckout = async (checkoutEmail: string) => {
+    try {
+      localStorage.setItem("acroxia_return_url", `/resultado-previo/${id}`);
+      await openCheckout({
+        priceId,
+        quantity: 1,
+        customerEmail: checkoutEmail || undefined,
+        customData: {
+          userId: user?.id || "",
+          analysisId: id || "",
+          perspective,
+          sessionId: localStorage.getItem("acroxia_session_id") || "",
+          userType: localStorage.getItem("acroxia_user_type") || "inquilino",
+          email: checkoutEmail || "",
+        },
+        successUrl: user
+          ? `${window.location.origin}/resultado/${id}`
+          : `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
+      });
+    } catch (err) {
+      console.error("Checkout error:", err);
+      toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
+    }
+  };
+
+  const handleUnlockClick = async () => {
+    const knownEmail = user?.email || analysis?.email || "";
+    if (knownEmail) {
+      await launchCheckout(knownEmail);
+      return;
+    }
+    setEmailGateValue("");
+    setEmailGateOpen(true);
+  };
+
+  const handleEmailGateSubmit = async () => {
+    const value = emailGateValue.trim().toLowerCase();
+    const valid = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(value);
+    if (!valid) {
+      toast.error("Introduce un email válido.");
+      return;
+    }
+    if (!id) {
+      toast.error("Análisis no encontrado.");
+      return;
+    }
+    setEmailGateLoading(true);
+    try {
+      const { data: ok, error: rpcError } = await supabase.rpc("set_anonymous_analysis_email", {
+        p_analysis_id: id,
+        p_email: value,
+      });
+      if (rpcError) {
+        console.warn("[FreeResultPreview] set_anonymous_analysis_email error:", rpcError);
+      }
+      // Refresca el analysis local con el email guardado (independientemente de la RPC).
+      setAnalysis((prev: any) => (prev ? { ...prev, email: value } : prev));
+      setEmailGateOpen(false);
+      await launchCheckout(value);
+    } finally {
+      setEmailGateLoading(false);
     }
   };
 
@@ -217,27 +283,17 @@ const FreeResultPreview = () => {
   );
 
   const getRecommendation = () => {
-    if (result.illegal_clauses >= 2) {
-      return { text: "No firmes sin negociar", color: "text-red-600", bg: "bg-red-50" };
-    }
-    if (result.illegal_clauses >= 1 || result.suspicious_clauses >= 3) {
+    if (result.illegal_clauses >= 2) return { text: "No firmes sin negociar", color: "text-red-600", bg: "bg-red-50" };
+    if (result.illegal_clauses >= 1 || result.suspicious_clauses >= 3)
       return { text: "Negocia antes de firmar", color: "text-amber-600", bg: "bg-amber-50" };
-    }
-    if (result.suspicious_clauses >= 1) {
+    if (result.suspicious_clauses >= 1)
       return { text: "Revisa con atención", color: "text-amber-600", bg: "bg-amber-50" };
-    }
     return { text: "Contrato aparentemente correcto", color: "text-green-600", bg: "bg-green-50" };
   };
 
   const recommendation = getRecommendation();
-
   const exampleClauses = (result.clauses || []).slice(0, 3);
 
-  // Render del estado pagado en la sidebar.
-  // 3 ramas:
-  //   a) sin user logado     -> CTA crear cuenta
-  //   b) user con email NO verificado -> aviso verificar email + reenviar
-  //   c) user verificado     -> spinner "preparando" (polling activo)
   const renderPaidSidebar = () => {
     if (!user) {
       return (
@@ -245,9 +301,7 @@ const FreeResultPreview = () => {
           <CardContent className="pt-6 text-center space-y-4">
             <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
             <h3 className="font-serif text-xl font-semibold">Pago recibido</h3>
-            <p className="text-sm text-muted-foreground">
-              Crea una cuenta para acceder a tu informe completo. Usa el mismo email del pago.
-            </p>
+            <p className="text-sm text-muted-foreground">Crea una cuenta para acceder a tu informe completo.</p>
             <Button asChild className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full">
               <Link to={`/registro?checkout=success&analysisId=${id}`}>
                 Crear cuenta
@@ -264,7 +318,6 @@ const FreeResultPreview = () => {
         </Card>
       );
     }
-
     if (!isEmailVerified) {
       return (
         <Card className="border-2 border-amber-500">
@@ -272,8 +325,8 @@ const FreeResultPreview = () => {
             <Mail className="h-10 w-10 text-amber-600 mx-auto" />
             <h3 className="font-serif text-xl font-semibold">Verifica tu email</h3>
             <p className="text-sm text-muted-foreground">
-              Hemos enviado un email a <strong>{user.email}</strong>. Haz clic en el enlace de verificación para acceder
-              a tu informe completo.
+              Hemos enviado un email a <strong>{user.email}</strong>. Haz clic en el enlace para acceder a tu informe
+              completo.
             </p>
             <Button
               variant="outline"
@@ -287,17 +340,14 @@ const FreeResultPreview = () => {
                   Reenviando...
                 </>
               ) : (
-                "Reenviar email de verificación"
+                "Reenviar email"
               )}
             </Button>
-            <p className="text-xs text-muted-foreground">
-              Tu pago está confirmado. Solo falta verificar el email para acceder.
-            </p>
+            <p className="text-xs text-muted-foreground">Tu pago está confirmado. Solo falta verificar el email.</p>
           </CardContent>
         </Card>
       );
     }
-
     return (
       <Card className="border-2 border-green-600">
         <CardContent className="pt-6 text-center space-y-4">
@@ -361,16 +411,8 @@ const FreeResultPreview = () => {
                       <div className="flex items-center gap-6">
                         <div className="relative">
                           <div
-                            className={`
-                            w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold
-                            ${
-                              riskScore >= 7
-                                ? "bg-red-100 text-red-600"
-                                : riskScore >= 4
-                                  ? "bg-amber-100 text-amber-600"
-                                  : "bg-green-100 text-green-600"
-                            }
-                          `}
+                            className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold
+                            ${riskScore >= 7 ? "bg-red-100 text-red-600" : riskScore >= 4 ? "bg-amber-100 text-amber-600" : "bg-green-100 text-green-600"}`}
                           >
                             {riskScore}/10
                           </div>
@@ -402,7 +444,6 @@ const FreeResultPreview = () => {
                           <p className="font-medium text-foreground">{result.valid_clauses} cláusulas correctas</p>
                         </div>
                       </div>
-
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50">
                         <AlertTriangle className="w-5 h-5 text-amber-600" />
                         <div className="flex-1">
@@ -411,7 +452,6 @@ const FreeResultPreview = () => {
                           </p>
                         </div>
                       </div>
-
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50">
                         <XCircle className="w-5 h-5 text-red-600" />
                         <div className="flex-1">
@@ -454,7 +494,6 @@ const FreeResultPreview = () => {
                                 </p>
                               </div>
                             </div>
-
                             <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-2">
                               <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Lock className="h-3 w-3" /> Desbloquea para ver el análisis completo
@@ -468,7 +507,6 @@ const FreeResultPreview = () => {
                           <p>Desbloquea el informe para ver el detalle de cada cláusula</p>
                         </div>
                       )}
-
                       {result.total_clauses > 3 && (
                         <div className="flex items-center justify-center gap-2 py-4 border-t text-muted-foreground">
                           <Lock className="h-4 w-4" />
@@ -501,36 +539,12 @@ const FreeResultPreview = () => {
                           </div>
 
                           <Button
-                            onClick={async () => {
-                              try {
-                                localStorage.setItem("acroxia_return_url", `/resultado-previo/${id}`);
-
-                                await openCheckout({
-                                  priceId,
-                                  quantity: 1,
-                                  customerEmail: user?.email || analysis?.email || undefined,
-                                  customData: {
-                                    userId: user?.id || "",
-                                    analysisId: id || "",
-                                    perspective,
-                                    sessionId: localStorage.getItem("acroxia_session_id") || "",
-                                    userType: localStorage.getItem("acroxia_user_type") || "inquilino",
-                                    email: user?.email || analysis?.email || "",
-                                  },
-                                  successUrl: user
-                                    ? `${window.location.origin}/resultado/${id}`
-                                    : `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
-                                });
-                              } catch (err) {
-                                console.error("Checkout error:", err);
-                                toast.error("Error al abrir el checkout. Inténtalo de nuevo.");
-                              }
-                            }}
-                            disabled={checkoutLoading}
+                            onClick={handleUnlockClick}
+                            disabled={checkoutLoading || emailGateLoading}
                             className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
                             size="lg"
                           >
-                            {checkoutLoading ? (
+                            {checkoutLoading || emailGateLoading ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Cargando...
@@ -603,6 +617,51 @@ const FreeResultPreview = () => {
         illegalCount={result.illegal_clauses}
         suspiciousCount={result.suspicious_clauses}
       />
+
+      {/* Email gate pre-checkout */}
+      <Dialog open={emailGateOpen} onOpenChange={setEmailGateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Introduce tu email</DialogTitle>
+            <DialogDescription>
+              Lo necesitamos para enviarte el informe y vincular el pago con tu cuenta. Usa el mismo email en el
+              siguiente paso de pago.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 pt-2">
+            <Label htmlFor="emailGate">Correo electrónico</Label>
+            <Input
+              id="emailGate"
+              type="email"
+              autoFocus
+              value={emailGateValue}
+              onChange={(e) => setEmailGateValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleEmailGateSubmit();
+                }
+              }}
+              placeholder="tu@email.com"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailGateOpen(false)} disabled={emailGateLoading}>
+              Cancelar
+            </Button>
+            <Button onClick={handleEmailGateSubmit} disabled={emailGateLoading}>
+              {emailGateLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Continuando...
+                </>
+              ) : (
+                "Continuar al pago"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
