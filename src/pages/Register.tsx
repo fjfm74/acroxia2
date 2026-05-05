@@ -11,6 +11,8 @@ import FadeIn from "@/components/animations/FadeIn";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, CreditCard } from "lucide-react";
 
+type UserType = "inquilino" | "propietario" | "profesional";
+
 const benefits = [
   "Análisis con inteligencia artificial",
   "Detección de cláusulas ilegales",
@@ -25,12 +27,11 @@ const Register = () => {
   const analysisId = searchParams.get("analysisId");
 
   const [prefilledEmail, setPrefilledEmail] = useState<string>("");
+  const [prefilledUserType, setPrefilledUserType] = useState<UserType | undefined>(undefined);
   const [emailLookupTried, setEmailLookupTried] = useState(false);
 
-  // Si venimos del checkout con un analysisId, intentamos obtener el email
-  // que se guardo en anonymous_analyses para precargarlo en el form de registro.
   useEffect(() => {
-    if (!analysisId || prefilledEmail || emailLookupTried) return;
+    if (!analysisId || emailLookupTried) return;
 
     let cancelled = false;
     (async () => {
@@ -38,14 +39,16 @@ const Register = () => {
         const { data, error } = await supabase.rpc("get_anonymous_analysis", { analysis_uuid: analysisId });
         if (cancelled) return;
         if (error) {
-          console.warn("[Register] no se pudo cargar email del analisis:", error);
+          console.warn("[Register] no se pudo cargar análisis:", error);
           return;
         }
-        const row = Array.isArray(data) ? data[0] : data;
-        const emailFromAnalysis = (row as any)?.email;
-        if (emailFromAnalysis && typeof emailFromAnalysis === "string") {
-          setPrefilledEmail(emailFromAnalysis);
+        const row: any = Array.isArray(data) ? data[0] : data;
+        if (row?.email && typeof row.email === "string" && !prefilledEmail) {
+          setPrefilledEmail(row.email);
         }
+        const persp = row?.analysis_result?.perspective;
+        if (persp === "landlord") setPrefilledUserType("propietario");
+        else if (persp === "tenant") setPrefilledUserType("inquilino");
       } finally {
         if (!cancelled) setEmailLookupTried(true);
       }
@@ -117,11 +120,11 @@ const Register = () => {
                       <CreditCard className="h-4 w-4 text-green-600" />
                       <AlertDescription className="text-green-800">
                         <strong>¡Pago completado!</strong> Crea tu cuenta para acceder al informe completo.
-                        {prefilledEmail && <> Hemos prerrellenado tu email para vincular el pago con tu cuenta.</>}
+                        {prefilledEmail && <> Hemos prerrellenado tu email del pago.</>}
                       </AlertDescription>
                     </Alert>
                   )}
-                  <AuthForm mode="register" prefilledEmail={prefilledEmail} />
+                  <AuthForm mode="register" prefilledEmail={prefilledEmail} prefilledUserType={prefilledUserType} />
 
                   <p className="mt-6 text-center text-sm text-muted-foreground">
                     ¿Ya tienes cuenta?{" "}
