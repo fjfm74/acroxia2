@@ -24,12 +24,19 @@ const VerificacionPendiente = () => {
   const [resending, setResending] = useState(false);
   const isVerified = !!(user as any)?.email_confirmed_at;
 
+  // Polling SIEMPRE activo: la verificación puede ocurrir en otra pestaña
+  // (la abierta desde el email link). No depende de que `user` o `isVerified`
+  // ya hayan llegado a este tab. Si la RPC `get_anonymous_analysis` devuelve
+  // `converted_contract_id`, navegamos al informe.
   useEffect(() => {
-    if (!analysisId || !user || !isVerified) return;
+    if (!analysisId) return;
 
     let cancelled = false;
     const poll = async () => {
       try {
+        // Refrescar la session por si Supabase ya la tiene en otra pestaña.
+        await supabase.auth.refreshSession();
+
         const { data, error } = await supabase.rpc("get_anonymous_analysis", { analysis_uuid: analysisId });
         if (cancelled) return;
         if (!error) {
@@ -49,7 +56,7 @@ const VerificacionPendiente = () => {
     return () => {
       cancelled = true;
     };
-  }, [user, analysisId, isVerified, navigate]);
+  }, [analysisId, navigate]);
 
   const handleResend = async () => {
     if (!email) {
@@ -71,43 +78,43 @@ const VerificacionPendiente = () => {
   return (
     <>
       <Helmet>
-        <title>Verificación pendiente | ACROXIA</title>
-        <meta name="robots" content="noindex" />
+        <title>Verifica tu email | ACROXIA</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-
       <div className="min-h-screen flex flex-col">
         <Header />
-
-        <main className="flex-1 flex items-center justify-center py-32 px-4 bg-muted">
+        <main className="flex-1 flex items-center justify-center py-20 px-4 bg-muted">
           <FadeIn>
-            <Card className="w-full max-w-md text-center rounded-2xl shadow-2xl shadow-foreground/10">
+            <Card className="max-w-md w-full text-center">
               <CardContent className="pt-10 pb-10 space-y-6">
-                {/* Icon */}
                 <div className="flex justify-center">
-                  <div className={`rounded-full p-4 ${isVerified ? "bg-green-100" : "bg-blue-100"}`}>
+                  <div className={`rounded-full p-4 ${isVerified ? "bg-green-100" : "bg-amber-100"}`}>
                     {isVerified ? (
                       <CheckCircle2 className="h-12 w-12 text-green-600" />
                     ) : (
-                      <Mail className="h-12 w-12 text-blue-600" />
+                      <Mail className="h-12 w-12 text-amber-600" />
                     )}
                   </div>
                 </div>
 
-                {/* Title */}
                 <div className="space-y-3">
-                  <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">
+                  <h1 className="font-serif text-3xl font-semibold text-foreground">
                     {isVerified ? "¡Email verificado!" : "Verifica tu email"}
                   </h1>
                   {!isVerified ? (
                     <>
                       <p className="text-muted-foreground">
-                        Pago recibido y cuenta creada.
+                        <strong className="text-foreground">Pago recibido</strong> y cuenta creada.
                         {email && (
-                          <>{" "}Te hemos enviado un email a <strong>{email}</strong> con el enlace de verificación.</>
+                          <>
+                            {" "}
+                            Te hemos enviado un email a <strong>{email}</strong> con el enlace de verificación.
+                          </>
                         )}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Verifica tu email para acceder a tu informe completo. Esta página detectará la verificación automáticamente.
+                        Verifica tu email para acceder a tu informe completo. Esta página detectará la verificación
+                        automáticamente.
                       </p>
                     </>
                   ) : (
@@ -117,15 +124,9 @@ const VerificacionPendiente = () => {
                   )}
                 </div>
 
-                {/* Actions */}
-                <div className="space-y-3">
+                <div className="flex flex-col items-center gap-3">
                   {!isVerified && (
-                    <Button
-                      onClick={handleResend}
-                      disabled={resending}
-                      className="rounded-full px-8"
-                      size="lg"
-                    >
+                    <Button onClick={handleResend} variant="outline" disabled={resending} className="w-full">
                       {resending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -137,24 +138,29 @@ const VerificacionPendiente = () => {
                     </Button>
                   )}
 
-                  <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-2" />
                   <p className="text-xs text-muted-foreground">
                     {isVerified ? "Vinculando tu informe…" : "Esperando confirmación…"}
                   </p>
                 </div>
 
-                {/* Help text */}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground border-t pt-4">
                   ¿No te llega? Mira en spam o usa el botón de reenviar.
                   {!isVerified && (
-                    <>{" "}También puedes <Link to="/login" className="underline">iniciar sesión</Link> después de verificar.</>
+                    <>
+                      {" "}
+                      También puedes{" "}
+                      <Link to="/login" className="underline hover:no-underline">
+                        iniciar sesión
+                      </Link>{" "}
+                      después de verificar.
+                    </>
                   )}
                 </p>
               </CardContent>
             </Card>
           </FadeIn>
         </main>
-
         <Footer />
       </div>
     </>
