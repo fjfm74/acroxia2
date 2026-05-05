@@ -13,12 +13,13 @@ import { checkUserIsLandlord } from "@/hooks/useIsLandlord";
 import { trackConversion, identifyUser } from "@/lib/analytics";
 import { emailSchema, passwordSchema, fullNameSchema } from "@/lib/validations";
 
+type UserType = "inquilino" | "propietario" | "profesional";
+
 interface AuthFormProps {
   mode: "login" | "register";
   prefilledEmail?: string;
+  prefilledUserType?: UserType;
 }
-
-type UserType = "inquilino" | "propietario" | "profesional";
 
 const getPostAuthRedirect = async (
   userId: string,
@@ -30,23 +31,18 @@ const getPostAuthRedirect = async (
     localStorage.removeItem("acroxia_return_url");
     return returnUrl;
   }
-
   if (fromPath && fromPath !== "/login" && fromPath !== "/registro") {
     return fromPath;
   }
-
   const isAdmin = await checkUserIsAdmin(userId);
   if (isAdmin) return "/admin";
-
   const isLandlord = await checkUserIsLandlord(userId);
   if (isLandlord || userType === "propietario") return "/propietario";
-
   if (userType === "profesional") return "/pro";
-
   return "/dashboard";
 };
 
-const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
+const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) => {
   const [email, setEmail] = useState(prefilledEmail || "");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -54,7 +50,10 @@ const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const savedUserType = localStorage.getItem("acroxia_user_type") as UserType | null;
   const [userType, setUserType] = useState<UserType | null>(
-    savedUserType && ["inquilino", "propietario", "profesional"].includes(savedUserType) ? savedUserType : null,
+    prefilledUserType ||
+      (savedUserType && ["inquilino", "propietario", "profesional"].includes(savedUserType)
+        ? (savedUserType as UserType)
+        : null),
   );
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -62,16 +61,33 @@ const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Si prefilledEmail llega despues del primer render (por la RPC asincrona),
-  // actualiza el campo solo si el usuario no ha empezado a escribir todavia.
+  // Sync prefilled values cuando llegan tras un fetch async
   useEffect(() => {
-    if (prefilledEmail && !email) {
-      setEmail(prefilledEmail);
-    }
+    if (prefilledEmail && !email) setEmail(prefilledEmail);
   }, [prefilledEmail, email]);
+  useEffect(() => {
+    if (prefilledUserType && !userType) setUserType(prefilledUserType);
+  }, [prefilledUserType, userType]);
 
   const fromPath = (location.state as any)?.from?.pathname || null;
   const isEmailPrefilled = mode === "register" && !!prefilledEmail && email === prefilledEmail;
+
+  const handleResendVerification = async (targetEmail: string) => {
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: targetEmail });
+      if (error) throw error;
+      toast({
+        title: "Email reenviado",
+        description: "Revisa tu bandeja de entrada (también en spam).",
+      });
+    } catch (err: any) {
+      toast({
+        title: "No pudimos reenviar el email",
+        description: err?.message || "Inténtalo en unos minutos.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,33 +224,67 @@ const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
           user_id: data.user?.id,
           user_type: userType,
         });
-        if (data.user) {
-          identifyUser(data.user.id);
-        }
+        if (data.user) identifyUser(data.user.id);
 
         toast({
           title: "Cuenta creada!",
-          description: "Tu cuenta ha sido creada exitosamente. Ya puedes acceder.",
+          description: data.session
+            ? "Tu cuenta ha sido creada exitosamente. Ya puedes acceder."
+            : "Te hemos enviado un email para verificar tu cuenta.",
         });
 
-        if (data.user) {
+        // Si Supabase requiere email verification, data.session será null.
+        // En ese caso, si venimos del flujo de checkout, navegar a la página de
+        // "verificación pendiente" con el contexto del análisis para no dejar al
+        // user en la pantalla de "Crea cuenta" otra vez.
+        if (data.user && !data.session) {
+          const params = new URLSearchParams(window.location.search);
+          const checkoutSuccess = params.get("checkout") === "success";
+          const analysisId = params.get("analysisId");
+          if (checkoutSuccess) {
+            const target = `/verificacion-pendiente?email=${encodeURIComponent(data.user.email || email)}${
+              analysisId ? `&analysisId=${analysisId}` : ""
+            }`;
+            navigate(target);
+            return;
+          }
+          // Sin contexto de checkout, mandamos también a verificación pendiente
+          // para que el user no quede atrapado intentando login con error.
+          navigate(`/verificacion-pendiente?email=${encodeURIComponent(data.user.email || email)}`);
+          return;
+        }
+
+        if (data.user && data.session) {
           const redirectPath = await getPostAuthRedirect(data.user.id, userType, fromPath);
           navigate(redirectPath);
         } else {
           navigate("/dashboard");
         }
       } else {
+        // mode === "login"
         const { data, error } = await supabase.auth.signInWithPassword({
           email: validatedEmail,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          // Traducción y CTA reenvío para "Email not confirmed"
+          const msg = (error.message || "").toLowerCase();
+          if (msg.includes("email not confirmed")) {
+            toast({
+              title: "Verifica tu email primero",
+              description:
+                "Tu cuenta existe pero el email aún no está verificado. Revisa tu bandeja de entrada (o spam).",
+              variant: "destructive",
+            });
+            await handleResendVerification(validatedEmail);
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
 
-        trackConversion("login", {
-          method: "email",
-          user_id: data.user.id,
-        });
+        trackConversion("login", { method: "email", user_id: data.user.id });
         identifyUser(data.user.id);
 
         toast({
@@ -272,7 +322,6 @@ const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
       const { error } = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
-
       if (error) throw error;
     } catch (error: any) {
       toast({
@@ -290,7 +339,6 @@ const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
       const { error } = await lovable.auth.signInWithOAuth("apple", {
         redirect_uri: window.location.origin,
       });
-
       if (error) throw error;
     } catch (error: any) {
       toast({
@@ -338,8 +386,8 @@ const AuthForm = ({ mode, prefilledEmail }: AuthFormProps) => {
         />
         {isEmailPrefilled && (
           <p className="text-xs text-muted-foreground">
-            Hemos prerrellenado tu email del pago. Si quieres usar otro distinto, edítalo aquí (asegúrate de que sea el
-            mismo del pago para vincular tu informe).
+            Hemos prerrellenado tu email del pago. Si quieres usar otro, edítalo (el email debe coincidir con el del
+            pago para vincular tu informe).
           </p>
         )}
       </div>
