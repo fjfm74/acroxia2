@@ -1441,7 +1441,11 @@ ${sanitizedContractText.substring(0, 4000)}`,
       const body = await req.clone().json().catch(() => null);
       const cid = body?.contractId;
       if (cid) {
-        await supabase.from("contracts").update({ status: "failed" }).eq("id", cid);
+        const sb = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        await sb.from("contracts").update({ status: "failed" }).eq("id", cid);
       }
     } catch (cleanupErr) {
       console.warn("No se pudo marcar el contract como failed en catch:", cleanupErr);
