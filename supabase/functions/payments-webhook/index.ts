@@ -1,4 +1,4 @@
-// redeploy 2026-05-05 v3: usar Paddle SDK para customer fetch (gateway-aware)
+// redeploy 2026-05-05 v4: triple cascade para identificar Pack Comparador (Lovable crea productos sin External ID custom)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhook, EventName, getPaddleClient, type PaddleEnv } from "../_shared/paddle.ts";
 
@@ -173,19 +173,40 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     return;
   }
 
+  // Triple cascade de identificación del producto. Lovable crea los productos en
+  // Paddle con IDs nativos (pri_xxx) sin External ID custom, así que no podemos
+  // confiar solo en priceToProduct[priceExternalId]. Fallback por importe + nombre.
   const item = data.items?.[0];
-  const productId = item?.price?.importMeta?.externalId || item?.price?.productId || "";
+  const priceExternalId = item?.price?.importMeta?.externalId || "";
+  const productExternalId = item?.product?.importMeta?.externalId || "";
+  const priceAmount = String(item?.price?.unitPrice?.amount ?? "");
+  const currency = String(item?.price?.unitPrice?.currencyCode ?? "EUR").toUpperCase();
+  const productName = String(item?.product?.name ?? "").toLowerCase();
 
   const priceToProduct: Record<string, string> = {
     pack_comparador_price: "pack_comparador",
   };
 
-  const resolvedProductId = priceToProduct[productId] || productId;
+  let resolvedProductId = priceToProduct[priceExternalId] || priceToProduct[productExternalId] || "";
+
+  // Fallback 1: por importe (3499 céntimos EUR = 34,99€ Pack Comparador)
+  if (!resolvedProductId && currency === "EUR" && priceAmount === "3499") {
+    resolvedProductId = "pack_comparador";
+  }
+
+  // Fallback 2: por nombre del producto
+  if (!resolvedProductId && productName.includes("pack") && productName.includes("comparador")) {
+    resolvedProductId = "pack_comparador";
+  }
+
+  console.log(
+    `[credits-resolution] resolved="${resolvedProductId}" priceId="${item?.price?.id}" externalId="${priceExternalId}" amount="${priceAmount} ${currency}" productName="${productName}"`,
+  );
+
   const creditsToAdd = CREDIT_MAP[resolvedProductId];
 
   if (creditsToAdd) {
     const { data: profile } = await supabase.from("profiles").select("credits").eq("id", userId).single();
-
     const currentCredits = profile?.credits || 0;
 
     await supabase
@@ -194,6 +215,10 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       .eq("id", userId);
 
     console.log(`Added ${creditsToAdd} credits to user ${userId}, product: ${resolvedProductId}, env: ${env}`);
+  } else {
+    console.warn(
+      `[credits-resolution] no credits to add for tx=${transactionId} userId=${userId} resolved="${resolvedProductId}"`,
+    );
   }
 
   if (!analysisId) return;
