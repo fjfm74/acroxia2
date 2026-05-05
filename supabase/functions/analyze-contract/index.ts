@@ -437,7 +437,8 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
 }
 
 async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
-  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  const uint8 = new Uint8Array(buffer);
+  const result = await mammoth.extractRawText({ buffer: uint8 });
   return result.value;
 }
 
@@ -989,6 +990,18 @@ serve(async (req) => {
         break;
       case "docx":
         contractText = await extractDocxText(buffer);
+        if (!contractText || contractText.length < 200) {
+          console.log("DOCX text extraction returned little content, retrying with vision OCR...");
+          try {
+            const visionText = await extractPdfTextWithVision(buffer, lovableApiKey);
+            if (visionText && visionText.length > contractText.length) {
+              contractText = visionText;
+              console.log(`Vision OCR improved DOCX extraction to ${contractText.length} chars`);
+            }
+          } catch (visionError) {
+            console.warn("Vision OCR fallback for DOCX failed:", visionError);
+          }
+        }
         break;
       case "image":
         contractText = await extractImageText(buffer, mimeType || "image/jpeg", lovableApiKey);
@@ -1422,6 +1435,18 @@ ${sanitizedContractText.substring(0, 4000)}`,
   } catch (error: unknown) {
     console.error("Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+
+    // Bug L: marcar el contract como failed para no dejar zombies en "processing".
+    try {
+      const body = await req.clone().json().catch(() => null);
+      const cid = body?.contractId;
+      if (cid) {
+        await supabase.from("contracts").update({ status: "failed" }).eq("id", cid);
+      }
+    } catch (cleanupErr) {
+      console.warn("No se pudo marcar el contract como failed en catch:", cleanupErr);
+    }
+
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
