@@ -1,6 +1,6 @@
-// redeploy 2026-05-04 v2: clause.type 'legal' (no 'valid'); recount valid_clauses
+// redeploy 2026-05-05 v3: usar Paddle SDK para customer fetch (gateway-aware)
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { verifyWebhook, EventName, type PaddleEnv } from "../_shared/paddle.ts";
+import { verifyWebhook, EventName, getPaddleClient, type PaddleEnv } from "../_shared/paddle.ts";
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
@@ -77,9 +77,7 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
       environment: env,
       updated_at: new Date().toISOString(),
     },
-    {
-      onConflict: "user_id,environment",
-    },
+    { onConflict: "user_id,environment" },
   );
 
   console.log(`Subscription created for user ${userId}, product: ${productId}, env: ${env}`);
@@ -91,7 +89,7 @@ async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
   await supabase
     .from("subscriptions")
     .update({
-      status: status,
+      status,
       current_period_start: currentBillingPeriod?.startsAt,
       current_period_end: currentBillingPeriod?.endsAt,
       cancel_at_period_end: scheduledChange?.action === "cancel",
@@ -123,28 +121,26 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   }
 
   if (analysisId) {
+    // Cascade de fuentes para el email del cliente:
+    //   1) customData.email (lo que pasa el frontend)
+    //   2) data.customer.email (raras veces expandido en webhook)
+    //   3) data.customerEmail (top-level)
+    //   4) Paddle SDK customers.get(customerId) — vía Lovable connector gateway
     let customerEmail = data.customData?.email || data.customer?.email || data.customerEmail || "";
 
     if (!customerEmail) {
       const paddleCustomerId = data.customer_id || data.customerId;
       if (paddleCustomerId) {
         try {
-          const paddleApiBase = env === "live" ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
-          const paddleKey =
-            env === "live" ? Deno.env.get("PADDLE_LIVE_API_KEY") || "" : Deno.env.get("PADDLE_SANDBOX_API_KEY") || "";
-          const resp = await fetch(`${paddleApiBase}/customers/${paddleCustomerId}`, {
-            headers: { Authorization: `Bearer ${paddleKey}` },
-          });
-          if (resp.ok) {
-            const json = await resp.json();
-            customerEmail = json.data?.email || "";
-            console.log(`Fetched customer email from Paddle API (env=${env}): ${customerEmail}`);
-          } else {
-            console.error(`Paddle customer fetch failed (env=${env}): ${resp.status} ${resp.statusText}`);
-          }
-        } catch (e) {
-          console.error("Error fetching customer from Paddle:", e);
+          const paddle = getPaddleClient(env);
+          const customer: any = await paddle.customers.get(paddleCustomerId);
+          customerEmail = customer?.email || customer?.data?.email || "";
+          console.log(`[paddle-sdk] customer.get(${paddleCustomerId}) email=${customerEmail || "(empty)"}`);
+        } catch (e: any) {
+          console.error("[paddle-sdk] customer.get failed:", e?.message || e);
         }
+      } else {
+        console.warn("No customer_id available in transaction event");
       }
     }
 
@@ -250,7 +246,7 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       contract_id: contract.id,
       full_report: report,
       total_clauses: clauses.length,
-      // Bug K fix: el AI emite 'legal' (no 'valid'); soportamos ambos por compatibilidad.
+      // Bug K: el AI emite 'legal' (no 'valid'); soportamos ambos por compatibilidad.
       valid_clauses: clauses.filter((c: any) => c.type === "legal" || c.type === "valid").length,
       suspicious_clauses: clauses.filter((c: any) => c.type === "suspicious").length,
       illegal_clauses: clauses.filter((c: any) => c.type === "illegal").length,
