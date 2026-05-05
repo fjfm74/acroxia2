@@ -306,9 +306,20 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
         navigate(redirectPath);
       }
     } catch (error: any) {
+      const rawMsg = (error?.message || "").toString();
+      const lower = rawMsg.toLowerCase();
+      let translated = rawMsg || "Ha ocurrido un error. Inténtalo de nuevo.";
+      if (lower.includes("password is known to be weak") || lower.includes("breached") || lower.includes("pwned")) {
+        translated =
+          "Esa contraseña aparece en filtraciones públicas conocidas. Por seguridad, usa una distinta (mínimo 8 caracteres, con letras y números, que no hayas reutilizado).";
+      } else if (lower.includes("password should be at least")) {
+        translated = "La contraseña es demasiado corta. Usa al menos 8 caracteres con letras y números.";
+      } else if (lower.includes("user already registered") || lower.includes("already exists")) {
+        translated = "Ya existe una cuenta con ese email. Prueba a iniciar sesión.";
+      }
       toast({
         title: "Error",
-        description: error.message || "Ha ocurrido un error. Intentalo de nuevo.",
+        description: translated,
         variant: "destructive",
       });
     } finally {
@@ -423,6 +434,11 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
+        {mode === "register" && (
+          <p className="text-xs text-muted-foreground">
+            Mínimo 8 caracteres, con letras y números. Evita contraseñas obvias o reutilizadas.
+          </p>
+        )}
       </div>
 
       {mode === "register" && (
