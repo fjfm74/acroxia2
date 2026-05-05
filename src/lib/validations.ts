@@ -9,8 +9,10 @@ export const emailSchema = z
 
 export const passwordSchema = z
   .string()
-  .min(6, "La contraseña debe tener al menos 6 caracteres")
-  .max(100, "La contraseña es demasiado larga");
+  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .max(100, "La contraseña es demasiado larga")
+  .regex(/[A-Za-z]/, "Debe contener al menos una letra")
+  .regex(/\d/, "Debe contener al menos un número");
 
 export const fullNameSchema = z
   .string()
@@ -20,10 +22,7 @@ export const fullNameSchema = z
 
 export const phoneSchema = z
   .string()
-  .regex(
-    /^(\+?\d{1,3})?[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/,
-    "Introduce un teléfono válido"
-  )
+  .regex(/^(\+?\d{1,3})?[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/, "Introduce un teléfono válido")
   .optional()
   .or(z.literal(""))
   .transform((phone) => phone?.trim() || "");
