@@ -421,11 +421,14 @@ FORMATO DE RESPUESTA (JSON estricto):
   ]
 }
 
-PRINCIPIOS:
-- Rigor jurídico: no inventes ilegalidades. Si una cláusula es razonable, márcala "legal".
-- Contratos cortos: si faltan cláusulas pero las que hay son válidas, NO marques las ausencias como "illegal" — marca solo lo escrito.
-- Contratos de habitación o temporales (art. 3 LAU): reconoce que NO se rigen por LAU vivienda habitual; ajusta el análisis.
-- Prioriza las cláusulas más problemáticas reales, no infles el conteo.`;
+PRINCIPIOS DE CALIFICACIÓN (CRÍTICOS):
+- "illegal" se reserva ESTRICTAMENTE para cláusulas que contradicen explícitamente una norma imperativa que aplica DIRECTAMENTE a este contrato. Si dudas, usa "suspicious".
+- NUNCA marques como "illegal" la AUSENCIA de cláusulas o información (ej. "no menciona depósito autonómico", "falta referencia catastral", "no informa de la prórroga forzosa"). Las omisiones del CONTRATO, aunque sean obligaciones del ARRENDADOR, son "suspicious" (alertan al user) o ni siquiera se mencionan si el contrato es válido sin esa información.
+- NUNCA marques como "illegal" cláusulas aplicando una norma "por analogía" (ej. aplicar LAU vivienda habitual a un contrato de habitación temporal). Si la norma no aplica directamente, usa "suspicious" y explica el matiz.
+- Si el contrato es claramente uso distinto al de vivienda (habitación, temporal estudiantes, art. 3 LAU), recórdalo en una cláusula "OTRAS" tipo "suspicious" o "legal" indicando que se rige por autonomía de la voluntad y no por LAU vivienda habitual; no apliques restricciones de vivienda habitual como ilegales.
+- Una cláusula que es subóptima, mejorable o discutible NO es ilegal. Es "suspicious".
+- El conteo de "illegal" debe ser conservador. Mejor sub-contar que sobre-contar (un cliente que vea 0-1 ilegales en un contrato razonable confiará más que uno que vea 5 ilegalidades dudosas en un contrato simple).
+- Rigor jurídico real: no infles para "asustar al user". El objetivo es darle información veraz.
 
   if (perspective === "landlord") {
     return `${commonIntro}
