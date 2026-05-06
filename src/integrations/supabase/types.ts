@@ -1569,6 +1569,78 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_diagnostics: {
+        Row: {
+          analysis_id: string | null
+          contract_id_created: string | null
+          created_at: string
+          credits_added: number | null
+          currency: string | null
+          customer_email: string | null
+          customer_id: string | null
+          env: string | null
+          event_type: string | null
+          id: string
+          notes: string | null
+          price_amount: string | null
+          price_external_id: string | null
+          price_id: string | null
+          product_external_id: string | null
+          product_name: string | null
+          raw_custom_data: Json | null
+          raw_item: Json | null
+          resolved_product_id: string | null
+          transaction_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analysis_id?: string | null
+          contract_id_created?: string | null
+          created_at?: string
+          credits_added?: number | null
+          currency?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          env?: string | null
+          event_type?: string | null
+          id?: string
+          notes?: string | null
+          price_amount?: string | null
+          price_external_id?: string | null
+          price_id?: string | null
+          product_external_id?: string | null
+          product_name?: string | null
+          raw_custom_data?: Json | null
+          raw_item?: Json | null
+          resolved_product_id?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analysis_id?: string | null
+          contract_id_created?: string | null
+          created_at?: string
+          credits_added?: number | null
+          currency?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          env?: string | null
+          event_type?: string | null
+          id?: string
+          notes?: string | null
+          price_amount?: string | null
+          price_external_id?: string | null
+          price_id?: string | null
+          product_external_id?: string | null
+          product_name?: string | null
+          raw_custom_data?: Json | null
+          raw_item?: Json | null
+          resolved_product_id?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_paid_unlinked_analyses: {
