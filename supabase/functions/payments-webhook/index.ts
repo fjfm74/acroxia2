@@ -1,4 +1,4 @@
-// redeploy 2026-05-05 v4: triple cascade para identificar Pack Comparador (Lovable crea productos sin External ID custom)
+// redeploy 2026-05-06 v5: telemetría persistente en webhook_diagnostics
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhook, EventName, getPaddleClient, type PaddleEnv } from "../_shared/paddle.ts";
 
@@ -7,6 +7,15 @@ const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPAB
 const CREDIT_MAP: Record<string, number> = {
   pack_comparador: 3,
 };
+
+// Helper: registrar en webhook_diagnostics. Fire-and-forget, no bloquea el flujo.
+async function logDiagnostic(row: Record<string, unknown>) {
+  try {
+    await supabase.from("webhook_diagnostics").insert(row);
+  } catch (e: any) {
+    console.error("[webhook_diagnostics] insert failed:", e?.message || e);
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -35,17 +44,33 @@ Deno.serve(async (req) => {
         break;
       case EventName.TransactionPaymentFailed:
         console.log("Payment failed:", event.data.id, "env:", env);
+        await logDiagnostic({
+          env,
+          event_type: "transaction.payment_failed",
+          transaction_id: event.data.id,
+          notes: "Payment failed",
+        });
         break;
       default:
         console.log("Unhandled event:", event.eventType);
+        await logDiagnostic({
+          env,
+          event_type: String(event.eventType),
+          notes: "Unhandled event type",
+        });
     }
 
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (e) {
+  } catch (e: any) {
     console.error("Webhook error:", e);
+    await logDiagnostic({
+      env,
+      event_type: "error",
+      notes: `Webhook error: ${e?.message || e}`,
+    });
     return new Response("Webhook error", { status: 400 });
   }
 });
@@ -56,6 +81,13 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
   const userId = customData?.userId;
   if (!userId) {
     console.error("No userId in customData");
+    await logDiagnostic({
+      env,
+      event_type: "subscription.created",
+      transaction_id: id,
+      notes: "No userId in customData",
+      raw_custom_data: customData ?? null,
+    });
     return;
   }
 
@@ -114,37 +146,43 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const userId = data.customData?.userId;
   const analysisId = data.customData?.analysisId;
   const transactionId = data.id;
+  const paddleCustomerId = data.customer_id || data.customerId;
+
+  // Telemetría — campos que iremos rellenando
+  const diag: Record<string, unknown> = {
+    env,
+    event_type: "transaction.completed",
+    transaction_id: transactionId,
+    user_id: userId || null,
+    analysis_id: analysisId || null,
+    customer_id: paddleCustomerId || null,
+    raw_custom_data: data.customData ?? null,
+  };
 
   if (data.subscriptionId) {
+    diag.notes = "Skipped: subscription transaction";
+    await logDiagnostic(diag);
     console.log("Subscription transaction, skipping credit logic:", transactionId);
     return;
   }
 
+  // ====================== Procesar email ======================
   if (analysisId) {
-    // Cascade de fuentes para el email del cliente:
-    //   1) customData.email (lo que pasa el frontend)
-    //   2) data.customer.email (raras veces expandido en webhook)
-    //   3) data.customerEmail (top-level)
-    //   4) Paddle SDK customers.get(customerId) — vía Lovable connector gateway
     let customerEmail = data.customData?.email || data.customer?.email || data.customerEmail || "";
 
-    if (!customerEmail) {
-      const paddleCustomerId = data.customer_id || data.customerId;
-      if (paddleCustomerId) {
-        try {
-          const paddle = getPaddleClient(env);
-          const customer: any = await paddle.customers.get(paddleCustomerId);
-          customerEmail = customer?.email || customer?.data?.email || "";
-          console.log(`[paddle-sdk] customer.get(${paddleCustomerId}) email=${customerEmail || "(empty)"}`);
-        } catch (e: any) {
-          console.error("[paddle-sdk] customer.get failed:", e?.message || e);
-        }
-      } else {
-        console.warn("No customer_id available in transaction event");
+    if (!customerEmail && paddleCustomerId) {
+      try {
+        const paddle = getPaddleClient(env);
+        const customer: any = await paddle.customers.get(paddleCustomerId);
+        customerEmail = customer?.email || customer?.data?.email || "";
+        console.log(`[paddle-sdk] customer.get(${paddleCustomerId}) email=${customerEmail || "(empty)"}`);
+      } catch (e: any) {
+        console.error("[paddle-sdk] customer.get failed:", e?.message || e);
       }
     }
 
     const normalizedEmail = customerEmail.trim().toLowerCase();
+    diag.customer_email = normalizedEmail || null;
 
     const updates: Record<string, unknown> = {
       paid: true,
@@ -169,19 +207,28 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   }
 
   if (!userId) {
+    diag.notes = "Anonymous payment without userId — pending registration to link";
+    await logDiagnostic(diag);
     console.log("Transaction completed without userId (anonymous purchase):", transactionId, "analysisId:", analysisId);
     return;
   }
 
-  // Triple cascade de identificación del producto. Lovable crea los productos en
-  // Paddle con IDs nativos (pri_xxx) sin External ID custom, así que no podemos
-  // confiar solo en priceToProduct[priceExternalId]. Fallback por importe + nombre.
+  // ====================== Resolver producto y créditos ======================
   const item = data.items?.[0];
   const priceExternalId = item?.price?.importMeta?.externalId || "";
   const productExternalId = item?.product?.importMeta?.externalId || "";
   const priceAmount = String(item?.price?.unitPrice?.amount ?? "");
   const currency = String(item?.price?.unitPrice?.currencyCode ?? "EUR").toUpperCase();
   const productName = String(item?.product?.name ?? "").toLowerCase();
+  const priceId = String(item?.price?.id ?? "");
+
+  diag.price_external_id = priceExternalId || null;
+  diag.product_external_id = productExternalId || null;
+  diag.price_amount = priceAmount;
+  diag.currency = currency;
+  diag.product_name = item?.product?.name ?? null;
+  diag.price_id = priceId || null;
+  diag.raw_item = item ?? null;
 
   const priceToProduct: Record<string, string> = {
     pack_comparador_price: "pack_comparador",
@@ -189,18 +236,18 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
 
   let resolvedProductId = priceToProduct[priceExternalId] || priceToProduct[productExternalId] || "";
 
-  // Fallback 1: por importe (3499 céntimos EUR = 34,99€ Pack Comparador)
   if (!resolvedProductId && currency === "EUR" && priceAmount === "3499") {
     resolvedProductId = "pack_comparador";
   }
 
-  // Fallback 2: por nombre del producto
   if (!resolvedProductId && productName.includes("pack") && productName.includes("comparador")) {
     resolvedProductId = "pack_comparador";
   }
 
+  diag.resolved_product_id = resolvedProductId || null;
+
   console.log(
-    `[credits-resolution] resolved="${resolvedProductId}" priceId="${item?.price?.id}" externalId="${priceExternalId}" amount="${priceAmount} ${currency}" productName="${productName}"`,
+    `[credits-resolution] resolved="${resolvedProductId}" priceId="${priceId}" externalId="${priceExternalId}" amount="${priceAmount} ${currency}" productName="${productName}"`,
   );
 
   const creditsToAdd = CREDIT_MAP[resolvedProductId];
@@ -214,14 +261,21 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       .update({ credits: currentCredits + creditsToAdd })
       .eq("id", userId);
 
+    diag.credits_added = creditsToAdd;
     console.log(`Added ${creditsToAdd} credits to user ${userId}, product: ${resolvedProductId}, env: ${env}`);
   } else {
+    diag.credits_added = 0;
+    diag.notes = `No credits to add. resolved="${resolvedProductId}"`;
     console.warn(
       `[credits-resolution] no credits to add for tx=${transactionId} userId=${userId} resolved="${resolvedProductId}"`,
     );
   }
 
-  if (!analysisId) return;
+  // ====================== Contract + analysis_results (si hay analysisId) ======================
+  if (!analysisId) {
+    await logDiagnostic(diag);
+    return;
+  }
 
   const { data: existingContract } = await supabase
     .from("contracts")
@@ -230,6 +284,9 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     .maybeSingle();
 
   if (existingContract) {
+    diag.contract_id_created = existingContract.id;
+    diag.notes = (diag.notes ? diag.notes + " | " : "") + "Contract already exists, skipped insert";
+    await logDiagnostic(diag);
     console.log(`Contract already exists for analysis ${analysisId} (id: ${existingContract.id}), skipping insert`);
     return;
   }
@@ -237,6 +294,8 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const { data: analysisData } = await supabase.from("anonymous_analyses").select("*").eq("id", analysisId).single();
 
   if (!analysisData) {
+    diag.notes = (diag.notes ? diag.notes + " | " : "") + `Analysis ${analysisId} not found`;
+    await logDiagnostic(diag);
     console.error(`Analysis ${analysisId} not found when linking to user ${userId}`);
     return;
   }
@@ -259,9 +318,13 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     .single();
 
   if (contractError) {
+    diag.notes = (diag.notes ? diag.notes + " | " : "") + `contractError: ${contractError.message}`;
+    await logDiagnostic(diag);
     console.error("Error creating contract:", contractError);
     return;
   }
+
+  diag.contract_id_created = contract.id;
 
   if (contract && analysisData.analysis_result) {
     const report = analysisData.analysis_result as any;
@@ -271,7 +334,6 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       contract_id: contract.id,
       full_report: report,
       total_clauses: clauses.length,
-      // Bug K: el AI emite 'legal' (no 'valid'); soportamos ambos por compatibilidad.
       valid_clauses: clauses.filter((c: any) => c.type === "legal" || c.type === "valid").length,
       suspicious_clauses: clauses.filter((c: any) => c.type === "suspicious").length,
       illegal_clauses: clauses.filter((c: any) => c.type === "illegal").length,
@@ -279,5 +341,6 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     });
   }
 
+  await logDiagnostic(diag);
   console.log(`Linked analysis ${analysisId} to user ${userId} (contract: ${contract.id})`);
 }
