@@ -24,27 +24,46 @@ const VerificacionPendiente = () => {
   const [resending, setResending] = useState(false);
   const isVerified = !!(user as any)?.email_confirmed_at;
 
-  // Polling SIEMPRE activo: la verificación puede ocurrir en otra pestaña
-  // (la abierta desde el email link). No depende de que `user` o `isVerified`
-  // ya hayan llegado a este tab. Si la RPC `get_anonymous_analysis` devuelve
-  // `converted_contract_id`, navegamos al informe.
+  // Polling SIEMPRE activo. Soporta dos modos:
+  //   a) Con analysisId (vino de pago): espera a que la RPC devuelva
+  //      converted_contract_id y redirige al informe completo.
+  //   b) Sin analysisId (solo registro): espera a que email_confirmed_at
+  //      llegue tras la verificación y redirige al dashboard.
+  // El polling refresca la session porque la verificación suele ocurrir
+  // en otra pestaña (la abierta desde el email link).
   useEffect(() => {
-    if (!analysisId) return;
-
     let cancelled = false;
+
     const poll = async () => {
       try {
-        // Refrescar la session por si Supabase ya la tiene en otra pestaña.
         await supabase.auth.refreshSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-        const { data, error } = await supabase.rpc("get_anonymous_analysis", { analysis_uuid: analysisId });
-        if (cancelled) return;
-        if (!error) {
-          const row = Array.isArray(data) ? data[0] : data;
-          const contractId = (row as any)?.converted_contract_id;
-          if (contractId) {
-            navigate(`/resultado/${contractId}`, { replace: true });
-            return;
+        if (!cancelled && session?.user) {
+          const verified = !!(session.user as any).email_confirmed_at;
+          if (verified) {
+            if (analysisId) {
+              // Modo a: esperar a que el contract esté reconciliado
+              const { data, error } = await supabase.rpc("get_anonymous_analysis", {
+                analysis_uuid: analysisId,
+              });
+              if (!error) {
+                const row = Array.isArray(data) ? data[0] : data;
+                const contractId = (row as any)?.converted_contract_id;
+                if (contractId) {
+                  navigate(`/resultado/${contractId}`, { replace: true });
+                  return;
+                }
+              }
+              // si todavía no hay contract, sigue polling (la RPC del AuthContext
+              // creará el contract en cuanto SIGNED_IN se dispare en este tab).
+            } else {
+              // Modo b: solo registro, ir al dashboard
+              navigate("/dashboard", { replace: true });
+              return;
+            }
           }
         }
       } catch (e) {
@@ -52,6 +71,7 @@ const VerificacionPendiente = () => {
       }
       if (!cancelled) setTimeout(poll, POLL_INTERVAL_MS);
     };
+
     poll();
     return () => {
       cancelled = true;
@@ -74,6 +94,47 @@ const VerificacionPendiente = () => {
       setResending(false);
     }
   };
+
+  // Texto adaptado al modo:
+  const headline = isVerified ? "¡Email verificado!" : "Verifica tu email";
+
+  const intro = isVerified ? (
+    <p className="text-muted-foreground">
+      {analysisId
+        ? "Estamos preparando tu informe… te redirigiremos en unos segundos."
+        : "Te estamos llevando a tu panel…"}
+    </p>
+  ) : analysisId ? (
+    <>
+      <p className="text-muted-foreground">
+        <strong className="text-foreground">Pago recibido</strong> y cuenta creada.
+        {email && (
+          <>
+            {" "}
+            Te hemos enviado un email a <strong>{email}</strong> con el enlace de verificación.
+          </>
+        )}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Verifica tu email para acceder a tu informe completo. Esta página detectará la verificación automáticamente.
+      </p>
+    </>
+  ) : (
+    <>
+      <p className="text-muted-foreground">
+        <strong className="text-foreground">Cuenta creada.</strong>
+        {email && (
+          <>
+            {" "}
+            Te hemos enviado un email a <strong>{email}</strong> con el enlace de verificación.
+          </>
+        )}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Verifica tu email para activar tu cuenta. Esta página detectará la verificación automáticamente.
+      </p>
+    </>
+  );
 
   return (
     <>
@@ -98,30 +159,8 @@ const VerificacionPendiente = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <h1 className="font-serif text-3xl font-semibold text-foreground">
-                    {isVerified ? "¡Email verificado!" : "Verifica tu email"}
-                  </h1>
-                  {!isVerified ? (
-                    <>
-                      <p className="text-muted-foreground">
-                        <strong className="text-foreground">Pago recibido</strong> y cuenta creada.
-                        {email && (
-                          <>
-                            {" "}
-                            Te hemos enviado un email a <strong>{email}</strong> con el enlace de verificación.
-                          </>
-                        )}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Verifica tu email para acceder a tu informe completo. Esta página detectará la verificación
-                        automáticamente.
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground">
-                      Estamos preparando tu informe… te redirigiremos en unos segundos.
-                    </p>
-                  )}
+                  <h1 className="font-serif text-3xl font-semibold text-foreground">{headline}</h1>
+                  {intro}
                 </div>
 
                 <div className="flex flex-col items-center gap-3">
@@ -140,7 +179,11 @@ const VerificacionPendiente = () => {
 
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-2" />
                   <p className="text-xs text-muted-foreground">
-                    {isVerified ? "Vinculando tu informe…" : "Esperando confirmación…"}
+                    {isVerified
+                      ? analysisId
+                        ? "Vinculando tu informe…"
+                        : "Cargando tu panel…"
+                      : "Esperando confirmación…"}
                   </p>
                 </div>
 
