@@ -54,31 +54,12 @@ function detectSupportedLanguage(text: string): LanguageDetectionResult {
   const esScore = countLanguageMatches(sample, ES_LANGUAGE_PATTERNS);
   const caScore = countLanguageMatches(sample, CA_LANGUAGE_PATTERNS);
   const total = esScore + caScore;
-
-  if (total < 3) {
-    return { detectedLanguage: "unsupported", supported: false, esScore, caScore };
-  }
-
-  if (esScore >= 3 && esScore >= caScore * 1.6) {
-    return { detectedLanguage: "es", supported: true, esScore, caScore };
-  }
-
-  if (caScore >= 3 && caScore >= esScore * 1.6) {
-    return { detectedLanguage: "ca", supported: true, esScore, caScore };
-  }
-
-  if (esScore >= 2 && caScore >= 2) {
-    return { detectedLanguage: "mixed_es_ca", supported: true, esScore, caScore };
-  }
-
-  if (esScore >= 3) {
-    return { detectedLanguage: "es", supported: true, esScore, caScore };
-  }
-
-  if (caScore >= 3) {
-    return { detectedLanguage: "ca", supported: true, esScore, caScore };
-  }
-
+  if (total < 3) return { detectedLanguage: "unsupported", supported: false, esScore, caScore };
+  if (esScore >= 3 && esScore >= caScore * 1.6) return { detectedLanguage: "es", supported: true, esScore, caScore };
+  if (caScore >= 3 && caScore >= esScore * 1.6) return { detectedLanguage: "ca", supported: true, esScore, caScore };
+  if (esScore >= 2 && caScore >= 2) return { detectedLanguage: "mixed_es_ca", supported: true, esScore, caScore };
+  if (esScore >= 3) return { detectedLanguage: "es", supported: true, esScore, caScore };
+  if (caScore >= 3) return { detectedLanguage: "ca", supported: true, esScore, caScore };
   return { detectedLanguage: "unsupported", supported: false, esScore, caScore };
 }
 
@@ -97,10 +78,9 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
   const uint8Array = new Uint8Array(buffer);
   const decoder = new TextDecoder("utf-8", { fatal: false });
   const rawText = decoder.decode(uint8Array);
-
   const textSegments = rawText.match(/[\x20-\x7E\xC0-\xFF\n\r\t]+/g) || [];
   return textSegments
-    .filter((segment) => segment.length > 10)
+    .filter((s) => s.length > 10)
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
@@ -115,17 +95,11 @@ async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
 async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: string): Promise<string> {
   const uint8Array = new Uint8Array(buffer);
   let binary = "";
-  for (let i = 0; i < uint8Array.length; i++) {
-    binary += String.fromCharCode(uint8Array[i]);
-  }
+  for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
   const base64 = btoa(binary);
-
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
@@ -136,20 +110,13 @@ async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: s
               type: "text",
               text: "Transcribe TODO el texto visible en esta imagen de un contrato de alquiler español. Extrae el texto completo manteniendo la estructura del documento. Devuelve SOLO el texto transcrito sin comentarios adicionales.",
             },
-            {
-              type: "image_url",
-              image_url: { url: `data:${mimeType};base64,${base64}` },
-            },
+            { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
           ],
         },
       ],
     }),
   });
-
-  if (!response.ok) {
-    throw new Error("Error al procesar la imagen con OCR");
-  }
-
+  if (!response.ok) throw new Error("Error al procesar la imagen con OCR");
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
 }
@@ -157,17 +124,11 @@ async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: s
 async function extractPdfTextWithVision(buffer: ArrayBuffer, apiKey: string): Promise<string> {
   const uint8Array = new Uint8Array(buffer);
   let binary = "";
-  for (let i = 0; i < uint8Array.length; i++) {
-    binary += String.fromCharCode(uint8Array[i]);
-  }
+  for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
   const base64 = btoa(binary);
-
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       temperature: 0,
@@ -179,21 +140,16 @@ async function extractPdfTextWithVision(buffer: ArrayBuffer, apiKey: string): Pr
               type: "text",
               text: "Transcribe TODO el texto legible de este PDF de alquiler en España. Mantén estructura por secciones cuando sea posible. Devuelve SOLO texto plano transcrito, sin comentarios.",
             },
-            {
-              type: "image_url",
-              image_url: { url: `data:application/pdf;base64,${base64}` },
-            },
+            { type: "image_url", image_url: { url: `data:application/pdf;base64,${base64}` } },
           ],
         },
       ],
     }),
   });
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error OCR PDF (vision): ${response.status} ${errorText.slice(0, 200)}`);
   }
-
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
 }
@@ -221,40 +177,229 @@ function splitContractCoreAndAnnexes(text: string): { coreText: string; annexTex
     /etiqueta\s+energ[ée]tica/i,
     /etiqueta\s+energ[èe]tica/i,
   ];
-
   let splitIndex = -1;
   for (const marker of markers) {
     const match = marker.exec(text);
-    if (match && match.index >= 0 && (splitIndex === -1 || match.index < splitIndex)) {
-      splitIndex = match.index;
-    }
+    if (match && match.index >= 0 && (splitIndex === -1 || match.index < splitIndex)) splitIndex = match.index;
   }
-
-  if (splitIndex > 5000) {
-    return {
-      coreText: text.slice(0, splitIndex).trim(),
-      annexText: text.slice(splitIndex).trim(),
-      splitApplied: true,
-    };
-  }
-
-  return {
-    coreText: text,
-    annexText: "",
-    splitApplied: false,
-  };
+  if (splitIndex > 5000)
+    return { coreText: text.slice(0, splitIndex).trim(), annexText: text.slice(splitIndex).trim(), splitApplied: true };
+  return { coreText: text, annexText: "", splitApplied: false };
 }
 
-// Dynamic system prompt based on perspective
-function buildSystemPrompt(perspective: "tenant" | "landlord"): string {
-  const commonIntro = `Eres un experto en derecho inmobiliario español especializado en contratos de alquiler de vivienda habitual.
-El contrato puede estar en español o catalán. Debes interpretar equivalencias legales entre ambos idiomas.`;
+// ============================================================================
+// RAG: detección territorial + búsqueda de chunks legales
+// ============================================================================
 
-  const commonLegalFrame = `
-MARCO LEGAL DE REFERENCIA:
-- Ley 29/1994 de Arrendamientos Urbanos (LAU)
-- Ley 12/2023 por el derecho a la vivienda
-- Real Decreto-ley 7/2019`;
+function extractMunicipality(text: string): string | null {
+  const patterns = [
+    /(?:situada?\s+en|domicilio\s+en|ubicad[ao]\s+en|localidad\s+de|municipio\s+de|población\s+de|ciudad\s+de)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|d['’]|la|el|les|l['’]|dels?)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    /(?:situad[ao]?\s+a|domicili\s+a|ubicad[ao]?\s+a|localitat\s+de|municipi\s+de|poblaci[oó]\s+de|ciutat\s+de)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|d['’]|la|el|les|l['’]|dels?)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    /C\.?P\.?\s*\d{5}\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    /\ben\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)\s*[,(]\s*(?:provincia\s+(?:de\s+)?)?[A-ZÀ-Ú]/gi,
+    /finca\s+sita\s+en\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+    /finca\s+situada?\s+a\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+(?:de(?:l)?|la|el)?\s*[A-ZÀ-Ú][a-zà-ú]+)*)/gi,
+  ];
+  for (const pattern of patterns) {
+    const matches = text.matchAll(pattern);
+    for (const match of matches) {
+      if (match[1] && match[1].length > 2) {
+        const municipality = match[1]
+          .trim()
+          .split(/\s+/)
+          .map((word) => {
+            if (/^(de|del|la|el|les|l['’]|d['’]|dels?)$/i.test(word)) return word.toLowerCase();
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          })
+          .join(" ");
+        const excluded = [
+          "calle",
+          "avenida",
+          "plaza",
+          "paseo",
+          "carrer",
+          "avinguda",
+          "plaça",
+          "número",
+          "piso",
+          "puerta",
+          "escalera",
+          "portal",
+          "bloque",
+        ];
+        if (!excluded.some((ex) => municipality.toLowerCase().startsWith(ex))) return municipality;
+      }
+    }
+  }
+  return null;
+}
+
+function extractProvince(text: string): string | null {
+  const provinces = [
+    "Álava",
+    "Albacete",
+    "Alicante",
+    "Almería",
+    "Asturias",
+    "Ávila",
+    "Badajoz",
+    "Barcelona",
+    "Burgos",
+    "Cáceres",
+    "Cádiz",
+    "Cantabria",
+    "Castellón",
+    "Ciudad Real",
+    "Córdoba",
+    "Cuenca",
+    "Girona",
+    "Granada",
+    "Guadalajara",
+    "Guipúzcoa",
+    "Huelva",
+    "Huesca",
+    "Illes Balears",
+    "Jaén",
+    "La Coruña",
+    "La Rioja",
+    "Las Palmas",
+    "León",
+    "Lleida",
+    "Lugo",
+    "Madrid",
+    "Málaga",
+    "Murcia",
+    "Navarra",
+    "Ourense",
+    "Palencia",
+    "Pontevedra",
+    "Salamanca",
+    "Santa Cruz de Tenerife",
+    "Segovia",
+    "Sevilla",
+    "Soria",
+    "Tarragona",
+    "Teruel",
+    "Toledo",
+    "Valencia",
+    "Valladolid",
+    "Vizcaya",
+    "Zamora",
+    "Zaragoza",
+  ];
+  for (const province of provinces) {
+    const patterns = [
+      new RegExp(`provincia\\s+de\\s+${province}`, "i"),
+      new RegExp(`\\(${province}\\)`, "i"),
+      new RegExp(`,\\s*${province}\\s*[,\\)]`, "i"),
+      new RegExp(`\\b${province}\\b`, "i"),
+    ];
+    if (patterns.some((p) => p.test(text))) return province;
+  }
+  return null;
+}
+
+function detectTerritory(text: string): string | null {
+  const territories: Record<string, string[]> = {
+    Cataluña: ["barcelona", "girona", "lleida", "tarragona", "catalunya", "cataluña", "catalan"],
+    Madrid: ["madrid"],
+    Andalucía: [
+      "sevilla",
+      "málaga",
+      "malaga",
+      "granada",
+      "córdoba",
+      "cordoba",
+      "cádiz",
+      "cadiz",
+      "almería",
+      "almeria",
+      "huelva",
+      "jaén",
+      "jaen",
+    ],
+    "Comunidad Valenciana": ["valencia", "alicante", "castellón", "castellon"],
+    "País Vasco": ["bilbao", "san sebastián", "san sebastian", "vitoria", "euskadi", "vizcaya", "guipúzcoa"],
+    Galicia: ["a coruña", "coruña", "vigo", "santiago", "lugo", "ourense", "pontevedra"],
+    Canarias: ["tenerife", "gran canaria", "las palmas", "santa cruz"],
+    Baleares: ["mallorca", "ibiza", "menorca", "palma"],
+    Aragón: ["zaragoza", "huesca", "teruel"],
+    "Castilla y León": ["valladolid", "burgos", "salamanca", "león", "leon"],
+    "Castilla-La Mancha": ["toledo", "ciudad real", "albacete", "guadalajara", "cuenca"],
+    Murcia: ["murcia", "cartagena"],
+    Asturias: ["oviedo", "gijón", "gijon", "asturias"],
+    Navarra: ["pamplona", "navarra"],
+    Cantabria: ["santander", "cantabria"],
+    Extremadura: ["badajoz", "cáceres", "caceres"],
+    "La Rioja": ["logroño", "rioja"],
+  };
+  const lowerText = text.toLowerCase();
+  for (const [territory, keywords] of Object.entries(territories)) {
+    if (keywords.some((kw) => lowerText.includes(kw))) return territory;
+  }
+  return null;
+}
+
+// Build system prompt incluyendo el contexto legal RAG.
+function buildSystemPrompt(
+  perspective: "tenant" | "landlord",
+  legalContext: string,
+  hasLegalContext: boolean,
+  availableSources: string[],
+  territorialFilter: string | null,
+  detectedMunicipality: string | null,
+  detectedProvince: string | null,
+  hasZonaTensionadaInfo: boolean,
+): string {
+  const commonIntro = `Eres el sistema de análisis de ACROXIA, plataforma española de protección de inquilinos.
+Analiza contratos de alquiler de vivienda habitual identificando cláusulas ilegales, abusivas o sospechosas con rigor jurídico.
+El contrato puede estar redactado en español o catalán; interpreta equivalencias jurídicas en ambos idiomas.`;
+
+  const zonaTensionadaSection = detectedMunicipality
+    ? `
+VERIFICACIÓN DE ZONA TENSIONADA
+================================
+Municipio detectado: ${detectedMunicipality}
+${detectedProvince ? `Provincia: ${detectedProvince}` : ""}
+${territorialFilter ? `Comunidad Autónoma: ${territorialFilter}` : ""}
+${
+  hasZonaTensionadaInfo
+    ? `
+HAY información de zonas tensionadas en el contexto legal.
+Si "${detectedMunicipality}" aparece en alguna lista de municipios tensionados:
+- Añade una cláusula con category: "RENTA Y ACTUALIZACIONES", type: "suspicious"
+- En "explanation": indica que el inmueble está en zona de mercado residencial tensionado y la renta puede estar sujeta a límites legales
+- En "recommendation": "Verifique la renta máxima aplicable en https://serpavi.mivau.gob.es/"
+- NO determines automáticamente si la renta es abusiva (depende de superficie, año construcción, etc. que no están en el contrato)
+`
+    : `
+No se detectó información específica de zonas tensionadas. Si la renta parece elevada, sugiere consultar https://serpavi.mivau.gob.es/`
+}
+`
+    : "";
+
+  const legalContextSection = hasLegalContext
+    ? `
+DOCUMENTOS LEGALES INDEXADOS EN LA BASE DE DATOS ACROXIA
+=========================================================
+Fuentes disponibles: ${availableSources.join(", ")}
+Territorio detectado: ${territorialFilter || "No detectado (aplicar normativa estatal)"}
+
+CONTEXTO LEGAL VERIFICADO (extraído de la base de datos):
+${legalContext}
+
+INSTRUCCIONES CRÍTICAS:
+- SOLO marca "verified": true si el artículo aparece literalmente en el contexto anterior
+- Si citas por conocimiento general pero no está en el contexto, marca "verified": false
+- Sé conservador: NO marques cláusulas como ilegales sin base legal sólida
+- En contratos cortos o especiales (habitación, temporal), reconoce las limitaciones del análisis
+`
+    : `
+AVISO: No se encontraron documentos legales específicos en la base de datos para este análisis.
+- Todas las referencias legales deben tener "verified": false
+- Sé conservador, recomienda consultar con un profesional ante dudas
+- Aplica normativa estatal: Ley 29/1994 (LAU), Ley 12/2023, RD 7/2019
+`;
 
   const commonFormat = `
 FORMATO DE RESPUESTA (JSON estricto):
@@ -269,73 +414,88 @@ FORMATO DE RESPUESTA (JSON estricto):
       "category": "FIANZA Y GARANTÍAS" | "DURACIÓN Y PRÓRROGAS" | "RENTA Y ACTUALIZACIONES" | "GASTOS E IMPUESTOS" | "OBRAS Y REPARACIONES" | "PENALIZACIONES" | "HONORARIOS" | "OTRAS",
       "type": "legal" | "suspicious" | "illegal",
       "original_text": "texto exacto del contrato",
-      "explanation": "breve explicación del problema",
-      "legal_reference": "artículo aplicable"
+      "explanation": "explicación clara y específica",
+      "legal_reference": "artículo aplicable",
+      "verified": true | false
     }
   ]
 }
 
-Analiza de forma rigurosa pero concisa. Prioriza las cláusulas más problemáticas.`;
+PRINCIPIOS:
+- Rigor jurídico: no inventes ilegalidades. Si una cláusula es razonable, márcala "legal".
+- Contratos cortos: si faltan cláusulas pero las que hay son válidas, NO marques las ausencias como "illegal" — marca solo lo escrito.
+- Contratos de habitación o temporales (art. 3 LAU): reconoce que NO se rigen por LAU vivienda habitual; ajusta el análisis.
+- Prioriza las cláusulas más problemáticas reales, no infles el conteo.`;
 
   if (perspective === "landlord") {
     return `${commonIntro}
 
-Tu tarea es analizar el contrato proporcionado DESDE LA PERSPECTIVA DEL PROPIETARIO/ARRENDADOR e identificar:
-- ILEGALES: Cláusulas que incumplen la LAU y podrían ser anuladas judicialmente, dejando al propietario desprotegido
-- SOSPECHOSAS: Cláusulas que podrían generar problemas legales al propietario o que faltan y deberían incluirse
-- LEGALES: Conformes a la normativa vigente y que protegen adecuadamente al arrendador
-${commonLegalFrame}
+Analiza DESDE LA PERSPECTIVA DEL PROPIETARIO/ARRENDADOR:
+- ILEGALES: cláusulas que incumplen LAU y dejarían al propietario desprotegido
+- SOSPECHOSAS: posibles problemas legales o cláusulas ausentes que deberían incluirse
+- LEGALES: conformes y que protegen al arrendador
+${zonaTensionadaSection}
+${legalContextSection}
 
-PUNTOS CRÍTICOS A REVISAR PARA EL PROPIETARIO:
-1. Fianza: ¿Se ha establecido correctamente la fianza legal (1 mes) más garantías adicionales (máx. 2 meses)?
-2. Duración: ¿Se respeta la duración mínima obligatoria? ¿Está bien redactada la prórroga?
-3. Actualización de renta: ¿Se incluye un índice de actualización válido y correcto?
-4. Cláusula de obras: ¿Se delimita claramente qué obras corresponden a cada parte?
-5. Penalización por desistimiento: ¿Se incluye la penalización legal a favor del propietario?
-6. Suministros e impuestos: ¿Se establece quién asume cada gasto?
-7. Cláusulas protectoras ausentes: ¿Falta alguna cláusula que el propietario debería incluir?
+PUNTOS CRÍTICOS PARA EL PROPIETARIO:
+1. Fianza: 1 mes obligatorio + 2 meses garantías adicionales máximo
+2. Duración mínima y prórrogas correctamente redactadas
+3. Índice de actualización válido (IRAV/IPC según corresponda)
+4. Cláusula de obras: delimita responsabilidades
+5. Penalización por desistimiento del inquilino
+6. Suministros, IBI, comunidad: quién asume cada gasto
+7. Cláusulas protectoras ausentes que deberían incluirse
 ${commonFormat}`;
   }
 
-  // Default: tenant perspective
   return `${commonIntro}
 
-Tu tarea es analizar el contrato proporcionado e identificar cláusulas que puedan ser:
-- ILEGALES: Contravienen directamente la LAU u otra normativa aplicable
-- SOSPECHOSAS: Podrían ser abusivas o perjudiciales para el inquilino
-- LEGALES: Conformes a la normativa vigente
-${commonLegalFrame}
+Analiza DESDE LA PERSPECTIVA DEL INQUILINO:
+- ILEGALES: contravienen LAU u otra normativa aplicable
+- SOSPECHOSAS: pueden ser abusivas o perjudiciales
+- LEGALES: conformes a normativa vigente
+${zonaTensionadaSection}
+${legalContextSection}
 
-PUNTOS CRÍTICOS A REVISAR:
-1. Fianza: Máximo 1 mensualidad + 2 de garantías adicionales
-2. Duración: Mínimo 5 años (persona física) o 7 años (jurídica)
-3. Honorarios inmobiliaria: A cargo del arrendador si es empresa
-4. Actualización renta: Índice oficial, no IPC libre
-5. Obras y reparaciones: Conservación a cargo del propietario
-6. Penalizaciones: Máximo 1 mes por año restante de contrato
+PUNTOS CRÍTICOS:
+1. Fianza: máximo 1 mensualidad + 2 garantías adicionales
+2. Duración: mínimo 5 años (persona física) o 7 años (jurídica) en vivienda habitual
+3. Honorarios inmobiliaria: a cargo del arrendador si es empresa (Ley 12/2023)
+4. Actualización renta: índice oficial (IRAV), no IPC libre desde 2025
+5. Obras y reparaciones: conservación a cargo del propietario (art. 21 LAU)
+6. Penalizaciones por desistimiento: máximo 1 mes por año restante
+7. IBI, comunidad: por defecto a cargo del propietario salvo pacto explícito
 ${commonFormat}`;
 }
 
+// Categorías semánticas inferidas del contrato (para ranking de chunks)
+function inferSemanticCategories(text: string): string[] {
+  const cats: string[] = [];
+  const lower = text.toLowerCase();
+  if (/fian[zç]a|garant[íi]a/i.test(lower)) cats.push("fianza");
+  if (/renta|actualizaci[óo]n|ipc|irav/i.test(lower)) cats.push("renta_actualizacion");
+  if (/duraci[óo]n|pr[óo]rroga|prorroga/i.test(lower)) cats.push("duracion_prorroga");
+  if (/obra|reparaci[óo]n|conservaci[óo]n/i.test(lower)) cats.push("obras_reparaciones");
+  if (/penalizaci[óo]n|desistimiento|incumplimiento/i.test(lower)) cats.push("penalizaciones");
+  if (/ibi|gasto|comunidad|suministro/i.test(lower)) cats.push("gastos_impuestos");
+  if (/honorar|inmobiliaria|agencia/i.test(lower)) cats.push("honorarios");
+  return cats;
+}
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { analysisId, filePath, fileType, sessionId, fileName, perspective: rawPerspective } = await req.json();
     const perspective = rawPerspective === "landlord" ? "landlord" : "tenant";
 
-    if (!filePath) {
-      throw new Error("Faltan parámetros requeridos");
-    }
+    if (!filePath) throw new Error("Faltan parámetros requeridos");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const apiKey = Deno.env.get("LOVABLE_API_KEY")!;
-
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Create anonymous analysis record if not provided
     let effectiveAnalysisId = analysisId;
     if (!effectiveAnalysisId) {
       const { data: newAnalysis, error: insertError } = await supabase
@@ -348,39 +508,28 @@ serve(async (req) => {
         })
         .select("id")
         .single();
-
       if (insertError) throw new Error(`Error creating analysis record: ${insertError.message}`);
       effectiveAnalysisId = newAnalysis.id;
     }
 
     console.log(`Processing public analysis: ${effectiveAnalysisId}, file: ${filePath}`);
 
-    // Download file from storage
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
+    if (downloadError || !fileData) throw new Error(`Error descargando archivo: ${downloadError?.message}`);
 
-    if (downloadError || !fileData) {
-      throw new Error(`Error descargando archivo: ${downloadError?.message}`);
-    }
-
-    // Extract text based on file type
     const detectedFileType = getFileType(filePath, fileType);
     const buffer = await fileData.arrayBuffer();
     let contractText = "";
-
-    console.log(`Extracting text from ${detectedFileType} file`);
 
     switch (detectedFileType) {
       case "pdf":
         contractText = await extractPdfText(buffer);
         if (looksLikeLowQualityPdfExtraction(contractText)) {
-          console.log("Low-quality PDF text extraction detected in public analyzer, retrying with vision OCR...");
           try {
             const visionText = await extractPdfTextWithVision(buffer, apiKey);
-            if (visionText.length > contractText.length) {
-              contractText = visionText;
-            }
+            if (visionText.length > contractText.length) contractText = visionText;
           } catch (visionError) {
-            console.warn("Public analyzer vision OCR fallback failed:", visionError);
+            console.warn("Public vision OCR fallback failed:", visionError);
           }
         }
         break;
@@ -392,54 +541,133 @@ serve(async (req) => {
         break;
     }
 
-    if (!contractText || contractText.length < 100) {
+    if (!contractText || contractText.length < 100)
       throw new Error("No se pudo extraer suficiente texto del documento");
-    }
-
     console.log(`Extracted ${contractText.length} characters`);
 
     const languageDetection = detectSupportedLanguage(contractText);
-    console.log(
-      `Language detection: ${languageDetection.detectedLanguage} (es=${languageDetection.esScore}, ca=${languageDetection.caScore})`,
-    );
     if (!languageDetection.supported) {
       await supabase
         .from("anonymous_analyses")
         .update({
           analysis_result: {
-            error:
-              "No se puede validar el contrato: idioma no soportado. Actualmente solo se admiten español y catalán.",
+            error: "No se puede validar el contrato: idioma no soportado. Solo se admiten español y catalán.",
             code: "UNSUPPORTED_LANGUAGE",
             detected_language: languageDetection.detectedLanguage,
             language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
           },
         })
         .eq("id", effectiveAnalysisId);
-
       return new Response(
         JSON.stringify({
-          error: "No se puede validar el contrato: idioma no soportado. Actualmente solo se admiten español y catalán.",
+          error: "No se puede validar el contrato: idioma no soportado. Solo se admiten español y catalán.",
           code: "UNSUPPORTED_LANGUAGE",
           detected_language: languageDetection.detectedLanguage,
-          language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
         }),
-        {
-          status: 422,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Call AI for analysis
-    const systemPrompt = buildSystemPrompt(perspective);
+    // ========================================================================
+    // RAG: detectar territorio + buscar chunks legales relevantes
+    // ========================================================================
+    const detectedMunicipality = extractMunicipality(contractText);
+    const detectedProvince = extractProvince(contractText);
+    const territorialFilter = detectTerritory(contractText);
+    const semanticCategories = inferSemanticCategories(contractText);
+
+    console.log(
+      `[RAG] municipio="${detectedMunicipality}" provincia="${detectedProvince}" territorio="${territorialFilter}" categorías=[${semanticCategories.join(",")}]`,
+    );
+
+    // Búsqueda general (texto completo, filtrada por territorio)
+    const searchQuery =
+      `arrendamiento vivienda fianza renta actualización IRAV duración prórroga ${semanticCategories.join(" ")}`.trim();
+    const { data: generalChunks, error: gErr } = await supabase.rpc("search_legal_chunks", {
+      search_query: searchQuery,
+      match_count: 12,
+      territorial_filter: territorialFilter,
+    });
+    if (gErr) console.warn("[RAG] search_legal_chunks error:", gErr.message);
+
+    // Búsqueda específica por ubicación (zona tensionada / municipio)
+    let locationChunks: any[] = [];
+    if (detectedMunicipality || detectedProvince) {
+      const { data: locChunks, error: lErr } = await supabase.rpc("search_legal_chunks_by_location", {
+        search_query: "zona mercado residencial tensionado límite renta precio índice referencia municipal",
+        municipality_name: detectedMunicipality,
+        province_name: detectedProvince,
+        match_count: 8,
+      });
+      if (lErr) console.warn("[RAG] search_legal_chunks_by_location error:", lErr.message);
+      locationChunks = locChunks || [];
+    }
+
+    // Combinar y deduplicar chunks
+    const allChunksMap = new Map<string, any>();
+    (generalChunks || []).forEach((c: any) => allChunksMap.set(c.id, c));
+    locationChunks.forEach((c: any) => {
+      c.is_location_match = true;
+      allChunksMap.set(c.id, c);
+    });
+
+    const combinedChunks = Array.from(allChunksMap.values()).sort((a, b) => {
+      if (a.is_location_match && !b.is_location_match) return -1;
+      if (!a.is_location_match && b.is_location_match) return 1;
+      return (b.rank || 0) - (a.rank || 0);
+    });
+
+    // Limit a 15 chunks para preview gratuito
+    const usedChunks = combinedChunks.slice(0, 15);
+
+    let legalContext = "";
+    let hasZonaTensionadaInfo = false;
+    const uniqueSources = new Set<string>();
+
+    legalContext = usedChunks
+      .map((c: any) => {
+        uniqueSources.add(c.document_title);
+        if (c.content?.toLowerCase().includes("tensionad") || c.affected_municipalities?.length > 0) {
+          hasZonaTensionadaInfo = true;
+        }
+        const muni =
+          c.affected_municipalities?.length > 0
+            ? `\nMunicipios afectados: ${c.affected_municipalities.slice(0, 12).join(", ")}${c.affected_municipalities.length > 12 ? "..." : ""}`
+            : "";
+        const locMatch = c.is_location_match ? " [COINCIDENCIA DE UBICACIÓN]" : "";
+        return `[FUENTE: ${c.document_title}]${locMatch}
+${c.article_reference ? `Artículo: ${c.article_reference}` : ""}
+${c.section_title ? `Sección: ${c.section_title}` : ""}
+${c.territorial_scope ? `Ámbito: ${c.territorial_scope}` : ""}${muni}
+Contenido: ${c.content}
+---`;
+      })
+      .join("\n\n");
+
+    const hasLegalContext = usedChunks.length > 0;
+    const availableSources = Array.from(uniqueSources);
+    console.log(
+      `[RAG] usados ${usedChunks.length} chunks de ${availableSources.length} fuentes (${locationChunks.length} location-specific)`,
+    );
+
+    // ========================================================================
+    // AI analysis
+    // ========================================================================
+    const systemPrompt = buildSystemPrompt(
+      perspective,
+      legalContext,
+      hasLegalContext,
+      availableSources,
+      territorialFilter,
+      detectedMunicipality,
+      detectedProvince,
+      hasZonaTensionadaInfo,
+    );
 
     const { coreText, annexText } = splitContractCoreAndAnnexes(contractText);
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
@@ -461,12 +689,8 @@ serve(async (req) => {
 
     const aiData = await aiResponse.json();
     let analysisContent = aiData.choices?.[0]?.message?.content || "";
-
-    // Parse JSON response
     const jsonMatch = analysisContent.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Respuesta de IA no válida");
-    }
+    if (!jsonMatch) throw new Error("Respuesta de IA no válida");
 
     const analysisResult = JSON.parse(jsonMatch[0]);
     analysisResult.perspective = perspective;
@@ -475,22 +699,22 @@ serve(async (req) => {
       detected_language: languageDetection.detectedLanguage,
       language_scores: { es: languageDetection.esScore, ca: languageDetection.caScore },
       perspective,
+      detected_municipality: detectedMunicipality,
+      detected_province: detectedProvince,
+      detected_territory: territorialFilter,
+      legal_context_chunks: usedChunks.length,
+      legal_context_sources: availableSources.length,
     };
 
     console.log(
       `Analysis complete: ${analysisResult.total_clauses} clauses, ${analysisResult.illegal_clauses} illegal`,
     );
 
-    // Update anonymous_analyses with result
     const { error: updateError } = await supabase
       .from("anonymous_analyses")
       .update({ analysis_result: analysisResult })
       .eq("id", effectiveAnalysisId);
-
-    if (updateError) {
-      console.error("Error updating analysis:", updateError);
-      throw new Error("Error guardando resultados");
-    }
+    if (updateError) throw new Error("Error guardando resultados");
 
     return new Response(
       JSON.stringify({
