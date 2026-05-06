@@ -544,9 +544,24 @@ const FreeResultPreview = () => {
                             <p className="text-xs text-muted-foreground mb-4">Pago único · Incluye registro gratuito</p>
                           </div>
 
+                          <div className="flex items-start gap-3 p-3 rounded-lg border border-charcoal/10 bg-muted/50">
+                            <Checkbox
+                              id="consent-digital-unlock"
+                              checked={consentDigital}
+                              onCheckedChange={(checked) => setConsentDigital(checked as boolean)}
+                              className="mt-0.5"
+                            />
+                            <Label htmlFor="consent-digital-unlock" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                              Confirmo que entiendo que al desbloquear el informe (servicio digital de ejecución inmediata), pierdo el derecho de desistimiento de 14 días conforme al art. 103.m RDL 1/2007. He leído los{" "}
+                              <Link to="/terminos" className="underline hover:no-underline text-foreground">Términos</Link>
+                              {" "}y la{" "}
+                              <Link to="/politica-desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
+                            </Label>
+                          </div>
+
                           <Button
                             onClick={handleUnlockClick}
-                            disabled={checkoutLoading || emailGateLoading}
+                            disabled={checkoutLoading || emailGateLoading || !consentDigital}
                             className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
                             size="lg"
                           >
