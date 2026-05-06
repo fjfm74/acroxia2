@@ -555,7 +555,7 @@ const FreeResultPreview = () => {
                               Confirmo que entiendo que al desbloquear el informe (servicio digital de ejecución inmediata), pierdo el derecho de desistimiento de 14 días conforme al art. 103.m RDL 1/2007. He leído los{" "}
                               <Link to="/terminos" className="underline hover:no-underline text-foreground">Términos</Link>
                               {" "}y la{" "}
-                              <Link to="/politica-desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
+                              <Link to="/desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
                             </Label>
                           </div>
 

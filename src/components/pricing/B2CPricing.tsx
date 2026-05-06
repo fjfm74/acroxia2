@@ -121,7 +121,7 @@ const B2CPricing = () => {
               Confirmo que entiendo que el análisis es un servicio digital de ejecución inmediata y que, conforme al art. 103.m del RDL 1/2007, pierdo el derecho de desistimiento de 14 días en cuanto se inicie el análisis. He leído los{" "}
               <Link to="/terminos" className="underline hover:no-underline text-foreground">Términos</Link>
               {" "}y la{" "}
-              <Link to="/politica-desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
+              <Link to="/desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
             </Label>
           </div>
         </FadeIn>
