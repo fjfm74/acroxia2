@@ -429,6 +429,7 @@ PRINCIPIOS DE CALIFICACIÓN (CRÍTICOS):
 - Una cláusula que es subóptima, mejorable o discutible NO es ilegal. Es "suspicious".
 - El conteo de "illegal" debe ser conservador. Mejor sub-contar que sobre-contar (un cliente que vea 0-1 ilegales en un contrato razonable confiará más que uno que vea 5 ilegalidades dudosas en un contrato simple).
 - Rigor jurídico real: no infles para "asustar al user". El objetivo es darle información veraz.
+`;
 
   if (perspective === "landlord") {
     return `${commonIntro}
