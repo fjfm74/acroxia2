@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -18,12 +18,20 @@ import { trackConversion } from "@/lib/analytics";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+// Polling tras vuelta del checkout para detectar créditos sumados por el webhook.
+// El webhook puede tardar 1-5 segundos en procesar la transacción y escribir
+// profiles.credits. Sin polling, el user vería los créditos viejos hasta recargar.
+const CHECKOUT_POLL_INTERVAL_MS = 2000;
+const CHECKOUT_POLL_MAX_MS = 30_000;
+
 const Analyze = () => {
   const { user, profile, refreshProfile } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const checkoutSuccess = searchParams.get("checkout") === "success";
+
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -33,8 +41,77 @@ const Analyze = () => {
   const [acceptedThirdPartyData, setAcceptedThirdPartyData] = useState(false);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Estimated analysis duration in seconds (based on logs: 30-90s, avg ~60s)
+  // Estado del polling de créditos post-checkout
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentTimedOut, setPaymentTimedOut] = useState(false);
+  const checkoutPollRef = useRef<{ baselineCredits: number; cancelled: boolean } | null>(null);
+
+  // Estimated analysis duration in seconds
   const ESTIMATED_DURATION = 60;
+
+  // Polling tras checkout: detectar créditos sumados por el webhook.
+  useEffect(() => {
+    if (!checkoutSuccess || !profile) return;
+    if (checkoutPollRef.current) return; // ya arrancó
+
+    const baseline = profile.credits ?? 0;
+    checkoutPollRef.current = { baselineCredits: baseline, cancelled: false };
+    setPaymentProcessing(true);
+    setPaymentTimedOut(false);
+
+    const startedAt = Date.now();
+
+    const poll = async () => {
+      if (checkoutPollRef.current?.cancelled) return;
+      try {
+        await refreshProfile();
+      } catch (e) {
+        console.warn("[checkout-poll] refreshProfile error:", e);
+      }
+      // Re-leer credits del profile actual a través de un fetch directo (porque
+      // refreshProfile actualiza el state pero no podemos leerlo síncrono aquí).
+      if (!user) return;
+      const { data: fresh } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
+      if (checkoutPollRef.current?.cancelled) return;
+
+      const currentCredits = fresh?.credits ?? 0;
+      const baselineNow = checkoutPollRef.current?.baselineCredits ?? baseline;
+
+      if (currentCredits > baselineNow) {
+        // Créditos llegaron — limpiamos URL y notificamos.
+        setPaymentProcessing(false);
+        setPaymentTimedOut(false);
+        checkoutPollRef.current = { ...checkoutPollRef.current!, cancelled: true };
+        const newSearch = new URLSearchParams(searchParams);
+        newSearch.delete("checkout");
+        setSearchParams(newSearch, { replace: true });
+        toast({
+          title: "¡Pago completado!",
+          description: `Ahora tienes ${currentCredits} crédito${currentCredits === 1 ? "" : "s"} disponible${currentCredits === 1 ? "" : "s"}.`,
+        });
+        return;
+      }
+
+      if (Date.now() - startedAt >= CHECKOUT_POLL_MAX_MS) {
+        // Timeout sin créditos nuevos: aviso al user.
+        setPaymentProcessing(false);
+        setPaymentTimedOut(true);
+        checkoutPollRef.current = { ...checkoutPollRef.current!, cancelled: true };
+        return;
+      }
+
+      setTimeout(poll, CHECKOUT_POLL_INTERVAL_MS);
+    };
+
+    setTimeout(poll, CHECKOUT_POLL_INTERVAL_MS);
+
+    return () => {
+      if (checkoutPollRef.current) {
+        checkoutPollRef.current.cancelled = true;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkoutSuccess, profile?.id]);
 
   // Gradual progress animation during AI analysis
   useEffect(() => {
@@ -48,7 +125,7 @@ const Analyze = () => {
 
     const startProgress = 50;
     const targetProgress = 88;
-    const duration = ESTIMATED_DURATION * 1000 * 0.85; // 85% of estimated time
+    const duration = ESTIMATED_DURATION * 1000 * 0.85;
     const intervalMs = 500;
     const totalSteps = duration / intervalMs;
     const increment = (targetProgress - startProgress) / totalSteps;
@@ -57,13 +134,9 @@ const Analyze = () => {
 
     progressIntervalRef.current = setInterval(() => {
       currentStep++;
-      const newProgress = Math.min(
-        Math.round(startProgress + increment * currentStep),
-        targetProgress
-      );
+      const newProgress = Math.min(Math.round(startProgress + increment * currentStep), targetProgress);
       setProgress(newProgress);
 
-      // Dynamic messages based on progress
       if (newProgress >= 50 && newProgress < 62) {
         setAnalysisStep("Extrayendo texto del documento...");
       } else if (newProgress >= 62 && newProgress < 74) {
@@ -104,7 +177,7 @@ const Analyze = () => {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "image/jpeg",
     "image/png",
-    "image/webp"
+    "image/webp",
   ];
 
   const validateFile = (file: File): string | null => {
@@ -117,21 +190,24 @@ const Analyze = () => {
     return null;
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      const error = validateFile(droppedFile);
-      if (error) {
-        toast({ title: "Error", description: error, variant: "destructive" });
-        return;
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        const droppedFile = e.dataTransfer.files[0];
+        const error = validateFile(droppedFile);
+        if (error) {
+          toast({ title: "Error", description: error, variant: "destructive" });
+          return;
+        }
+        setFile(droppedFile);
       }
-      setFile(droppedFile);
-    }
-  }, [toast]);
+    },
+    [toast],
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -148,7 +224,6 @@ const Analyze = () => {
   const handleAnalyze = async () => {
     if (!file || !user) return;
 
-    // Los admins tienen análisis ilimitados
     if (!isAdmin && (!profile || profile.credits < 1)) {
       toast({
         title: "Sin créditos",
@@ -163,28 +238,22 @@ const Analyze = () => {
     setProgress(10);
     setAnalysisStep("Subiendo contrato...");
 
-    // Track analysis started
-    trackConversion('analysis_started', {
+    trackConversion("analysis_started", {
       file_type: file.type,
-      file_size_mb: Math.round(file.size / 1024 / 1024 * 100) / 100,
+      file_size_mb: Math.round((file.size / 1024 / 1024) * 100) / 100,
       user_id: user.id,
     });
 
     const startTime = Date.now();
 
     try {
-      // Upload file
       const filePath = `${user.id}/${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("contracts")
-        .upload(filePath, file);
-
+      const { error: uploadError } = await supabase.storage.from("contracts").upload(filePath, file);
       if (uploadError) throw uploadError;
 
       setProgress(30);
       setAnalysisStep("Creando registro...");
 
-      // Create contract record
       const { data: contract, error: contractError } = await supabase
         .from("contracts")
         .insert({
@@ -199,17 +268,13 @@ const Analyze = () => {
 
       if (contractError) throw contractError;
 
-      // Log third-party data consent
       await supabase.from("consent_logs").insert({
         user_id: user.id,
         consent_type: "third_party_data",
         accepted: true,
         user_agent: navigator.userAgent,
         document_version: "2026-01-08",
-        metadata: {
-          contract_id: contract.id,
-          file_name: file.name,
-        },
+        metadata: { contract_id: contract.id, file_name: file.name },
       });
 
       setUploading(false);
@@ -217,17 +282,12 @@ const Analyze = () => {
       setProgress(50);
       setAnalysisStep("Extrayendo texto del documento...");
 
-      // Call analysis edge function
-      const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
-        "analyze-contract",
-        {
-          body: { contractId: contract.id, filePath, fileType: file.type },
-        }
-      );
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke("analyze-contract", {
+        body: { contractId: contract.id, filePath, fileType: file.type },
+      });
 
       if (analysisError) throw analysisError;
 
-      // Stop gradual progress and jump to completion
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
@@ -236,14 +296,12 @@ const Analyze = () => {
       setProgress(95);
       setAnalysisStep("Guardando resultados...");
 
-      // Refresh profile to update credits
       await refreshProfile();
 
       setProgress(100);
       setAnalysisStep("¡Análisis completado!");
 
-      // Track analysis completed
-      trackConversion('analysis_completed', {
+      trackConversion("analysis_completed", {
         contract_id: contract.id,
         file_name: file.name,
         duration_seconds: Math.round((Date.now() - startTime) / 1000),
@@ -255,11 +313,7 @@ const Analyze = () => {
         description: "Tu contrato ha sido analizado exitosamente.",
       });
 
-      // Navigate to results
-      setTimeout(() => {
-        navigate(`/resultado/${contract.id}`);
-      }, 1000);
-
+      setTimeout(() => navigate(`/resultado/${contract.id}`), 1000);
     } catch (error: any) {
       console.error("Analysis error:", error);
       toast({
@@ -279,7 +333,10 @@ const Analyze = () => {
     <>
       <Helmet>
         <title>Analizar Contrato | ACROXIA</title>
-        <meta name="description" content="Sube tu contrato de alquiler y recibe un análisis detallado de cláusulas ilegales." />
+        <meta
+          name="description"
+          content="Sube tu contrato de alquiler y recibe un análisis detallado de cláusulas ilegales."
+        />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
@@ -289,22 +346,47 @@ const Analyze = () => {
           <div className="container mx-auto px-6 max-w-2xl">
             <FadeIn>
               <div className="text-center mb-8">
-                <h1 className="font-serif text-3xl font-semibold text-charcoal mb-2">
-                  Analizar contrato
-                </h1>
-                <p className="text-charcoal/70">
-                  Sube tu contrato de alquiler
-                </p>
+                <h1 className="font-serif text-3xl font-semibold text-charcoal mb-2">Analizar contrato</h1>
+                <p className="text-charcoal/70">Sube tu contrato de alquiler</p>
               </div>
             </FadeIn>
+
+            {/* Banner post-checkout: estamos esperando a que el webhook sume los créditos */}
+            {paymentProcessing && (
+              <FadeIn>
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+                  <Loader2 className="h-5 w-5 text-blue-600 animate-spin flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-800">Procesando tu pago…</p>
+                    <p className="text-sm text-blue-700">
+                      Estamos sumando los créditos a tu cuenta. Suele tardar unos segundos. No cierres esta ventana.
+                    </p>
+                  </div>
+                </div>
+              </FadeIn>
+            )}
+
+            {/* Banner timeout: el polling acabó sin ver nuevos créditos */}
+            {paymentTimedOut && (
+              <FadeIn>
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-amber-800">El pago aún se está procesando</p>
+                    <p className="text-sm text-amber-700">
+                      Si has pagado correctamente, tus créditos aparecerán en breve. Recarga la página en unos segundos.
+                      Si pasados varios minutos sigue sin verse, escríbenos a soporte.
+                    </p>
+                  </div>
+                </div>
+              </FadeIn>
+            )}
 
             <FadeIn delay={0.1}>
               <Card>
                 <CardHeader>
                   <CardTitle>Subir contrato</CardTitle>
-                  <CardDescription>
-                    Formatos aceptados: PDF, DOCX, JPG, PNG (máx. 10MB)
-                  </CardDescription>
+                  <CardDescription>Formatos aceptados: PDF, DOCX, JPG, PNG (máx. 10MB)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {!isProcessing ? (
@@ -327,14 +409,12 @@ const Analyze = () => {
                           onChange={handleFileSelect}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
-                        
+
                         {file ? (
                           <div className="space-y-2">
                             <CheckCircle2 className="mx-auto h-12 w-12 text-green-600" />
                             <p className="font-medium text-green-800">{file.name}</p>
-                            <p className="text-sm text-green-600">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
+                            <p className="text-sm text-green-600">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -353,43 +433,40 @@ const Analyze = () => {
                             <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                             <div>
                               <p className="font-medium">Arrastra tu contrato aquí</p>
-                              <p className="text-sm text-muted-foreground">
-                                o haz clic para seleccionar
-                              </p>
+                              <p className="text-sm text-muted-foreground">o haz clic para seleccionar</p>
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {!isAdmin && profile && profile.credits < 1 && (
+                      {!isAdmin && profile && profile.credits < 1 && !paymentProcessing && (
                         <div className="flex items-center gap-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                           <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
                           <div>
                             <p className="font-medium text-amber-800">Sin créditos disponibles</p>
                             <p className="text-sm text-amber-600">
                               Necesitas créditos para analizar contratos.{" "}
-                              <a href="/precios" className="underline">Ver planes</a>
+                              <a href="/precios" className="underline">
+                                Ver planes
+                              </a>
                             </p>
                           </div>
                         </div>
                       )}
 
-                      {/* Third Party Data Declaration - Legal Compliance */}
                       <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                         <div className="flex items-start gap-3 mb-4">
                           <ShieldAlert className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                           <div>
-                            <p className="font-medium text-amber-800 mb-2">
-                              Declaración sobre datos de terceros
-                            </p>
+                            <p className="font-medium text-amber-800 mb-2">Declaración sobre datos de terceros</p>
                             <p className="text-sm text-amber-700 mb-3">
-                              El contrato que vas a subir puede contener datos personales de terceras personas 
-                              (arrendador, propietario, inmobiliaria, avalistas), incluyendo nombres, DNI/NIE, 
+                              El contrato que vas a subir puede contener datos personales de terceras personas
+                              (arrendador, propietario, inmobiliaria, avalistas), incluyendo nombres, DNI/NIE,
                               direcciones y datos bancarios.
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-start gap-3 ml-8">
                           <Checkbox
                             id="thirdPartyData"
@@ -397,24 +474,31 @@ const Analyze = () => {
                             onCheckedChange={(checked) => setAcceptedThirdPartyData(checked as boolean)}
                             className="mt-1"
                           />
-                          <Label htmlFor="thirdPartyData" className="text-sm text-amber-800 leading-relaxed cursor-pointer">
-                            Declaro que <strong>soy parte del contrato</strong> (arrendatario o potencial arrendatario) 
+                          <Label
+                            htmlFor="thirdPartyData"
+                            className="text-sm text-amber-800 leading-relaxed cursor-pointer"
+                          >
+                            Declaro que <strong>soy parte del contrato</strong> (arrendatario o potencial arrendatario)
                             y tengo interés legítimo en analizarlo. He leído la información sobre el{" "}
-                            <Link to="/privacidad#datos-terceros" className="underline hover:no-underline" target="_blank">
+                            <Link
+                              to="/privacidad#datos-terceros"
+                              className="underline hover:no-underline"
+                              target="_blank"
+                            >
                               tratamiento de datos de terceros
-                            </Link>.
+                            </Link>
+                            .
                           </Label>
                         </div>
                       </div>
 
-                      {/* AI Disclaimer - Legal Compliance */}
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-                        <p className="font-medium text-blue-800 mb-2">
-                          ℹ️ Información importante sobre el análisis
-                        </p>
+                        <p className="font-medium text-blue-800 mb-2">ℹ️ Información importante sobre el análisis</p>
                         <ul className="text-blue-700 space-y-1 list-disc list-inside">
                           <li>Este análisis es generado por inteligencia artificial</li>
-                          <li>Tiene carácter <strong>informativo</strong>, NO es asesoramiento legal</li>
+                          <li>
+                            Tiene carácter <strong>informativo</strong>, NO es asesoramiento legal
+                          </li>
                           <li>Para decisiones legales, consulta con un abogado colegiado</li>
                         </ul>
                       </div>
