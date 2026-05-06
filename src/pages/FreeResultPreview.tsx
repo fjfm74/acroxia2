@@ -281,12 +281,11 @@ const FreeResultPreview = () => {
     illegal_clauses: 0,
   };
 
-  const riskScore = Math.min(
-    10,
-    Math.round(
-      ((result.illegal_clauses * 3 + result.suspicious_clauses * 1.5) / Math.max(result.total_clauses, 1)) * 10,
-    ),
-  );
+  // Riesgo absoluto: cada ilegal pesa 2 puntos, cada sospechosa 1, cap en 10.
+  // Antes usábamos un ratio sobre total_clauses que inflaba la puntuación
+  // en contratos cortos con pocas cláusulas. La fórmula absoluta es más
+  // estable y refleja mejor el riesgo real para el inquilino.
+  const riskScore = Math.min(10, result.illegal_clauses * 2 + result.suspicious_clauses);
 
   const getRecommendation = () => {
     if (result.illegal_clauses >= 2) return { text: "No firmes sin negociar", color: "text-red-600", bg: "bg-red-50" };
@@ -551,11 +550,21 @@ const FreeResultPreview = () => {
                               onCheckedChange={(checked) => setConsentDigital(checked as boolean)}
                               className="mt-0.5"
                             />
-                            <Label htmlFor="consent-digital-unlock" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                              Confirmo que entiendo que al desbloquear el informe (servicio digital de ejecución inmediata), pierdo el derecho de desistimiento de 14 días conforme al art. 103.m RDL 1/2007. He leído los{" "}
-                              <Link to="/terminos" className="underline hover:no-underline text-foreground">Términos</Link>
-                              {" "}y la{" "}
-                              <Link to="/desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
+                            <Label
+                              htmlFor="consent-digital-unlock"
+                              className="text-xs text-muted-foreground leading-relaxed cursor-pointer"
+                            >
+                              Confirmo que entiendo que al desbloquear el informe (servicio digital de ejecución
+                              inmediata), pierdo el derecho de desistimiento de 14 días conforme al art. 103.m RDL
+                              1/2007. He leído los{" "}
+                              <Link to="/terminos" className="underline hover:no-underline text-foreground">
+                                Términos
+                              </Link>{" "}
+                              y la{" "}
+                              <Link to="/desistimiento" className="underline hover:no-underline text-foreground">
+                                Política de Desistimiento
+                              </Link>
+                              .
                             </Label>
                           </div>
 
