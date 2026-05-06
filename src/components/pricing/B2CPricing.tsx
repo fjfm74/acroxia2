@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Check } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 import { Link } from "react-router-dom";
@@ -65,8 +68,14 @@ const plans = [
 const B2CPricing = () => {
   const { user } = useAuth();
   const { openCheckout, loading } = usePaddleCheckout();
+  const [consentDigital, setConsentDigital] = useState(false);
 
   const handlePlanClick = async (plan: typeof plans[0]) => {
+    if (!plan.isFree && !consentDigital) {
+      toast.error("Marca la casilla de consentimiento antes de continuar al pago.");
+      return;
+    }
+
     if (plan.isFree) return;
 
     if (!user) {
@@ -97,6 +106,23 @@ const B2CPricing = () => {
             <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal">
               Analiza tu próximo alquiler
             </h2>
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={0.05}>
+          <div className="flex items-start gap-3 max-w-4xl mx-auto mb-8 p-4 rounded-xl border border-charcoal/10 bg-white">
+            <Checkbox
+              id="consent-digital"
+              checked={consentDigital}
+              onCheckedChange={(checked) => setConsentDigital(checked as boolean)}
+              className="mt-0.5"
+            />
+            <Label htmlFor="consent-digital" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+              Confirmo que entiendo que el análisis es un servicio digital de ejecución inmediata y que, conforme al art. 103.m del RDL 1/2007, pierdo el derecho de desistimiento de 14 días en cuanto se inicie el análisis. He leído los{" "}
+              <Link to="/terminos" className="underline hover:no-underline text-foreground">Términos</Link>
+              {" "}y la{" "}
+              <Link to="/politica-desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
+            </Label>
           </div>
         </FadeIn>
 
@@ -157,7 +183,7 @@ const B2CPricing = () => {
                 ) : (
                   <Button
                     onClick={() => handlePlanClick(plan)}
-                    disabled={loading}
+                    disabled={loading || !consentDigital}
                     className={`w-full rounded-full font-medium ${
                       plan.highlighted
                         ? "bg-charcoal text-cream hover:bg-charcoal/90"

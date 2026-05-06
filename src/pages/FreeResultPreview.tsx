@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,7 @@ const FreeResultPreview = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [waitingForContract, setWaitingForContract] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
+  const [consentDigital, setConsentDigital] = useState(false);
 
   // Email gate pre-checkout
   const [emailGateOpen, setEmailGateOpen] = useState(false);
@@ -194,6 +196,10 @@ const FreeResultPreview = () => {
   };
 
   const handleUnlockClick = async () => {
+    if (!consentDigital) {
+      toast.error("Marca la casilla de consentimiento antes de continuar al pago.");
+      return;
+    }
     const knownEmail = user?.email || analysis?.email || "";
     if (knownEmail) {
       await launchCheckout(knownEmail);
@@ -538,9 +544,24 @@ const FreeResultPreview = () => {
                             <p className="text-xs text-muted-foreground mb-4">Pago único · Incluye registro gratuito</p>
                           </div>
 
+                          <div className="flex items-start gap-3 p-3 rounded-lg border border-charcoal/10 bg-muted/50">
+                            <Checkbox
+                              id="consent-digital-unlock"
+                              checked={consentDigital}
+                              onCheckedChange={(checked) => setConsentDigital(checked as boolean)}
+                              className="mt-0.5"
+                            />
+                            <Label htmlFor="consent-digital-unlock" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                              Confirmo que entiendo que al desbloquear el informe (servicio digital de ejecución inmediata), pierdo el derecho de desistimiento de 14 días conforme al art. 103.m RDL 1/2007. He leído los{" "}
+                              <Link to="/terminos" className="underline hover:no-underline text-foreground">Términos</Link>
+                              {" "}y la{" "}
+                              <Link to="/politica-desistimiento" className="underline hover:no-underline text-foreground">Política de Desistimiento</Link>.
+                            </Label>
+                          </div>
+
                           <Button
                             onClick={handleUnlockClick}
-                            disabled={checkoutLoading || emailGateLoading}
+                            disabled={checkoutLoading || emailGateLoading || !consentDigital}
                             className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-full"
                             size="lg"
                           >
