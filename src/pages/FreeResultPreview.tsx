@@ -65,6 +65,7 @@ const FreeResultPreview = () => {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [waitingForContract, setWaitingForContract] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
+  const [consentDigital, setConsentDigital] = useState(false);
 
   // Email gate pre-checkout
   const [emailGateOpen, setEmailGateOpen] = useState(false);
@@ -195,6 +196,10 @@ const FreeResultPreview = () => {
   };
 
   const handleUnlockClick = async () => {
+    if (!consentDigital) {
+      toast.error("Marca la casilla de consentimiento antes de continuar al pago.");
+      return;
+    }
     const knownEmail = user?.email || analysis?.email || "";
     if (knownEmail) {
       await launchCheckout(knownEmail);
