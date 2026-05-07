@@ -24,46 +24,41 @@ const VerificacionPendiente = () => {
   const [resending, setResending] = useState(false);
   const isVerified = !!(user as any)?.email_confirmed_at;
 
-  // Polling SIEMPRE activo. Soporta dos modos:
-  //   a) Con analysisId (vino de pago): espera a que la RPC devuelva
-  //      converted_contract_id y redirige al informe completo.
-  //   b) Sin analysisId (solo registro): espera a que email_confirmed_at
-  //      llegue tras la verificación y redirige al dashboard.
-  // El polling refresca la session porque la verificación suele ocurrir
-  // en otra pestaña (la abierta desde el email link).
+  // Polling SIEMPRE activo, SIN depender de tener session local.
+  // - Modo a (con analysisId, vino de pago): poll la RPC `get_anonymous_analysis`
+  //   que es SECURITY DEFINER y no requiere auth. Cuando otra pestaña verifica
+  //   y dispara la reconciliación, `converted_contract_id` aparece y redirigimos.
+  // - Modo b (sin analysisId, solo registro): comprobar session local. Si llega
+  //   email_confirmed_at, redirigir a /dashboard.
   useEffect(() => {
     let cancelled = false;
 
     const poll = async () => {
       try {
+        // Refrescar session (por si BroadcastChannel sincroniza otra pestaña)
         await supabase.auth.refreshSession();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
 
-        if (!cancelled && session?.user) {
-          const verified = !!(session.user as any).email_confirmed_at;
-          if (verified) {
-            if (analysisId) {
-              // Modo a: esperar a que el contract esté reconciliado
-              const { data, error } = await supabase.rpc("get_anonymous_analysis", {
-                analysis_uuid: analysisId,
-              });
-              if (!error) {
-                const row = Array.isArray(data) ? data[0] : data;
-                const contractId = (row as any)?.converted_contract_id;
-                if (contractId) {
-                  navigate(`/resultado/${contractId}`, { replace: true });
-                  return;
-                }
-              }
-              // si todavía no hay contract, sigue polling (la RPC del AuthContext
-              // creará el contract en cuanto SIGNED_IN se dispare en este tab).
-            } else {
-              // Modo b: solo registro, ir al dashboard
-              navigate("/dashboard", { replace: true });
+        // Modo a: poll la RPC pública (no necesita session local)
+        if (analysisId) {
+          const { data, error } = await supabase.rpc("get_anonymous_analysis", {
+            analysis_uuid: analysisId,
+          });
+          if (!cancelled && !error) {
+            const row = Array.isArray(data) ? data[0] : data;
+            const contractId = (row as any)?.converted_contract_id;
+            if (contractId) {
+              navigate(`/resultado/${contractId}`, { replace: true });
               return;
             }
+          }
+        } else {
+          // Modo b: necesita session local con email_confirmed_at
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (!cancelled && session?.user && (session.user as any).email_confirmed_at) {
+            navigate("/dashboard", { replace: true });
+            return;
           }
         }
       } catch (e) {
@@ -95,7 +90,6 @@ const VerificacionPendiente = () => {
     }
   };
 
-  // Texto adaptado al modo:
   const headline = isVerified ? "¡Email verificado!" : "Verifica tu email";
 
   const intro = isVerified ? (
