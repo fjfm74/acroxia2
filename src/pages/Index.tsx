@@ -1,103 +1,111 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+import SEOHead from "@/components/seo/SEOHead";
+import Header from "@/components/landing/Header";
+import HeroSection from "@/components/landing/HeroSection";
+import StatsSection from "@/components/landing/StatsSection";
+import InlineLeadCTA from "@/components/landing/InlineLeadCTA";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import LatestArticlesSection from "@/components/landing/LatestArticlesSection";
+import Footer from "@/components/landing/Footer";
+import ExitIntentCapture from "@/components/ExitIntentCapture";
 
-    <!-- CRITICAL: Preload LCP image FIRST -->
-    <link rel="preload" href="/images/hero-professional.webp" as="image" type="image/webp" fetchpriority="high">
+const Index = () => {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "ACROXIA",
+    "legalName": "ACROXIA",
+    "url": "https://acroxia.com",
+    "logo": "https://acroxia.com/acroxia-logo.png",
+    "image": "https://acroxia.com/og-image.jpg",
+    "description": "Plataforma de IA para análisis de contratos de alquiler y protección de derechos del inquilino en España. Detecta cláusulas abusivas en menos de 2 minutos.",
+    "slogan": "Tu contrato de alquiler, analizado por IA",
+    "foundingDate": "2025",
+    "foundingLocation": { "@type": "Place", "name": "España" },
+    "areaServed": { "@type": "Country", "name": "España" },
+    "knowsLanguage": "es",
+    "address": { "@type": "PostalAddress", "addressLocality": "Madrid", "addressCountry": "ES" },
+    "sameAs": [
+      "https://twitter.com/acroxia",
+      "https://linkedin.com/company/acroxia",
+      "https://www.instagram.com/acroxia"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer service",
+      "email": "contacto@acroxia.com",
+      "availableLanguage": "Spanish"
+    }
+  };
 
-    <!-- SEO Base - Dynamic meta tags managed by SEOHead/react-helmet-async per page -->
-    <title>ACROXIA - Analiza tu Contrato de Alquiler con IA</title>
-    <meta name="description" content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos con IA. Protección legal inteligente para inquilinos en España." />
-    <meta name="author" content="ACROXIA" />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
-    <link rel="canonical" href="https://acroxia.com/" />
-    <meta name="theme-color" content="#1F1D1B" />
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "ACROXIA",
+    "url": "https://acroxia.com",
+    "description": "Plataforma de análisis de contratos de alquiler con IA",
+    "inLanguage": "es-ES"
+  };
 
-    <!-- Open Graph (fallback — overridden per route by SEOHead) -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="ACROXIA" />
-    <meta property="og:title" content="ACROXIA - Analiza tu Contrato de Alquiler con IA" />
-    <meta property="og:description" content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos con IA. Protección legal inteligente para inquilinos en España." />
-    <meta property="og:url" content="https://acroxia.com/" />
-    <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="es_ES" />
+  const softwareAppSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ACROXIA - Analizador de Contratos de Alquiler",
+    "applicationCategory": "LegalApplication",
+    "operatingSystem": "Web",
+    "description": "Analiza tu contrato de alquiler con IA y detecta cláusulas abusivas en menos de 2 minutos",
+    "image": "https://acroxia.com/og-image.jpg",
+    "offers": {
+      "@type": "Offer",
+      "price": "14.99",
+      "priceCurrency": "EUR",
+      "description": "Informe completo de análisis (preview gratuito disponible)",
+      "priceValidUntil": "2026-12-31",
+      "availability": "https://schema.org/InStock",
+      "url": "https://acroxia.com/precios"
+    }
+  };
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ACROXIA - Analiza tu Contrato de Alquiler con IA" />
-    <meta name="twitter:description" content="Detecta cláusulas abusivas en tu contrato de alquiler en menos de 2 minutos con IA. Protección legal inteligente para inquilinos en España." />
-    <meta name="twitter:image" content="https://acroxia.com/og-image.jpg" />
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Cómo analizar tu contrato de alquiler con IA",
+    "description": "Guía paso a paso para detectar cláusulas abusivas en tu contrato de alquiler usando inteligencia artificial",
+    "totalTime": "PT2M",
+    "step": [
+      { "@type": "HowToStep", "position": 1, "name": "Sube tu contrato", "text": "Arrastra tu PDF, DOCX o imagen del contrato. Aceptamos los formatos más comunes." },
+      { "@type": "HowToStep", "position": 2, "name": "Análisis IA", "text": "Nuestra inteligencia artificial revisa cada cláusula según la LAU y jurisprudencia vigente." },
+      { "@type": "HowToStep", "position": 3, "name": "Recibe tu informe", "text": "Obtén un informe detallado con cláusulas potencialmente problemáticas identificadas y orientaciones claras." }
+    ],
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", ".speakable-summary"]
+    }
+  };
 
-    <!-- Resource hints -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://vmloiamemddwxyyunphz.supabase.co" crossorigin>
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+  return (
+    <>
+      <SEOHead
+        title="Analiza tu Contrato de Alquiler con IA en 2 min | ACROXIA"
+        description="¿Tu contrato de alquiler es legal? Descúbrelo gratis en 2 minutos con IA. Detectamos cláusulas abusivas según la LAU 2026. 100% confidencial."
+        canonical="https://acroxia.com/"
+        keywords="analizar contrato alquiler, cláusulas abusivas alquiler, derechos inquilino España, LAU 2026, IA legal, contrato arrendamiento"
+        jsonLd={[organizationSchema, websiteSchema, softwareAppSchema, howToSchema]}
+      />
 
-    <!-- Non-blocking Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
-          rel="stylesheet"
-          media="print"
-          onload="this.media='all'">
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    </noscript>
+      <div className="min-h-screen">
+        <Header />
+        <main>
+          <HeroSection />
+          <StatsSection />
+          <InlineLeadCTA />
+          <HowItWorksSection />
+          <LatestArticlesSection />
+        </main>
+        <Footer />
+        <ExitIntentCapture />
+      </div>
+    </>
+  );
+};
 
-    <!-- Favicon & PWA Manifest -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=3" />
-    <link rel="icon" type="image/png" href="/favicon.png?v=3" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=2" />
-    <link rel="manifest" href="/manifest.json?v=2" />
-
-    <!-- LLM Context Files -->
-    <!-- /llms.txt and /llms-full.txt available for AI assistants -->
-
-    <!-- Critical CSS for fonts fallback -->
-    <style>
-      body { font-family: Inter, system-ui, -apple-system, sans-serif; }
-      h1, h2, h3, h4, h5, h6, .font-serif { font-family: 'Playfair Display', Georgia, serif; }
-    </style>
-  </head>
-
-  <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-55VCM5N9"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-
-    <!-- Deferred Analytics - Load after page is interactive -->
-    <script>
-      // Load GTM after page load to not block FCP
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          // Google Tag Manager
-          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','GTM-55VCM5N9');
-
-          // Google Analytics
-          var gaScript = document.createElement('script');
-          gaScript.async = true;
-          gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BCJK9MP2NV';
-          document.head.appendChild(gaScript);
-
-          gaScript.onload = function() {
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-BCJK9MP2NV');
-          };
-        }, 100);
-      });
-    </script>
-  </body>
-</html>
+export default Index;
