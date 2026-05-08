@@ -80,7 +80,9 @@ const VerificacionPendiente = () => {
     }
     setResending(true);
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email });
+      const { error } = await supabase.functions.invoke("send-verification-email", {
+        body: { email },
+      });
       if (error) throw error;
       toast.success("Email reenviado. Revisa tu bandeja de entrada.");
     } catch (err: any) {

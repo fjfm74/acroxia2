@@ -57,6 +57,8 @@ project_id = "vmloiamemddwxyyunphz"
     verify_jwt = false
   [functions.send-lead-email]
     verify_jwt = false
+  [functions.send-verification-email]
+    verify_jwt = false
   [functions.send-nurturing-emails]
     verify_jwt = false
   [functions.sitemap]
