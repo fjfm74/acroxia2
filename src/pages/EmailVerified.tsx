@@ -15,10 +15,13 @@ const POLL_INTERVAL_MS = 2000;
 const POLL_MAX_MS = 30_000;
 
 const EmailVerified = () => {
-  const { profile, loading } = useAuth();
+  const { profile, loading, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const analysisId = searchParams.get("analysisId");
+  // analysisId puede venir en la URL (emailRedirectTo) o en localStorage (fallback)
+  const analysisIdFromUrl = searchParams.get("analysisId");
+  const analysisIdFromStorage = typeof window !== "undefined" ? localStorage.getItem("acroxia_pending_analysis_id") : null;
+  const analysisId = analysisIdFromUrl || analysisIdFromStorage;
 
   const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
   const [waitingForContract, setWaitingForContract] = useState(false);
