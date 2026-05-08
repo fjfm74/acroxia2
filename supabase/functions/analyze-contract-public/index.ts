@@ -814,6 +814,45 @@ Contenido: ${c.content}
       `Analysis complete: ${analysisResult.total_clauses} clauses, ${analysisResult.illegal_clauses} illegal`,
     );
 
+    // Si hay cláusulas problemáticas, generar guía de negociación (mismo patrón que el privado)
+    const problematicClauses = (analysisResult.clauses || []).filter(
+      (c: any) => c.type === "illegal" || c.type === "suspicious",
+    );
+
+    if (problematicClauses.length > 0) {
+      try {
+        const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysisResult.summary);
+        const guideResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: guidePrompt },
+              {
+                role: "user",
+                content:
+                  "Genera una guia de negociacion clara y practica para el inquilino. Incluye todos los puntos problematicos detectados con sugerencias de conversacion y consejos practicos. El tono debe ser profesional pero accesible, sin jerga legal innecesaria. No uses expresiones coloquiales como 'colega', 'tio' o similares. No uses emojis ni asteriscos para negrita. Los titulos con # deben ser texto plano.",
+              },
+            ],
+          }),
+        });
+
+        if (guideResponse.ok) {
+          const guideData = await guideResponse.json();
+          analysisResult.generated_letter = guideData.choices?.[0]?.message?.content || null;
+          console.log(`[analyze-contract-public] Generated negotiation letter (${analysisResult.generated_letter?.length || 0} chars)`);
+        } else {
+          console.warn("[analyze-contract-public] Negotiation letter generation failed:", await guideResponse.text());
+        }
+      } catch (e: any) {
+        console.error("[analyze-contract-public] Error generating negotiation letter:", e?.message || e);
+      }
+    }
+
     const { error: updateError } = await supabase
       .from("anonymous_analyses")
       .update({ analysis_result: analysisResult })
