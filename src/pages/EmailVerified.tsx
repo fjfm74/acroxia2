@@ -58,6 +58,7 @@ const EmailVerified = () => {
           const row = Array.isArray(data) ? data[0] : data;
           const contractId = (row as any)?.converted_contract_id;
           if (contractId) {
+            localStorage.removeItem("acroxia_pending_analysis_id");
             navigate(`/resultado/${contractId}`, { replace: true });
             return;
           }
