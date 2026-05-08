@@ -173,6 +173,7 @@ const FreeResultPreview = () => {
   const launchCheckout = async (checkoutEmail: string) => {
     try {
       localStorage.setItem("acroxia_return_url", `/resultado-previo/${id}`);
+      if (id) localStorage.setItem("acroxia_pending_analysis_id", id);
       await openCheckout({
         priceId,
         quantity: 1,
