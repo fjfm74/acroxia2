@@ -92,7 +92,7 @@ const SEOHead = ({
     if (articleMeta?.dateModified) setMeta("property", "article:modified_time", articleMeta.dateModified);
     if (articleMeta?.section) setMeta("property", "article:section", articleMeta.section);
 
-    document.querySelectorAll('script[type="application/ld+json"]').forEach((s) => s.remove());
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach((s) => s.remove());
     const jsonLdArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     jsonLdArray.forEach((schema) => {
       const script = document.createElement("script");
