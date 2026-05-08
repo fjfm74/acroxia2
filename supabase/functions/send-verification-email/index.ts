@@ -110,6 +110,7 @@ serve(async (req) => {
   try {
     const body = await req.json().catch(() => null);
     const email = normalizeEmail(String(body?.email || ""));
+    const analysisId = typeof body?.analysisId === "string" ? body.analysisId.trim() : "";
     if (!isValidEmail(email)) {
       return new Response(JSON.stringify({ error: "Invalid email" }), {
         status: 400,
