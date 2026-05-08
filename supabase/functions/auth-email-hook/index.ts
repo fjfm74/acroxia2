@@ -38,15 +38,41 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 const SITE_NAME = "ACROXIA"
 const SENDER_DOMAIN = "notify.acroxia.com"
 const ROOT_DOMAIN = "acroxia.com"
+const PRIMARY_SITE_URL = `https://${ROOT_DOMAIN}`
 const FROM_DOMAIN = "acroxia.com" // Domain shown in From address (may be root or sender subdomain)
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
+const LOVABLE_APP_ORIGIN_PATTERN = /https:\/\/[a-z0-9-]+\.lovable\.app/gi
+
+function normalizeConfirmationUrl(rawUrl: string | undefined, fallbackPath = '/verificado') {
+  if (!rawUrl) return `${PRIMARY_SITE_URL}${fallbackPath}`
+
+  const normalized = rawUrl.replace(LOVABLE_APP_ORIGIN_PATTERN, PRIMARY_SITE_URL)
+
+  try {
+    const url = new URL(normalized)
+    for (const param of ['redirect_to', 'redirectTo', 'redirect_url', 'return_to']) {
+      const value = url.searchParams.get(param)
+      if (value) {
+        url.searchParams.set(param, value.replace(LOVABLE_APP_ORIGIN_PATTERN, PRIMARY_SITE_URL))
+      }
+    }
+    if (url.hostname.endsWith('.lovable.app')) {
+      url.protocol = 'https:'
+      url.hostname = ROOT_DOMAIN
+      url.port = ''
+    }
+    return url.toString()
+  } catch (_error) {
+    return `${PRIMARY_SITE_URL}${fallbackPath}`
+  }
+}
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://acroxia2.lovable.app"
+const SAMPLE_PROJECT_URL = PRIMARY_SITE_URL
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
@@ -220,9 +246,12 @@ async function handleWebhook(req: Request): Promise<Response> {
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
+    siteUrl: PRIMARY_SITE_URL,
     recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
+    confirmationUrl: normalizeConfirmationUrl(
+      payload.data.url,
+      emailType === 'recovery' ? '/reset-password' : '/verificado',
+    ),
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
