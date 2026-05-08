@@ -74,9 +74,7 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
 
   const handleResendVerification = async (targetEmail: string) => {
     try {
-      const { error } = await supabase.functions.invoke("send-verification-email", {
-        body: { email: targetEmail },
-      });
+      const { error } = await supabase.auth.resend({ type: "signup", email: targetEmail });
       if (error) throw error;
       toast({
         title: "Email reenviado",
@@ -156,28 +154,34 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
           email: validatedEmail,
           password,
           options: {
-            emailRedirectTo: "https://acroxia.com/verificado",
+            emailRedirectTo: (() => {
+              const params = new URLSearchParams(window.location.search);
+              const aid = params.get("analysisId");
+              return aid ? `https://acroxia.com/verificado?analysisId=${aid}` : "https://acroxia.com/verificado";
+            })(),
             data: {
               full_name: validatedName,
               user_type: userType,
-              terms_accepted: acceptedTerms ? "true" : "false",
-              privacy_accepted: acceptedTerms ? "true" : "false",
-              marketing_consent: marketingConsent ? "true" : "false",
             },
           },
         });
 
         if (error) throw error;
 
-        const { error: verificationEmailError } = await supabase.functions.invoke("send-verification-email", {
-          body: { email: validatedEmail },
-        });
-
-        if (verificationEmailError) {
-          console.error("[AuthForm] verification email fallback error:", verificationEmailError);
-        }
-
         if (data.user) {
+          const now = new Date().toISOString();
+
+          await supabase
+            .from("profiles")
+            .update({
+              terms_accepted_at: now,
+              privacy_accepted_at: now,
+              user_type: userType,
+              marketing_consent: marketingConsent,
+              marketing_consent_at: marketingConsent ? now : null,
+            })
+            .eq("id", data.user.id);
+
           if (userType === "propietario") {
             await supabase.from("user_roles").insert({
               user_id: data.user.id,
