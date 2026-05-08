@@ -37,6 +37,10 @@ const VerificacionPendiente = () => {
       try {
         // Refrescar session (por si BroadcastChannel sincroniza otra pestaña)
         await supabase.auth.refreshSession();
+        const {
+          data: { session: localSession },
+        } = await supabase.auth.getSession();
+        const hasVerifiedSession = !!localSession?.user && !!(localSession.user as any).email_confirmed_at;
 
         // Modo a: poll la RPC pública (no necesita session local)
         if (analysisId) {
@@ -47,8 +51,14 @@ const VerificacionPendiente = () => {
             const row = Array.isArray(data) ? data[0] : data;
             const contractId = (row as any)?.converted_contract_id;
             if (contractId) {
-              navigate(`/resultado/${contractId}`, { replace: true });
-              return;
+              // Solo navegamos a la ruta protegida si esta pestaña ya tiene
+              // session verificada (sincronizada desde la pestaña de verificación).
+              // De lo contrario ProtectedRoute nos mandaría a /login.
+              if (hasVerifiedSession) {
+                navigate(`/resultado/${contractId}`, { replace: true });
+                return;
+              }
+              // Sin session aún: seguimos esperando a que se sincronice.
             }
           }
         } else {
