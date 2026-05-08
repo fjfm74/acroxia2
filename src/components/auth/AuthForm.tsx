@@ -158,6 +158,9 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
             data: {
               full_name: validatedName,
               user_type: userType,
+              terms_accepted: acceptedTerms ? "true" : "false",
+              privacy_accepted: acceptedTerms ? "true" : "false",
+              marketing_consent: marketingConsent ? "true" : "false",
             },
           },
         });
@@ -165,19 +168,6 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
         if (error) throw error;
 
         if (data.user) {
-          const now = new Date().toISOString();
-
-          await supabase
-            .from("profiles")
-            .update({
-              terms_accepted_at: now,
-              privacy_accepted_at: now,
-              user_type: userType,
-              marketing_consent: marketingConsent,
-              marketing_consent_at: marketingConsent ? now : null,
-            })
-            .eq("id", data.user.id);
-
           if (userType === "propietario") {
             await supabase.from("user_roles").insert({
               user_id: data.user.id,
