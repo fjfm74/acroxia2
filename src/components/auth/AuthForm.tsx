@@ -74,7 +74,9 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
 
   const handleResendVerification = async (targetEmail: string) => {
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email: targetEmail });
+      const { error } = await supabase.functions.invoke("send-verification-email", {
+        body: { email: targetEmail },
+      });
       if (error) throw error;
       toast({
         title: "Email reenviado",
@@ -166,6 +168,14 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
         });
 
         if (error) throw error;
+
+        const { error: verificationEmailError } = await supabase.functions.invoke("send-verification-email", {
+          body: { email: validatedEmail },
+        });
+
+        if (verificationEmailError) {
+          console.error("[AuthForm] verification email fallback error:", verificationEmailError);
+        }
 
         if (data.user) {
           if (userType === "propietario") {
