@@ -245,6 +245,13 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
           const params = new URLSearchParams(window.location.search);
           const checkoutSuccess = params.get("checkout") === "success";
           const analysisId = params.get("analysisId");
+
+          // Guardar analysisId en localStorage para que /verificado pueda
+          // recuperarlo aunque el link de verificación no lo incluya.
+          if (analysisId) {
+            localStorage.setItem("acroxia_pending_analysis_id", analysisId);
+          }
+
           if (checkoutSuccess) {
             const target = `/verificacion-pendiente?email=${encodeURIComponent(data.user.email || email)}${
               analysisId ? `&analysisId=${analysisId}` : ""
