@@ -186,7 +186,7 @@ const FreeResultPreview = () => {
           email: checkoutEmail || "",
         },
         successUrl: user
-          ? `${window.location.origin}/resultado/${id}`
+          ? `${window.location.origin}/resultado-previo/${id}?checkout=success`
           : `${window.location.origin}/registro?checkout=success&analysisId=${id}`,
       });
     } catch (err) {
