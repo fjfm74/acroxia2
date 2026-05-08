@@ -24,25 +24,40 @@ const VerificacionPendiente = () => {
   const [resending, setResending] = useState(false);
   const isVerified = !!(user as any)?.email_confirmed_at;
 
-  // Polling SIEMPRE activo, SIN depender de tener session local.
-  // - Modo a (con analysisId, vino de pago): poll la RPC `get_anonymous_analysis`
-  //   que es SECURITY DEFINER y no requiere auth. Cuando otra pestaña verifica
-  //   y dispara la reconciliación, `converted_contract_id` aparece y redirigimos.
-  // - Modo b (sin analysisId, solo registro): comprobar session local. Si llega
-  //   email_confirmed_at, redirigir a /dashboard.
+  // Estrategia:
+  // - Escuchar onAuthStateChange: cuando la pestaña de verificación crea sesión
+  //   en localStorage, esta pestaña recibe el evento SIGNED_IN/USER_UPDATED.
+  // - En paralelo, hacer polling de la RPC pública get_anonymous_analysis
+  //   (SECURITY DEFINER, no requiere auth) para detectar converted_contract_id.
+  // - Cuando ambos están listos, redirigir al informe.
+  // - Si solo hay session verificada (sin analysisId), redirigir a /dashboard.
   useEffect(() => {
     let cancelled = false;
+    let hasVerifiedSession = !!(user as any)?.email_confirmed_at;
+    let lastContractId: string | null = null;
 
+    const tryNavigate = () => {
+      if (cancelled) return;
+      if (analysisId) {
+        if (hasVerifiedSession && lastContractId) {
+          navigate(`/resultado/${lastContractId}`, { replace: true });
+        }
+      } else if (hasVerifiedSession) {
+        navigate("/dashboard", { replace: true });
+      }
+    };
+
+    // Suscripción a cambios de auth (sincroniza desde la pestaña de verificación)
+    const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user && (session.user as any).email_confirmed_at) {
+        hasVerifiedSession = true;
+        tryNavigate();
+      }
+    });
+
+    // Poll de la RPC pública para detectar converted_contract_id
     const poll = async () => {
       try {
-        // Refrescar session (por si BroadcastChannel sincroniza otra pestaña)
-        await supabase.auth.refreshSession();
-        const {
-          data: { session: localSession },
-        } = await supabase.auth.getSession();
-        const hasVerifiedSession = !!localSession?.user && !!(localSession.user as any).email_confirmed_at;
-
-        // Modo a: poll la RPC pública (no necesita session local)
         if (analysisId) {
           const { data, error } = await supabase.rpc("get_anonymous_analysis", {
             analysis_uuid: analysisId,
@@ -51,24 +66,19 @@ const VerificacionPendiente = () => {
             const row = Array.isArray(data) ? data[0] : data;
             const contractId = (row as any)?.converted_contract_id;
             if (contractId) {
-              // Solo navegamos a la ruta protegida si esta pestaña ya tiene
-              // session verificada (sincronizada desde la pestaña de verificación).
-              // De lo contrario ProtectedRoute nos mandaría a /login.
-              if (hasVerifiedSession) {
-                navigate(`/resultado/${contractId}`, { replace: true });
-                return;
-              }
-              // Sin session aún: seguimos esperando a que se sincronice.
+              lastContractId = contractId;
+              tryNavigate();
             }
           }
         } else {
-          // Modo b: necesita session local con email_confirmed_at
+          // Modo registro sin pago: re-comprobar session por si onAuthStateChange
+          // no se disparó por algún motivo.
           const {
             data: { session },
           } = await supabase.auth.getSession();
-          if (!cancelled && session?.user && (session.user as any).email_confirmed_at) {
-            navigate("/dashboard", { replace: true });
-            return;
+          if (session?.user && (session.user as any).email_confirmed_at) {
+            hasVerifiedSession = true;
+            tryNavigate();
           }
         }
       } catch (e) {
@@ -77,11 +87,15 @@ const VerificacionPendiente = () => {
       if (!cancelled) setTimeout(poll, POLL_INTERVAL_MS);
     };
 
+    // Estado inicial: chequeo inmediato
+    tryNavigate();
     poll();
+
     return () => {
       cancelled = true;
+      authSub.subscription.unsubscribe();
     };
-  }, [analysisId, navigate]);
+  }, [analysisId, navigate, user]);
 
   const handleResend = async () => {
     if (!email) {
