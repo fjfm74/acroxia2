@@ -55,9 +55,18 @@ const VerificacionPendiente = () => {
       }
     });
 
-    // Poll de la RPC pública para detectar converted_contract_id
+    // Poll de la RPC pública + re-check de session
     const poll = async () => {
       try {
+        // 1. Siempre re-check session (cross-tab fallback si onAuthStateChange no se disparó)
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.user && (session.user as any).email_confirmed_at) {
+          hasVerifiedSession = true;
+        }
+
+        // 2. Si hay analysisId, polling del contract_id
         if (analysisId) {
           const { data, error } = await supabase.rpc("get_anonymous_analysis", {
             analysis_uuid: analysisId,
@@ -67,20 +76,12 @@ const VerificacionPendiente = () => {
             const contractId = (row as any)?.converted_contract_id;
             if (contractId) {
               lastContractId = contractId;
-              tryNavigate();
             }
           }
-        } else {
-          // Modo registro sin pago: re-comprobar session por si onAuthStateChange
-          // no se disparó por algún motivo.
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (session?.user && (session.user as any).email_confirmed_at) {
-            hasVerifiedSession = true;
-            tryNavigate();
-          }
         }
+
+        // 3. Intentar navegar con lo que tengamos
+        tryNavigate();
       } catch (e) {
         console.error("[VerificacionPendiente] poll error:", e);
       }
