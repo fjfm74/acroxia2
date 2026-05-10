@@ -157,7 +157,8 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
             emailRedirectTo: (() => {
               const params = new URLSearchParams(window.location.search);
               const aid = params.get("analysisId");
-              return aid ? `https://acroxia.com/verificado?analysisId=${aid}` : "https://acroxia.com/verificado";
+              const baseUrl = `${window.location.origin}/verificado`;
+              return aid ? `${baseUrl}?analysisId=${encodeURIComponent(aid)}` : baseUrl;
             })(),
             data: {
               full_name: validatedName,
