@@ -48,6 +48,20 @@ function normalizeConfirmationUrl(rawUrl: string | undefined) {
   }
 }
 
+function getSafeRedirectOrigin(value: unknown): string {
+  if (typeof value !== "string") return PRIMARY_SITE_URL;
+  try {
+    const url = new URL(value);
+    const allowedHost =
+      url.hostname === ROOT_DOMAIN ||
+      url.hostname.endsWith(".lovableproject.com") ||
+      url.hostname.endsWith(".lovable.app");
+    return url.protocol === "https:" && allowedHost ? url.origin : PRIMARY_SITE_URL;
+  } catch (_error) {
+    return PRIMARY_SITE_URL;
+  }
+}
+
 function htmlToPlainText(html: string): string {
   return String(html || "")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -111,6 +125,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => null);
     const email = normalizeEmail(String(body?.email || ""));
     const analysisId = typeof body?.analysisId === "string" ? body.analysisId.trim() : "";
+    const redirectOrigin = getSafeRedirectOrigin(body?.redirectOrigin);
     if (!isValidEmail(email)) {
       return new Response(JSON.stringify({ error: "Invalid email" }), {
         status: 400,
@@ -143,8 +158,8 @@ serve(async (req) => {
     }
 
     const redirectPath = analysisId
-      ? `${PRIMARY_SITE_URL}/verificado?analysisId=${encodeURIComponent(analysisId)}`
-      : `${PRIMARY_SITE_URL}/verificado`;
+      ? `${redirectOrigin}/verificado?analysisId=${encodeURIComponent(analysisId)}`
+      : `${redirectOrigin}/verificado`;
 
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",
