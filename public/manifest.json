@@ -1,6 +1,6 @@
 {
-  "name": "ACROXIA - Análisis de Contratos de Alquiler",
-  "short_name": "ACROXIA",
+  "name": "ContratoAlquiler - Análisis Inteligente de Contratos de Alquiler",
+  "short_name": "ContratoAlquiler",
   "description": "Analiza tu contrato de alquiler con IA y detecta cláusulas potencialmente abusivas en menos de 2 minutos",
   "start_url": "/",
   "display": "standalone",
@@ -16,7 +16,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/acroxia-logo.png?v=2",
+      "src": "/contratoalquiler-logo.png?v=3",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
