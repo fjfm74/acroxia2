@@ -245,7 +245,7 @@ const LeadCaptureModal = ({
               className="mt-1"
             />
             <Label htmlFor="privacy" className="text-sm text-muted-foreground cursor-pointer">
-              Acepto recibir recordatorios y comunicaciones de ACROXIA. Puedo darme de baja en cualquier momento.{" "}
+              Acepto recibir recordatorios y comunicaciones de ContratoAlquiler. Puedo darme de baja en cualquier momento.{" "}
               <Link to="/privacidad" target="_blank" className="underline hover:no-underline">
                 Política de privacidad
               </Link>

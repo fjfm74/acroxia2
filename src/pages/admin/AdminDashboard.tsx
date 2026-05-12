@@ -100,7 +100,7 @@ const AdminDashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Dashboard Admin | ACROXIA</title>
+        <title>Dashboard Admin | ContratoAlquiler</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 

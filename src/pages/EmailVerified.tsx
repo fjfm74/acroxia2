@@ -108,9 +108,9 @@ const EmailVerified = () => {
   return (
     <>
       <SEOHead
-        title="Cuenta verificada | ACROXIA"
-        description="Tu email ha sido verificado correctamente. Accede a todas las funcionalidades de ACROXIA."
-        canonical="https://acroxia.com/verificado"
+        title="Cuenta verificada | ContratoAlquiler"
+        description="Tu email ha sido verificado correctamente. Accede a todas las funcionalidades de ContratoAlquiler."
+        canonical="https://contratoalquiler.com/verificado"
         noindex
       />
 
@@ -132,7 +132,7 @@ const EmailVerified = () => {
                   <p className="text-muted-foreground">
                     {waitingForContract
                       ? "Estamos preparando tu informe completo… te llevamos en unos segundos."
-                      : "Tu email ha sido verificado correctamente. Ya tienes acceso completo a todas las funcionalidades de ACROXIA."}
+                      : "Tu email ha sido verificado correctamente. Ya tienes acceso completo a todas las funcionalidades de ContratoAlquiler."}
                   </p>
                 </div>
 

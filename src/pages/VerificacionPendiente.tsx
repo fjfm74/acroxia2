@@ -160,7 +160,7 @@ const VerificacionPendiente = () => {
   return (
     <>
       <Helmet>
-        <title>Verifica tu email | ACROXIA</title>
+        <title>Verifica tu email | ContratoAlquiler</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen flex flex-col">

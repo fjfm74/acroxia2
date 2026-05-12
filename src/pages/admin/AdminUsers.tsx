@@ -230,7 +230,7 @@ const AdminUsers = () => {
   return (
     <>
       <Helmet>
-        <title>Usuarios Admin | ACROXIA Admin</title>
+        <title>Usuarios Admin | ContratoAlquiler Admin</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 

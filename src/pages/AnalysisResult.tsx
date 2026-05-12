@@ -339,7 +339,7 @@ const AnalysisResult = () => {
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(150, 150, 150);
-      doc.text("Generado con ACROXIA - Pagina " + i + " de " + totalPages, margin, pageHeight - 10);
+      doc.text("Generado con ContratoAlquiler - Pagina " + i + " de " + totalPages, margin, pageHeight - 10);
       doc.text(
         new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" }),
         pageWidth - margin - 45,
@@ -483,7 +483,7 @@ const AnalysisResult = () => {
   return (
     <>
       <Helmet>
-        <title>Resultado del Análisis | ACROXIA</title>
+        <title>Resultado del Análisis | ContratoAlquiler</title>
         <meta name="description" content="Resultado detallado del análisis de tu contrato de alquiler." />
       </Helmet>
 
@@ -810,7 +810,7 @@ const AnalysisResult = () => {
                                   {verified === true && (
                                     <p className="text-xs text-green-600 flex items-center gap-1">
                                       <ShieldCheck className="h-3 w-3" />
-                                      Verificado en base de datos ACROXIA
+                                      Verificado en base de datos ContratoAlquiler
                                     </p>
                                   )}
                                 </div>

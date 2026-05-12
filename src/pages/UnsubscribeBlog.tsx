@@ -64,7 +64,7 @@ const UnsubscribeBlog = () => {
     return (
       <>
         <Helmet>
-          <title>Darse de baja | ACROXIA Blog</title>
+          <title>Darse de baja | ContratoAlquiler Blog</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
         <Header />
@@ -92,7 +92,7 @@ const UnsubscribeBlog = () => {
   return (
     <>
       <Helmet>
-        <title>Darse de baja | ACROXIA Blog</title>
+        <title>Darse de baja | ContratoAlquiler Blog</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -111,7 +111,7 @@ const UnsubscribeBlog = () => {
                     Has sido dado de baja
                   </h1>
                   <p className="text-muted-foreground mb-8">
-                    Ya no recibirás emails del blog de ACROXIA en <strong>{email}</strong>.
+                    Ya no recibirás emails del blog de ContratoAlquiler en <strong>{email}</strong>.
                   </p>
                   <p className="text-sm text-muted-foreground mb-6">
                     Si cambias de opinión, siempre puedes volver a suscribirte desde nuestro blog.

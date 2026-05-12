@@ -165,7 +165,7 @@ const AnalyzeLandlordPage = () => {
   return (
     <>
       <Helmet>
-        <title>Analizar Contrato | Panel Propietario | ACROXIA</title>
+        <title>Analizar Contrato | Panel Propietario | ContratoAlquiler</title>
         <meta name="description" content="Analiza tu contrato de alquiler desde la perspectiva del propietario." />
       </Helmet>
 

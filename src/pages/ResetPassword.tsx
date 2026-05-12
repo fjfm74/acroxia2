@@ -99,7 +99,7 @@ const ResetPassword = () => {
     return (
       <>
         <Helmet>
-          <title>Contraseña Actualizada | ACROXIA</title>
+          <title>Contraseña Actualizada | ContratoAlquiler</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Header />
@@ -129,8 +129,8 @@ const ResetPassword = () => {
   return (
     <>
       <Helmet>
-        <title>Nueva Contraseña | ACROXIA</title>
-        <meta name="description" content="Crea una nueva contraseña para tu cuenta de ACROXIA." />
+        <title>Nueva Contraseña | ContratoAlquiler</title>
+        <meta name="description" content="Crea una nueva contraseña para tu cuenta de ContratoAlquiler." />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">

@@ -9,21 +9,21 @@ const Contacto = () => {
   const contactSchema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    "name": "Contacto - ACROXIA",
-    "description": "Contacta con el equipo de ACROXIA para resolver tus dudas sobre análisis de contratos de alquiler",
+    "name": "Contacto - ContratoAlquiler",
+    "description": "Contacta con el equipo de ContratoAlquiler para resolver tus dudas sobre análisis de contratos de alquiler",
     "mainEntity": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "email": "contacto@acroxia.com"
+      "name": "ContratoAlquiler",
+      "email": "info@contratoalquiler.com"
     }
   };
 
   return (
     <>
       <SEOHead
-        title="Contacto | ACROXIA - Análisis de Contratos de Alquiler"
-        description="Contacta con el equipo de ACROXIA para consultas sobre análisis de contratos, planes empresariales o colaboraciones. Respuesta en menos de 24 horas."
-        canonical="https://acroxia.com/contacto"
+        title="Contacto | ContratoAlquiler - Análisis de Contratos de Alquiler"
+        description="Contacta con el equipo de ContratoAlquiler para consultas sobre análisis de contratos, planes empresariales o colaboraciones. Respuesta en menos de 24 horas."
+        canonical="https://contratoalquiler.com/contacto"
         jsonLd={contactSchema}
       />
 
@@ -73,10 +73,10 @@ const Contacto = () => {
                             <div>
                               <p className="font-medium text-foreground mb-1">Email general</p>
                               <a 
-                                href="mailto:contacto@acroxia.com" 
+                                href="mailto:info@contratoalquiler.com" 
                                 className="text-muted-foreground hover:text-foreground transition-colors"
                               >
-                                contacto@acroxia.com
+                                info@contratoalquiler.com
                               </a>
                             </div>
                           </div>

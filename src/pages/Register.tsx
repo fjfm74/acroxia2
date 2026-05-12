@@ -66,20 +66,20 @@ const Register = () => {
   return (
     <>
       <Helmet>
-        <title>Crear Cuenta Gratis | ACROXIA</title>
+        <title>Crear Cuenta Gratis | ContratoAlquiler</title>
         <meta
           name="description"
-          content="Crea tu cuenta gratuita en ACROXIA y accede al análisis completo de tu contrato. Protege tus derechos como inquilino."
+          content="Crea tu cuenta gratuita en ContratoAlquiler y accede al análisis completo de tu contrato. Protege tus derechos como inquilino."
         />
-        <link rel="canonical" href="https://acroxia.com/registro" />
-        <meta property="og:title" content="Crear Cuenta Gratis | ACROXIA" />
+        <link rel="canonical" href="https://contratoalquiler.com/registro" />
+        <meta property="og:title" content="Crear Cuenta Gratis | ContratoAlquiler" />
         <meta
           property="og:description"
           content="Regístrate y accede al análisis completo de tu contrato. Detecta cláusulas abusivas con IA."
         />
-        <meta property="og:url" content="https://acroxia.com/registro" />
+        <meta property="og:url" content="https://contratoalquiler.com/registro" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://acroxia.com/og-image.jpg" />
+        <meta property="og:image" content="https://contratoalquiler.com/og-image.jpg" />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">

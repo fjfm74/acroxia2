@@ -50,7 +50,7 @@ const ForgotPassword = () => {
     return (
       <>
         <Helmet>
-          <title>Email Enviado | ACROXIA</title>
+          <title>Email Enviado | ContratoAlquiler</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Header />
@@ -89,8 +89,8 @@ const ForgotPassword = () => {
   return (
     <>
       <Helmet>
-        <title>Recuperar Contraseña | ACROXIA</title>
-        <meta name="description" content="Recupera el acceso a tu cuenta de ACROXIA." />
+        <title>Recuperar Contraseña | ContratoAlquiler</title>
+        <meta name="description" content="Recupera el acceso a tu cuenta de ContratoAlquiler." />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">

@@ -50,7 +50,7 @@ const ChatAssistant = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [config, setConfig] = useState<AssistantConfig>({
-    bubble_message: "¿Tienes alguna duda sobre ACROXIA?",
+    bubble_message: "¿Tienes alguna duda sobre ContratoAlquiler?",
     quick_replies_initial: ["🏠 Soy inquilino", "🏡 Soy propietario", "🏢 Soy profesional"],
     contact_trigger_phrases: ["ponerte en contacto", "contactar con nuestro equipo"],
     contact_success_message: "¡Perfecto! Hemos recibido tu mensaje. Nuestro equipo te contactará pronto.",
@@ -302,7 +302,7 @@ const ChatAssistant = () => {
       {/* Chat bubble */}
       <ChatBubble
         isVisible={showBubble && !isOpen}
-        message={config.bubble_message || "¿Tienes alguna duda sobre ACROXIA?"}
+        message={config.bubble_message || "¿Tienes alguna duda sobre ContratoAlquiler?"}
         onClose={handleCloseBubble}
         onClick={handleOpenChat}
       />
@@ -342,7 +342,7 @@ const ChatAssistant = () => {
                   <MessageCircle className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Asistente ACROXIA</p>
+                  <p className="font-medium text-sm">Asistente ContratoAlquiler</p>
                   <p className="text-xs text-cream/70">Online</p>
                 </div>
               </div>

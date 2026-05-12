@@ -120,7 +120,7 @@ const DashboardLandlord = () => {
   return (
     <>
       <Helmet>
-        <title>Panel Propietario | ACROXIA</title>
+        <title>Panel Propietario | ContratoAlquiler</title>
         <meta name="description" content="Gestiona tus contratos de alquiler como propietario." />
       </Helmet>
 

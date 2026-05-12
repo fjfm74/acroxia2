@@ -502,7 +502,7 @@ const AuthForm = ({ mode, prefilledEmail, prefilledUserType }: AuthFormProps) =>
               className="mt-1"
             />
             <Label htmlFor="marketing" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-              Acepto recibir comunicaciones comerciales y novedades de ACROXIA por email. Puedo darme de baja en
+              Acepto recibir comunicaciones comerciales y novedades de ContratoAlquiler por email. Puedo darme de baja en
               cualquier momento.
             </Label>
           </div>

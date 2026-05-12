@@ -373,7 +373,7 @@ const FreeResultPreview = () => {
   return (
     <>
       <Helmet>
-        <title>Resultado del Análisis | ACROXIA</title>
+        <title>Resultado del Análisis | ContratoAlquiler</title>
         <meta name="description" content="Resultados del análisis de tu contrato de alquiler." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>

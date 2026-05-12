@@ -222,7 +222,7 @@ const AdminBlog = () => {
   return (
     <>
       <Helmet>
-        <title>Gestión de Blog | ACROXIA Admin</title>
+        <title>Gestión de Blog | ContratoAlquiler Admin</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 

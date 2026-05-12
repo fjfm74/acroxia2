@@ -89,7 +89,7 @@ const ContactForm = () => {
       const { data: responseData, error } = await supabase.functions.invoke('send-email', {
         body: {
           type: 'contact',
-          to: 'contacto@acroxia.com',
+          to: 'info@contratoalquiler.com',
           data: {
             userName: data.name,
             email: data.email,
@@ -361,7 +361,7 @@ const ContactForm = () => {
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel className="text-sm font-normal cursor-pointer">
-                    Acepto recibir comunicaciones comerciales y novedades de ACROXIA. Puedo darme de baja en cualquier momento.
+                    Acepto recibir comunicaciones comerciales y novedades de ContratoAlquiler. Puedo darme de baja en cualquier momento.
                   </FormLabel>
                 </div>
               </FormItem>
@@ -426,7 +426,7 @@ const ContactForm = () => {
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Tus datos serán tratados por ACROXIA para gestionar tu consulta.{" "}
+            Tus datos serán tratados por ContratoAlquiler para gestionar tu consulta.{" "}
             <Link to="/privacidad" className="underline hover:text-foreground">
               Más información
             </Link>

@@ -78,7 +78,7 @@ const Dashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Panel Inquilino | ACROXIA</title>
+        <title>Panel Inquilino | ContratoAlquiler</title>
         <meta name="description" content="Gestiona tus análisis de contratos de alquiler como inquilino." />
       </Helmet>
 

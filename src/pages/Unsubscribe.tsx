@@ -64,7 +64,7 @@ const Unsubscribe = () => {
   return (
     <>
       <Helmet>
-        <title>Darse de baja | ACROXIA</title>
+        <title>Darse de baja | ContratoAlquiler</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -73,7 +73,7 @@ const Unsubscribe = () => {
         <header className="py-6 px-6 border-b border-foreground/5">
           <div className="container mx-auto">
             <Link to="/" className="font-serif text-2xl font-semibold text-foreground">
-              ACROXIA
+              ContratoAlquiler
             </Link>
           </div>
         </header>
@@ -183,7 +183,7 @@ const Unsubscribe = () => {
                   Ya no recibirás más emails de nurturing en {maskedEmail}
                 </p>
                 <Button asChild className="rounded-full">
-                  <Link to="/">Volver a ACROXIA</Link>
+                  <Link to="/">Volver a ContratoAlquiler</Link>
                 </Button>
               </div>
             )}
@@ -218,7 +218,7 @@ const Unsubscribe = () => {
         {/* Footer simple */}
         <footer className="py-6 px-6 border-t border-foreground/5 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2026 ACROXIA. Todos los derechos reservados.
+            © 2026 ContratoAlquiler. Todos los derechos reservados.
           </p>
         </footer>
       </div>

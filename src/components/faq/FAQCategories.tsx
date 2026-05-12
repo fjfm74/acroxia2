@@ -91,7 +91,7 @@ export const faqCategories = [
       },
       {
         question: "¿Cómo denuncio cláusulas abusivas en mi contrato?",
-        answer: "3 vías principales: 1) Reclamación en la OMIC (gratuita), 2) Denuncia ante la Agencia de Consumo de tu comunidad autónoma, 3) Demanda judicial (sin abogado obligatorio para cuantías inferiores a 2.000 €). ACROXIA puede ayudarte a identificar las cláusulas potencialmente abusivas antes de reclamar."
+        answer: "3 vías principales: 1) Reclamación en la OMIC (gratuita), 2) Denuncia ante la Agencia de Consumo de tu comunidad autónoma, 3) Demanda judicial (sin abogado obligatorio para cuantías inferiores a 2.000 €). ContratoAlquiler puede ayudarte a identificar las cláusulas potencialmente abusivas antes de reclamar."
       }
     ]
   },

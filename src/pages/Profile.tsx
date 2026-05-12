@@ -173,8 +173,8 @@ const Profile = () => {
   return (
     <>
       <Helmet>
-        <title>Mi Perfil - ACROXIA</title>
-        <meta name="description" content="Gestiona tu perfil, suscripción y configuración de cuenta en ACROXIA." />
+        <title>Mi Perfil - ContratoAlquiler</title>
+        <meta name="description" content="Gestiona tu perfil, suscripción y configuración de cuenta en ContratoAlquiler." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 

@@ -330,7 +330,7 @@ const AdminBlogNew = () => {
   return (
     <>
       <Helmet>
-        <title>Nuevo Post | ACROXIA Admin</title>
+        <title>Nuevo Post | ContratoAlquiler Admin</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 

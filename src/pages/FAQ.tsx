@@ -24,9 +24,9 @@ const FAQ = () => {
   return (
     <>
       <SEOHead
-        title="Preguntas Frecuentes sobre Alquiler en España 2026 | ACROXIA"
+        title="Preguntas Frecuentes sobre Alquiler en España 2026 | ContratoAlquiler"
         description="Resolvemos las 43 dudas más comunes sobre alquiler: fianzas, cláusulas abusivas, IRAV 2026, derechos del inquilino, subidas de renta y más. Respuestas basadas en la LAU."
-        canonical="https://acroxia.com/faq"
+        canonical="https://contratoalquiler.com/faq"
         keywords="preguntas alquiler españa 2026, IRAV 2026, subida alquiler, gastos comunidad inquilino, penalización alquiler, derechos inquilino, cláusulas abusivas, fianza alquiler, LAU 2026"
         jsonLd={faqSchema}
       />

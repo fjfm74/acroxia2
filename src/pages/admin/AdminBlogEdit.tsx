@@ -298,7 +298,7 @@ const AdminBlogEdit = () => {
   return (
     <>
       <Helmet>
-        <title>Editar Post | ACROXIA Admin</title>
+        <title>Editar Post | ContratoAlquiler Admin</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
