@@ -56,7 +56,7 @@ INSTRUCCIONES DE ENVÍO:
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'formulario-desistimiento-acroxia.txt';
+    link.download = 'formulario-desistimiento-contratoalquiler.txt';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
