@@ -15,7 +15,7 @@ const Index = () => {
     "name": "ACROXIA",
     "legalName": "ACROXIA",
     "url": "https://acroxia.com",
-    "logo": "https://acroxia.com/acroxia-logo.png",
+    "logo": "https://acroxia.com/contratoalquiler-logo.png",
     "image": "https://acroxia.com/og-image.jpg",
     "description": "Plataforma de IA para análisis de contratos de alquiler y protección de derechos del inquilino en España. Detecta cláusulas abusivas en menos de 2 minutos.",
     "slogan": "Tu contrato de alquiler, analizado por IA",

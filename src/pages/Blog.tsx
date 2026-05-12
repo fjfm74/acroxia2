@@ -179,7 +179,7 @@ const Blog = () => {
             "publisher": {
               "@type": "Organization",
               "name": "ACROXIA",
-              "logo": { "@type": "ImageObject", "url": "https://acroxia.com/acroxia-logo.png" }
+              "logo": { "@type": "ImageObject", "url": "https://acroxia.com/contratoalquiler-logo.png" }
             }
           }
         }}

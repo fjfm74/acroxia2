@@ -30,7 +30,7 @@ export const MagicLinkEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/acroxia-logo.png" width="140" height="40" alt="ACROXIA" style={logo} />
+          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ACROXIA" style={logo} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>Tu enlace de acceso</Heading>

@@ -150,7 +150,7 @@ const DevolucionFianza = () => {
       "url": "https://acroxia.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/acroxia-logo.png"
+        "url": "https://acroxia.com/contratoalquiler-logo.png"
       }
     },
     "mainEntityOfPage": {
