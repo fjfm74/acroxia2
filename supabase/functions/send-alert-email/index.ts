@@ -9,7 +9,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const ADMIN_EMAIL = "nuriafrancis@gmail.com";
-const SITE_URL = "https://acroxia.com";
+const SITE_URL = "https://contratoalquiler.com";
 
 interface AlertPayload {
   process: string;
@@ -111,7 +111,7 @@ function generateAlertEmailHTML(payload: AlertPayload): string {
 <body>
   <div class="container">
     <div class="header">
-      <h1>ACROXIA</h1>
+      <h1>ContratoAlquiler</h1>
       <p class="subtitle">⚠️ Alerta del Sistema</p>
     </div>
     
@@ -221,9 +221,9 @@ serve(async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "ACROXIA Alertas <alertas@acroxia.com>",
+        from: "ContratoAlquiler Alertas <noreply@contratoalquiler.com>",
         to: [ADMIN_EMAIL],
-        reply_to: "contacto@acroxia.com",
+        reply_to: "info@contratoalquiler.com",
         subject,
         html: emailHtml,
       }),

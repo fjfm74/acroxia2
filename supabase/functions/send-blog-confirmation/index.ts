@@ -10,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Email styles (same as other ACROXIA emails)
+// Email styles (same as other ContratoAlquiler emails)
 const baseStyles = `
   body { 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -117,7 +117,7 @@ const generateConfirmationEmail = (confirmUrl: string, audience: string) => {
   <div style="padding: 40px 20px; background-color: #FAF8F5;">
     <div class="container">
       <div class="header">
-        <h1 class="logo">ACROXIA</h1>
+        <h1 class="logo">ContratoAlquiler</h1>
       </div>
       <div class="content">
         <h2 class="title">Confirma tu suscripción</h2>
@@ -138,12 +138,12 @@ const generateConfirmationEmail = (confirmUrl: string, audience: string) => {
         </p>
       </div>
       <div class="footer">
-        <p class="footer-text">ACROXIA - Tu escudo legal para el alquiler</p>
+        <p class="footer-text">ContratoAlquiler - Tu escudo legal para el alquiler</p>
         <p class="footer-text">
-          <a href="mailto:contacto@acroxia.com" class="footer-link">contacto@acroxia.com</a> | Barcelona
+          <a href="mailto:info@contratoalquiler.com" class="footer-link">info@contratoalquiler.com</a> | Barcelona
         </p>
         <p class="footer-text" style="margin-top: 16px;">
-          © 2026 ACROXIA. Todos los derechos reservados.
+          © 2026 ContratoAlquiler. Todos los derechos reservados.
         </p>
       </div>
     </div>
@@ -197,7 +197,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate confirmation URL
-    const confirmUrl = `https://acroxia.com/confirmar-blog?token=${subscriber.confirmation_token}`;
+    const confirmUrl = `https://contratoalquiler.com/confirmar-blog?token=${subscriber.confirmation_token}`;
 
     // Send confirmation email via Resend API
     const emailHtml = generateConfirmationEmail(confirmUrl, audience);
@@ -209,9 +209,9 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "ACROXIA <noreply@acroxia.com>",
+        from: "ContratoAlquiler <noreply@contratoalquiler.com>",
         to: [email],
-        reply_to: "contacto@acroxia.com",
+        reply_to: "info@contratoalquiler.com",
         subject: "Confirma tu suscripción",
         html: emailHtml,
       }),

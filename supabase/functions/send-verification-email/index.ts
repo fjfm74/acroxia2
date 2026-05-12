@@ -7,9 +7,9 @@ import { SignupEmail } from "../_shared/email-templates/signup.tsx";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SITE_NAME = "ACROXIA";
-const PRIMARY_SITE_URL = "https://acroxia.com";
-const ROOT_DOMAIN = "acroxia.com";
+const SITE_NAME = "ContratoAlquiler";
+const PRIMARY_SITE_URL = "https://contratoalquiler.com";
+const ROOT_DOMAIN = "contratoalquiler.com";
 const LOVABLE_APP_ORIGIN_PATTERN = /https:\/\/[a-z0-9-]+\.lovable\.app/gi;
 const RATE_LIMIT_MAX = 3;
 const RATE_LIMIT_WINDOW_HOURS = 1;
@@ -186,10 +186,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "ACROXIA <noreply@acroxia.com>",
+        from: "ContratoAlquiler <noreply@contratoalquiler.com>",
         to: [email],
-        reply_to: "contacto@acroxia.com",
-        subject: "Confirma tu email en ACROXIA",
+        reply_to: "info@contratoalquiler.com",
+        subject: "Confirma tu email en ContratoAlquiler",
         html,
         text,
       }),

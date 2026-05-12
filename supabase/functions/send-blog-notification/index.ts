@@ -274,7 +274,7 @@ function isValidEmail(value: string): boolean {
 }
 
 const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
-  const postUrl = `https://acroxia.com/blog/${post.slug}`;
+  const postUrl = `https://contratoalquiler.com/blog/${post.slug}`;
   const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
   const normalizedTitle = normalizeCopy(post.title);
   const normalizedExcerpt = normalizeCopy(post.excerpt);
@@ -300,7 +300,7 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
   <div style="padding: 40px 20px; background-color: #FAF8F5;">
     <div class="container">
       <div class="header">
-        <h1 class="logo">ACROXIA</h1>
+        <h1 class="logo">ContratoAlquiler</h1>
       </div>
       <div class="content">
         <span class="category-badge">${safeCategory} &bull; ${safeReadTime}</span>
@@ -312,7 +312,7 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
         </div>
       </div>
       <div class="footer">
-        <p class="footer-text">ACROXIA - Tu escudo legal para el alquiler</p>
+        <p class="footer-text">ContratoAlquiler - Tu escudo legal para el alquiler</p>
         <p class="footer-text">
           Recibes este email porque te suscribiste a nuestro contenido para ${audienceLabel}.
         </p>
@@ -328,11 +328,11 @@ const generateNewPostEmail = (post: BlogPost, unsubscribeUrl: string) => {
 };
 
 const generateNewPostPlainText = (post: BlogPost, unsubscribeUrl: string) => {
-  const postUrl = `https://acroxia.com/blog/${post.slug}`;
+  const postUrl = `https://contratoalquiler.com/blog/${post.slug}`;
   const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
 
   return [
-    "ACROXIA",
+    "ContratoAlquiler",
     "",
     `${toPlainAscii(normalizeCopy(post.category))} - ${toPlainAscii(normalizeCopy(post.read_time))}`,
     toPlainAscii(normalizeCopy(post.title)),
@@ -347,7 +347,7 @@ const generateNewPostPlainText = (post: BlogPost, unsubscribeUrl: string) => {
 };
 
 const generateFallbackEmail = (post: BlogPost, unsubscribeUrl: string) => {
-  const postUrl = `https://acroxia.com/blog/${post.slug}`;
+  const postUrl = `https://contratoalquiler.com/blog/${post.slug}`;
   const audienceLabel = post.audience === "inquilino" ? "inquilinos" : "propietarios";
   const title = escapeHtml(normalizeCopy(post.title));
   const excerpt = escapeHtml(normalizeCopy(post.excerpt));
@@ -363,7 +363,7 @@ const generateFallbackEmail = (post: BlogPost, unsubscribeUrl: string) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; color:#1F1D1B; line-height:1.6; margin:0; padding:24px;">
-  <h1 style="margin:0 0 16px 0; font-size:24px;">ACROXIA</h1>
+  <h1 style="margin:0 0 16px 0; font-size:24px;">ContratoAlquiler</h1>
   <p style="margin:0 0 8px 0; color:#4A4745;">${category} · ${readTime}</p>
   <h2 style="margin:0 0 12px 0; font-size:22px;">${title}</h2>
   <p style="margin:0 0 20px 0;">${excerpt}</p>
@@ -381,7 +381,7 @@ const generateFallbackEmail = (post: BlogPost, unsubscribeUrl: string) => {
 </html>`;
 
   const text = [
-    "ACROXIA",
+    "ContratoAlquiler",
     "",
     `${toPlainAscii(normalizeCopy(post.category))} - ${toPlainAscii(normalizeCopy(post.read_time))}`,
     toPlainAscii(normalizeCopy(post.title)),
@@ -579,7 +579,7 @@ const handler = async (req: Request): Promise<Response> => {
           return { sent: 0, errors: 1 };
         }
 
-        const unsubscribeUrl = `https://acroxia.com/blog/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${encodeURIComponent(subscriber.confirmation_token || "")}`;
+        const unsubscribeUrl = `https://contratoalquiler.com/blog/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${encodeURIComponent(subscriber.confirmation_token || "")}`;
         const emailHtml = generateNewPostEmail(post, unsubscribeUrl);
         const emailText = generateNewPostPlainText(post, unsubscribeUrl);
         const fallbackEmail = generateFallbackEmail(post, unsubscribeUrl);
@@ -587,9 +587,9 @@ const handler = async (req: Request): Promise<Response> => {
 
         try {
           let result = await sendViaResend({
-            from: "ACROXIA Blog <blog@acroxia.com>",
+            from: "ContratoAlquiler Blog <noreply@contratoalquiler.com>",
             to: [normalizeEmail(subscriber.email)],
-            reply_to: "contacto@acroxia.com",
+            reply_to: "info@contratoalquiler.com",
             subject,
             html: emailHtml,
             text: emailText,
@@ -599,11 +599,11 @@ const handler = async (req: Request): Promise<Response> => {
               { name: "audience", value: String(post.audience) },
             ],
             headers: {
-              "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
+              "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:info@contratoalquiler.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
               "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-              "List-ID": "ACROXIA Blog <blog.acroxia.com>",
-              "X-Acroxia-Post-Id": String(post.id),
-              "X-Acroxia-Audience": String(post.audience),
+              "List-ID": "ContratoAlquiler Blog <blog.contratoalquiler.com>",
+              "X-ContratoAlquiler-Post-Id": String(post.id),
+              "X-ContratoAlquiler-Audience": String(post.audience),
             },
           });
 
@@ -614,10 +614,10 @@ const handler = async (req: Request): Promise<Response> => {
               `[send-blog-notification] Content rejection for ${subscriber.email}, retrying with fallback template (HTTP ${result.status})`,
             );
             result = await sendViaResend({
-              from: "ACROXIA Blog <blog@acroxia.com>",
+              from: "ContratoAlquiler Blog <noreply@contratoalquiler.com>",
               to: [normalizeEmail(subscriber.email)],
-              reply_to: "contacto@acroxia.com",
-              subject: `ACROXIA Blog | ${subject}`.slice(0, 190),
+              reply_to: "info@contratoalquiler.com",
+              subject: `ContratoAlquiler Blog | ${subject}`.slice(0, 190),
               html: fallbackEmail.html,
               text: fallbackEmail.text,
               tags: [
@@ -627,12 +627,12 @@ const handler = async (req: Request): Promise<Response> => {
                 { name: "fallback", value: "true" },
               ],
               headers: {
-                "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:contacto@acroxia.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
+                "List-Unsubscribe": `<${unsubscribeUrl}>, <mailto:info@contratoalquiler.com?subject=unsubscribe%20${encodeURIComponent(subscriber.email)}>`,
                 "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-                "List-ID": "ACROXIA Blog <blog.acroxia.com>",
-                "X-Acroxia-Post-Id": String(post.id),
-                "X-Acroxia-Audience": String(post.audience),
-                "X-Acroxia-Fallback": "true",
+                "List-ID": "ContratoAlquiler Blog <blog.contratoalquiler.com>",
+                "X-ContratoAlquiler-Post-Id": String(post.id),
+                "X-ContratoAlquiler-Audience": String(post.audience),
+                "X-ContratoAlquiler-Fallback": "true",
               },
             });
           }

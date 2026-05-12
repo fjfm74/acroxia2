@@ -140,7 +140,7 @@ async function getSiteConfig(supabase: any): Promise<FullSiteConfig> {
   return {
     b2cPlans: configMap.get("b2c_plans")?.plans || [],
     b2bPlans: configMap.get("b2b_plans")?.plans || [],
-    companyInfo: configMap.get("company_info") || { email: "contacto@acroxia.com", phone: "+34 91 XXX XX XX" },
+    companyInfo: configMap.get("company_info") || { email: "info@contratoalquiler.com", phone: "+34 91 XXX XX XX" },
     productFlow: configMap.get("product_flow") || {
       accepted_formats: ["PDF", "DOCX", "JPG", "PNG", "WEBP"],
       free_analysis: { description: "Preview gratuito", includes: [] },
@@ -201,7 +201,7 @@ function buildSystemPrompt(config: FullSiteConfig, userProfile: string): string 
   const { b2cPlans, b2bPlans, companyInfo, productFlow, platformInfo, faqSummary } = config;
 
   // Información de la plataforma
-  const whatIs = platformInfo.what_acroxia_is || "ACROXIA es una herramienta de IA para analizar contratos de alquiler.";
+  const whatIs = platformInfo.what_acroxia_is || "ContratoAlquiler es una herramienta de IA para analizar contratos de alquiler.";
   const whatIsNot = platformInfo.what_acroxia_is_not?.join("; ") || "";
   const features = platformInfo.features?.join(", ") || "";
 
@@ -251,14 +251,14 @@ function buildSystemPrompt(config: FullSiteConfig, userProfile: string): string 
     ? "PERFIL DETECTADO: INQUILINO particular. Enfócate en los planes B2C: Escaneo Rápido (14,99€), Análisis Único (34,99€, el más popular) y Pack Comparador 3 contratos (59,99€). El análisis gratuito en /analizar-gratis."
     : "PERFIL NO DETECTADO: Tras 2-3 mensajes sin saber el perfil, haz una pregunta natural como: '¿Estás buscando revisar un contrato como inquilino o como propietario?' o '¿Es un contrato que vas a firmar tú o uno que quieres ofrecer a un inquilino?'. NO preguntes directamente '¿eres inquilino o propietario?' - intégralo de forma natural.";
 
-  return `Eres el asistente virtual de ACROXIA. Tu trabajo es resolver dudas sobre la PLATAFORMA y sus servicios. NO das consejos legales.
+  return `Eres el asistente virtual de ContratoAlquiler. Tu trabajo es resolver dudas sobre la PLATAFORMA y sus servicios. NO das consejos legales.
 
 ═══════════════════════════════════════════════════════════════════════════════
-¿QUÉ ES ACROXIA?
+¿QUÉ ES ContratoAlquiler?
 ═══════════════════════════════════════════════════════════════════════════════
 ${whatIs}
 
-Lo que ACROXIA NO es: ${whatIsNot}
+Lo que ContratoAlquiler NO es: ${whatIsNot}
 
 Funcionalidades principales: ${features}
 

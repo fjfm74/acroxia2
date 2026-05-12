@@ -118,7 +118,7 @@ serve(async (req: Request) => {
     for (const lead of (day2Leads || []) as Lead[]) {
       try {
         const token = generateUnsubscribeToken(lead.email, supabaseServiceKey);
-        const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
+        const unsubscribeUrl = `https://contratoalquiler.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
 
         const emailTemplate = getEmailTemplate("nurturing_tips", {
           email: lead.email,
@@ -134,9 +134,9 @@ serve(async (req: Request) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "ACROXIA <info@acroxia.com>",
+            from: "ContratoAlquiler <noreply@contratoalquiler.com>",
             to: [lead.email],
-            reply_to: "contacto@acroxia.com",
+            reply_to: "info@contratoalquiler.com",
             subject: emailTemplate.subject,
             html: emailTemplate.html,
           }),
@@ -171,7 +171,7 @@ serve(async (req: Request) => {
     for (const lead of (day5Leads || []) as Lead[]) {
       try {
         const token = generateUnsubscribeToken(lead.email, supabaseServiceKey);
-        const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
+        const unsubscribeUrl = `https://contratoalquiler.com/unsubscribe?email=${encodeURIComponent(lead.email)}&token=${token}`;
 
         const emailTemplate = getEmailTemplate("nurturing_offer", {
           email: lead.email,
@@ -187,9 +187,9 @@ serve(async (req: Request) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "ACROXIA <info@acroxia.com>",
+            from: "ContratoAlquiler <noreply@contratoalquiler.com>",
             to: [lead.email],
-            reply_to: "contacto@acroxia.com",
+            reply_to: "info@contratoalquiler.com",
             subject: emailTemplate.subject,
             html: emailTemplate.html,
           }),

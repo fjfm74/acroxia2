@@ -308,7 +308,7 @@ async function sendConfirmationEmail(
     return;
   }
 
-  const siteUrl = "https://acroxia.com";
+  const siteUrl = "https://contratoalquiler.com";
   const postUrl = `${siteUrl}/blog/${post.slug}`;
   const adminUrl = `${siteUrl}/admin/blog`;
 
@@ -342,7 +342,7 @@ async function sendConfirmationEmail(
 <body>
   <div class="container">
     <div class="header">
-      <h1>ACROXIA</h1>
+      <h1>ContratoAlquiler</h1>
       <span class="success-badge">✓ Post publicado automáticamente</span>
       <span class="audience-badge">Propietarios</span>
     </div>
@@ -380,9 +380,9 @@ async function sendConfirmationEmail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "ACROXIA <noreply@acroxia.com>",
+        from: "ContratoAlquiler <noreply@contratoalquiler.com>",
         to: ["nuriafrancis@gmail.com"],
-        reply_to: "contacto@acroxia.com",
+        reply_to: "info@contratoalquiler.com",
         subject: `✅ Post publicado: ${post.title}`,
         html: emailHtml,
       }),
