@@ -4,7 +4,7 @@ const Terminos = () => {
   return (
     <LegalPageLayout
       title="Términos y Condiciones"
-      metaDescription="Términos y condiciones de uso de ACROXIA. Condiciones del servicio de análisis de contratos de alquiler con inteligencia artificial."
+      metaDescription="Términos y condiciones de uso de ContratoAlquiler. Condiciones del servicio de análisis de contratos de alquiler con inteligencia artificial."
       lastUpdated="8 de enero de 2026"
     >
       <div className="space-y-10 text-foreground/80">
@@ -12,7 +12,7 @@ const Terminos = () => {
         <section className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-2xl">
           <p className="font-semibold text-foreground mb-3">⚠️ AVISO LEGAL IMPORTANTE - LÉELO ANTES DE USAR EL SERVICIO</p>
           <p className="leading-relaxed mb-3">
-            El servicio de análisis de contratos proporcionado por ACROXIA es de carácter <strong className="text-foreground">orientativo e informativo</strong>. Los resultados generados por nuestra tecnología de inteligencia artificial <strong className="text-foreground">NO constituyen asesoramiento legal profesional</strong> y no sustituyen la consulta con un abogado colegiado.
+            El servicio de análisis de contratos proporcionado por ContratoAlquiler es de carácter <strong className="text-foreground">orientativo e informativo</strong>. Los resultados generados por nuestra tecnología de inteligencia artificial <strong className="text-foreground">NO constituyen asesoramiento legal profesional</strong> y no sustituyen la consulta con un abogado colegiado.
           </p>
           <p className="leading-relaxed">
             Para cuestiones legales complejas, litigios o decisiones que puedan tener consecuencias jurídicas significativas, <strong className="text-foreground">recomendamos encarecidamente consultar con un profesional del derecho</strong>.
@@ -25,7 +25,7 @@ const Terminos = () => {
             1. Aceptación de los Términos
           </h2>
           <p className="mb-4 leading-relaxed">
-            Al acceder y utilizar los servicios de ACROXIA (el "Servicio"), proporcionados por ACROXIA ("nosotros" o "nuestro"), aceptas quedar vinculado por estos Términos y Condiciones ("Términos"). Si no estás de acuerdo con alguna parte de estos Términos, no podrás acceder al Servicio.
+            Al acceder y utilizar los servicios de ContratoAlquiler (el "Servicio"), proporcionados por ContratoAlquiler ("nosotros" o "nuestro"), aceptas quedar vinculado por estos Términos y Condiciones ("Términos"). Si no estás de acuerdo con alguna parte de estos Términos, no podrás acceder al Servicio.
           </p>
           <p className="leading-relaxed">
             Estos Términos se aplican a todos los visitantes, usuarios y otras personas que accedan o utilicen el Servicio.
@@ -38,7 +38,7 @@ const Terminos = () => {
             2. Descripción del Servicio
           </h2>
           <p className="mb-4 leading-relaxed">
-            ACROXIA es una plataforma tecnológica que utiliza inteligencia artificial para analizar contratos de alquiler y detectar posibles cláusulas abusivas, ilegales o desfavorables para el arrendatario, según la legislación española vigente.
+            ContratoAlquiler es una plataforma tecnológica que utiliza inteligencia artificial para analizar contratos de alquiler y detectar posibles cláusulas abusivas, ilegales o desfavorables para el arrendatario, según la legislación española vigente.
           </p>
           <p className="leading-relaxed">
             El Servicio incluye:
@@ -61,7 +61,7 @@ const Terminos = () => {
             <p className="font-semibold text-red-800 mb-3">🔴 LIMITACIONES IMPORTANTES</p>
             <ul className="list-disc list-inside space-y-3 text-red-900/80">
               <li><strong>No es asesoramiento legal:</strong> Los análisis proporcionados son orientativos y no sustituyen el consejo de un abogado cualificado.</li>
-              <li><strong>Sin responsabilidad profesional:</strong> ACROXIA no ejerce la abogacía y no asume responsabilidad profesional por las decisiones tomadas basándose en nuestros análisis.</li>
+              <li><strong>Sin responsabilidad profesional:</strong> ContratoAlquiler no ejerce la abogacía y no asume responsabilidad profesional por las decisiones tomadas basándose en nuestros análisis.</li>
               <li><strong>Posibles errores:</strong> La tecnología de IA, aunque avanzada, puede cometer errores, malinterpretar contextos o no detectar todas las cláusulas problemáticas.</li>
               <li><strong>Legislación cambiante:</strong> Las leyes y jurisprudencia evolucionan constantemente. Nuestros análisis pueden no reflejar los cambios más recientes.</li>
               <li><strong>Contexto limitado:</strong> El análisis se basa únicamente en el texto del contrato proporcionado, sin conocer las circunstancias particulares de cada caso.</li>
@@ -69,7 +69,7 @@ const Terminos = () => {
           </div>
 
           <p className="leading-relaxed">
-            Al utilizar el Servicio, reconoces y aceptas expresamente estas limitaciones y eximes a ACROXIA de cualquier responsabilidad derivada de decisiones tomadas basándose en nuestros análisis.
+            Al utilizar el Servicio, reconoces y aceptas expresamente estas limitaciones y eximes a ContratoAlquiler de cualquier responsabilidad derivada de decisiones tomadas basándose en nuestros análisis.
           </p>
         </section>
 
@@ -106,7 +106,7 @@ const Terminos = () => {
             <li>Subir documentos que contengan malware o código malicioso.</li>
             <li>Intentar acceder a sistemas, datos o cuentas de otros usuarios.</li>
             <li>Realizar ingeniería inversa o intentar extraer el código fuente de nuestros algoritmos.</li>
-            <li>Utilizar el Servicio para competir directamente con ACROXIA.</li>
+            <li>Utilizar el Servicio para competir directamente con ContratoAlquiler.</li>
             <li>Revender o redistribuir el Servicio sin autorización.</li>
             <li>Subir contratos de terceros en los que no seas parte.</li>
           </ul>
@@ -125,7 +125,7 @@ const Terminos = () => {
           </div>
 
           <p className="leading-relaxed">
-            ACROXIA queda exonerada de cualquier responsabilidad derivada del uso indebido de la plataforma para analizar contratos en los que el usuario no tenga un interés legítimo o sobre los cuales no tenga derecho a acceder.
+            ContratoAlquiler queda exonerada de cualquier responsabilidad derivada del uso indebido de la plataforma para analizar contratos en los que el usuario no tenga un interés legítimo o sobre los cuales no tenga derecho a acceder.
           </p>
         </section>
 
@@ -137,7 +137,7 @@ const Terminos = () => {
           
           <h3 className="font-semibold text-foreground mt-6 mb-3">6.1. Modelo de créditos</h3>
           <p className="mb-4 leading-relaxed">
-            ACROXIA funciona con un sistema de créditos. Cada análisis de contrato consume un número determinado de créditos según el tipo de servicio contratado.
+            ContratoAlquiler funciona con un sistema de créditos. Cada análisis de contrato consume un número determinado de créditos según el tipo de servicio contratado.
           </p>
 
           <h3 className="font-semibold text-foreground mt-6 mb-3">6.2. Precios</h3>
@@ -176,7 +176,7 @@ const Terminos = () => {
           
           <h3 className="font-semibold text-foreground mt-6 mb-3">7.1. Nuestra propiedad</h3>
           <p className="mb-4 leading-relaxed">
-            El Servicio, incluyendo todo el software, algoritmos, diseño, textos, gráficos y otros contenidos, son propiedad exclusiva de ACROXIA y están protegidos por las leyes de propiedad intelectual e industrial.
+            El Servicio, incluyendo todo el software, algoritmos, diseño, textos, gráficos y otros contenidos, son propiedad exclusiva de ContratoAlquiler y están protegidos por las leyes de propiedad intelectual e industrial.
           </p>
 
           <h3 className="font-semibold text-foreground mt-6 mb-3">7.2. Tus documentos</h3>
@@ -199,7 +199,7 @@ const Terminos = () => {
           <div className="bg-muted rounded-2xl p-6 mb-6">
             <p className="font-semibold text-foreground mb-3">EXENCIÓN DE RESPONSABILIDAD</p>
             <p className="leading-relaxed">
-              EN LA MÁXIMA MEDIDA PERMITIDA POR LA LEY APLICABLE, ACROXIA NO SERÁ RESPONSABLE POR DAÑOS INDIRECTOS, INCIDENTALES, ESPECIALES, CONSECUENTES O PUNITIVOS, INCLUYENDO, SIN LIMITACIÓN, PÉRDIDA DE BENEFICIOS, DATOS, USO, FONDO DE COMERCIO U OTRAS PÉRDIDAS INTANGIBLES, RESULTANTES DE:
+              EN LA MÁXIMA MEDIDA PERMITIDA POR LA LEY APLICABLE, ContratoAlquiler NO SERÁ RESPONSABLE POR DAÑOS INDIRECTOS, INCIDENTALES, ESPECIALES, CONSECUENTES O PUNITIVOS, INCLUYENDO, SIN LIMITACIÓN, PÉRDIDA DE BENEFICIOS, DATOS, USO, FONDO DE COMERCIO U OTRAS PÉRDIDAS INTANGIBLES, RESULTANTES DE:
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
               <li>El uso o la imposibilidad de uso del Servicio.</li>
@@ -211,7 +211,7 @@ const Terminos = () => {
           </div>
 
           <p className="leading-relaxed">
-            En ningún caso nuestra responsabilidad total excederá el importe pagado por ti a ACROXIA en los 12 meses anteriores al evento que dio lugar a la reclamación.
+            En ningún caso nuestra responsabilidad total excederá el importe pagado por ti a ContratoAlquiler en los 12 meses anteriores al evento que dio lugar a la reclamación.
           </p>
         </section>
 
@@ -221,7 +221,7 @@ const Terminos = () => {
             9. Indemnización
           </h2>
           <p className="leading-relaxed">
-            Aceptas defender, indemnizar y mantener indemne a ACROXIA, sus directivos, empleados y agentes, frente a cualquier reclamación, daño, obligación, pérdida, responsabilidad, coste o deuda, y gasto (incluyendo honorarios de abogados) derivados de: (a) tu uso del Servicio; (b) tu incumplimiento de estos Términos; (c) tu violación de derechos de terceros.
+            Aceptas defender, indemnizar y mantener indemne a ContratoAlquiler, sus directivos, empleados y agentes, frente a cualquier reclamación, daño, obligación, pérdida, responsabilidad, coste o deuda, y gasto (incluyendo honorarios de abogados) derivados de: (a) tu uso del Servicio; (b) tu incumplimiento de estos Términos; (c) tu violación de derechos de terceros.
           </p>
         </section>
 
@@ -270,9 +270,9 @@ const Terminos = () => {
             13. Disposiciones Generales
           </h2>
           <ul className="list-disc list-inside space-y-3 ml-4">
-            <li><strong className="text-foreground">Acuerdo completo:</strong> Estos Términos constituyen el acuerdo completo entre tú y ACROXIA respecto al Servicio.</li>
+            <li><strong className="text-foreground">Acuerdo completo:</strong> Estos Términos constituyen el acuerdo completo entre tú y ContratoAlquiler respecto al Servicio.</li>
             <li><strong className="text-foreground">Divisibilidad:</strong> Si alguna disposición de estos Términos resulta inválida, las demás disposiciones permanecerán en vigor.</li>
-            <li><strong className="text-foreground">Renuncia:</strong> El hecho de que ACROXIA no ejerza un derecho o disposición de estos Términos no constituirá una renuncia a dicho derecho o disposición.</li>
+            <li><strong className="text-foreground">Renuncia:</strong> El hecho de que ContratoAlquiler no ejerza un derecho o disposición de estos Términos no constituirá una renuncia a dicho derecho o disposición.</li>
             <li><strong className="text-foreground">Cesión:</strong> No puedes ceder estos Términos sin nuestro consentimiento previo por escrito.</li>
           </ul>
         </section>
@@ -286,8 +286,8 @@ const Terminos = () => {
             Si tienes alguna pregunta sobre estos Términos, por favor contáctanos:
           </p>
           <div className="bg-muted rounded-2xl p-6 space-y-2">
-            <p><strong className="text-foreground">ACROXIA</strong></p>
-            <p><strong className="text-foreground">Email:</strong> contacto@acroxia.com</p>
+            <p><strong className="text-foreground">ContratoAlquiler</strong></p>
+            <p><strong className="text-foreground">Email:</strong> info@contratoalquiler.com</p>
           </div>
         </section>
       </div>

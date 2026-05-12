@@ -9,8 +9,8 @@ const Desistimiento = () => {
 (Este formulario debe cumplimentarse y enviarse solo si desea desistir del contrato)
 
 A la atención de:
-ACROXIA
-Email: legal@acroxia.com
+ContratoAlquiler
+Email: info@contratoalquiler.com
 
 Por la presente comunico que desisto del contrato de prestación del siguiente servicio:
 
@@ -22,7 +22,7 @@ DATOS DEL CONSUMIDOR:
 
 - Nombre y apellidos: ____________________________
 - Dirección: ____________________________
-- Email registrado en ACROXIA: ____________________________
+- Email registrado en ContratoAlquiler: ____________________________
 - Teléfono (opcional): ____________________________
 
 SOLICITO:
@@ -47,7 +47,7 @@ Lugar: ____________________________
 INSTRUCCIONES DE ENVÍO:
 1. Cumplimente todos los campos marcados con líneas.
 2. Firme y feche el documento.
-3. Envíelo por email a: legal@acroxia.com
+3. Envíelo por email a: info@contratoalquiler.com
 4. Recibirá confirmación de recepción en 24-48 horas laborables.
 5. El reembolso se procesará en un máximo de 14 días.
 `;
@@ -66,7 +66,7 @@ INSTRUCCIONES DE ENVÍO:
   return (
     <LegalPageLayout
       title="Derecho de Desistimiento"
-      metaDescription="Información sobre tu derecho de desistimiento en ACROXIA. Plazo de 14 días para cancelar tu suscripción."
+      metaDescription="Información sobre tu derecho de desistimiento en ContratoAlquiler. Plazo de 14 días para cancelar tu suscripción."
       lastUpdated="8 de enero de 2026"
     >
       <div className="space-y-8">
@@ -124,8 +124,8 @@ INSTRUCCIONES DE ENVÍO:
                 <p className="text-sm text-muted-foreground mb-2">
                   Envía el formulario cumplimentado o una comunicación clara a:
                 </p>
-                <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">
-                  legal@acroxia.com
+                <a href="mailto:info@contratoalquiler.com" className="text-primary hover:underline">
+                  info@contratoalquiler.com
                 </a>
               </div>
             </div>
@@ -215,8 +215,8 @@ INSTRUCCIONES DE ENVÍO:
           <h2 className="font-serif text-2xl font-semibold mb-4">7. Contacto</h2>
           <p className="text-muted-foreground">
             Para cualquier consulta sobre el derecho de desistimiento:{" "}
-            <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">
-              legal@acroxia.com
+            <a href="mailto:info@contratoalquiler.com" className="text-primary hover:underline">
+              info@contratoalquiler.com
             </a>
           </p>
         </section>

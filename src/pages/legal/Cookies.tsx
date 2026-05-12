@@ -4,7 +4,7 @@ const Cookies = () => {
   return (
     <LegalPageLayout
       title="Política de Cookies"
-      metaDescription="Política de cookies de ACROXIA. Conoce qué cookies utilizamos y cómo gestionarlas."
+      metaDescription="Política de cookies de ContratoAlquiler. Conoce qué cookies utilizamos y cómo gestionarlas."
       lastUpdated="8 de enero de 2026"
       allowIndex={true}
     >
@@ -42,13 +42,13 @@ const Cookies = () => {
               <tbody className="text-muted-foreground">
                 <tr className="border-t border-border">
                   <td className="px-4 py-3">sb-*-auth-token</td>
-                  <td className="px-4 py-3">ACROXIA</td>
+                  <td className="px-4 py-3">ContratoAlquiler</td>
                   <td className="px-4 py-3">Autenticación de usuario</td>
                   <td className="px-4 py-3">Sesión</td>
                 </tr>
                 <tr className="border-t border-border">
                   <td className="px-4 py-3">cookie-consent</td>
-                  <td className="px-4 py-3">ACROXIA</td>
+                  <td className="px-4 py-3">ContratoAlquiler</td>
                   <td className="px-4 py-3">Guardar preferencias de cookies</td>
                   <td className="px-4 py-3">1 año</td>
                 </tr>
@@ -75,13 +75,13 @@ const Cookies = () => {
               <tbody className="text-muted-foreground">
                 <tr className="border-t border-border">
                   <td className="px-4 py-3">sidebar-collapsed</td>
-                  <td className="px-4 py-3">ACROXIA</td>
+                  <td className="px-4 py-3">ContratoAlquiler</td>
                   <td className="px-4 py-3">Recordar estado del menú lateral</td>
                   <td className="px-4 py-3">Persistente</td>
                 </tr>
                 <tr className="border-t border-border">
                   <td className="px-4 py-3">theme</td>
-                  <td className="px-4 py-3">ACROXIA</td>
+                  <td className="px-4 py-3">ContratoAlquiler</td>
                   <td className="px-4 py-3">Preferencia de tema claro/oscuro</td>
                   <td className="px-4 py-3">Persistente</td>
                 </tr>
@@ -91,7 +91,7 @@ const Cookies = () => {
 
           <h3 className="font-medium text-lg mb-3">2.3 Cookies analíticas</h3>
           <p className="text-muted-foreground mb-4">
-            Actualmente, ACROXIA no utiliza cookies analíticas de terceros. Si en el futuro 
+            Actualmente, ContratoAlquiler no utiliza cookies analíticas de terceros. Si en el futuro 
             implementáramos herramientas de análisis, actualizaríamos esta política y solicitaríamos 
             tu consentimiento previo.
           </p>
@@ -143,7 +143,7 @@ const Cookies = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4">5. Cookies de terceros</h2>
           <p className="text-muted-foreground mb-4">
-            ACROXIA utiliza servicios de terceros que pueden establecer sus propias cookies:
+            ContratoAlquiler utiliza servicios de terceros que pueden establecer sus propias cookies:
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
             <li><strong>Google (OAuth):</strong> Para el inicio de sesión con Google, sujeto a la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">política de privacidad de Google</a>.</li>
@@ -163,8 +163,8 @@ const Cookies = () => {
           <h2 className="font-serif text-2xl font-semibold mb-4">7. Contacto</h2>
           <p className="text-muted-foreground">
             Si tienes alguna pregunta sobre nuestra Política de Cookies, puedes contactarnos en:{" "}
-            <a href="mailto:legal@acroxia.com" className="text-primary hover:underline">
-              legal@acroxia.com
+            <a href="mailto:info@contratoalquiler.com" className="text-primary hover:underline">
+              info@contratoalquiler.com
             </a>
           </p>
         </section>

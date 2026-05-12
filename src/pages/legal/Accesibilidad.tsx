@@ -5,7 +5,7 @@ const Accesibilidad = () => {
   return (
     <LegalPageLayout
       title="Declaración de Accesibilidad"
-      metaDescription="Compromiso de accesibilidad web de ACROXIA. Objetivo WCAG 2.1 nivel AA."
+      metaDescription="Compromiso de accesibilidad web de ContratoAlquiler. Objetivo WCAG 2.1 nivel AA."
       lastUpdated="8 de enero de 2026"
       allowIndex={true}
     >
@@ -19,7 +19,7 @@ const Accesibilidad = () => {
                 Nuestro compromiso con la accesibilidad
               </h2>
               <p className="text-muted-foreground">
-                ACROXIA se compromete a garantizar la accesibilidad digital de su sitio web para 
+                ContratoAlquiler se compromete a garantizar la accesibilidad digital de su sitio web para 
                 personas con discapacidad. Trabajamos continuamente para mejorar la experiencia 
                 de usuario para todos y aplicar las normas de accesibilidad pertinentes.
               </p>
@@ -30,7 +30,7 @@ const Accesibilidad = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4">1. Nivel de conformidad</h2>
           <p className="text-muted-foreground mb-4">
-            ACROXIA se esfuerza por cumplir con las <strong>Pautas de Accesibilidad para el 
+            ContratoAlquiler se esfuerza por cumplir con las <strong>Pautas de Accesibilidad para el 
             Contenido Web (WCAG) 2.1 nivel AA</strong>, publicadas por el World Wide Web Consortium (W3C).
           </p>
           <p className="text-muted-foreground mb-4">
@@ -93,7 +93,7 @@ const Accesibilidad = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4">4. Tecnologías compatibles</h2>
           <p className="text-muted-foreground mb-4">
-            La accesibilidad de ACROXIA depende de las siguientes tecnologías para funcionar:
+            La accesibilidad de ContratoAlquiler depende de las siguientes tecnologías para funcionar:
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
             <li>HTML5</li>
@@ -110,7 +110,7 @@ const Accesibilidad = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4">5. Navegadores y tecnologías de asistencia</h2>
           <p className="text-muted-foreground mb-4">
-            ACROXIA es compatible con los siguientes navegadores y tecnologías de asistencia:
+            ContratoAlquiler es compatible con los siguientes navegadores y tecnologías de asistencia:
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
             <li>Google Chrome (últimas 2 versiones)</li>
@@ -126,7 +126,7 @@ const Accesibilidad = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4">6. Evaluación y auditoría</h2>
           <p className="text-muted-foreground mb-4">
-            ACROXIA evalúa la accesibilidad de su sitio web mediante:
+            ContratoAlquiler evalúa la accesibilidad de su sitio web mediante:
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
             <li><strong>Autoevaluación:</strong> Revisiones internas periódicas utilizando herramientas automatizadas.</li>
@@ -141,7 +141,7 @@ const Accesibilidad = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4">7. Comentarios y contacto</h2>
           <p className="text-muted-foreground mb-4">
-            Agradecemos tus comentarios sobre la accesibilidad de ACROXIA. Si encuentras 
+            Agradecemos tus comentarios sobre la accesibilidad de ContratoAlquiler. Si encuentras 
             barreras de accesibilidad o tienes sugerencias de mejora, por favor contacta con nosotros:
           </p>
           
@@ -149,8 +149,8 @@ const Accesibilidad = () => {
             <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium">Email de accesibilidad</p>
-              <a href="mailto:contacto@acroxia.com" className="text-primary hover:underline">
-                contacto@acroxia.com
+              <a href="mailto:info@contratoalquiler.com" className="text-primary hover:underline">
+                info@contratoalquiler.com
               </a>
             </div>
           </div>
