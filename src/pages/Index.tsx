@@ -16,25 +16,9 @@ const Index = () => {
     "legalName": "ContratoAlquiler",
     "url": "https://contratoalquiler.com",
     "logo": "https://contratoalquiler.com/contratoalquiler-logo.png",
-    "image": "https://contratoalquiler.com/og-image.jpg",
-    "description": "Plataforma de IA para análisis de contratos de alquiler y protección de derechos del inquilino en España. Detecta cláusulas abusivas en menos de 2 minutos.",
-    "slogan": "Tu contrato de alquiler, analizado por IA",
-    "foundingDate": "2025",
-    "foundingLocation": { "@type": "Place", "name": "España" },
-    "areaServed": { "@type": "Country", "name": "España" },
-    "knowsLanguage": "es",
-    "address": { "@type": "PostalAddress", "addressLocality": "Madrid", "addressCountry": "ES" },
-    "sameAs": [
-      "https://twitter.com/acroxia",
-      "https://linkedin.com/company/acroxia",
-      "https://www.instagram.com/acroxia"
-    ],
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "contactType": "customer service",
-      "email": "info@contratoalquiler.com",
-      "availableLanguage": "Spanish"
-    }
+    "email": "info@contratoalquiler.com",
+    "description": "Plataforma tecnológica que analiza contratos de alquiler con inteligencia artificial e identifica cláusulas potencialmente abusivas según la legislación española.",
+    "areaServed": { "@type": "Country", "name": "Spain" }
   };
 
   const websiteSchema = {

@@ -82,7 +82,6 @@ const SEOHead = ({
     setMeta("property", "og:site_name", "ContratoAlquiler");
 
     setMeta("name", "twitter:card", "summary_large_image");
-    setMeta("name", "twitter:site", "@acroxia");
     setMeta("name", "twitter:title", title);
     setMeta("name", "twitter:description", description);
     setMeta("name", "twitter:image", ogImage);
