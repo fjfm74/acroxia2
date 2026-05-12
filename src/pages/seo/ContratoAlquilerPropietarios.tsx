@@ -17,53 +17,53 @@ import {
 const schemaWebPage = {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  "@id": "https://acroxia.com/contrato-alquiler-propietarios",
+  "@id": "https://contratoalquiler.com/contrato-alquiler-propietarios",
   "name": "Contrato de Alquiler para Propietarios 2026",
   "description": "Guía completa para propietarios sobre contratos de alquiler en 2026. Requisitos LAU, fianzas permitidas (máximo 3 meses), zonas tensionadas y gastos del arrendador.",
-  "url": "https://acroxia.com/contrato-alquiler-propietarios",
+  "url": "https://contratoalquiler.com/contrato-alquiler-propietarios",
   "inLanguage": "es-ES",
   "publisher": {
     "@type": "Organization",
-    "name": "ACROXIA",
-    "url": "https://acroxia.com"
+    "name": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com"
   },
   "isPartOf": {
     "@type": "WebSite",
-    "name": "ACROXIA",
-    "url": "https://acroxia.com"
+    "name": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com"
   },
   "datePublished": "2026-01-14",
   "dateModified": "2026-02-09",
   "mainEntity": {
     "@type": "Article",
-    "@id": "https://acroxia.com/contrato-alquiler-propietarios#article"
+    "@id": "https://contratoalquiler.com/contrato-alquiler-propietarios#article"
   }
 };
 
 const schemaArticle = {
   "@context": "https://schema.org",
   "@type": "Article",
-  "@id": "https://acroxia.com/contrato-alquiler-propietarios#article",
+  "@id": "https://contratoalquiler.com/contrato-alquiler-propietarios#article",
   "headline": "Contrato de Alquiler para Propietarios 2026: Guía LAU Completa",
   "description": "Requisitos legales, fianzas permitidas y limitaciones en zonas tensionadas para redactar un contrato conforme a la LAU.",
   "author": {
     "@type": "Organization",
-    "name": "ACROXIA",
-    "url": "https://acroxia.com"
+    "name": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com"
   },
   "publisher": {
     "@type": "Organization",
-    "name": "ACROXIA",
+    "name": "ContratoAlquiler",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://acroxia.com/contratoalquiler-logo.png"
+      "url": "https://contratoalquiler.com/contratoalquiler-logo.png"
     }
   },
   "datePublished": "2026-01-14",
   "dateModified": "2026-02-09",
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://acroxia.com/contrato-alquiler-propietarios"
+    "@id": "https://contratoalquiler.com/contrato-alquiler-propietarios"
   },
   "speakable": {
     "@type": "SpeakableSpecification",
@@ -170,9 +170,9 @@ const ContratoAlquilerPropietarios = () => {
   return (
     <>
       <SEOHead
-        title="Contrato de Alquiler: Requisitos LAU 2026 | Guía para Propietarios 2026 | ACROXIA"
+        title="Contrato de Alquiler: Requisitos LAU 2026 | Guía para Propietarios 2026 | ContratoAlquiler"
         description="Guía para propietarios: fianzas (máx 3 meses), zonas tensionadas, elementos obligatorios y requisitos LAU 2026 para tu contrato de alquiler."
-        canonical="https://acroxia.com/contrato-alquiler-propietarios"
+        canonical="https://contratoalquiler.com/contrato-alquiler-propietarios"
         ogType="article"
         keywords="contrato alquiler propietario 2026, fianza alquiler máxima, zonas tensionadas propietarios, LAU arrendadores, requisitos contrato alquiler"
         articleMeta={{ datePublished: "2026-01-14", dateModified: "2026-02-09" }}
@@ -655,7 +655,7 @@ const ContratoAlquilerPropietarios = () => {
                   ¿Necesitas un contrato conforme a la ley?
                 </h2>
                 <p className="text-background/80 text-lg mb-8">
-                  ACROXIA te ayuda a verificar que tu contrato cumple con todos los requisitos 
+                  ContratoAlquiler te ayuda a verificar que tu contrato cumple con todos los requisitos 
                   de la LAU 2026 y a detectar posibles cláusulas problemáticas.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -738,7 +738,7 @@ const ContratoAlquilerPropietarios = () => {
                 <p className="text-muted-foreground">
                   Esta guía tiene carácter informativo y no sustituye el asesoramiento legal profesional. 
                   El cálculo del IRAV y la verificación de zonas tensionadas debe realizarse en las fuentes 
-                  oficiales (INE, MIVAU o webs autonómicas). ACROXIA es una herramienta de apoyo informativo.
+                  oficiales (INE, MIVAU o webs autonómicas). ContratoAlquiler es una herramienta de apoyo informativo.
                 </p>
               </div>
             </FadeIn>

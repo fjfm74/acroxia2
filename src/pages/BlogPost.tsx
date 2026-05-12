@@ -155,35 +155,35 @@ const BlogPost = () => {
     "@type": "BlogPosting",
     "headline": post.title,
     "description": post.meta_description || post.excerpt,
-    "image": post.image || "https://acroxia.com/og-image.jpg",
+    "image": post.image || "https://contratoalquiler.com/og-image.jpg",
     "author": post.author ? {
       "@type": "Person",
       "name": post.author.name,
-      "url": `https://acroxia.com/autor/${post.author.slug}`,
+      "url": `https://contratoalquiler.com/autor/${post.author.slug}`,
       "jobTitle": post.author.role
     } : {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
+      "name": "ContratoAlquiler",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/contratoalquiler-logo.png"
+        "url": "https://contratoalquiler.com/contratoalquiler-logo.png"
       }
     },
     "datePublished": post.published_at,
     "dateModified": post.updated_at,
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://acroxia.com/blog/${post.slug}`
+      "@id": `https://contratoalquiler.com/blog/${post.slug}`
     },
     "isPartOf": {
       "@type": "Blog",
-      "name": "Blog ACROXIA",
-      "url": "https://acroxia.com/blog"
+      "name": "Blog ContratoAlquiler",
+      "url": "https://contratoalquiler.com/blog"
     },
     "articleSection": post.category,
     "inLanguage": "es-ES",
@@ -236,7 +236,7 @@ const BlogPost = () => {
   const audienceUrl = `/blog?audiencia=${post.audience || "inquilino"}`;
 
   // Truncar título a 60 caracteres para SEO
-  const suffix = " | ACROXIA";
+  const suffix = " | ContratoAlquiler";
   const maxTitleLength = 60;
   const availableLength = maxTitleLength - suffix.length;
   const seoTitle = post.title.length > availableLength
@@ -250,15 +250,15 @@ const BlogPost = () => {
       <SEOHead
         title={seoTitle}
         description={seoDescription.slice(0, 155)}
-        canonical={`https://acroxia.com/blog/${post.slug}`}
-        ogImage={post.image || "https://acroxia.com/og-image.jpg"}
+        canonical={`https://contratoalquiler.com/blog/${post.slug}`}
+        ogImage={post.image || "https://contratoalquiler.com/og-image.jpg"}
         ogType="article"
         noindex={post.noindex === true}
         robots={post.noindex === true ? "noindex, follow" : "index, follow"}
         keywords={post.keywords?.join(", ") || ""}
         jsonLd={jsonLdSchemas}
         articleMeta={{
-          author: post.author?.name || "ACROXIA",
+          author: post.author?.name || "ContratoAlquiler",
           datePublished: post.published_at || undefined,
           dateModified: post.updated_at || undefined,
           section: post.category,
@@ -329,16 +329,16 @@ const BlogPost = () => {
                     <span className="flex items-center gap-2">
                       <img 
                         src="/contratoalquiler-logo.png" 
-                        alt="ACROXIA" 
+                        alt="ContratoAlquiler" 
                         className="w-5 h-5 rounded-full object-contain bg-foreground p-0.5" 
                       />
-                      Por {post.author?.name || "Equipo ACROXIA"}
+                      Por {post.author?.name || "Equipo ContratoAlquiler"}
                     </span>
                   </div>
                 </FadeIn>
                 <FadeIn delay={0.25}>
                   <p className="text-xs text-muted-foreground/70 mt-3">
-                    Contenido revisado por {post.author?.name || "profesionales de ACROXIA"}
+                    Contenido revisado por {post.author?.name || "profesionales de ContratoAlquiler"}
                   </p>
                 </FadeIn>
               </div>

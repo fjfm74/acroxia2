@@ -100,27 +100,27 @@ const SubidaAlquiler2026 = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": "https://acroxia.com/subida-alquiler-2026",
+    "@id": "https://contratoalquiler.com/subida-alquiler-2026",
     name: "Subida de Alquiler 2026 - IRAV y Límites Legales",
     description:
       "Último IRAV publicado (marzo 2026): 2,47%. Límites legales a la subida del alquiler en España, cómo calcular la actualización según la LAU y qué hacer si la subida es abusiva.",
-    url: "https://acroxia.com/subida-alquiler-2026",
+    url: "https://contratoalquiler.com/subida-alquiler-2026",
     datePublished: "2026-01-01",
     dateModified: "2026-04-21",
     inLanguage: "es-ES",
     publisher: {
       "@type": "Organization",
-      name: "ACROXIA",
-      url: "https://acroxia.com",
+      name: "ContratoAlquiler",
+      url: "https://contratoalquiler.com",
     },
     isPartOf: {
       "@type": "WebSite",
-      name: "ACROXIA",
-      url: "https://acroxia.com",
+      name: "ContratoAlquiler",
+      url: "https://contratoalquiler.com",
     },
     mainEntity: {
       "@type": "Article",
-      "@id": "https://acroxia.com/subida-alquiler-2026#article",
+      "@id": "https://contratoalquiler.com/subida-alquiler-2026#article",
     },
   };
 
@@ -140,7 +140,7 @@ const SubidaAlquiler2026 = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "@id": "https://acroxia.com/subida-alquiler-2026#article",
+    "@id": "https://contratoalquiler.com/subida-alquiler-2026#article",
     headline: "IRAV 2026: último valor publicado 2,47% (marzo) y cómo afecta a la subida del alquiler",
     description:
       "El IRAV de marzo 2026 es 2,47%, el último dato publicado por el INE. Cómo se aplica al alquiler, cómo calcular la subida según la LAU y qué hacer si la actualización es abusiva.",
@@ -148,21 +148,21 @@ const SubidaAlquiler2026 = () => {
     dateModified: "2026-04-21",
     author: {
       "@type": "Organization",
-      name: "ACROXIA",
-      url: "https://acroxia.com",
+      name: "ContratoAlquiler",
+      url: "https://contratoalquiler.com",
     },
     publisher: {
       "@type": "Organization",
-      name: "ACROXIA",
-      url: "https://acroxia.com",
+      name: "ContratoAlquiler",
+      url: "https://contratoalquiler.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://acroxia.com/contratoalquiler-logo.png",
+        url: "https://contratoalquiler.com/contratoalquiler-logo.png",
       },
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": "https://acroxia.com/subida-alquiler-2026",
+      "@id": "https://contratoalquiler.com/subida-alquiler-2026",
     },
     speakable: {
       "@type": "SpeakableSpecification",
@@ -174,9 +174,9 @@ const SubidaAlquiler2026 = () => {
   return (
     <>
       <SEOHead
-        title="IRAV marzo 2026: 2,47% — Subida máxima alquiler | ACROXIA"
+        title="IRAV marzo 2026: 2,47% — Subida máxima alquiler | ContratoAlquiler"
         description="Último IRAV publicado (marzo 2026): 2,47%. Cuánto puede subirte el alquiler según la LAU y qué hacer si la subida supera el índice legal."
-        canonical="https://acroxia.com/subida-alquiler-2026"
+        canonical="https://contratoalquiler.com/subida-alquiler-2026"
         ogType="article"
         keywords="IRAV marzo 2026, IRAV 2026, subida alquiler 2026, límite subida alquiler, actualización renta, índice arrendamientos vivienda"
         articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-04-21" }}
@@ -487,7 +487,7 @@ const SubidaAlquiler2026 = () => {
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-sm text-muted-foreground">
                 <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal.
-                El valor del IRAV debe consultarse en la web oficial del INE. ACROXIA es una herramienta de análisis que
+                El valor del IRAV debe consultarse en la web oficial del INE. ContratoAlquiler es una herramienta de análisis que
                 ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
               </p>
             </div>

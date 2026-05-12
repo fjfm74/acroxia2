@@ -68,7 +68,7 @@ const faqs = [
   },
   {
     question: "¿Cómo puedo saber si mi contrato tiene cláusulas ilegales?",
-    answer: "Compara cada cláusula con los artículos 6, 11, 17, 20, 21, 25 y 36 de la LAU. También puedes usar herramientas de análisis con IA como ACROXIA que identifican cláusulas potencialmente abusivas en menos de 2 minutos."
+    answer: "Compara cada cláusula con los artículos 6, 11, 17, 20, 21, 25 y 36 de la LAU. También puedes usar herramientas de análisis con IA como ContratoAlquiler que identifican cláusulas potencialmente abusivas en menos de 2 minutos."
   },
   {
     question: "¿Qué hacer si descubro cláusulas abusivas después de firmar?",
@@ -84,26 +84,26 @@ const ClausulasAbusivas = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": "https://acroxia.com/clausulas-abusivas-alquiler",
+    "@id": "https://contratoalquiler.com/clausulas-abusivas-alquiler",
     "name": "Cláusulas Abusivas en Contratos de Alquiler - Guía 2026",
     "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler. Guía completa sobre qué cláusulas podrían ser nulas según la LAU y cómo reclamar.",
-    "url": "https://acroxia.com/clausulas-abusivas-alquiler",
+    "url": "https://contratoalquiler.com/clausulas-abusivas-alquiler",
     "datePublished": "2026-01-01",
     "dateModified": "2026-02-09",
     "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "isPartOf": {
       "@type": "WebSite",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "mainEntity": {
       "@type": "Article",
-      "@id": "https://acroxia.com/clausulas-abusivas-alquiler#article"
+      "@id": "https://contratoalquiler.com/clausulas-abusivas-alquiler#article"
     }
   };
 
@@ -123,28 +123,28 @@ const ClausulasAbusivas = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "@id": "https://acroxia.com/clausulas-abusivas-alquiler#article",
+    "@id": "https://contratoalquiler.com/clausulas-abusivas-alquiler#article",
     "headline": "Cláusulas Abusivas en Contratos de Alquiler 2026",
     "description": "Identifica cláusulas potencialmente ilegales en tu contrato de alquiler según la LAU.",
     "datePublished": "2026-01-01",
     "dateModified": "2026-02-09",
     "author": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com",
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/contratoalquiler-logo.png"
+        "url": "https://contratoalquiler.com/contratoalquiler-logo.png"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://acroxia.com/clausulas-abusivas-alquiler"
+      "@id": "https://contratoalquiler.com/clausulas-abusivas-alquiler"
     },
     "speakable": {
       "@type": "SpeakableSpecification",
@@ -158,7 +158,7 @@ const ClausulasAbusivas = () => {
       <SEOHead
         title="Las 8 Cláusulas Abusivas Más Comunes en Contratos de Alquiler 2026"
         description="Descubre las cláusulas ilegales más frecuentes en contratos de alquiler en España: fianza excesiva, gastos de inmobiliaria, penalizaciones... Guía actualizada a la LAU 2026."
-        canonical="https://acroxia.com/clausulas-abusivas-alquiler"
+        canonical="https://contratoalquiler.com/clausulas-abusivas-alquiler"
         ogType="article"
         keywords="cláusulas abusivas alquiler, cláusulas ilegales contrato, LAU cláusulas nulas, contrato alquiler ilegal, detectar cláusulas abusivas"
         articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-02-09" }}
@@ -370,7 +370,7 @@ const ClausulasAbusivas = () => {
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-sm text-muted-foreground">
                 <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal. 
-                Para casos específicos, consulta con un profesional del derecho. ACROXIA es una herramienta de análisis 
+                Para casos específicos, consulta con un profesional del derecho. ContratoAlquiler es una herramienta de análisis 
                 que ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
               </p>
             </div>

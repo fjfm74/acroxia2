@@ -28,15 +28,15 @@ const Breadcrumbs = ({ items, className = "", truncateLength = 50 }: Breadcrumbs
         "@type": "ListItem",
         "position": 1,
         "name": "Inicio",
-        "item": "https://acroxia.com/"
+        "item": "https://contratoalquiler.com/"
       },
       ...items.map((item, index) => ({
         "@type": "ListItem",
         "position": index + 2,
         "name": item.label,
         "item": item.href 
-          ? `https://acroxia.com${item.href}` 
-          : `https://acroxia.com${location.pathname}`
+          ? `https://contratoalquiler.com${item.href}` 
+          : `https://contratoalquiler.com${location.pathname}`
       }))
     ]
   };

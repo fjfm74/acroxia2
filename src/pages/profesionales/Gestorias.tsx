@@ -93,11 +93,11 @@ const plans = [
 const schemaService = {
   "@context": "https://schema.org",
   "@type": "Service",
-  "name": "ACROXIA para Gestorías y Administradores de Fincas",
+  "name": "ContratoAlquiler para Gestorías y Administradores de Fincas",
   "provider": {
     "@type": "Organization",
-    "name": "ACROXIA",
-    "url": "https://acroxia.com"
+    "name": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com"
   },
   "serviceType": "Análisis de contratos de alquiler con IA",
   "description": "Herramienta de análisis de contratos para gestorías y administradores de fincas. Ofrece un servicio diferenciador a tus clientes.",
@@ -116,7 +116,7 @@ const breadcrumbItems = [
   return (
     <>
       <Helmet>
-        <title>ACROXIA para Gestorías y Administradores de Fincas | Análisis de Contratos</title>
+        <title>ContratoAlquiler para Gestorías y Administradores de Fincas | Análisis de Contratos</title>
         <meta 
           name="description" 
           content="Herramienta de análisis de contratos para gestorías y administradores de fincas. Ofrece un servicio diferenciador a tus clientes. Planes desde 99€/mes." 
@@ -125,7 +125,7 @@ const breadcrumbItems = [
           name="keywords" 
           content="análisis contratos gestoría, administrador fincas contratos, software gestión alquiler, herramienta contratos IA, gestoría administrativa" 
         />
-        <link rel="canonical" href="https://acroxia.com/profesionales/gestorias" />
+        <link rel="canonical" href="https://contratoalquiler.com/profesionales/gestorias" />
         <script type="application/ld+json">
           {JSON.stringify(schemaService)}
         </script>
@@ -214,7 +214,7 @@ const breadcrumbItems = [
             <FadeIn>
               <div className="text-center mb-16">
                 <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">
-                  Cómo ACROXIA puede ayudarte
+                  Cómo ContratoAlquiler puede ayudarte
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                   Herramientas diseñadas para optimizar tu trabajo diario
@@ -251,7 +251,7 @@ const breadcrumbItems = [
                   Casos de uso en tu día a día
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                  ACROXIA se adapta a las necesidades específicas de gestorías y administradores
+                  ContratoAlquiler se adapta a las necesidades específicas de gestorías y administradores
                 </p>
               </div>
             </FadeIn>
@@ -345,7 +345,7 @@ const breadcrumbItems = [
                   Herramienta de apoyo profesional
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  ACROXIA es una herramienta de apoyo informativo que utiliza inteligencia artificial 
+                  ContratoAlquiler es una herramienta de apoyo informativo que utiliza inteligencia artificial 
                   para analizar contratos de alquiler. Los resultados tienen carácter orientativo y 
                   no sustituyen el asesoramiento legal profesional. Recomendamos consultar con un 
                   abogado especializado para decisiones legales.
@@ -364,7 +364,7 @@ const breadcrumbItems = [
                   Ofrece un servicio más completo a tus clientes
                 </h2>
                 <p className="text-background/80 text-lg mb-8 max-w-2xl mx-auto">
-                  Únete a las gestorías y administradores de fincas que ya utilizan ACROXIA 
+                  Únete a las gestorías y administradores de fincas que ya utilizan ContratoAlquiler 
                   como herramienta de apoyo en la gestión de contratos de alquiler.
                 </p>
                 <Button 

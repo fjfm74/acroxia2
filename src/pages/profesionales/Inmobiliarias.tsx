@@ -90,11 +90,11 @@ const plans = [
 const schemaService = {
   "@context": "https://schema.org",
   "@type": "Service",
-  "name": "ACROXIA para Inmobiliarias",
+  "name": "ContratoAlquiler para Inmobiliarias",
   "provider": {
     "@type": "Organization",
-    "name": "ACROXIA",
-    "url": "https://acroxia.com"
+    "name": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com"
   },
   "serviceType": "Análisis de contratos de alquiler con IA",
   "areaServed": {
@@ -139,7 +139,7 @@ const Inmobiliarias = () => {
   return (
     <>
       <Helmet>
-        <title>ACROXIA para Inmobiliarias y APIs | Análisis de Contratos con IA</title>
+        <title>ContratoAlquiler para Inmobiliarias y APIs | Análisis de Contratos con IA</title>
         <meta 
           name="description" 
           content="Herramienta de análisis de contratos para inmobiliarias y APIs. Identifica cláusulas potencialmente problemáticas en menos de 2 minutos. Planes desde 99€/mes." 
@@ -148,10 +148,10 @@ const Inmobiliarias = () => {
           name="keywords" 
           content="análisis contratos inmobiliaria, software inmobiliarias, gestión contratos alquiler, herramienta APIs, contratos arrendamiento" 
         />
-        <link rel="canonical" href="https://acroxia.com/profesionales/inmobiliarias" />
-        <meta property="og:title" content="ACROXIA para Inmobiliarias | Análisis de Contratos con IA" />
+        <link rel="canonical" href="https://contratoalquiler.com/profesionales/inmobiliarias" />
+        <meta property="og:title" content="ContratoAlquiler para Inmobiliarias | Análisis de Contratos con IA" />
         <meta property="og:description" content="Optimiza la gestión de contratos en tu inmobiliaria. Análisis con IA en menos de 2 minutos." />
-        <meta property="og:url" content="https://acroxia.com/profesionales/inmobiliarias" />
+        <meta property="og:url" content="https://contratoalquiler.com/profesionales/inmobiliarias" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">
           {JSON.stringify(schemaService)}
@@ -237,7 +237,7 @@ const Inmobiliarias = () => {
             <FadeIn>
               <div className="text-center mb-16">
                 <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">
-                  Cómo ACROXIA ayuda a tu equipo
+                  Cómo ContratoAlquiler ayuda a tu equipo
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                   Herramientas diseñadas para profesionales inmobiliarios
@@ -386,7 +386,7 @@ const Inmobiliarias = () => {
                   <span className="text-sm text-muted-foreground">Información importante</span>
                 </div>
                 <p className="text-muted-foreground">
-                  ACROXIA es una herramienta de apoyo informativo que utiliza inteligencia artificial para analizar contratos de alquiler. 
+                  ContratoAlquiler es una herramienta de apoyo informativo que utiliza inteligencia artificial para analizar contratos de alquiler. 
                   Los resultados tienen carácter orientativo y no sustituyen el asesoramiento legal profesional. 
                   Recomendamos consultar con un abogado especializado para decisiones legales.
                 </p>
@@ -404,7 +404,7 @@ const Inmobiliarias = () => {
                   Empieza a optimizar tu gestión hoy
                 </h2>
                 <p className="text-background/70 text-lg mb-10">
-                  Únete a las inmobiliarias que ya utilizan ACROXIA para agilizar la revisión de contratos
+                  Únete a las inmobiliarias que ya utilizan ContratoAlquiler para agilizar la revisión de contratos
                 </p>
                 <Button 
                   asChild 

@@ -114,17 +114,17 @@ const Blog = () => {
 
   const seoData = {
     default: {
-      title: "Blog de Alquiler en España | ACROXIA",
+      title: "Blog de Alquiler en España | ContratoAlquiler",
       description: "Guías prácticas sobre alquiler en España para inquilinos y propietarios. Normativa LAU, contratos, fianzas y consejos legales actualizados 2026.",
       keywords: "blog alquiler españa, inquilinos, propietarios, contratos alquiler, LAU 2026",
     },
     inquilino: {
-      title: "Blog de Alquiler y Derechos del Inquilino | ACROXIA",
+      title: "Blog de Alquiler y Derechos del Inquilino | ContratoAlquiler",
       description: "Guías prácticas sobre alquiler en España: cláusulas abusivas, fianzas, derechos del inquilino, subidas de renta y más. Información legal actualizada 2026.",
       keywords: "blog alquiler españa, derechos inquilino, cláusulas abusivas, fianza alquiler, subida renta",
     },
     propietario: {
-      title: "Blog para Propietarios: Contratos, Gestión y Normativa | ACROXIA",
+      title: "Blog para Propietarios: Contratos, Gestión y Normativa | ContratoAlquiler",
       description: "Guías para propietarios de viviendas en alquiler: contratos seguros, gestión de impagos, garantías, normativa LAU actualizada 2026.",
       keywords: "blog propietarios alquiler, contratos alquiler, gestión inmuebles, impagos alquiler, LAU 2026",
     },
@@ -134,12 +134,12 @@ const Blog = () => {
   // Canonical: SIEMPRE /blog limpio cuando hay filtro de audiencia (es duplicado de /blog).
   // Solo las páginas de categoría tienen canonical propio (contenido distinto).
   const canonicalUrl = categoryFromUrl
-    ? `https://acroxia.com/blog?categoria=${encodeURIComponent(categoryFromUrl)}`
-    : "https://acroxia.com/blog";
+    ? `https://contratoalquiler.com/blog?categoria=${encodeURIComponent(categoryFromUrl)}`
+    : "https://contratoalquiler.com/blog";
 
   // Título dinámico para vista por categoría
   const categoryTitle = categoryFromUrl
-    ? `Artículos sobre ${categoryFromUrl} | Blog ACROXIA`
+    ? `Artículos sobre ${categoryFromUrl} | Blog ContratoAlquiler`
     : null;
   const categoryDescription = categoryFromUrl
     ? `Guías y artículos sobre ${categoryFromUrl} en el contexto del alquiler en España. Información legal actualizada 2026.`
@@ -153,7 +153,7 @@ const Blog = () => {
             ? categoryTitle
             : selectedAudience
               ? currentSeo.title
-              : "Blog sobre Alquiler en España | Guías Legales 2026 | ACROXIA"
+              : "Blog sobre Alquiler en España | Guías Legales 2026 | ContratoAlquiler"
         }
         description={
           categoryDescription
@@ -173,13 +173,13 @@ const Blog = () => {
           "url": canonicalUrl,
           "mainEntity": {
             "@type": "Blog",
-            "name": "Blog ACROXIA",
-            "url": "https://acroxia.com/blog",
+            "name": "Blog ContratoAlquiler",
+            "url": "https://contratoalquiler.com/blog",
             "description": "Guías prácticas sobre alquiler en España para inquilinos y propietarios",
             "publisher": {
               "@type": "Organization",
-              "name": "ACROXIA",
-              "logo": { "@type": "ImageObject", "url": "https://acroxia.com/contratoalquiler-logo.png" }
+              "name": "ContratoAlquiler",
+              "logo": { "@type": "ImageObject", "url": "https://contratoalquiler.com/contratoalquiler-logo.png" }
             }
           }
         }}

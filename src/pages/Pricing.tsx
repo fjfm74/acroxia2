@@ -7,7 +7,7 @@ import MarketplaceTeaser from "@/components/pricing/MarketplaceTeaser";
 import PricingFAQ from "@/components/pricing/PricingFAQ";
 
 const Pricing = () => {
-  const offer = (name: string, price: string, description: string, url = "https://acroxia.com/precios") => ({
+  const offer = (name: string, price: string, description: string, url = "https://contratoalquiler.com/precios") => ({
     "@type": "Offer",
     name,
     price,
@@ -22,12 +22,12 @@ const Pricing = () => {
   const pricingSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "ACROXIA",
+    "name": "ContratoAlquiler",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "description": "Servicio de análisis de contratos de alquiler con IA para identificar cláusulas potencialmente problemáticas según la LAU 2026.",
-    "image": "https://acroxia.com/og-image.jpg",
-    "url": "https://acroxia.com",
+    "image": "https://contratoalquiler.com/og-image.jpg",
+    "url": "https://contratoalquiler.com",
     "offers": {
       "@type": "AggregateOffer",
       "lowPrice": "0",
@@ -42,8 +42,8 @@ const Pricing = () => {
         offer("Suscripción Mensual", "12", "Análisis ilimitados, alertas de renovación y cambios legislativos."),
         offer("Suscripción Anual", "99", "Análisis ilimitados durante 12 meses. Ahorro de 45€ vs mensual."),
         // Propietarios (B2C)
-        offer("Propietario", "29", "Análisis de contrato + generador de contratos conformes a la LAU 2026. Pago único.", "https://acroxia.com/propietarios"),
-        offer("Propietario Pro", "149", "Análisis ilimitados, gestión multi-propiedad y alertas de renovación.", "https://acroxia.com/propietarios"),
+        offer("Propietario", "29", "Análisis de contrato + generador de contratos conformes a la LAU 2026. Pago único.", "https://contratoalquiler.com/propietarios"),
+        offer("Propietario Pro", "149", "Análisis ilimitados, gestión multi-propiedad y alertas de renovación.", "https://contratoalquiler.com/propietarios"),
         // Profesionales (B2B)
         offer("Profesional", "99", "15 análisis/mes con informes con marca propia para gestorías e inmobiliarias."),
         offer("Profesional Plus", "149", "Análisis ilimitados e informes personalizados."),
@@ -54,9 +54,9 @@ const Pricing = () => {
   return (
     <>
       <SEOHead
-        title="Precios ACROXIA 2026 | Análisis de Contratos desde 14,99€"
+        title="Precios ContratoAlquiler 2026 | Análisis de Contratos desde 14,99€"
         description="Planes transparentes para inquilinos, propietarios y profesionales. Desde preview gratuito hasta análisis ilimitados con API. Todos los precios incluyen IVA."
-        canonical="https://acroxia.com/precios"
+        canonical="https://contratoalquiler.com/precios"
         keywords="precio analisis contrato alquiler, identificar cláusulas problemáticas precio, revisar contrato alquiler coste"
         jsonLd={pricingSchema}
       />
