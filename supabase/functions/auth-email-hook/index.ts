@@ -16,12 +16,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirma tu email en ACROXIA',
-  invite: 'Te han invitado a ACROXIA',
-  magiclink: 'Tu enlace de acceso a ACROXIA',
-  recovery: 'Restablece tu contraseña de ACROXIA',
-  email_change: 'Confirma tu cambio de email en ACROXIA',
-  reauthentication: 'Tu código de verificación de ACROXIA',
+  signup: 'Confirma tu email en ContratoAlquiler',
+  invite: 'Te han invitado a ContratoAlquiler',
+  magiclink: 'Tu enlace de acceso a ContratoAlquiler',
+  recovery: 'Restablece tu contraseña de ContratoAlquiler',
+  email_change: 'Confirma tu cambio de email en ContratoAlquiler',
+  reauthentication: 'Tu código de verificación de ContratoAlquiler',
 }
 
 // Template mapping
@@ -35,11 +35,11 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "ACROXIA"
-const SENDER_DOMAIN = "notify.acroxia.com"
-const ROOT_DOMAIN = "acroxia.com"
+const SITE_NAME = "ContratoAlquiler"
+const SENDER_DOMAIN = "notify.contratoalquiler.com"
+const ROOT_DOMAIN = "contratoalquiler.com"
 const PRIMARY_SITE_URL = `https://${ROOT_DOMAIN}`
-const FROM_DOMAIN = "acroxia.com" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "contratoalquiler.com" // Domain shown in From address (may be root or sender subdomain)
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const LOVABLE_APP_ORIGIN_PATTERN = /https:\/\/[a-z0-9-]+\.lovable\.app/gi
 

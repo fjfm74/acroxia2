@@ -70,14 +70,14 @@ serve(async (req: Request): Promise<Response> => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu resumen de análisis - ACROXIA</title>
+  <title>Tu resumen de análisis - ContratoAlquiler</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1F1D1B; background-color: #FAF8F5; margin: 0; padding: 0;">
   <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
     
     <!-- Header -->
     <div style="text-align: center; margin-bottom: 40px;">
-      <h1 style="font-family: Georgia, serif; font-size: 28px; font-weight: 600; margin: 0; color: #1F1D1B;">ACROXIA</h1>
+      <h1 style="font-family: Georgia, serif; font-size: 28px; font-weight: 600; margin: 0; color: #1F1D1B;">ContratoAlquiler</h1>
       <p style="color: #6B6B6B; font-size: 14px; margin-top: 8px;">Análisis inteligente de contratos de alquiler</p>
     </div>
 
@@ -126,7 +126,7 @@ serve(async (req: Request): Promise<Response> => {
         <p style="font-size: 14px; color: #6B6B6B; margin: 0 0 16px 0;">
           ¿Quieres ver el análisis completo con todas las cláusulas y recomendaciones?
         </p>
-        <a href="https://acroxia.com/resultado-previo/${analysisId}" style="display: inline-block; background-color: #1F1D1B; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: 600; font-size: 16px;">
+        <a href="https://contratoalquiler.com/resultado-previo/${analysisId}" style="display: inline-block; background-color: #1F1D1B; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: 600; font-size: 16px;">
           Ver informe completo
         </a>
         <p style="font-size: 12px; color: #6B6B6B; margin-top: 12px;">
@@ -142,7 +142,7 @@ serve(async (req: Request): Promise<Response> => {
         Este análisis es informativo y no constituye asesoramiento legal.
       </p>
       <p style="margin: 0;">
-        © 2026 ACROXIA · <a href="https://acroxia.com/privacidad" style="color: #6B6B6B;">Política de privacidad</a>
+        © 2026 ContratoAlquiler · <a href="https://contratoalquiler.com/privacidad" style="color: #6B6B6B;">Política de privacidad</a>
       </p>
     </div>
 
@@ -159,9 +159,9 @@ serve(async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "ACROXIA <noreply@acroxia.com>",
+        from: "ContratoAlquiler <noreply@contratoalquiler.com>",
         to: [email],
-        reply_to: "contacto@acroxia.com",
+        reply_to: "info@contratoalquiler.com",
         subject: `Tu contrato tiene ${result.illegal_clauses || 0} cláusulas potencialmente ilegales`,
         html: emailHtml,
       }),

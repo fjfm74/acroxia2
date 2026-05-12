@@ -159,7 +159,7 @@ serve(async (req: Request) => {
         try {
           // Add tracking pixel and unsubscribe link per recipient
           const trackPixel = `<img src="${trackBaseUrl}?type=open&cid=${campaign_id}&email=${encodeURIComponent(email)}" width="1" height="1" style="display:none;" />`;
-          const unsubscribeUrl = `https://acroxia.com/unsubscribe?email=${encodeURIComponent(email)}&source=campaign&cid=${campaign_id}`;
+          const unsubscribeUrl = `https://contratoalquiler.com/unsubscribe?email=${encodeURIComponent(email)}&source=campaign&cid=${campaign_id}`;
           
           // Replace links for click tracking
           let htmlWithTracking = campaign.html_content;
@@ -193,9 +193,9 @@ serve(async (req: Request) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "ACROXIA News <noreply@acroxia.com>",
+              from: "ContratoAlquiler News <noreply@contratoalquiler.com>",
               to: [email],
-              reply_to: "contacto@acroxia.com",
+              reply_to: "info@contratoalquiler.com",
               subject: campaign.subject,
               html: htmlWithTracking,
             }),

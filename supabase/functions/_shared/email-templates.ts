@@ -1,4 +1,4 @@
-// Email Templates for ACROXIA
+// Email Templates for ContratoAlquiler
 // Design System: Cream/Charcoal, Playfair Display, Editorial style
 
 const baseStyles = `
@@ -151,16 +151,16 @@ const baseTemplate = (content: string) => `
   <div style="padding: 40px 20px; background-color: #FAF8F5;">
     <div class="container">
       <div class="header">
-        <h1 class="logo">ACROXIA</h1>
+        <h1 class="logo">ContratoAlquiler</h1>
       </div>
       ${content}
       <div class="footer">
-        <p class="footer-text">ACROXIA - Tu escudo legal para el alquiler</p>
+        <p class="footer-text">ContratoAlquiler - Tu escudo legal para el alquiler</p>
         <p class="footer-text">
-          <a href="mailto:contacto@acroxia.com" class="footer-link">contacto@acroxia.com</a> | Barcelona
+          <a href="mailto:info@contratoalquiler.com" class="footer-link">info@contratoalquiler.com</a> | Barcelona
         </p>
         <p class="footer-text" style="margin-top: 16px;">
-          © 2026 ACROXIA. Todos los derechos reservados.
+          © 2026 ContratoAlquiler. Todos los derechos reservados.
         </p>
       </div>
     </div>
@@ -189,10 +189,10 @@ export interface EmailData {
 
 // Email: Confirmación de cuenta
 export const confirmationEmail = (data: EmailData) => ({
-  subject: "Confirma tu cuenta en ACROXIA",
+  subject: "Confirma tu cuenta en ContratoAlquiler",
   html: baseTemplate(`
     <div class="content">
-      <h2 class="title">Bienvenido a ACROXIA</h2>
+      <h2 class="title">Bienvenido a ContratoAlquiler</h2>
       <p class="text">Hola${data.userName ? ` ${data.userName}` : ''},</p>
       <p class="text">
         Gracias por registrarte. Solo falta un paso para activar tu cuenta y empezar a proteger tus contratos de alquiler.
@@ -235,7 +235,7 @@ export const welcomeEmail = (data: EmailData) => ({
         <span>Cartas de reclamación automáticas</span>
       </div>
       <div class="button-container">
-        <a href="https://acroxia.com/dashboard" class="button">Analizar mi contrato</a>
+        <a href="https://contratoalquiler.com/dashboard" class="button">Analizar mi contrato</a>
       </div>
       <p class="note">
         ¿Tienes dudas? Responde a este email y te ayudamos.
@@ -289,7 +289,7 @@ export const passwordChangedEmail = (data: EmailData) => ({
         </p>
       </div>
       <div class="button-container">
-        <a href="https://acroxia.com/login" class="button">Ir a mi cuenta</a>
+        <a href="https://contratoalquiler.com/login" class="button">Ir a mi cuenta</a>
       </div>
     </div>
   `)
@@ -333,7 +333,7 @@ export const analysisCompletedEmail = (data: EmailData) => ({
         </div>
       `}
       <div class="button-container">
-        <a href="https://acroxia.com/analisis/${data.analysisId}" class="button">Ver informe completo</a>
+        <a href="https://contratoalquiler.com/analisis/${data.analysisId}" class="button">Ver informe completo</a>
       </div>
     </div>
   `)
@@ -354,7 +354,7 @@ export const lowCreditsEmail = (data: EmailData) => ({
         Para seguir protegiendo tus contratos, considera ampliar tu plan o comprar análisis adicionales.
       </p>
       <div class="button-container">
-        <a href="https://acroxia.com/precios" class="button">Ver planes</a>
+        <a href="https://contratoalquiler.com/precios" class="button">Ver planes</a>
       </div>
     </div>
   `)
@@ -378,7 +378,7 @@ export const contactFormEmail = (data: EmailData) => ({
       </div>
       <div class="divider"></div>
       <div class="button-container">
-        <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject || 'Tu consulta en ACROXIA')}" class="button">Responder</a>
+        <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject || 'Tu consulta en ContratoAlquiler')}" class="button">Responder</a>
       </div>
     </div>
   `)
@@ -433,7 +433,7 @@ export const nurturingTipsEmail = (data: EmailData) => ({
       </div>
       
       <div class="button-container">
-        <a href="https://acroxia.com/resultado-previo/${data.analysisId}" class="button">Ver mi análisis</a>
+        <a href="https://contratoalquiler.com/resultado-previo/${data.analysisId}" class="button">Ver mi análisis</a>
       </div>
       
       <p class="note">
@@ -442,7 +442,7 @@ export const nurturingTipsEmail = (data: EmailData) => ({
       
       <div class="divider"></div>
       <p class="footer-text" style="font-size: 12px; color: #7A7775;">
-        Si no deseas recibir más emails de ACROXIA, 
+        Si no deseas recibir más emails de ContratoAlquiler, 
         <a href="${data.unsubscribeUrl || '#'}" style="color: #7A7775;">haz clic aquí</a>.
       </p>
     </div>
@@ -494,7 +494,7 @@ export const nurturingOfferEmail = (data: EmailData) => ({
       </div>
       
       <div class="button-container">
-        <a href="https://acroxia.com/resultado-previo/${data.analysisId}" class="button" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%);">Desbloquear por solo 29€</a>
+        <a href="https://contratoalquiler.com/resultado-previo/${data.analysisId}" class="button" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%);">Desbloquear por solo 29€</a>
       </div>
       
       <p class="note" style="font-size: 13px;">
@@ -503,7 +503,7 @@ export const nurturingOfferEmail = (data: EmailData) => ({
       
       <div class="divider"></div>
       <p class="footer-text" style="font-size: 12px; color: #7A7775;">
-        Si no deseas recibir más emails de ACROXIA, 
+        Si no deseas recibir más emails de ContratoAlquiler, 
         <a href="${data.unsubscribeUrl || '#'}" style="color: #7A7775;">haz clic aquí</a>.
       </p>
     </div>

@@ -56,7 +56,7 @@ serve(async (req) => {
 
     const post = scheduledPost.blog_posts as any;
     const token = scheduledPost.approval_token;
-    const siteUrl = 'https://acroxia.com';
+    const siteUrl = 'https://contratoalquiler.com';
     const approveUrl = `${siteUrl}/aprobar-post/${token}`;
 
     const audienceBadge = post.audience === 'propietario' 
@@ -90,7 +90,7 @@ serve(async (req) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>ACROXIA</h1>
+      <h1>ContratoAlquiler</h1>
       <p style="margin: 8px 0 0; opacity: 0.8;">Nuevo post pendiente de aprobación ${audienceBadge}</p>
     </div>
     
@@ -130,9 +130,9 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'ACROXIA <noreply@acroxia.com>',
+        from: 'ContratoAlquiler <noreply@contratoalquiler.com>',
         to: ['nuriafrancis@gmail.com'],
-        reply_to: 'contacto@acroxia.com',
+        reply_to: 'info@contratoalquiler.com',
         subject: `📝 Nuevo post para aprobar: ${post.title}`,
         html: emailHtml,
       }),

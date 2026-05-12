@@ -332,7 +332,7 @@ function buildEmailHtml(items: FoundItem[], fromDate: string, toDate: string): s
   <body style="margin:0;padding:0;font-family:'Inter',Arial,sans-serif;background:#F5F3F0;">
     <div style="max-width:600px;margin:0 auto;background:#FAF8F5;">
       <div style="background:#1F1D1B;padding:28px;text-align:center;">
-        <h1 style="font-family:'Playfair Display',Georgia,serif;color:#FAF8F5;font-size:22px;margin:0;">ACROXIA</h1>
+        <h1 style="font-family:'Playfair Display',Georgia,serif;color:#FAF8F5;font-size:22px;margin:0;">ContratoAlquiler</h1>
         <p style="color:#A8A49E;font-size:11px;margin:6px 0 0;letter-spacing:2px;">MONITOR BOE · ARRENDAMIENTOS v2</p>
       </div>
       <div style="padding:28px;">
@@ -342,11 +342,11 @@ function buildEmailHtml(items: FoundItem[], fromDate: string, toDate: string): s
         </div>
         <table style="width:100%;border-collapse:collapse;">${rows}</table>
         <div style="text-align:center;margin-top:24px;">
-          <a href="https://acroxia.com/admin/boe" style="display:inline-block;background:#1F1D1B;color:#FAF8F5;padding:12px 24px;border-radius:50px;text-decoration:none;font-size:14px;">Panel de Administración</a>
+          <a href="https://contratoalquiler.com/admin/boe" style="display:inline-block;background:#1F1D1B;color:#FAF8F5;padding:12px 24px;border-radius:50px;text-decoration:none;font-size:14px;">Panel de Administración</a>
         </div>
       </div>
       <div style="background:#F5F3F0;padding:20px;text-align:center;">
-        <p style="margin:0;font-size:11px;color:#8B8680;">Monitor automático BOE v2 · © 2026 ACROXIA</p>
+        <p style="margin:0;font-size:11px;color:#8B8680;">Monitor automático BOE v2 · © 2026 ContratoAlquiler</p>
       </div>
     </div>
   </body></html>`;
@@ -362,9 +362,9 @@ async function sendNotification(items: FoundItem[], fromDate: string, toDate: st
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
       body: JSON.stringify({
-        from: "ACROXIA Monitor <alertas@acroxia.com>",
+        from: "ContratoAlquiler Monitor <noreply@contratoalquiler.com>",
         to: ["nuriafrancis@gmail.com"],
-        reply_to: "contacto@acroxia.com",
+        reply_to: "info@contratoalquiler.com",
         subject: `🔔 BOE: ${items.length} novedad${items.length !== 1 ? "es" : ""} arrendamientos – ${toDate}`,
         html: buildEmailHtml(items, fromDate, toDate),
       }),
