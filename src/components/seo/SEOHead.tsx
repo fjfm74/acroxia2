@@ -48,7 +48,7 @@ const SEOHead = ({
   title,
   description,
   canonical,
-  ogImage = "https://acroxia.com/og-image.jpg",
+  ogImage = "https://contratoalquiler.com/og-image.jpg",
   ogType = "website",
   noindex = false,
   robots,
@@ -79,7 +79,7 @@ const SEOHead = ({
     setMeta("property", "og:image:width", "1200");
     setMeta("property", "og:image:height", "630");
     setMeta("property", "og:locale", "es_ES");
-    setMeta("property", "og:site_name", "ACROXIA");
+    setMeta("property", "og:site_name", "ContratoAlquiler");
 
     setMeta("name", "twitter:card", "summary_large_image");
     setMeta("name", "twitter:site", "@acroxia");

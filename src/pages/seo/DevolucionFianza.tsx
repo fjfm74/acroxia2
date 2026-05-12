@@ -81,26 +81,26 @@ const DevolucionFianza = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": "https://acroxia.com/devolucion-fianza-alquiler",
+    "@id": "https://contratoalquiler.com/devolucion-fianza-alquiler",
     "name": "Devolución de Fianza de Alquiler - Guía 2026",
     "description": "Guía completa sobre cómo recuperar la fianza de tu alquiler. Plazos legales, motivos de retención ilegales y cómo reclamar paso a paso.",
-    "url": "https://acroxia.com/devolucion-fianza-alquiler",
+    "url": "https://contratoalquiler.com/devolucion-fianza-alquiler",
     "datePublished": "2026-01-01",
     "dateModified": "2026-02-09",
     "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "isPartOf": {
       "@type": "WebSite",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "mainEntity": {
       "@type": "Article",
-      "@id": "https://acroxia.com/devolucion-fianza-alquiler#article"
+      "@id": "https://contratoalquiler.com/devolucion-fianza-alquiler#article"
     }
   };
 
@@ -134,28 +134,28 @@ const DevolucionFianza = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "@id": "https://acroxia.com/devolucion-fianza-alquiler#article",
+    "@id": "https://contratoalquiler.com/devolucion-fianza-alquiler#article",
     "headline": "Devolución de Fianza de Alquiler 2026: Cómo Recuperarla",
     "description": "Guía completa sobre cómo recuperar la fianza de tu alquiler. Plazos legales, motivos de retención ilegales y cómo reclamar.",
     "datePublished": "2026-01-01",
     "dateModified": "2026-02-09",
     "author": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com",
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/contratoalquiler-logo.png"
+        "url": "https://contratoalquiler.com/contratoalquiler-logo.png"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://acroxia.com/devolucion-fianza-alquiler"
+      "@id": "https://contratoalquiler.com/devolucion-fianza-alquiler"
     },
     "speakable": {
       "@type": "SpeakableSpecification",
@@ -169,7 +169,7 @@ const DevolucionFianza = () => {
       <SEOHead
         title="Cómo Recuperar la Fianza del Alquiler | Guía Legal 2026"
         description="Plazo de 30 días, descuentos permitidos y cómo reclamar si no te devuelven la fianza. Guía completa con modelo de burofax según la LAU 2026."
-        canonical="https://acroxia.com/devolucion-fianza-alquiler"
+        canonical="https://contratoalquiler.com/devolucion-fianza-alquiler"
         ogType="article"
         keywords="devolución fianza alquiler, recuperar fianza, fianza no devuelta, plazo devolución fianza, reclamar fianza alquiler"
         articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-02-09" }}
@@ -411,7 +411,7 @@ const DevolucionFianza = () => {
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-sm text-muted-foreground">
                 <strong>Aviso legal:</strong> Esta guía tiene carácter informativo y no constituye asesoramiento legal. 
-                Para casos específicos, consulta con un profesional del derecho. ACROXIA es una herramienta de análisis 
+                Para casos específicos, consulta con un profesional del derecho. ContratoAlquiler es una herramienta de análisis 
                 que ayuda a identificar cláusulas potencialmente problemáticas en contratos de alquiler.
               </p>
             </div>

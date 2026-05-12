@@ -131,27 +131,27 @@ const ZonasTensionadasPropietarios = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": "https://acroxia.com/zonas-tensionadas-propietarios",
+    "@id": "https://contratoalquiler.com/zonas-tensionadas-propietarios",
     name: "Zonas Tensionadas: Guía para Propietarios | Límites de Renta 2026",
     description:
       "Cómo saber si tu vivienda está en zona tensionada consultando SERPAVI, límites de renta en nuevos contratos y actualizaciones, obligaciones legales del propietario y excepciones permitidas en 2026.",
-    url: "https://acroxia.com/zonas-tensionadas-propietarios",
+    url: "https://contratoalquiler.com/zonas-tensionadas-propietarios",
     inLanguage: "es-ES",
     publisher: {
       "@type": "Organization",
-      name: "ACROXIA",
-      url: "https://acroxia.com",
+      name: "ContratoAlquiler",
+      url: "https://contratoalquiler.com",
     },
     isPartOf: {
       "@type": "WebSite",
-      name: "ACROXIA",
-      url: "https://acroxia.com",
+      name: "ContratoAlquiler",
+      url: "https://contratoalquiler.com",
     },
     datePublished: "2026-01-22",
     dateModified: "2026-04-21",
     mainEntity: {
       "@type": "Article",
-      "@id": "https://acroxia.com/zonas-tensionadas-propietarios#article",
+      "@id": "https://contratoalquiler.com/zonas-tensionadas-propietarios#article",
     },
   };
 
@@ -171,28 +171,28 @@ const ZonasTensionadasPropietarios = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "@id": "https://acroxia.com/zonas-tensionadas-propietarios#article",
+    "@id": "https://contratoalquiler.com/zonas-tensionadas-propietarios#article",
     headline: "Zonas tensionadas 2026: cómo consultar SERPAVI y límites de renta aplicables",
     description:
       "Guía para verificar si una vivienda está en zona tensionada (SERPAVI/MIVAU), los límites de renta en nuevos contratos y actualizaciones, obligaciones legales y excepciones previstas por la Ley 12/2023.",
     author: {
       "@type": "Organization",
-      name: "ACROXIA",
-      url: "https://acroxia.com",
+      name: "ContratoAlquiler",
+      url: "https://contratoalquiler.com",
     },
     publisher: {
       "@type": "Organization",
-      name: "ACROXIA",
+      name: "ContratoAlquiler",
       logo: {
         "@type": "ImageObject",
-        url: "https://acroxia.com/contratoalquiler-logo.png",
+        url: "https://contratoalquiler.com/contratoalquiler-logo.png",
       },
     },
     datePublished: "2026-01-22",
     dateModified: "2026-04-21",
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": "https://acroxia.com/zonas-tensionadas-propietarios",
+      "@id": "https://contratoalquiler.com/zonas-tensionadas-propietarios",
     },
     speakable: {
       "@type": "SpeakableSpecification",
@@ -203,9 +203,9 @@ const ZonasTensionadasPropietarios = () => {
   return (
     <>
       <SEOHead
-        title="Zonas tensionadas 2026: consulta SERPAVI y límites de renta | ACROXIA"
+        title="Zonas tensionadas 2026: consulta SERPAVI y límites de renta | ContratoAlquiler"
         description="Cómo saber si tu vivienda está en zona tensionada (consulta SERPAVI), qué límites de renta se aplican, obligaciones legales y excepciones permitidas en 2026."
-        canonical="https://acroxia.com/zonas-tensionadas-propietarios"
+        canonical="https://contratoalquiler.com/zonas-tensionadas-propietarios"
         ogType="article"
         keywords="zonas tensionadas 2026, SERPAVI consulta, consultar zona tensionada, MIVAU, límite renta zona tensionada, índice referencia arrendamientos"
         articleMeta={{ datePublished: "2026-01-22", dateModified: "2026-04-21" }}

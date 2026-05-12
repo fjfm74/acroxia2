@@ -368,12 +368,12 @@ const Glosario = () => {
     "@type": "DefinedTermSet",
     "name": "Glosario Legal de Alquiler en España 2026",
     "description": "Definiciones claras de más de 30 términos legales del alquiler en España, actualizados a la normativa vigente en 2026.",
-    "url": "https://acroxia.com/glosario",
+    "url": "https://contratoalquiler.com/glosario",
     "hasDefinedTerm": glossaryTerms.map((t) => ({
       "@type": "DefinedTerm",
       "name": t.term,
       "description": t.definition,
-      "inDefinedTermSet": "https://acroxia.com/glosario",
+      "inDefinedTermSet": "https://contratoalquiler.com/glosario",
     })),
   };
 
@@ -385,9 +385,9 @@ const Glosario = () => {
   return (
     <>
       <SEOHead
-        title="Glosario Legal de Alquiler en España 2026 | ACROXIA"
+        title="Glosario Legal de Alquiler en España 2026 | ContratoAlquiler"
         description="Definiciones claras de 30+ términos legales del alquiler: LAU, IRAV, SERPAVI, fianza, cláusula abusiva, zona tensionada y más. Actualizado a la normativa 2026."
-        canonical="https://acroxia.com/glosario"
+        canonical="https://contratoalquiler.com/glosario"
         jsonLd={jsonLd}
         keywords="glosario alquiler, términos legales alquiler, LAU, IRAV, SERPAVI, fianza, cláusula abusiva, zona tensionada, arrendador, arrendatario"
       />

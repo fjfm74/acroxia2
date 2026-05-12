@@ -111,26 +111,26 @@ const ImpagoAlquilerPropietarios = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": "https://acroxia.com/impago-alquiler-propietarios",
+    "@id": "https://contratoalquiler.com/impago-alquiler-propietarios",
     "name": "Qué Hacer Ante el Impago de Alquiler | Guía para Propietarios 2026",
     "description": "Guía completa para propietarios sobre cómo actuar ante el impago del alquiler: pasos legales, desahucio express, seguros de impago y protección preventiva.",
-    "url": "https://acroxia.com/impago-alquiler-propietarios",
+    "url": "https://contratoalquiler.com/impago-alquiler-propietarios",
     "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "isPartOf": {
       "@type": "WebSite",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "datePublished": "2026-01-22",
     "dateModified": "2026-02-09",
     "mainEntity": {
       "@type": "Article",
-      "@id": "https://acroxia.com/impago-alquiler-propietarios#article"
+      "@id": "https://contratoalquiler.com/impago-alquiler-propietarios#article"
     }
   };
 
@@ -164,27 +164,27 @@ const ImpagoAlquilerPropietarios = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "@id": "https://acroxia.com/impago-alquiler-propietarios#article",
+    "@id": "https://contratoalquiler.com/impago-alquiler-propietarios#article",
     "headline": "Qué Hacer Ante el Impago de Alquiler | Guía para Propietarios 2026",
     "description": "Pasos legales, desahucio express, seguros de impago y protección preventiva para propietarios.",
     "author": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
+      "name": "ContratoAlquiler",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/contratoalquiler-logo.png"
+        "url": "https://contratoalquiler.com/contratoalquiler-logo.png"
       }
     },
     "datePublished": "2026-01-22",
     "dateModified": "2026-02-09",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://acroxia.com/impago-alquiler-propietarios"
+      "@id": "https://contratoalquiler.com/impago-alquiler-propietarios"
     },
     "speakable": {
       "@type": "SpeakableSpecification",
@@ -195,9 +195,9 @@ const ImpagoAlquilerPropietarios = () => {
   return (
     <>
       <SEOHead
-        title="Impago de Alquiler: Pasos Legales y Desahucio | Guía para Propietarios 2026 | ACROXIA"
+        title="Impago de Alquiler: Pasos Legales y Desahucio | Guía para Propietarios 2026 | ContratoAlquiler"
         description="¿Tu inquilino no paga? Burofax, desahucio express, seguros de impago y protección preventiva. Guía completa para propietarios actualizada 2026."
-        canonical="https://acroxia.com/impago-alquiler-propietarios"
+        canonical="https://contratoalquiler.com/impago-alquiler-propietarios"
         ogType="article"
         keywords="impago alquiler, desahucio express 2026, inquilino no paga, reclamar alquiler impagado, seguro impago alquiler"
         articleMeta={{ datePublished: "2026-01-22", dateModified: "2026-02-09" }}

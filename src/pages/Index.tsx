@@ -12,11 +12,11 @@ const Index = () => {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "ACROXIA",
-    "legalName": "ACROXIA",
-    "url": "https://acroxia.com",
-    "logo": "https://acroxia.com/contratoalquiler-logo.png",
-    "image": "https://acroxia.com/og-image.jpg",
+    "name": "ContratoAlquiler",
+    "legalName": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com",
+    "logo": "https://contratoalquiler.com/contratoalquiler-logo.png",
+    "image": "https://contratoalquiler.com/og-image.jpg",
     "description": "Plataforma de IA para análisis de contratos de alquiler y protección de derechos del inquilino en España. Detecta cláusulas abusivas en menos de 2 minutos.",
     "slogan": "Tu contrato de alquiler, analizado por IA",
     "foundingDate": "2025",
@@ -32,7 +32,7 @@ const Index = () => {
     "contactPoint": {
       "@type": "ContactPoint",
       "contactType": "customer service",
-      "email": "contacto@acroxia.com",
+      "email": "contacto@contratoalquiler.com",
       "availableLanguage": "Spanish"
     }
   };
@@ -40,8 +40,8 @@ const Index = () => {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "ACROXIA",
-    "url": "https://acroxia.com",
+    "name": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com",
     "description": "Plataforma de análisis de contratos de alquiler con IA",
     "inLanguage": "es-ES"
   };
@@ -49,11 +49,11 @@ const Index = () => {
   const softwareAppSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "ACROXIA - Analizador de Contratos de Alquiler",
+    "name": "ContratoAlquiler - Analizador de Contratos de Alquiler",
     "applicationCategory": "LegalApplication",
     "operatingSystem": "Web",
     "description": "Analiza tu contrato de alquiler con IA y detecta cláusulas abusivas en menos de 2 minutos",
-    "image": "https://acroxia.com/og-image.jpg",
+    "image": "https://contratoalquiler.com/og-image.jpg",
     "offers": {
       "@type": "Offer",
       "price": "14.99",
@@ -61,7 +61,7 @@ const Index = () => {
       "description": "Informe completo de análisis (preview gratuito disponible)",
       "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/InStock",
-      "url": "https://acroxia.com/precios"
+      "url": "https://contratoalquiler.com/precios"
     }
   };
 
@@ -85,9 +85,9 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="Analiza tu Contrato de Alquiler con IA en 2 min | ACROXIA"
+        title="Analiza tu Contrato de Alquiler con IA en 2 min | ContratoAlquiler"
         description="¿Tu contrato de alquiler es legal? Descúbrelo gratis en 2 minutos con IA. Detectamos cláusulas abusivas según la LAU 2026. 100% confidencial."
-        canonical="https://acroxia.com/"
+        canonical="https://contratoalquiler.com/"
         keywords="analizar contrato alquiler, cláusulas abusivas alquiler, derechos inquilino España, LAU 2026, IA legal, contrato arrendamiento"
         jsonLd={[organizationSchema, websiteSchema, softwareAppSchema, howToSchema]}
       />

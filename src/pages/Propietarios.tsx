@@ -15,13 +15,13 @@ import BlogSubscriptionForm from "@/components/blog/BlogSubscriptionForm";
 const schemaService = {
   "@context": "https://schema.org",
   "@type": "Service",
-  "name": "ACROXIA para Propietarios",
-  "image": "https://acroxia.com/og-image.jpg",
+  "name": "ContratoAlquiler para Propietarios",
+  "image": "https://contratoalquiler.com/og-image.jpg",
   "provider": {
     "@type": "Organization",
-    "name": "ACROXIA",
-    "url": "https://acroxia.com",
-    "logo": "https://acroxia.com/contratoalquiler-logo.png"
+    "name": "ContratoAlquiler",
+    "url": "https://contratoalquiler.com",
+    "logo": "https://contratoalquiler.com/contratoalquiler-logo.png"
   },
   "serviceType": "Análisis de contratos de alquiler para propietarios",
   "areaServed": {
@@ -38,7 +38,7 @@ const schemaService = {
       "description": "Análisis + generador de contratos LAU 2026. Pago único por contrato.",
       "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/InStock",
-      "url": "https://acroxia.com/propietarios"
+      "url": "https://contratoalquiler.com/propietarios"
     },
     {
       "@type": "Offer",
@@ -48,7 +48,7 @@ const schemaService = {
       "description": "Análisis ilimitados, gestión multi-propiedad y alertas de renovación",
       "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/InStock",
-      "url": "https://acroxia.com/propietarios",
+      "url": "https://contratoalquiler.com/propietarios",
       "priceSpecification": {
         "@type": "UnitPriceSpecification",
         "price": "149",
@@ -68,9 +68,9 @@ const Propietarios = () => {
   return (
     <>
       <SEOHead
-        title="Propietarios: Verifica que tu Contrato Cumple la LAU 2026 | ACROXIA"
+        title="Propietarios: Verifica que tu Contrato Cumple la LAU 2026 | ContratoAlquiler"
         description="¿Tu contrato de alquiler cumple la LAU 2026? Verifica zonas tensionadas, fianzas y cláusulas obligatorias. Herramientas de IA para propietarios."
-        canonical="https://acroxia.com/propietarios"
+        canonical="https://contratoalquiler.com/propietarios"
         keywords="contrato alquiler propietario, análisis contrato arrendador, zonas tensionadas 2026, LAU propietarios, generador contrato alquiler"
         jsonLd={schemaService}
       />
@@ -96,7 +96,7 @@ const Propietarios = () => {
                   <span className="text-sm text-muted-foreground">Información importante</span>
                 </div>
                 <p className="text-muted-foreground">
-                  ACROXIA es una herramienta de apoyo informativo. Los análisis tienen carácter orientativo y no sustituyen 
+                  ContratoAlquiler es una herramienta de apoyo informativo. Los análisis tienen carácter orientativo y no sustituyen 
                   el asesoramiento legal profesional. El cálculo del IRAV y la verificación de zonas tensionadas debe realizarse 
                   en las fuentes oficiales (INE, MIVAU o webs autonómicas).
                 </p>

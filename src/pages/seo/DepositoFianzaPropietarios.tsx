@@ -135,26 +135,26 @@ const DepositoFianzaPropietarios = () => {
   const pageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": "https://acroxia.com/deposito-fianza-propietarios",
+    "@id": "https://contratoalquiler.com/deposito-fianza-propietarios",
     "name": "Depósito de Fianza: Guía Completa para Propietarios 2026",
     "description": "Todo sobre el depósito de fianza para propietarios: dónde depositarla, plazos por comunidad autónoma, devolución al inquilino y descuentos permitidos.",
-    "url": "https://acroxia.com/deposito-fianza-propietarios",
+    "url": "https://contratoalquiler.com/deposito-fianza-propietarios",
     "inLanguage": "es-ES",
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "isPartOf": {
       "@type": "WebSite",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "datePublished": "2026-01-22",
     "dateModified": "2026-02-09",
     "mainEntity": {
       "@type": "Article",
-      "@id": "https://acroxia.com/deposito-fianza-propietarios#article"
+      "@id": "https://contratoalquiler.com/deposito-fianza-propietarios#article"
     }
   };
 
@@ -174,27 +174,27 @@ const DepositoFianzaPropietarios = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "@id": "https://acroxia.com/deposito-fianza-propietarios#article",
+    "@id": "https://contratoalquiler.com/deposito-fianza-propietarios#article",
     "headline": "Depósito de Fianza: Guía Completa para Propietarios 2026",
     "description": "Dónde depositar la fianza, plazos por CCAA, devolución al inquilino y descuentos permitidos.",
     "author": {
       "@type": "Organization",
-      "name": "ACROXIA",
-      "url": "https://acroxia.com"
+      "name": "ContratoAlquiler",
+      "url": "https://contratoalquiler.com"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ACROXIA",
+      "name": "ContratoAlquiler",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/contratoalquiler-logo.png"
+        "url": "https://contratoalquiler.com/contratoalquiler-logo.png"
       }
     },
     "datePublished": "2026-01-22",
     "dateModified": "2026-02-09",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://acroxia.com/deposito-fianza-propietarios"
+      "@id": "https://contratoalquiler.com/deposito-fianza-propietarios"
     },
     "speakable": {
       "@type": "SpeakableSpecification",
@@ -205,9 +205,9 @@ const DepositoFianzaPropietarios = () => {
   return (
     <>
       <SEOHead
-        title="Depósito de Fianza por CCAA: INCASOL, IVIMA y Plazos | Guía para Propietarios 2026 | ACROXIA"
+        title="Depósito de Fianza por CCAA: INCASOL, IVIMA y Plazos | Guía para Propietarios 2026 | ContratoAlquiler"
         description="Dónde depositar la fianza según tu CCAA, plazos legales, devolución al inquilino y descuentos permitidos. Guía completa para propietarios 2026."
-        canonical="https://acroxia.com/deposito-fianza-propietarios"
+        canonical="https://contratoalquiler.com/deposito-fianza-propietarios"
         ogType="article"
         keywords="depositar fianza alquiler, INCASOL, IVIMA, devolucion fianza propietario, organismo deposito fianza, descuentos fianza"
         articleMeta={{ datePublished: "2026-01-22", dateModified: "2026-02-09" }}

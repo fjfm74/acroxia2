@@ -115,7 +115,7 @@ const CalculadoraIRAV = () => {
       "@type": "WebApplication",
       "name": "Calculadora IRAV 2026 - Revisión de Alquiler",
       "description": "Herramienta orientativa para saber qué índice se aplica a la actualización de tu alquiler en 2026: IRAV o IPC.",
-      "url": "https://acroxia.com/calculadora-irav",
+      "url": "https://contratoalquiler.com/calculadora-irav",
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Web",
       "offers": {
@@ -125,8 +125,8 @@ const CalculadoraIRAV = () => {
       },
       "provider": {
         "@type": "Organization",
-        "name": "ACROXIA",
-        "url": "https://acroxia.com",
+        "name": "ContratoAlquiler",
+        "url": "https://contratoalquiler.com",
       },
     },
     {
@@ -162,9 +162,9 @@ const CalculadoraIRAV = () => {
   return (
     <>
       <SEOHead
-        title="Calculadora IRAV 2026: ¿Cuánto Puede Subir tu Alquiler? | ACROXIA"
+        title="Calculadora IRAV 2026: ¿Cuánto Puede Subir tu Alquiler? | ContratoAlquiler"
         description="Descubre qué índice se aplica a la revisión de tu alquiler en 2026: IRAV o IPC. Herramienta orientativa gratuita con enlaces a fuentes oficiales del INE y SERPAVI."
-        canonical="https://acroxia.com/calculadora-irav"
+        canonical="https://contratoalquiler.com/calculadora-irav"
         jsonLd={jsonLd}
         keywords="calculadora IRAV, subida alquiler 2026, revisión renta alquiler, IRAV INE, índice referencia arrendamientos vivienda, actualización alquiler"
       />
