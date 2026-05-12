@@ -28,7 +28,7 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
             <AdminNav onNavigate={() => setMobileMenuOpen(false)} />
           </SheetContent>
         </Sheet>
-        <span className="font-serif text-lg font-semibold">ACROXIA Admin</span>
+        <span className="font-serif text-lg font-semibold">ContratoAlquiler Admin</span>
       </header>
 
       <div className="flex">

@@ -71,7 +71,7 @@ const Header = () => {
     }`}>
       <div className="container mx-auto px-6 py-6 flex items-center justify-between">
         <Link to="/" className="text-2xl font-serif font-semibold text-foreground tracking-tight">
-          ACROXIA
+          ContratoAlquiler
         </Link>
         
         <nav className="hidden lg:flex items-center gap-10">

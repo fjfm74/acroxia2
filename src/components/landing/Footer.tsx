@@ -32,7 +32,7 @@ const Footer = ({ hideSubscription = false }: FooterProps) => {
           {/* Brand */}
           <div className="lg:col-span-2">
             <span className="font-serif text-2xl font-semibold text-foreground block mb-4">
-              ACROXIA
+              ContratoAlquiler
             </span>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
               Herramienta de análisis de contratos de alquiler con IA. 
@@ -50,7 +50,7 @@ const Footer = ({ hideSubscription = false }: FooterProps) => {
             <ul className="hidden lg:block space-y-2">
               <li className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Mail className="w-4 h-4" />
-                <span>contacto@acroxia.com</span>
+                <span>info@contratoalquiler.com</span>
               </li>
             </ul>
           </div>
@@ -131,7 +131,7 @@ const Footer = ({ hideSubscription = false }: FooterProps) => {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-muted-foreground text-sm">
                 <Mail className="w-4 h-4" />
-                <span>contacto@acroxia.com</span>
+                <span>info@contratoalquiler.com</span>
               </li>
               <li className="flex items-center gap-3 text-muted-foreground text-sm">
                 <Phone className="w-4 h-4" />
@@ -147,7 +147,7 @@ const Footer = ({ hideSubscription = false }: FooterProps) => {
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © 2026 ACROXIA. Todos los derechos reservados.
+            © 2026 ContratoAlquiler. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <span className="w-2 h-2 rounded-full bg-green-500"></span>

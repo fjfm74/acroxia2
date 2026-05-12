@@ -171,7 +171,7 @@ const BlogPost = () => {
       "name": "ACROXIA",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://acroxia.com/acroxia-logo.png"
+        "url": "https://acroxia.com/contratoalquiler-logo.png"
       }
     },
     "datePublished": post.published_at,
@@ -328,7 +328,7 @@ const BlogPost = () => {
                     {/* Autor inline */}
                     <span className="flex items-center gap-2">
                       <img 
-                        src="/acroxia-logo.png" 
+                        src="/contratoalquiler-logo.png" 
                         alt="ACROXIA" 
                         className="w-5 h-5 rounded-full object-contain bg-foreground p-0.5" 
                       />

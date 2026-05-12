@@ -21,7 +21,7 @@ const schemaService = {
     "@type": "Organization",
     "name": "ACROXIA",
     "url": "https://acroxia.com",
-    "logo": "https://acroxia.com/acroxia-logo.png"
+    "logo": "https://acroxia.com/contratoalquiler-logo.png"
   },
   "serviceType": "Análisis de contratos de alquiler para propietarios",
   "areaServed": {

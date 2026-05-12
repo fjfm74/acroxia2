@@ -74,7 +74,7 @@ const AdminNav = ({ onNavigate }: AdminNavProps) => {
       </Link>
       
       <div className="mb-8">
-        <h1 className="font-serif text-xl font-semibold text-foreground">ACROXIA</h1>
+        <h1 className="font-serif text-xl font-semibold text-foreground">ContratoAlquiler</h1>
         <p className="text-xs text-muted-foreground mt-1">Panel de Administración</p>
       </div>
 

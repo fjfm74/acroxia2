@@ -5,7 +5,7 @@ const TransparenciaIA = () => {
   return (
     <LegalPageLayout
       title="Transparencia de Inteligencia Artificial"
-      metaDescription="Información sobre el uso de IA en ACROXIA. Cumplimiento del Reglamento de IA de la UE (AI Act)."
+      metaDescription="Información sobre el uso de IA en ContratoAlquiler. Cumplimiento del Reglamento de IA de la UE (AI Act)."
       lastUpdated="8 de enero de 2026"
     >
       <div className="space-y-8">
@@ -15,7 +15,7 @@ const TransparenciaIA = () => {
             <Bot className="h-8 w-8 text-primary flex-shrink-0 mt-1" />
             <div>
               <h2 className="font-serif text-xl font-semibold mb-2">
-                ACROXIA utiliza Inteligencia Artificial
+                ContratoAlquiler utiliza Inteligencia Artificial
               </h2>
               <p className="text-muted-foreground">
                 Esta página explica de forma transparente cómo utilizamos sistemas de IA en nuestros 
@@ -27,9 +27,9 @@ const TransparenciaIA = () => {
         </div>
 
         <section>
-          <h2 className="font-serif text-2xl font-semibold mb-4">1. ¿Qué es ACROXIA?</h2>
+          <h2 className="font-serif text-2xl font-semibold mb-4">1. ¿Qué es ContratoAlquiler?</h2>
           <p className="text-muted-foreground mb-4">
-            ACROXIA es una herramienta tecnológica que utiliza inteligencia artificial para analizar 
+            ContratoAlquiler es una herramienta tecnológica que utiliza inteligencia artificial para analizar 
             contratos de alquiler y detectar posibles cláusulas abusivas o ilegales según la normativa 
             española vigente.
           </p>
@@ -42,7 +42,7 @@ const TransparenciaIA = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4">2. Tecnología utilizada</h2>
           <p className="text-muted-foreground mb-4">
-            ACROXIA emplea modelos de lenguaje de gran escala (LLM) para el procesamiento de texto natural. 
+            ContratoAlquiler emplea modelos de lenguaje de gran escala (LLM) para el procesamiento de texto natural. 
             Específicamente:
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
@@ -75,7 +75,7 @@ const TransparenciaIA = () => {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-4 flex items-center gap-2">
             <Scale className="h-6 w-6" />
-            4. Lo que ACROXIA NO es ni hace
+            4. Lo que ContratoAlquiler NO es ni hace
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="p-4 border border-border rounded-lg">
@@ -120,8 +120,8 @@ const TransparenciaIA = () => {
           </ul>
           <p className="text-muted-foreground mb-4">
             Si crees que el sistema ha cometido un error significativo, puedes reportarlo a{" "}
-            <a href="mailto:contacto@acroxia.com" className="text-primary hover:underline">
-              contacto@acroxia.com
+            <a href="mailto:info@contratoalquiler.com" className="text-primary hover:underline">
+              info@contratoalquiler.com
             </a>{" "}
             para su revisión.
           </p>
@@ -141,7 +141,7 @@ const TransparenciaIA = () => {
             <li><strong>Impugnar la decisión:</strong> Puedes solicitar una nueva evaluación si consideras que hay errores.</li>
           </ul>
           <p className="text-muted-foreground mb-4">
-            ACROXIA no toma decisiones automatizadas que produzcan efectos jurídicos sobre ti. 
+            ContratoAlquiler no toma decisiones automatizadas que produzcan efectos jurídicos sobre ti. 
             Proporcionamos información para que tú tomes tus propias decisiones de forma informada.
           </p>
         </section>
@@ -230,10 +230,10 @@ const TransparenciaIA = () => {
             10. Contacto
           </h2>
           <p className="text-muted-foreground mb-4">
-            Si tienes preguntas sobre el uso de IA en ACROXIA, puedes contactarnos:
+            Si tienes preguntas sobre el uso de IA en ContratoAlquiler, puedes contactarnos:
           </p>
           <ul className="text-muted-foreground space-y-2">
-            <li><strong>Email:</strong> <a href="mailto:contacto@acroxia.com" className="text-primary hover:underline">contacto@acroxia.com</a></li>
+            <li><strong>Email:</strong> <a href="mailto:info@contratoalquiler.com" className="text-primary hover:underline">info@contratoalquiler.com</a></li>
           </ul>
         </section>
       </div>
