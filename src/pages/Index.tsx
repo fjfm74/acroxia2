@@ -32,7 +32,7 @@ const Index = () => {
     "contactPoint": {
       "@type": "ContactPoint",
       "contactType": "customer service",
-      "email": "contacto@contratoalquiler.com",
+      "email": "info@contratoalquiler.com",
       "availableLanguage": "Spanish"
     }
   };
