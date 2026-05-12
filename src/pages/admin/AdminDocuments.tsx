@@ -669,7 +669,7 @@ const AdminDocuments = () => {
   return (
     <>
       <Helmet>
-        <title>Documentos Legales | ACROXIA Admin</title>
+        <title>Documentos Legales | ContratoAlquiler Admin</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 

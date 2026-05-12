@@ -332,7 +332,7 @@ const Analyze = () => {
   return (
     <>
       <Helmet>
-        <title>Analizar Contrato | ACROXIA</title>
+        <title>Analizar Contrato | ContratoAlquiler</title>
         <meta
           name="description"
           content="Sube tu contrato de alquiler y recibe un análisis detallado de cláusulas ilegales."

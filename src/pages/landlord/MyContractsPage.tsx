@@ -128,7 +128,7 @@ const MyContractsPage = () => {
   return (
     <>
       <Helmet>
-        <title>Mis Contratos | Panel Propietario | ACROXIA</title>
+        <title>Mis Contratos | Panel Propietario | ContratoAlquiler</title>
         <meta name="description" content="Gestiona todos tus contratos de alquiler." />
       </Helmet>
 

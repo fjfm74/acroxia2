@@ -1,4 +1,4 @@
-// Campaign email templates for ACROXIA marketing
+// Campaign email templates for ContratoAlquiler marketing
 // Design system: Cream (#FAF8F5) / Charcoal (#1F1D1B), Playfair Display
 
 export interface CampaignTemplate {
@@ -44,15 +44,15 @@ export const wrapInBaseTemplate = (content: string, unsubscribeUrl?: string): st
   <div style="padding: 40px 20px; background-color: #FAF8F5;">
     <div class="container">
       <div class="header">
-        <h1 class="logo">ACROXIA</h1>
+        <h1 class="logo">ContratoAlquiler</h1>
       </div>
       ${content}
       <div class="footer">
-        <p class="footer-text">ACROXIA - Tu escudo legal para el alquiler</p>
+        <p class="footer-text">ContratoAlquiler - Tu escudo legal para el alquiler</p>
         <p class="footer-text">
-          <a href="mailto:contacto@acroxia.com" class="footer-link">contacto@acroxia.com</a> | Barcelona
+          <a href="mailto:info@contratoalquiler.com" class="footer-link">info@contratoalquiler.com</a> | Barcelona
         </p>
-        <p class="footer-text" style="margin-top: 16px;">© 2026 ACROXIA. Todos los derechos reservados.</p>
+        <p class="footer-text" style="margin-top: 16px;">© 2026 ContratoAlquiler. Todos los derechos reservados.</p>
         ${unsubscribeUrl ? `<p class="footer-text" style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #7A7775; font-size: 12px;">Darme de baja</a></p>` : ''}
       </div>
     </div>
@@ -67,20 +67,20 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     id: "inquilino_bienvenida",
     name: "Bienvenida al blog",
     audience: "inquilino",
-    subject: "Bienvenido a ACROXIA: tu escudo legal para el alquiler",
+    subject: "Bienvenido a ContratoAlquiler: tu escudo legal para el alquiler",
     htmlContent: `
       <div class="content">
         <h2 class="title">Protege tus derechos como inquilino</h2>
         <p class="text">Hola,</p>
         <p class="text">
-          Gracias por unirte a la comunidad ACROXIA. Somos una plataforma de inteligencia legal que analiza contratos de alquiler con IA para detectar cláusulas abusivas y proteger tus derechos.
+          Gracias por unirte a la comunidad ContratoAlquiler. Somos una plataforma de inteligencia legal que analiza contratos de alquiler con IA para detectar cláusulas abusivas y proteger tus derechos.
         </p>
         <p class="text" style="font-weight: 600;">¿Sabías que el 67% de los contratos de alquiler contienen cláusulas ilegales?</p>
         <div class="button-container">
-          <a href="https://acroxia.com/analizar-gratis" class="button">Analiza tu contrato gratis</a>
+          <a href="https://contratoalquiler.com/analizar-gratis" class="button">Analiza tu contrato gratis</a>
         </div>
         <div class="divider"></div>
-        <p class="text" style="font-weight: 600; margin-bottom: 16px;">Con ACROXIA puedes:</p>
+        <p class="text" style="font-weight: 600; margin-bottom: 16px;">Con ContratoAlquiler puedes:</p>
         <div class="benefit-item"><span class="check-icon"></span><span>Detectar cláusulas ilegales en minutos</span></div>
         <div class="benefit-item"><span class="check-icon"></span><span>Obtener referencias legales específicas</span></div>
         <div class="benefit-item"><span class="check-icon"></span><span>Generar cartas de reclamación automáticas</span></div>
@@ -113,7 +113,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
           <p style="margin: 0; font-size: 14px; color: #4A4745;">Las reparaciones estructurales son obligación del propietario. Si tu contrato dice lo contrario, reclama.</p>
         </div>
         <div class="button-container">
-          <a href="https://acroxia.com/analizar-gratis" class="button">Analiza tu contrato ahora</a>
+          <a href="https://contratoalquiler.com/analizar-gratis" class="button">Analiza tu contrato ahora</a>
         </div>
       </div>
     `,
@@ -145,7 +145,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
           <p style="margin: 0; font-size: 14px; color: #4A4745;">Nuevas obligaciones para propietarios con 5+ viviendas en zonas tensionadas.</p>
         </div>
         <div class="button-container">
-          <a href="https://acroxia.com/blog" class="button">Leer más en el blog</a>
+          <a href="https://contratoalquiler.com/blog" class="button">Leer más en el blog</a>
         </div>
       </div>
     `,
@@ -154,23 +154,23 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     id: "propietario_herramientas",
     name: "Herramientas para propietarios",
     audience: "propietario",
-    subject: "Gestiona tus contratos de alquiler con ACROXIA",
+    subject: "Gestiona tus contratos de alquiler con ContratoAlquiler",
     htmlContent: `
       <div class="content">
-        <h2 class="title">Tu panel de propietario en ACROXIA</h2>
+        <h2 class="title">Tu panel de propietario en ContratoAlquiler</h2>
         <p class="text">Hola,</p>
         <p class="text">
-          ACROXIA no solo es para inquilinos. Como propietario, tienes acceso a herramientas diseñadas para gestionar tus contratos de forma profesional y conforme a la ley:
+          ContratoAlquiler no solo es para inquilinos. Como propietario, tienes acceso a herramientas diseñadas para gestionar tus contratos de forma profesional y conforme a la ley:
         </p>
         <div class="benefit-item"><span class="check-icon"></span><span>Análisis de contratos para verificar cumplimiento legal</span></div>
         <div class="benefit-item"><span class="check-icon"></span><span>Generador de contratos con plantillas actualizadas</span></div>
         <div class="benefit-item"><span class="check-icon"></span><span>Gestión de fianzas y recordatorios de vencimiento</span></div>
         <div class="benefit-item"><span class="check-icon"></span><span>Alertas sobre cambios normativos relevantes</span></div>
         <div class="button-container">
-          <a href="https://acroxia.com/propietarios" class="button">Descubrir funcionalidades</a>
+          <a href="https://contratoalquiler.com/propietarios" class="button">Descubrir funcionalidades</a>
         </div>
         <p class="text" style="text-align: center; margin-top: 16px;">
-          ¿Prefieres que te lo expliquemos? <a href="https://acroxia.com/contacto" style="color: #1F1D1B;">Contacta con nosotros</a>.
+          ¿Prefieres que te lo expliquemos? <a href="https://contratoalquiler.com/contacto" style="color: #1F1D1B;">Contacta con nosotros</a>.
         </p>
       </div>
     `,
@@ -186,7 +186,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         <h2 class="title">Automatiza el análisis legal de contratos</h2>
         <p class="text">Estimados profesionales,</p>
         <p class="text">
-          Somos ACROXIA, una plataforma de inteligencia legal que utiliza IA para analizar contratos de alquiler y detectar cláusulas problemáticas en segundos.
+          Somos ContratoAlquiler, una plataforma de inteligencia legal que utiliza IA para analizar contratos de alquiler y detectar cláusulas problemáticas en segundos.
         </p>
         <p class="text">
           Nuestro objetivo es compartir con vosotros información relevante sobre la normativa de alquiler y cómo la tecnología puede optimizar el trabajo de gestorías, inmobiliarias y administradores de fincas.
@@ -198,7 +198,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         <div class="benefit-item"><span class="check-icon"></span><span>API de integración con vuestros sistemas</span></div>
         <div class="benefit-item"><span class="check-icon"></span><span>Informes personalizados con vuestra marca</span></div>
         <div class="button-container">
-          <a href="https://acroxia.com/profesionales/gestorias" class="button">Más información</a>
+          <a href="https://contratoalquiler.com/profesionales/gestorias" class="button">Más información</a>
         </div>
         <p class="text" style="font-size: 14px; color: #7A7775; text-align: center;">
           Este email es meramente informativo. Podéis daros de baja en cualquier momento.
@@ -210,13 +210,13 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     id: "profesional_oferta",
     name: "Oferta profesional",
     audience: "profesional",
-    subject: "Plan Pro ACROXIA: análisis ilimitados para tu despacho",
+    subject: "Plan Pro ContratoAlquiler: análisis ilimitados para tu despacho",
     htmlContent: `
       <div class="content">
-        <h2 class="title">Plan Profesional ACROXIA</h2>
+        <h2 class="title">Plan Profesional ContratoAlquiler</h2>
         <p class="text">Hola,</p>
         <p class="text">
-          Sabemos que la revisión manual de contratos consume horas de trabajo. Con el Plan Pro de ACROXIA, tu equipo puede analizar contratos en segundos:
+          Sabemos que la revisión manual de contratos consume horas de trabajo. Con el Plan Pro de ContratoAlquiler, tu equipo puede analizar contratos en segundos:
         </p>
         <div class="stats-box" style="background: linear-gradient(135deg, #1F1D1B 0%, #3A3835 100%); color: #FAF8F5; padding: 32px;">
           <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8;">Plan Profesional</p>
@@ -228,7 +228,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         <div class="benefit-item"><span class="check-icon"></span><span>Gestión de clientes integrada</span></div>
         <div class="benefit-item"><span class="check-icon"></span><span>Soporte técnico prioritario</span></div>
         <div class="button-container">
-          <a href="https://acroxia.com/precios" class="button">Ver planes y precios</a>
+          <a href="https://contratoalquiler.com/precios" class="button">Ver planes y precios</a>
         </div>
       </div>
     `,

@@ -227,7 +227,7 @@ const WaitlistModal = ({ open, onOpenChange, planName, source = "waitlist", anal
               htmlFor="waitlist-marketing"
               className="text-xs text-muted-foreground leading-relaxed cursor-pointer"
             >
-              Acepto recibir comunicaciones comerciales y novedades de ACROXIA por email.
+              Acepto recibir comunicaciones comerciales y novedades de ContratoAlquiler por email.
             </Label>
           </div>
 

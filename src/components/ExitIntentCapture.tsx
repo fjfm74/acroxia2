@@ -143,7 +143,7 @@ const ExitIntentCapture = () => {
               className="mt-1"
             />
             <Label htmlFor="exit-privacy" className="text-sm text-muted-foreground cursor-pointer">
-              Acepto recibir comunicaciones de ACROXIA.{" "}
+              Acepto recibir comunicaciones de ContratoAlquiler.{" "}
               <Link to="/privacidad" target="_blank" className="underline hover:no-underline">
                 Política de privacidad
               </Link>

@@ -113,7 +113,7 @@ export default function AprobarPost() {
         <FadeIn>
           <div className="text-center mb-8">
             <Link to="/" className="inline-block">
-              <h1 className="font-serif text-3xl font-semibold text-foreground">ACROXIA</h1>
+              <h1 className="font-serif text-3xl font-semibold text-foreground">ContratoAlquiler</h1>
             </Link>
             <p className="text-muted-foreground mt-2">Sistema de aprobación de posts</p>
           </div>

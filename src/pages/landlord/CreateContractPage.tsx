@@ -9,7 +9,7 @@ const CreateContractLandlordPage = () => {
   return (
     <>
       <Helmet>
-        <title>Crear Contrato | Panel Propietario | ACROXIA</title>
+        <title>Crear Contrato | Panel Propietario | ContratoAlquiler</title>
         <meta name="description" content="Genera un contrato de alquiler conforme a la LAU vigente." />
       </Helmet>
 

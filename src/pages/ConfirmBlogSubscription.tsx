@@ -57,7 +57,7 @@ const ConfirmBlogSubscription = () => {
   return (
     <>
       <Helmet>
-        <title>Confirmar suscripción | ACROXIA Blog</title>
+        <title>Confirmar suscripción | ContratoAlquiler Blog</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 

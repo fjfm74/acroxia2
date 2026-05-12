@@ -43,7 +43,7 @@ const ChatContactForm = ({ onClose, onSuccess, initialMessage }: ChatContactForm
       const { error } = await supabase.functions.invoke("send-email", {
         body: {
           type: "contact",
-          to: "contacto@acroxia.com",
+          to: "info@contratoalquiler.com",
           data: {
             name: data.name,
             email: data.email,
