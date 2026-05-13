@@ -29,18 +29,18 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Te han invitado a ACROXIA</Preview>
+    <Preview>Te han invitado a ContratoAlquiler</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ACROXIA" style={logo} />
+          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="60" height="60" alt="ContratoAlquiler" style={logo} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>Has sido invitado</Heading>
           <Text style={text}>
             Te han invitado a unirte a{' '}
             <Link href={siteUrl} style={link}>
-              <strong>ACROXIA</strong>
+              <strong>ContratoAlquiler</strong>
             </Link>
             . Haz clic en el botón para aceptar la invitación y crear tu cuenta.
           </Text>
@@ -52,7 +52,7 @@ export const InviteEmail = ({
           <Text style={footer}>
             Si no esperabas esta invitación, puedes ignorar este email.
           </Text>
-          <Text style={footerBrand}>© 2026 ACROXIA. Todos los derechos reservados.</Text>
+          <Text style={footerBrand}>© 2026 ContratoAlquiler. Todos los derechos reservados.</Text>
         </Section>
       </Container>
     </Body>
@@ -64,7 +64,7 @@ export default InviteEmail
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }
 const container = { maxWidth: '560px', margin: '0 auto' }
 const header = { padding: '32px 40px 24px', borderBottom: '1px solid #E8E6E3', textAlign: 'center' as const }
-const logo = { display: 'inline-block' as const, margin: '0 auto', maxWidth: '160px', height: 'auto' }
+const logo = { display: 'inline-block' as const, margin: '0 auto', maxWidth: '60px', height: 'auto' }
 const content = { padding: '40px 40px 32px' }
 const h1 = {
   fontFamily: "'Playfair Display', Georgia, serif",
