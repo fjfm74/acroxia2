@@ -26,26 +26,26 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Tu enlace de acceso a ACROXIA</Preview>
+    <Preview>Tu enlace de acceso a ContratoAlquiler</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ACROXIA" style={logo} />
+          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ContratoAlquiler" style={logo} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>Tu enlace de acceso</Heading>
           <Text style={text}>
-            Haz clic en el botón para acceder a ACROXIA. Este enlace expirará en breve.
+            Haz clic en el botón para acceder a ContratoAlquiler. Este enlace expirará en breve.
           </Text>
           <Button style={button} href={confirmationUrl}>
-            Acceder a ACROXIA
+            Acceder a ContratoAlquiler
           </Button>
         </Section>
         <Section style={footerSection}>
           <Text style={footer}>
             Si no has solicitado este enlace, puedes ignorar este email.
           </Text>
-          <Text style={footerBrand}>© 2026 ACROXIA. Todos los derechos reservados.</Text>
+          <Text style={footerBrand}>© 2026 ContratoAlquiler. Todos los derechos reservados.</Text>
         </Section>
       </Container>
     </Body>

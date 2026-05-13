@@ -31,16 +31,16 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Confirma tu cambio de email en ACROXIA</Preview>
+    <Preview>Confirma tu cambio de email en ContratoAlquiler</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ACROXIA" style={logo} />
+          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ContratoAlquiler" style={logo} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>Confirma tu nuevo email</Heading>
           <Text style={text}>
-            Has solicitado cambiar tu dirección de email en ACROXIA de{' '}
+            Has solicitado cambiar tu dirección de email en ContratoAlquiler de{' '}
             <Link href={`mailto:${email}`} style={link}>
               {email}
             </Link>{' '}
@@ -61,7 +61,7 @@ export const EmailChangeEmail = ({
           <Text style={footer}>
             Si no has solicitado este cambio, protege tu cuenta inmediatamente.
           </Text>
-          <Text style={footerBrand}>© 2026 ACROXIA. Todos los derechos reservados.</Text>
+          <Text style={footerBrand}>© 2026 ContratoAlquiler. Todos los derechos reservados.</Text>
         </Section>
       </Container>
     </Body>

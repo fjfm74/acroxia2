@@ -26,16 +26,16 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Restablece tu contraseña de ACROXIA</Preview>
+    <Preview>Restablece tu contraseña de ContratoAlquiler</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ACROXIA" style={logo} />
+          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ContratoAlquiler" style={logo} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>Restablece tu contraseña</Heading>
           <Text style={text}>
-            Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en ACROXIA. Haz clic en el botón para elegir una nueva contraseña.
+            Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en ContratoAlquiler. Haz clic en el botón para elegir una nueva contraseña.
           </Text>
           <Button style={button} href={confirmationUrl}>
             Restablecer contraseña
@@ -45,7 +45,7 @@ export const RecoveryEmail = ({
           <Text style={footer}>
             Si no has solicitado este cambio, puedes ignorar este email. Tu contraseña no se modificará.
           </Text>
-          <Text style={footerBrand}>© 2026 ACROXIA. Todos los derechos reservados.</Text>
+          <Text style={footerBrand}>© 2026 ContratoAlquiler. Todos los derechos reservados.</Text>
         </Section>
       </Container>
     </Body>

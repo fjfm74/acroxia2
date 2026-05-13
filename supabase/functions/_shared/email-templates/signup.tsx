@@ -31,18 +31,18 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Confirma tu email para ACROXIA</Preview>
+    <Preview>Confirma tu email para ContratoAlquiler</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ACROXIA" style={logo} />
+          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ContratoAlquiler" style={logo} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>Confirma tu email</Heading>
           <Text style={text}>
             Gracias por registrarte en{' '}
             <Link href={siteUrl} style={link}>
-              <strong>ACROXIA</strong>
+              <strong>ContratoAlquiler</strong>
             </Link>
             , tu escudo legal para el alquiler.
           </Text>
@@ -61,7 +61,7 @@ export const SignupEmail = ({
           <Text style={footer}>
             Si no has creado una cuenta, puedes ignorar este email.
           </Text>
-          <Text style={footerBrand}>© 2026 ACROXIA. Todos los derechos reservados.</Text>
+          <Text style={footerBrand}>© 2026 ContratoAlquiler. Todos los derechos reservados.</Text>
         </Section>
       </Container>
     </Body>
