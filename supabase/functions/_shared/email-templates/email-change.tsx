@@ -35,7 +35,7 @@ export const EmailChangeEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="140" height="40" alt="ContratoAlquiler" style={logo} />
+          <Img src="https://vmloiamemddwxyyunphz.supabase.co/storage/v1/object/public/email-assets/contratoalquiler-logo.png" width="60" height="60" alt="ContratoAlquiler" style={logo} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>Confirma tu nuevo email</Heading>
@@ -73,7 +73,7 @@ export default EmailChangeEmail
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }
 const container = { maxWidth: '560px', margin: '0 auto' }
 const header = { padding: '32px 40px 24px', borderBottom: '1px solid #E8E6E3', textAlign: 'center' as const }
-const logo = { display: 'inline-block' as const, margin: '0 auto', maxWidth: '160px', height: 'auto' }
+const logo = { display: 'inline-block' as const, margin: '0 auto', maxWidth: '60px', height: 'auto' }
 const content = { padding: '40px 40px 32px' }
 const h1 = {
   fontFamily: "'Playfair Display', Georgia, serif",
