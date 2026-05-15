@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Check } from "lucide-react";
+import { Check, Sparkles, X } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
