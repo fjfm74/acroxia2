@@ -951,6 +951,24 @@ serve(async (req) => {
   try {
     const { contractId, filePath, fileType: mimeType } = await req.json();
 
+    const ACCEPTED_MIME_TYPES = new Set([
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ]);
+    if (mimeType && !ACCEPTED_MIME_TYPES.has(String(mimeType).toLowerCase())) {
+      return new Response(
+        JSON.stringify({
+          error: "Formato no soportado",
+          detail: `Formato ${mimeType} no aceptado. Use PDF, DOCX, JPG, PNG o WEBP.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");

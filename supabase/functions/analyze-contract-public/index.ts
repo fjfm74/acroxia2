@@ -595,6 +595,24 @@ serve(async (req) => {
 
     if (!filePath) throw new Error("Faltan parámetros requeridos");
 
+    const ACCEPTED_MIME_TYPES = new Set([
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ]);
+    if (fileType && !ACCEPTED_MIME_TYPES.has(String(fileType).toLowerCase())) {
+      return new Response(
+        JSON.stringify({
+          error: "Formato no soportado",
+          detail: `Formato ${fileType} no aceptado. Use PDF, DOCX, JPG, PNG o WEBP.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const apiKey = Deno.env.get("LOVABLE_API_KEY")!;

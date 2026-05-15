@@ -425,7 +425,7 @@ const AnalyzePublic = () => {
                           >
                             <input
                               type="file"
-                              accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.webp"
+                              accept=".pdf,.docx,.jpg,.jpeg,.png,.webp"
                               onChange={handleFileSelect}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
