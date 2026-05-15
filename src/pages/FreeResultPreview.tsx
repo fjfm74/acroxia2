@@ -37,6 +37,7 @@ import {
   Loader2,
   Mail,
 } from "lucide-react";
+import NegotiationGuideTeaser from "@/components/analyze/NegotiationGuideTeaser";
 
 interface AnalysisResult {
   total_clauses: number;
