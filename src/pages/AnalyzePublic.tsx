@@ -337,6 +337,7 @@ const AnalyzePublic = () => {
             )}
 
             {step === "upload" && (
+            <>
             <FadeIn>
               <div className="text-center mb-8">
                 <span className="inline-block px-4 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
@@ -573,6 +574,7 @@ const AnalyzePublic = () => {
                 </FadeIn>
               </div>
             </div>
+            </>
             )}
           </div>
         </main>
