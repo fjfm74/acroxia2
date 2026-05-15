@@ -13,6 +13,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, X, Loader2, CheckCircle2, ShieldAlert, Users, Clock, Shield } from "lucide-react";
 import { trackConversion } from "@/lib/analytics";
+import ContractTypeSelector, { ContractTypeChoice } from "@/components/analyze/ContractTypeSelector";
+import ContractNotSupported from "@/components/analyze/ContractNotSupported";
+import ContractTypeWizard, { WizardResult } from "@/components/analyze/ContractTypeWizard";
+
+type Step = "selector" | "wizard" | "not_supported" | "upload";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -47,6 +52,29 @@ const AnalyzePublic = () => {
     return initialPerspective;
   });
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [step, setStep] = useState<Step>("selector");
+  const [notSupportedType, setNotSupportedType] = useState<"temporada" | "vacacional">("temporada");
+
+  const handleTypeSelect = (choice: ContractTypeChoice) => {
+    if (choice === "habitual" || choice === "habitacion") {
+      setStep("upload");
+    } else if (choice === "no_seguro") {
+      setStep("wizard");
+    } else {
+      setNotSupportedType(choice);
+      setStep("not_supported");
+    }
+  };
+
+  const handleWizardResult = (result: WizardResult) => {
+    if (result === "habitual") {
+      setStep("upload");
+    } else {
+      setNotSupportedType(result);
+      setStep("not_supported");
+    }
+  };
 
   // Estimated analysis duration in seconds (based on logs: 30-90s, avg ~60s)
   const ESTIMATED_DURATION = 60;
@@ -284,6 +312,32 @@ const AnalyzePublic = () => {
 
         <main className="flex-1 bg-muted pt-28 pb-12">
           <div className="container mx-auto px-6 max-w-4xl">
+            {step === "selector" && (
+              <FadeIn>
+                <ContractTypeSelector onSelect={handleTypeSelect} />
+              </FadeIn>
+            )}
+
+            {step === "wizard" && (
+              <FadeIn>
+                <ContractTypeWizard
+                  onResult={handleWizardResult}
+                  onBack={() => setStep("selector")}
+                />
+              </FadeIn>
+            )}
+
+            {step === "not_supported" && (
+              <FadeIn>
+                <ContractNotSupported
+                  type={notSupportedType}
+                  onBack={() => setStep("selector")}
+                />
+              </FadeIn>
+            )}
+
+            {step === "upload" && (
+            <>
             <FadeIn>
               <div className="text-center mb-8">
                 <span className="inline-block px-4 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
@@ -520,6 +574,8 @@ const AnalyzePublic = () => {
                 </FadeIn>
               </div>
             </div>
+            </>
+            )}
           </div>
         </main>
 
