@@ -181,12 +181,27 @@ const B2CPricing = () => {
                 </div>
 
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <Check className="w-4 h-4 text-charcoal mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-charcoal/80">{feature}</span>
-                    </li>
-                  ))}
+                  {plan.features.map((feature, i) => {
+                    const Icon = feature.kind === "highlight" ? Sparkles : feature.kind === "negative" ? X : Check;
+                    const iconClass =
+                      feature.kind === "highlight"
+                        ? "text-success"
+                        : feature.kind === "negative"
+                        ? "text-charcoal/40"
+                        : "text-charcoal";
+                    const textClass =
+                      feature.kind === "negative"
+                        ? "text-charcoal/50 line-through"
+                        : feature.kind === "highlight"
+                        ? "text-charcoal font-medium"
+                        : "text-charcoal/80";
+                    return (
+                      <li key={i} className="flex items-start gap-3">
+                        <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconClass}`} />
+                        <span className={`text-sm ${textClass}`}>{feature.text}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 {plan.isFree ? (
