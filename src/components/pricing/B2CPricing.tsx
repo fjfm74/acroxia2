@@ -9,35 +9,51 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { toast } from "sonner";
 
-const plans = [
+type Feature = { text: string; kind?: "default" | "highlight" | "negative" };
+
+const plans: Array<{
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  subPrice?: string;
+  subPriceColor?: string;
+  features: Feature[];
+  cta: string;
+  highlighted: boolean;
+  badge?: string;
+  isFree: boolean;
+  priceId: string;
+}> = [
   {
     name: "Escaneo Rápido",
-    price: "0",
+    price: "14,99",
     period: "",
-    description: "Preview gratuito de tu contrato",
+    description: "Análisis IA de tu contrato",
     features: [
-      "Puntuación de riesgo (1-10)",
-      "Número de alertas detectadas",
-      "2 cláusulas parcialmente visibles",
-      "Válido durante 24 horas",
+      { text: "Análisis IA de cláusulas según LAU" },
+      { text: "Puntuación de riesgo y resumen" },
+      { text: "Listado de cláusulas problemáticas" },
+      { text: "Sin guía de negociación", kind: "negative" },
     ],
-    cta: "Escanear contrato gratis",
+    cta: "Comprar escaneo",
     highlighted: false,
-    isFree: true,
-    priceId: "",
+    isFree: false,
+    priceId: "escaneo_rapido_price",
   },
   {
     name: "Análisis Único",
-    price: "14,99",
+    price: "34,99",
     period: "",
-    description: "Análisis completo para un contrato específico",
-    subPrice: "Menos de lo que cuesta un café al día",
+    description: "Análisis completo + documentos para actuar",
+    subPrice: "Lo más elegido por inquilinos",
     subPriceColor: "text-green-600",
     features: [
-      "1 análisis completo",
-      "Todas las cláusulas analizadas",
-      "Cláusulas potencialmente ilegales destacadas",
-      "Recomendaciones personalizadas",
+      { text: "Todo lo del Escaneo Rápido +" },
+      { text: "Guía de negociación personalizada (PDF descargable)", kind: "highlight" },
+      { text: "Borrador de email listo para enviar al propietario", kind: "highlight" },
+      { text: "Borrador de burofax (si necesitas escalar)", kind: "highlight" },
+      { text: "Detalle completo de cada cláusula con argumentación legal" },
     ],
     cta: "Comprar análisis",
     highlighted: true,
@@ -47,16 +63,16 @@ const plans = [
   },
   {
     name: "Pack Comparador",
-    price: "34,99",
+    price: "59,99",
     period: "",
     description: "Ideal para comparar varios pisos antes de decidir",
-    subPrice: "11,66€ por análisis",
+    subPrice: "19,99€ por análisis",
     subPriceColor: "text-charcoal/60",
     features: [
-      "3 análisis completos",
-      "Todas las cláusulas analizadas",
-      "Cláusulas potencialmente ilegales destacadas",
-      "Recomendaciones personalizadas",
+      { text: "Análisis Único × 3 contratos" },
+      { text: "Comparativa lado a lado de los 3 contratos" },
+      { text: "3× Guía de negociación + Email + Burofax (uno por contrato)" },
+      { text: "Recomendación del mejor contrato" },
     ],
     cta: "Comprar pack",
     highlighted: false,
