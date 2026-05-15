@@ -1680,6 +1680,30 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_contract_types: {
+        Row: {
+          accepted_rgpd_at: string
+          contract_type: string
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          accepted_rgpd_at?: string
+          contract_type: string
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          accepted_rgpd_at?: string
+          contract_type?: string
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       webhook_diagnostics: {
         Row: {
           analysis_id: string | null
