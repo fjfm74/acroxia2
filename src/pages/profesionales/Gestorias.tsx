@@ -6,6 +6,8 @@ import Footer from "@/components/landing/Footer";
 import FadeIn from "@/components/animations/FadeIn";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import { Clock, FileText, Shield, Building2, Users, CheckCircle, ArrowRight, Briefcase, FolderOpen, RefreshCw } from "lucide-react";
+import ComingSoonOverlay from "@/components/coming-soon/ComingSoonOverlay";
+import ComingSoonButton from "@/components/coming-soon/ComingSoonButton";
 
 const painPoints = [
   {
@@ -133,6 +135,7 @@ const breadcrumbItems = [
 
       <Header />
       
+      <ComingSoonOverlay audience="profesional_gestorias">
       <Breadcrumbs items={breadcrumbItems} />
 
       <main>
@@ -162,12 +165,16 @@ const breadcrumbItems = [
               
               <FadeIn delay={0.3}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button size="lg" className="rounded-full px-8" asChild>
-                    <Link to="/registro">
-                      Contratar Plan Profesional
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
+                  <ComingSoonButton
+                    audience="profesional_gestorias"
+                    originalHref="/registro"
+                    size="lg"
+                    className="rounded-full px-8"
+                    showBadge={false}
+                  >
+                    Contratar Plan Profesional
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </ComingSoonButton>
                 </div>
               </FadeIn>
             </div>
@@ -321,13 +328,15 @@ const breadcrumbItems = [
                       ))}
                     </ul>
                     
-                    <Button 
+                    <ComingSoonButton
+                      audience="profesional_gestorias"
+                      originalHref="/registro"
+                      showBadge={false}
                       className={`w-full rounded-full ${plan.highlighted ? 'bg-background text-foreground hover:bg-background/90' : ''}`}
                       variant={plan.highlighted ? "secondary" : "default"}
-                      asChild
                     >
-                      <Link to="/registro">Contratar</Link>
-                    </Button>
+                      Contratar
+                    </ComingSoonButton>
                   </div>
                 </FadeIn>
               ))}
@@ -367,21 +376,22 @@ const breadcrumbItems = [
                   Únete a las gestorías y administradores de fincas que ya utilizan ContratoAlquiler 
                   como herramienta de apoyo en la gestión de contratos de alquiler.
                 </p>
-                <Button 
-                  size="lg" 
+                <ComingSoonButton
+                  audience="profesional_gestorias"
+                  originalHref="/registro"
+                  size="lg"
+                  showBadge={false}
                   className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
-                  asChild
                 >
-                  <Link to="/registro">
-                    Contratar ahora
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                  Contratar ahora
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </ComingSoonButton>
               </div>
             </FadeIn>
           </div>
         </section>
       </main>
+      </ComingSoonOverlay>
 
       <Footer />
     </>
