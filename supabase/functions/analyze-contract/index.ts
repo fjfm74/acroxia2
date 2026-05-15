@@ -842,105 +842,129 @@ REGLAS DE ORO (OBLIGATORIAS)
 10. VERIFICACIÓN OBLIGATORIA DE REQUISITOS DOCUMENTALES: Comprueba SIEMPRE si el contrato menciona la cédula de habitabilidad (o licencia de primera/segunda ocupación según CCAA) y el certificado de eficiencia energética. Si NO aparecen mencionados en el contrato, DEBES generar una cláusula por cada documento ausente con category "ESTADO DE LA VIVIENDA E INVENTARIO", type "suspicious", risk_level 7, explicando que son documentos legalmente obligatorios que el arrendador debe entregar antes de la firma. Referencias: Art. 25.2 LAU y normativa autonómica (cédula de habitabilidad), RD 235/2013 (certificado energético). Esta verificación es OBLIGATORIA en TODOS los análisis.`;
 }
 
-// Construir prompt para guia de negociacion (documento para el usuario)
-function buildNegotiationGuidePrompt(problematicClauses: any[], summary: any): string {
+// Construye prompt para generar 3 documentos en JSON: guía, email y burofax.
+function buildNegotiationGuidePrompt(
+  problematicClauses: any[],
+  summary: any,
+  perspective: "tenant" | "landlord" = "tenant",
+): string {
+  const overallRisk = String(summary?.overall_risk || "medio").toLowerCase();
+  const isLandlord = perspective === "landlord";
+
+  const audienceLabel = isLandlord ? "propietario/arrendador" : "inquilino/arrendatario";
+  const counterpartyLabel = isLandlord ? "inquilino" : "propietario";
+
+  const toneByPerspective = isLandlord
+    ? "Tono colaborativo: el objetivo es asegurar que el contrato cumpla la LAU para evitar futuras impugnaciones del inquilino. Constructivo, profesional, sin acusaciones."
+    : "Tono firme pero conciliador: defensa de los derechos del inquilino sin agresividad. Directo, profesional, basado en la normativa.";
+
+  const firmnessByRisk =
+    overallRisk === "alto" || overallRisk === "critico"
+      ? "ASERTIVO: hay puntos que DEBEN negociarse urgentemente antes de firmar/continuar."
+      : overallRisk === "medio"
+      ? "FIRME: hay puntos que recomendamos modificar para que el contrato sea conforme a derecho."
+      : "EDUCATIVO: son puntos a revisar que conviene aclarar, sin alarmar.";
+
   const clausesList = problematicClauses
     .map(
-      (c, i) => `
-${i + 1}. CLAUSULA: "${c.original_text || c.text}"
-   - Tipo: ${c.type === "illegal" ? "Potencialmente ilegal" : "Sospechosa/Negociable"}
-   - Categoria: ${c.category || "General"}
-   - Problema: ${c.explanation}
-   - Nivel de riesgo: ${c.risk_level || "No especificado"}/10
-`,
+      (c, i) => `${i + 1}. [${(c.type || "suspicious").toUpperCase()} · riesgo ${c.risk_level || "?"}/10 · ${c.category || "General"}]
+   Cláusula: "${(c.original_text || c.text || "").slice(0, 400)}"
+   Problema detectado: ${c.explanation || "no especificado"}`,
     )
-    .join("\n");
+    .join("\n\n");
 
-  return `IDENTIDAD Y TONO
-================
-Eres un asesor profesional y cercano que explica las cosas con claridad. Este documento es PARA EL USUARIO (inquilino), no para el propietario. Es una guia practica y accesible.
+  return `Eres un asesor legal experto en LAU (Ley 29/1994 de Arrendamientos Urbanos) en España. Tu tarea: generar 3 documentos para el ${audienceLabel}, basados EXCLUSIVAMENTE en las cláusulas problemáticas REALES detectadas en el contrato analizado.
 
-TONO OBLIGATORIO:
-- Profesional pero accesible, como un buen asesor que se preocupa por ti
-- Trato de usted NO: usa "tu" en todo momento, pero con respeto
-- Explicaciones claras y directas, sin jerga legal innecesaria
-- Enfoque practico: que significa esto para ti y que puedes hacer
-- PROHIBIDO usar jerga o expresiones excesivamente coloquiales (por ejemplo: colega, tio, mola, chaval o similares)
-- PROHIBIDO: tono condescendiente o paternalista
+CONTEXTO
+========
+- Audiencia: ${audienceLabel}
+- Riesgo general del contrato: ${overallRisk}
+- Tono según perspectiva: ${toneByPerspective}
+- Firmeza según riesgo: ${firmnessByRisk}
+- Número de puntos problemáticos: ${problematicClauses.length}
 
-REGLAS DE FORMATO ESTRICTAS:
-- NO uses emojis bajo ninguna circunstancia (ni en titulos ni en texto)
-- NO uses caracteres especiales como numeros en circulos (1, 2, 3)
-- Usa solo numeros normales: 1., 2., 3.
-- NO uses asteriscos dobles (**texto**) para negrita. Para enfasis usa comillas simples o MAYUSCULAS
-- NO uses asteriscos simples (*texto*) para cursiva
-- Escribe tildes normales (a, e, i, o, u) - evita caracteres unicode raros
-- Los titulos con # deben ser texto plano sin emojis, signos de exclamacion ni interrogacion
-
-CLAUSULAS PROBLEMATICAS DETECTADAS
-==================================
+CLÁUSULAS PROBLEMÁTICAS DETECTADAS (datos reales del contrato)
+==============================================================
 ${clausesList}
 
-CONTEXTO DEL ANALISIS
-=====================
-- Riesgo general del contrato: ${summary?.overall_risk || "medio"}
-- Numero de puntos a revisar: ${problematicClauses.length}
+INSTRUCCIONES CRÍTICAS
+======================
+- Cada documento debe REFERENCIAR las cláusulas reales detectadas, una por una. NO uses lenguaje genérico.
+- Cita la LAU cuando proceda (ej: "art. 36 LAU sobre fianza", "art. 9 LAU sobre duración").
+- Trato: "tú" en email, "Vd." en burofax.
+- NO uses emojis, NI **negritas** markdown, NI colores, NI cumplidos vacíos.
+- Números arábigos (1, 2, 3), no romanos.
 
-ESTRUCTURA DEL DOCUMENTO (OBLIGATORIO)
-======================================
+OUTPUT OBLIGATORIO
+==================
+Devuelve EXACTAMENTE un objeto JSON válido, sin texto fuera del JSON, sin code fences. Schema:
 
-# Resumen de tu contrato
+{
+  "informative_guide": "<markdown ~700-900 palabras. Estructura obligatoria con encabezados '#':
+    1) Resumen del análisis (1 párrafo)
+    2) Puntos a ${overallRisk === "bajo" ? "revisar" : overallRisk === "medio" ? "negociar" : "exigir"} — UNO por cada cláusula problemática REAL detectada arriba, con sub-secciones 'Qué pone tu contrato' / 'Por qué importa (con cita LAU)' / 'Qué decir o hacer'
+    3) Consejos para la conversación (3-4 bullets)
+    4) Plan si no llegáis a acuerdo (burofax, asociaciones, juzgado)
+    5) Disclaimer legal (carácter informativo, no asesoramiento)>",
 
-## Lo que hemos encontrado
+  "email_draft": "<email completo listo para copiar y pegar. ~250-400 palabras. Estructura: 'Asunto: ...' en primera línea, línea en blanco, saludo ('Hola [nombre del ${counterpartyLabel}],'), motivo (acabo de revisar el contrato), puntos concretos referenciando las cláusulas reales detectadas, propuesta constructiva, despedida cordial. Tono según las reglas anteriores. Tutea.>",
 
-[1-2 parrafos breves y claros explicando la situacion general. Ejemplo: "Hemos revisado tu contrato y hemos detectado ${problematicClauses.length} puntos que conviene revisar antes de firmar. A continuacion te explicamos cada uno y que opciones tienes."]
+  "burofax_draft": "<burofax oficial. ~300-500 palabras. Estructura formal jurídica:
+    Línea 1: 'BUROFAX CERTIFICADO CON ACUSE DE RECIBO Y CERTIFICACIÓN DE TEXTO'
+    Bloque REMITENTE: [Nombre completo] / [DNI] / [Domicilio] (usa placeholders entre corchetes)
+    Bloque DESTINATARIO: [Nombre del ${counterpartyLabel}] / [Domicilio]
+    Lugar y fecha: [Ciudad], a [fecha]
+    EXPONE: hechos numerados, cita LAU explícita por cada cláusula problemática real
+    SOLICITA: petición concreta en términos legales
+    INDICA: plazo de respuesta razonable (10-15 días) y consecuencias en caso de no respuesta
+    Despedida formal: 'Atentamente,' + firma. Use Vd. en lugar de tú.>"
+}
 
----
+REGLAS DE FORMATO ESTRICTAS
+===========================
+- NO añadas texto antes ni después del JSON.
+- NO uses backticks ni code fences.
+- Escapa correctamente los saltos de línea dentro de los strings JSON con \\n.
+- NO incluyas comentarios JSON.`;
+}
 
-## Los puntos que deberias revisar
-
-[Para CADA clausula, crear una seccion asi. Maximo 2-3 frases por apartado:]
-
-### Punto 1: [Titulo muy corto y claro del problema]
-
-Que pone en el contrato:
-"[Extracto breve de la clausula, simplificado si es muy largo]"
-
-Por que es importante:
-[Explicacion en 1-2 frases claras. Ejemplo: "Esto significa que si te vas antes de tiempo, tendrias que pagar X meses. Sin embargo, la ley establece que solo puede ser 1 mes como maximo."]
-
-Que puedes hacer:
-[Sugerencia practica y respetuosa. Ejemplo: "Puedes comentarle al propietario que este punto no se ajusta a la normativa vigente y proponer una redaccion alternativa. Por ejemplo: 'He revisado el contrato y creo que podriamos ajustar esta clausula para que sea conforme a la ley.'"]
-
----
-
-[Repetir para cada punto problematico: Punto 2, Punto 3, etc.]
-
----
-
-## Consejos para la conversacion
-
-[3-4 consejos muy breves y practicos, en formato lista:]
-
-- Elige un buen momento: Busca un momento tranquilo para hablar con el propietario
-- Lleva el contrato: Asi podeis revisar los puntos juntos sobre el documento
-- Manten un tono constructivo: El objetivo es llegar a un acuerdo beneficioso para ambas partes
-- Deja constancia por escrito: Si acordais modificar algo, aseguraos de que quede reflejado en el contrato
-
----
-
-## Si no llegais a un acuerdo
-
-[2-3 frases tranquilizadoras sobre que hacer si la negociacion no funciona. Tono calmado y profesional:]
-
-Si no conseguis acordar todos los puntos, puedes valorar si el piso te compensa igualmente o buscar otras opciones. Tambien puedes consultar con una asociacion de inquilinos de tu zona, que suelen ofrecer orientacion gratuita.
-
----
-
-Este resumen tiene caracter orientativo e informativo. Para asesoramiento legal vinculante, consulta con un abogado colegiado.
-
----
-Generado por ACROXIA - Analisis de contratos con IA`;
+// Parsea respuesta del modelo intentando extraer los 3 campos. Robusto a code fences y texto extra.
+function parseGuideResponse(raw: string): {
+  informative_guide: string | null;
+  email_draft: string | null;
+  burofax_draft: string | null;
+} {
+  if (!raw) return { informative_guide: null, email_draft: null, burofax_draft: null };
+  const stripped = raw
+    .replace(/^\s*```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+  // Try direct parse first
+  try {
+    const obj = JSON.parse(stripped);
+    return {
+      informative_guide: typeof obj.informative_guide === "string" ? obj.informative_guide : null,
+      email_draft: typeof obj.email_draft === "string" ? obj.email_draft : null,
+      burofax_draft: typeof obj.burofax_draft === "string" ? obj.burofax_draft : null,
+    };
+  } catch {
+    // Try to find first {...} block
+    const match = stripped.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        const obj = JSON.parse(match[0]);
+        return {
+          informative_guide: typeof obj.informative_guide === "string" ? obj.informative_guide : null,
+          email_draft: typeof obj.email_draft === "string" ? obj.email_draft : null,
+          burofax_draft: typeof obj.burofax_draft === "string" ? obj.burofax_draft : null,
+        };
+      } catch {
+        // fall through
+      }
+    }
+  }
+  // Fallback: dump everything as informative_guide
+  return { informative_guide: stripped, email_draft: null, burofax_draft: null };
 }
 
 serve(async (req) => {
