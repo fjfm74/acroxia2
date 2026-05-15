@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { toast } from "sonner";
+import ComingSoonButton from "@/components/coming-soon/ComingSoonButton";
+import ComingSoonOverlay from "@/components/coming-soon/ComingSoonOverlay";
+import { isAudienceEnabled } from "@/lib/features";
 
 const plans = [
   {
@@ -65,7 +68,10 @@ const LandlordPricing = () => {
     }
   };
 
+  const enabled = isAudienceEnabled("propietario");
+
   return (
+    <ComingSoonOverlay audience="propietario">
     <section className="py-24 bg-muted">
       <div className="container mx-auto px-6">
         <FadeIn>
@@ -91,8 +97,15 @@ const LandlordPricing = () => {
                   plan.highlighted
                     ? "ring-2 ring-success shadow-xl shadow-success/10"
                     : "border border-charcoal/10 shadow-sm"
-                }`}
+                } ${!enabled ? "opacity-70" : ""}`}
               >
+                {!enabled && (
+                  <div className="absolute top-4 right-4">
+                    <span className="bg-amber-100 text-amber-900 px-2 py-0.5 text-[10px] font-medium rounded-full">
+                      Próximamente
+                    </span>
+                  </div>
+                )}
                 {plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <span className="bg-success text-white text-xs font-medium px-4 py-1.5 rounded-full">
@@ -125,34 +138,57 @@ const LandlordPricing = () => {
                   ))}
                 </ul>
 
-                <Button
-                  onClick={() => handlePlanClick(plan)}
-                  disabled={loading}
-                  className={`w-full rounded-full font-medium ${
-                    plan.highlighted
-                      ? "bg-charcoal text-cream hover:bg-charcoal/90"
-                      : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
-                  }`}
-                >
-                  {loading ? "Cargando..." : plan.cta}
-                </Button>
+                {enabled ? (
+                  <Button
+                    onClick={() => handlePlanClick(plan)}
+                    disabled={loading}
+                    className={`w-full rounded-full font-medium ${
+                      plan.highlighted
+                        ? "bg-charcoal text-cream hover:bg-charcoal/90"
+                        : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
+                    }`}
+                  >
+                    {loading ? "Cargando..." : plan.cta}
+                  </Button>
+                ) : (
+                  <ComingSoonButton
+                    audience="propietario"
+                    showBadge={false}
+                    className={`w-full rounded-full font-medium ${
+                      plan.highlighted
+                        ? "bg-charcoal text-cream hover:bg-charcoal/90"
+                        : "bg-transparent text-charcoal border border-charcoal hover:bg-charcoal hover:text-cream"
+                    }`}
+                  >
+                    {plan.cta}
+                  </ComingSoonButton>
+                )}
               </div>
             </FadeIn>
           ))}
         </div>
 
         <FadeIn delay={0.3}>
-          <div className="text-center mt-10">
+          <div className="text-center mt-10 space-y-2">
             <Link
               to="/propietarios"
-              className="text-sm font-medium text-charcoal/70 hover:text-charcoal underline underline-offset-4"
+              className="text-sm font-medium text-charcoal/70 hover:text-charcoal underline underline-offset-4 block"
             >
               Ver todas las funcionalidades para propietarios →
             </Link>
+            {!enabled && (
+              <Link
+                to="/analizar-gratis"
+                className="text-sm text-charcoal/60 hover:text-charcoal underline underline-offset-4 block"
+              >
+                Mientras tanto, analiza un contrato gratis →
+              </Link>
+            )}
           </div>
         </FadeIn>
       </div>
     </section>
+    </ComingSoonOverlay>
   );
 };
 
