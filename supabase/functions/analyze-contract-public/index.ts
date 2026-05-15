@@ -856,21 +856,19 @@ Contenido: ${c.content}
 
     if (problematicClauses.length > 0) {
       try {
-        const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysisResult.summary);
+        const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysisResult.summary, perspective);
         const guideResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash",
+            temperature: 0.4,
             messages: [
               { role: "system", content: guidePrompt },
               {
                 role: "user",
                 content:
-                  "Genera una guia de negociacion clara y practica para el inquilino. Incluye todos los puntos problematicos detectados con sugerencias de conversacion y consejos practicos. El tono debe ser profesional pero accesible, sin jerga legal innecesaria. No uses expresiones coloquiales como 'colega', 'tio' o similares. No uses emojis ni asteriscos para negrita. Los titulos con # deben ser texto plano.",
+                  "Genera los 3 documentos solicitados (informative_guide, email_draft, burofax_draft) en JSON estricto, basados en las cláusulas reales detectadas.",
               },
             ],
           }),
@@ -878,13 +876,19 @@ Contenido: ${c.content}
 
         if (guideResponse.ok) {
           const guideData = await guideResponse.json();
-          analysisResult.generated_letter = guideData.choices?.[0]?.message?.content || null;
-          console.log(`[analyze-contract-public] Generated negotiation letter (${analysisResult.generated_letter?.length || 0} chars)`);
+          const raw = guideData.choices?.[0]?.message?.content || "";
+          const parsed = parseGuideResponse(raw);
+          analysisResult.generated_letter = parsed.informative_guide;
+          analysisResult.generated_email = parsed.email_draft;
+          analysisResult.generated_burofax = parsed.burofax_draft;
+          console.log(
+            `[analyze-contract-public] Guide. guide=${!!parsed.informative_guide} email=${!!parsed.email_draft} burofax=${!!parsed.burofax_draft}`,
+          );
         } else {
-          console.warn("[analyze-contract-public] Negotiation letter generation failed:", await guideResponse.text());
+          console.warn("[analyze-contract-public] Guide generation failed:", await guideResponse.text());
         }
       } catch (e: any) {
-        console.error("[analyze-contract-public] Error generating negotiation letter:", e?.message || e);
+        console.error("[analyze-contract-public] Error generating guide:", e?.message || e);
       }
     }
 
