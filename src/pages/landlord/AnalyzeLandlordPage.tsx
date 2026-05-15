@@ -260,7 +260,7 @@ const AnalyzeLandlordPage = () => {
                       </p>
                       <input
                         type="file"
-                        accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.webp"
+                        accept=".pdf,.docx,.jpg,.jpeg,.png,.webp"
                         onChange={handleFileChange}
                         className="hidden"
                         disabled={!hasCredits}
