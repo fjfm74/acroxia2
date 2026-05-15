@@ -573,6 +573,7 @@ const AnalyzePublic = () => {
                 </FadeIn>
               </div>
             </div>
+            )}
           </div>
         </main>
 
