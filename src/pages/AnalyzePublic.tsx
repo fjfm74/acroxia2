@@ -16,6 +16,8 @@ import { trackConversion } from "@/lib/analytics";
 import ContractTypeSelector, { ContractTypeChoice } from "@/components/analyze/ContractTypeSelector";
 import ContractNotSupported from "@/components/analyze/ContractNotSupported";
 import ContractTypeWizard, { WizardResult } from "@/components/analyze/ContractTypeWizard";
+import ComingSoonModal from "@/components/coming-soon/ComingSoonModal";
+import { isAudienceEnabled } from "@/lib/features";
 
 type Step = "selector" | "wizard" | "not_supported" | "upload";
 
@@ -55,6 +57,8 @@ const AnalyzePublic = () => {
 
   const [step, setStep] = useState<Step>("selector");
   const [notSupportedType, setNotSupportedType] = useState<"temporada" | "vacacional">("temporada");
+  const [landlordModalOpen, setLandlordModalOpen] = useState(false);
+  const landlordEnabled = isAudienceEnabled("propietario");
 
   const handleTypeSelect = (choice: ContractTypeChoice) => {
     if (choice === "habitual" || choice === "habitacion") {
@@ -367,16 +371,27 @@ const AnalyzePublic = () => {
                   </button>
                   <button
                     onClick={() => {
+                      if (!landlordEnabled) {
+                        setLandlordModalOpen(true);
+                        return;
+                      }
                       setPerspective("landlord");
                       localStorage.setItem("acroxia_user_type", "propietario");
                     }}
-                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
-                      perspective === "landlord"
+                    className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
+                      !landlordEnabled
+                        ? "bg-muted text-muted-foreground/60 cursor-not-allowed"
+                        : perspective === "landlord"
                         ? "bg-foreground text-background"
                         : "bg-muted text-muted-foreground hover:bg-muted-foreground/10"
                     }`}
                   >
                     Soy propietario
+                    {!landlordEnabled && (
+                      <span className="ml-2 inline-flex items-center bg-amber-100 text-amber-900 px-1.5 py-0.5 text-[9px] font-medium rounded-full">
+                        Próximamente
+                      </span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -581,6 +596,11 @@ const AnalyzePublic = () => {
 
         <Footer />
       </div>
+      <ComingSoonModal
+        audience="propietario"
+        open={landlordModalOpen}
+        onOpenChange={setLandlordModalOpen}
+      />
     </>
   );
 };

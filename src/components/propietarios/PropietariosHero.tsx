@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import FadeIn from "@/components/animations/FadeIn";
+import ComingSoonButton from "@/components/coming-soon/ComingSoonButton";
 
 const PropietariosHero = () => {
   return (
@@ -27,11 +28,17 @@ const PropietariosHero = () => {
           
           <FadeIn delay={0.3}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="rounded-full px-8">
-                <Link to="/registro">Ver planes para propietarios</Link>
-              </Button>
+              <ComingSoonButton
+                audience="propietario"
+                originalHref="/registro"
+                size="lg"
+                className="rounded-full px-8"
+                showBadge={false}
+              >
+                Ver planes para propietarios
+              </ComingSoonButton>
               <Button asChild size="lg" variant="outline" className="rounded-full px-8">
-                <Link to="/analizar-gratis?perspectiva=propietario">Analizar mi contrato</Link>
+                <Link to="/analizar-gratis">Analizar mi contrato</Link>
               </Button>
             </div>
           </FadeIn>

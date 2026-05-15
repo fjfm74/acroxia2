@@ -6,6 +6,8 @@ import Footer from "@/components/landing/Footer";
 import FadeIn from "@/components/animations/FadeIn";
 import { Button } from "@/components/ui/button";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import ComingSoonOverlay from "@/components/coming-soon/ComingSoonOverlay";
+import ComingSoonButton from "@/components/coming-soon/ComingSoonButton";
 
 const painPoints = [
   {
@@ -160,6 +162,7 @@ const Inmobiliarias = () => {
 
       <Header />
 
+      <ComingSoonOverlay audience="profesional_inmobiliarias">
       <Breadcrumbs items={breadcrumbItems} />
 
       <main>
@@ -188,9 +191,15 @@ const Inmobiliarias = () => {
               
               <FadeIn delay={0.3}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild size="lg" className="rounded-full px-8">
-                    <Link to="/registro">Contratar Plan Profesional</Link>
-                  </Button>
+                  <ComingSoonButton
+                    audience="profesional_inmobiliarias"
+                    originalHref="/registro"
+                    size="lg"
+                    className="rounded-full px-8"
+                    showBadge={false}
+                  >
+                    Contratar Plan Profesional
+                  </ComingSoonButton>
                 </div>
               </FadeIn>
             </div>
@@ -357,18 +366,20 @@ const Inmobiliarias = () => {
                       ))}
                     </ul>
 
-                    <Button 
-                      asChild 
-                      size="lg" 
+                    <ComingSoonButton
+                      audience="profesional_inmobiliarias"
+                      originalHref="/registro"
+                      size="lg"
+                      showBadge={false}
                       className={`w-full rounded-full ${
-                        plan.highlighted 
-                          ? "bg-background text-foreground hover:bg-background/90" 
+                        plan.highlighted
+                          ? "bg-background text-foreground hover:bg-background/90"
                           : ""
                       }`}
                       variant={plan.highlighted ? "secondary" : "default"}
                     >
-                      <Link to="/registro">Contratar</Link>
-                    </Button>
+                      Contratar
+                    </ComingSoonButton>
                   </div>
                 </FadeIn>
               ))}
@@ -406,21 +417,22 @@ const Inmobiliarias = () => {
                 <p className="text-background/70 text-lg mb-10">
                   Únete a las inmobiliarias que ya utilizan ContratoAlquiler para agilizar la revisión de contratos
                 </p>
-                <Button 
-                  asChild 
-                  size="lg" 
+                <ComingSoonButton
+                  audience="profesional_inmobiliarias"
+                  originalHref="/registro"
+                  size="lg"
+                  showBadge={false}
                   className="rounded-full px-8 bg-background text-foreground hover:bg-background/90"
                 >
-                  <Link to="/registro">
-                    Contratar ahora
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
+                  Contratar ahora
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </ComingSoonButton>
               </div>
             </FadeIn>
           </div>
         </section>
       </main>
+      </ComingSoonOverlay>
 
       <Footer />
     </>

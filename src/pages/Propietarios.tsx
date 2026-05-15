@@ -11,6 +11,7 @@ import PropietariosFAQ from "@/components/propietarios/PropietariosFAQ";
 import PropietariosCTA from "@/components/propietarios/PropietariosCTA";
 import FadeIn from "@/components/animations/FadeIn";
 import BlogSubscriptionForm from "@/components/blog/BlogSubscriptionForm";
+import ComingSoonOverlay from "@/components/coming-soon/ComingSoonOverlay";
 
 const schemaService = {
   "@context": "https://schema.org",
@@ -77,6 +78,7 @@ const Propietarios = () => {
 
       <Header />
 
+      <ComingSoonOverlay audience="propietario">
       <Breadcrumbs items={breadcrumbItems} />
 
       <main>
@@ -124,6 +126,7 @@ const Propietarios = () => {
 
         <PropietariosCTA />
       </main>
+      </ComingSoonOverlay>
 
       <Footer />
     </>

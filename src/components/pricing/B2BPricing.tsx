@@ -4,6 +4,10 @@ import FadeIn from "@/components/animations/FadeIn";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import ComingSoonButton from "@/components/coming-soon/ComingSoonButton";
+import ComingSoonOverlay from "@/components/coming-soon/ComingSoonOverlay";
+import { isAudienceEnabled } from "@/lib/features";
 
 const b2bPlans = [
   {
@@ -65,7 +69,11 @@ const B2BPricing = () => {
     }
   };
 
-  return (
+  const inmoEnabled = isAudienceEnabled("profesional_inmobiliarias");
+  const gestEnabled = isAudienceEnabled("profesional_gestorias");
+  const bothDisabled = !inmoEnabled && !gestEnabled;
+
+  const content = (
     <section className="py-24 bg-charcoal">
       <div className="container mx-auto px-6">
         <FadeIn>
@@ -90,8 +98,15 @@ const B2BPricing = () => {
                   plan.highlighted
                     ? "bg-cream/10 border-2 border-success/70 shadow-xl shadow-success/10"
                     : "bg-cream/5 border border-cream/10 hover:bg-cream/10"
-                }`}
+                } ${bothDisabled ? "opacity-80" : ""}`}
               >
+                {bothDisabled && (
+                  <div className="absolute top-4 right-4">
+                    <span className="bg-amber-100 text-amber-900 px-2 py-0.5 text-[10px] font-medium rounded-full">
+                      Próximamente
+                    </span>
+                  </div>
+                )}
                 {plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <span className="bg-success text-white text-xs font-medium px-4 py-1.5 rounded-full">
@@ -140,20 +155,52 @@ const B2BPricing = () => {
                   ))}
                 </ul>
 
-                <Button
-                  onClick={() => handlePlanClick(plan)}
-                  disabled={loading}
-                  className="w-full rounded-full bg-cream text-charcoal hover:bg-cream/90 font-medium"
-                >
-                  {loading ? "Cargando..." : "Suscribirme"}
-                </Button>
+                {!bothDisabled ? (
+                  <Button
+                    onClick={() => handlePlanClick(plan)}
+                    disabled={loading}
+                    className="w-full rounded-full bg-cream text-charcoal hover:bg-cream/90 font-medium"
+                  >
+                    {loading ? "Cargando..." : "Suscribirme"}
+                  </Button>
+                ) : (
+                  <ComingSoonButton
+                    audience="profesional_inmobiliarias"
+                    showBadge={false}
+                    className="w-full rounded-full bg-cream text-charcoal hover:bg-cream/90 font-medium"
+                  >
+                    Suscribirme
+                  </ComingSoonButton>
+                )}
               </div>
             </FadeIn>
           ))}
         </div>
+
+        {bothDisabled && (
+          <FadeIn delay={0.3}>
+            <div className="text-center mt-10">
+              <Link
+                to="/analizar-gratis"
+                className="text-sm text-cream/70 hover:text-cream underline underline-offset-4"
+              >
+                Mientras tanto, analiza un contrato gratis →
+              </Link>
+            </div>
+          </FadeIn>
+        )}
       </div>
     </section>
   );
+
+  if (bothDisabled) {
+    return (
+      <ComingSoonOverlay audience="profesional_inmobiliarias">
+        {content}
+      </ComingSoonOverlay>
+    );
+  }
+  return content;
 };
 
 export default B2BPricing;
