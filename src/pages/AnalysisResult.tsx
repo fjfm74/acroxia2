@@ -82,6 +82,8 @@ interface FullReport {
   clauses: Clause[];
   overall_assessment?: string;
   generated_letter?: string;
+  generated_email?: string;
+  generated_burofax?: string;
   contract_metadata?: ContractMetadata;
   summary?: Summary;
 }
