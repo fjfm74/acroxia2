@@ -596,6 +596,11 @@ const AnalyzePublic = () => {
 
         <Footer />
       </div>
+      <ComingSoonModal
+        audience="propietario"
+        open={landlordModalOpen}
+        onOpenChange={setLandlordModalOpen}
+      />
     </>
   );
 };
