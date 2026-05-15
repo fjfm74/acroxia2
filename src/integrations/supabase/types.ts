@@ -1680,6 +1680,36 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_audiences: {
+        Row: {
+          accepted_rgpd_at: string
+          audience: string
+          created_at: string
+          email: string
+          id: string
+          notified_launch_at: string | null
+          source_url: string | null
+        }
+        Insert: {
+          accepted_rgpd_at?: string
+          audience: string
+          created_at?: string
+          email: string
+          id?: string
+          notified_launch_at?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          accepted_rgpd_at?: string
+          audience?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notified_launch_at?: string | null
+          source_url?: string | null
+        }
+        Relationships: []
+      }
       waitlist_contract_types: {
         Row: {
           accepted_rgpd_at: string
