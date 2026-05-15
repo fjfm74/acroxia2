@@ -37,6 +37,7 @@ import {
   Loader2,
   Mail,
 } from "lucide-react";
+import NegotiationGuideTeaser from "@/components/analyze/NegotiationGuideTeaser";
 
 interface AnalysisResult {
   total_clauses: number;
@@ -524,6 +525,19 @@ const FreeResultPreview = () => {
                     </CardContent>
                   </Card>
                 </FadeIn>
+
+                {!isPaid && (result as any).generated_letter && (
+                  <FadeIn delay={0.35}>
+                    <NegotiationGuideTeaser
+                      generatedLetter={(result as any).generated_letter}
+                      problematicClausesCount={result.suspicious_clauses + result.illegal_clauses}
+                      perspective={isLandlord ? "landlord" : "tenant"}
+                      price={priceDisplay}
+                      onUnlock={handleUnlockClick}
+                      disabled={checkoutLoading || emailGateLoading || !consentDigital}
+                    />
+                  </FadeIn>
+                )}
               </div>
 
               <div className="lg:col-span-1 space-y-6">

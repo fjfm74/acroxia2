@@ -29,7 +29,10 @@ import {
   User,
   Bot,
   MessageSquareHeart,
+  Mail,
+  FileWarning,
 } from "lucide-react";
+import { toast } from "sonner";
 import jsPDF from "jspdf";
 
 interface LegalReference {
@@ -79,6 +82,8 @@ interface FullReport {
   clauses: Clause[];
   overall_assessment?: string;
   generated_letter?: string;
+  generated_email?: string;
+  generated_burofax?: string;
   contract_metadata?: ContractMetadata;
   summary?: Summary;
 }
@@ -132,44 +137,30 @@ const AnalysisResult = () => {
     fetchAnalysis();
   }, [id]);
 
-  const handleDownloadGuide = () => {
-    if (!analysis?.full_report?.generated_letter) return;
+  const cleanText = (text: string): string => {
+    return text
+      .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
+      .replace(/[\u{2600}-\u{26FF}]/gu, "")
+      .replace(/[\u{2700}-\u{27BF}]/gu, "")
+      .replace(/[\u{1F600}-\u{1F64F}]/gu, "")
+      .replace(/[\u{1F680}-\u{1F6FF}]/gu, "")
+      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, "")
+      .replace(/[\u{2460}-\u{24FF}]/gu, "")
+      .replace(/[\u{2776}-\u{277F}]/gu, "")
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, "")
+      .replace(/[\u{200B}-\u{200D}]/gu, "")
+      .replace(/[\u{FEFF}]/gu, "")
+      .replace(/[""]/g, '"')
+      .replace(/['']/g, "'")
+      .replace(/[—–]/g, "-")
+      .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, "")
+      .trim();
+  };
 
-    const fileName = analysis.contracts?.file_name?.replace(/\.pdf$/i, "") || "contrato";
-    let guideContent = analysis.full_report.generated_letter;
+  const generatePdf = (rawContent: string, headerTitle: string, headerSubtitle: string, fileSuffix: string) => {
+    const fileName = analysis?.contracts?.file_name?.replace(/\.pdf$/i, "") || "contrato";
+    const content = cleanText(rawContent);
 
-    // Clean problematic characters
-    const cleanText = (text: string): string => {
-      return (
-        text
-          // Remove emojis and special unicode characters
-          .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
-          .replace(/[\u{2600}-\u{26FF}]/gu, "")
-          .replace(/[\u{2700}-\u{27BF}]/gu, "")
-          .replace(/[\u{1F600}-\u{1F64F}]/gu, "")
-          .replace(/[\u{1F680}-\u{1F6FF}]/gu, "")
-          .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, "")
-          // Remove circled numbers
-          .replace(/[\u{2460}-\u{24FF}]/gu, "")
-          .replace(/[\u{2776}-\u{277F}]/gu, "")
-          .replace(/1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|🔟/g, "")
-          // Remove other problematic characters
-          .replace(/[\u{FE00}-\u{FE0F}]/gu, "")
-          .replace(/[\u{200B}-\u{200D}]/gu, "")
-          .replace(/[\u{FEFF}]/gu, "")
-          // Normalize quotes and dashes
-          .replace(/[""]/g, '"')
-          .replace(/['']/g, "'")
-          .replace(/[—–]/g, "-")
-          // Remove any remaining non-printable characters except newlines
-          .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, "")
-          .trim()
-      );
-    };
-
-    guideContent = cleanText(guideContent);
-
-    // Create PDF with jsPDF
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -177,28 +168,19 @@ const AnalysisResult = () => {
     const maxWidth = pageWidth - margin * 2;
     let yPosition = margin;
 
-    // Helper to check page break
-    const checkPageBreak = (neededSpace: number = 15) => {
+    const checkPageBreak = (neededSpace = 15) => {
       if (yPosition > pageHeight - margin - neededSpace) {
         doc.addPage();
         yPosition = margin;
       }
     };
 
-    // Helper function to add text with word wrap and page breaks
-    const addText = (
-      text: string,
-      fontSize: number,
-      isBold = false,
-      color: [number, number, number] = [31, 29, 27],
-    ) => {
+    const addText = (text: string, fontSize: number, isBold = false, color: [number, number, number] = [31, 29, 27]) => {
       doc.setFontSize(fontSize);
       doc.setFont("helvetica", isBold ? "bold" : "normal");
       doc.setTextColor(color[0], color[1], color[2]);
-
       const lines = doc.splitTextToSize(text, maxWidth);
       const lineHeight = fontSize * 0.45;
-
       for (const line of lines) {
         checkPageBreak();
         doc.text(line, margin, yPosition);
@@ -207,147 +189,73 @@ const AnalysisResult = () => {
       yPosition += 2;
     };
 
-    // Helper to render text with inline bold (handles **text** patterns)
-    const addTextWithInlineBold = (text: string, fontSize: number) => {
-      // First clean any remaining markdown
-      const cleanedText = text
-        .replace(/\*\*([^*]+)\*\*/g, "$1") // Remove bold markers but keep text
-        .replace(/\*([^*]+)\*/g, "$1"); // Remove italic markers
-
-      addText(cleanedText, fontSize, false);
-    };
-
-    // Header - friendly design
+    // Header
     doc.setFillColor(31, 29, 27);
     doc.rect(0, 0, pageWidth, 40, "F");
     doc.setTextColor(250, 248, 245);
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Tu resumen del contrato", margin, 18);
+    doc.text(headerTitle, margin, 18);
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text("Puntos a revisar y consejos para negociar", margin, 28);
+    doc.text(headerSubtitle, margin, 28);
     doc.setFontSize(9);
     doc.setTextColor(180, 180, 180);
     doc.text("Archivo: " + fileName.substring(0, 50), margin, 36);
     yPosition = 55;
 
-    // Process the markdown-like content
-    const lines = guideContent.split("\n");
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const trimmedLine = line.trim();
-
-      if (!trimmedLine) {
+    const lines = content.split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
         yPosition += 3;
         continue;
       }
-
-      // Handle headers
-      if (trimmedLine.startsWith("# ")) {
-        yPosition += 8;
-        checkPageBreak(20);
-        const headerText = trimmedLine.replace("# ", "").replace(/[!?]/g, "");
-        addText(headerText, 18, true, [31, 29, 27]);
-        yPosition += 4;
-      } else if (trimmedLine.startsWith("## ")) {
+      if (trimmed.startsWith("# ")) {
         yPosition += 6;
-        checkPageBreak(15);
-        const headerText = trimmedLine.replace("## ", "");
-        addText(headerText, 14, true, [31, 29, 27]);
-        yPosition += 3;
-      } else if (trimmedLine.startsWith("### ")) {
-        yPosition += 5;
-        checkPageBreak(12);
-        const headerText = trimmedLine.replace("### ", "").replace("Punto ", "");
-        // Add a subtle background for section headers
-        doc.setFillColor(245, 243, 240);
-        doc.rect(margin - 2, yPosition - 5, maxWidth + 4, 8, "F");
-        addText(headerText, 11, true, [60, 60, 60]);
-        yPosition += 2;
-      } else if (trimmedLine.startsWith("> ")) {
-        // Blockquote styling with beige background
-        checkPageBreak(20);
-        const quoteText = cleanText(trimmedLine.replace("> ", "").replace(/"/g, ""));
-        doc.setFontSize(10);
-        const quoteLines = doc.splitTextToSize(quoteText, maxWidth - 14);
-        const quoteHeight = quoteLines.length * 5 + 8;
-
-        doc.setFillColor(252, 250, 245);
-        doc.setDrawColor(220, 210, 190);
-        doc.rect(margin, yPosition - 2, maxWidth, quoteHeight, "FD");
-
-        doc.setFont("helvetica", "italic");
-        doc.setTextColor(80, 75, 70);
-        let qY = yPosition + 4;
-        for (const qLine of quoteLines) {
-          doc.text(qLine, margin + 7, qY);
-          qY += 5;
-        }
-        yPosition += quoteHeight + 4;
-      } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
-        // Bullet points
-        checkPageBreak(10);
-        let bulletText = trimmedLine.replace(/^[-*]\s/, "");
-        // Clean bold markers from bullet text
-        bulletText = bulletText.replace(/\*\*([^*]+)\*\*/g, "$1");
-
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(31, 29, 27);
-
-        // Draw bullet
-        doc.setFillColor(31, 29, 27);
-        doc.circle(margin + 2, yPosition - 1.5, 1, "F");
-
-        const bulletLines = doc.splitTextToSize(bulletText, maxWidth - 12);
-        for (let j = 0; j < bulletLines.length; j++) {
-          checkPageBreak();
-          doc.text(bulletLines[j], margin + 8, yPosition);
-          yPosition += 5;
-        }
-        yPosition += 2;
-      } else if (trimmedLine.startsWith("---")) {
-        // Horizontal rule - visual separator
+        addText(trimmed.replace("# ", "").replace(/[!?]/g, ""), 16, true);
+      } else if (trimmed.startsWith("## ")) {
         yPosition += 4;
-        checkPageBreak();
-        doc.setDrawColor(200, 195, 185);
-        doc.setLineWidth(0.3);
-        doc.line(margin + 20, yPosition, pageWidth - margin - 20, yPosition);
-        yPosition += 8;
-      } else if (/^\d+\./.test(trimmedLine)) {
-        // Numbered list
-        checkPageBreak();
-        addTextWithInlineBold(trimmedLine, 10);
-      } else if (trimmedLine.includes(":") && trimmedLine.length < 80 && !trimmedLine.includes('"')) {
-        // Likely a label line (e.g., "Que pone en el contrato:")
-        checkPageBreak();
-        const labelText = trimmedLine.replace(/:/g, ":");
-        addText(labelText, 10, true, [50, 50, 50]);
+        addText(trimmed.replace("## ", ""), 13, true);
+      } else if (trimmed.startsWith("### ")) {
+        yPosition += 3;
+        addText(trimmed.replace("### ", ""), 11, true, [60, 60, 60]);
+      } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+        addText("• " + trimmed.replace(/^[-*]\s/, "").replace(/\*\*([^*]+)\*\*/g, "$1"), 10);
       } else {
-        // Regular paragraph
-        checkPageBreak();
-        addTextWithInlineBold(trimmedLine, 10);
+        addText(trimmed.replace(/\*\*([^*]+)\*\*/g, "$1"), 10);
       }
     }
 
-    // Footer on all pages
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
       doc.setTextColor(150, 150, 150);
-      doc.text("Generado con ContratoAlquiler - Pagina " + i + " de " + totalPages, margin, pageHeight - 10);
-      doc.text(
-        new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" }),
-        pageWidth - margin - 45,
-        pageHeight - 10,
-      );
+      doc.text("Generado con ACROXIA - Pagina " + i + " de " + totalPages, margin, pageHeight - 10);
     }
 
-    doc.save("guia-negociacion-" + fileName + ".pdf");
+    doc.save(`${fileSuffix}-${fileName}.pdf`);
+  };
+
+  const handleDownloadGuide = () => {
+    if (!analysis?.full_report?.generated_letter) return;
+    generatePdf(analysis.full_report.generated_letter, "Tu guía de negociación", "Puntos a revisar y consejos", "guia-negociacion");
+  };
+
+  const handleDownloadBurofax = () => {
+    if (!analysis?.full_report?.generated_burofax) return;
+    generatePdf(analysis.full_report.generated_burofax, "Borrador de burofax", "Documento formal jurídico", "burofax");
+  };
+
+  const handleCopyEmail = async () => {
+    if (!analysis?.full_report?.generated_email) return;
+    try {
+      await navigator.clipboard.writeText(analysis.full_report.generated_email);
+      toast.success("Email copiado al portapapeles");
+    } catch {
+      toast.error("No se pudo copiar. Inténtalo de nuevo.");
+    }
   };
 
   const getClauseIcon = (type: string) => {
