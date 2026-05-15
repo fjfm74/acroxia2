@@ -1397,7 +1397,8 @@ ${sanitizedContractText.substring(0, 4000)}`,
     const problematicClauses = clauses.filter((c: any) => c.type === "illegal" || c.type === "suspicious");
 
     if (problematicClauses.length > 0) {
-      const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysis.summary);
+      const guidePerspective = (analysis as any)?.perspective === "landlord" ? "landlord" : "tenant";
+      const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysis.summary, guidePerspective);
 
       const guideResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -1407,14 +1408,13 @@ ${sanitizedContractText.substring(0, 4000)}`,
         },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
+          temperature: 0.4,
           messages: [
-            {
-              role: "system",
-              content: guidePrompt,
-            },
+            { role: "system", content: guidePrompt },
             {
               role: "user",
-              content: `Genera una guia de negociacion clara y practica para el inquilino. Incluye todos los puntos problematicos detectados con sugerencias de conversacion y consejos practicos. El tono debe ser profesional pero accesible, sin jerga legal innecesaria. No uses expresiones coloquiales como "colega", "tio" o similares. No uses emojis ni asteriscos para negrita. Los titulos con # deben ser texto plano.`,
+              content:
+                "Genera los 3 documentos solicitados (informative_guide, email_draft, burofax_draft) en JSON estricto, basados en las cláusulas reales detectadas.",
             },
           ],
         }),
@@ -1422,7 +1422,16 @@ ${sanitizedContractText.substring(0, 4000)}`,
 
       if (guideResponse.ok) {
         const guideData = await guideResponse.json();
-        analysis.generated_letter = guideData.choices?.[0]?.message?.content || null;
+        const raw = guideData.choices?.[0]?.message?.content || "";
+        const parsed = parseGuideResponse(raw);
+        analysis.generated_letter = parsed.informative_guide;
+        analysis.generated_email = parsed.email_draft;
+        analysis.generated_burofax = parsed.burofax_draft;
+        console.log(
+          `[analyze-contract] Guide generated. guide=${!!parsed.informative_guide} email=${!!parsed.email_draft} burofax=${!!parsed.burofax_draft}`,
+        );
+      } else {
+        console.warn("[analyze-contract] Guide generation failed:", await guideResponse.text());
       }
     }
 
