@@ -312,6 +312,31 @@ const AnalyzePublic = () => {
 
         <main className="flex-1 bg-muted pt-28 pb-12">
           <div className="container mx-auto px-6 max-w-4xl">
+            {step === "selector" && (
+              <FadeIn>
+                <ContractTypeSelector onSelect={handleTypeSelect} />
+              </FadeIn>
+            )}
+
+            {step === "wizard" && (
+              <FadeIn>
+                <ContractTypeWizard
+                  onResult={handleWizardResult}
+                  onBack={() => setStep("selector")}
+                />
+              </FadeIn>
+            )}
+
+            {step === "not_supported" && (
+              <FadeIn>
+                <ContractNotSupported
+                  type={notSupportedType}
+                  onBack={() => setStep("selector")}
+                />
+              </FadeIn>
+            )}
+
+            {step === "upload" && (
             <FadeIn>
               <div className="text-center mb-8">
                 <span className="inline-block px-4 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
