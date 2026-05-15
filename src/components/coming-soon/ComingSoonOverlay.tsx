@@ -1,6 +1,5 @@
 import { ReactNode, useState } from "react";
 import { AudienceFlag, isAudienceEnabled } from "@/lib/features";
-import ComingSoonBanner from "./ComingSoonBanner";
 import ComingSoonModal from "./ComingSoonModal";
 
 interface Props {
@@ -16,7 +15,6 @@ const ComingSoonOverlay = ({ audience, children }: Props) => {
 
   return (
     <>
-      <ComingSoonBanner audience={audience} onCtaClick={() => setOpen(true)} />
       {children}
       <ComingSoonModal
         audience={audience}
