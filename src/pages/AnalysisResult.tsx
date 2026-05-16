@@ -30,7 +30,6 @@ import {
   Bot,
   MessageSquareHeart,
   Mail,
-  FileWarning,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -83,7 +82,6 @@ interface FullReport {
   overall_assessment?: string;
   generated_letter?: string;
   generated_email?: string;
-  generated_burofax?: string;
   contract_metadata?: ContractMetadata;
   summary?: Summary;
 }
@@ -243,10 +241,7 @@ const AnalysisResult = () => {
     generatePdf(analysis.full_report.generated_letter, "Tu guía de negociación", "Puntos a revisar y consejos", "guia-negociacion");
   };
 
-  const handleDownloadBurofax = () => {
-    if (!analysis?.full_report?.generated_burofax) return;
-    generatePdf(analysis.full_report.generated_burofax, "Borrador de burofax", "Documento formal jurídico", "burofax");
-  };
+
 
   const handleCopyEmail = async () => {
     if (!analysis?.full_report?.generated_email) return;
@@ -460,20 +455,7 @@ const AnalysisResult = () => {
                       </div>
                     )}
 
-                    {analysis.full_report?.generated_burofax && (
-                      <div className="flex items-start gap-3 p-4 border rounded-lg bg-white">
-                        <FileWarning className="h-5 w-5 text-charcoal mt-1 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold">Borrador de burofax</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Si el email no funciona, escala con este burofax formal (cita LAU explícitamente)
-                          </p>
-                        </div>
-                        <Button onClick={handleDownloadBurofax} variant="outline" size="sm">
-                          Descargar PDF
-                        </Button>
-                      </div>
-                    )}
+
 
                     <p className="text-xs text-muted-foreground pt-2 border-t">
                       ℹ️ Estos documentos son orientativos y no sustituyen asesoramiento legal profesional.

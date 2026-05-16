@@ -842,7 +842,7 @@ REGLAS DE ORO (OBLIGATORIAS)
 10. VERIFICACIÓN OBLIGATORIA DE REQUISITOS DOCUMENTALES: Comprueba SIEMPRE si el contrato menciona la cédula de habitabilidad (o licencia de primera/segunda ocupación según CCAA) y el certificado de eficiencia energética. Si NO aparecen mencionados en el contrato, DEBES generar una cláusula por cada documento ausente con category "ESTADO DE LA VIVIENDA E INVENTARIO", type "suspicious", risk_level 7, explicando que son documentos legalmente obligatorios que el arrendador debe entregar antes de la firma. Referencias: Art. 25.2 LAU y normativa autonómica (cédula de habitabilidad), RD 235/2013 (certificado energético). Esta verificación es OBLIGATORIA en TODOS los análisis.`;
 }
 
-// Construye prompt para generar 3 documentos en JSON: guía, email y burofax.
+// Construye prompt para generar 2 documentos en JSON: guía y email.
 function buildNegotiationGuidePrompt(
   problematicClauses: any[],
   summary: any,
@@ -873,7 +873,7 @@ function buildNegotiationGuidePrompt(
     )
     .join("\n\n");
 
-  return `Eres un asesor legal experto en LAU (Ley 29/1994 de Arrendamientos Urbanos) en España. Tu tarea: generar 3 documentos para el ${audienceLabel}, basados EXCLUSIVAMENTE en las cláusulas problemáticas REALES detectadas en el contrato analizado.
+  return `Eres un asesor legal experto en LAU (Ley 29/1994 de Arrendamientos Urbanos) en España. Tu tarea: generar 2 documentos para el ${audienceLabel}, basados EXCLUSIVAMENTE en las cláusulas problemáticas REALES detectadas en el contrato analizado.
 
 CONTEXTO
 ========
@@ -891,7 +891,7 @@ INSTRUCCIONES CRÍTICAS
 ======================
 - Cada documento debe REFERENCIAR las cláusulas reales detectadas, una por una. NO uses lenguaje genérico.
 - Cita la LAU cuando proceda (ej: "art. 36 LAU sobre fianza", "art. 9 LAU sobre duración").
-- Trato: "tú" en email, "Vd." en burofax.
+- Trato: "tú" en el email.
 - NO uses emojis, NI **negritas** markdown, NI colores, NI cumplidos vacíos.
 - Números arábigos (1, 2, 3), no romanos.
 
@@ -904,20 +904,9 @@ Devuelve EXACTAMENTE un objeto JSON válido, sin texto fuera del JSON, sin code 
     1) Resumen del análisis (1 párrafo)
     2) Puntos a ${overallRisk === "bajo" ? "revisar" : overallRisk === "medio" ? "negociar" : "exigir"} — UNO por cada cláusula problemática REAL detectada arriba, con sub-secciones 'Qué pone tu contrato' / 'Por qué importa (con cita LAU)' / 'Qué decir o hacer'
     3) Consejos para la conversación (3-4 bullets)
-    4) Plan si no llegáis a acuerdo (burofax, asociaciones, juzgado)
-    5) Disclaimer legal (carácter informativo, no asesoramiento)>",
+    4) Disclaimer legal (carácter informativo, no asesoramiento)>",
 
-  "email_draft": "<email completo listo para copiar y pegar. ~250-400 palabras. Estructura: 'Asunto: ...' en primera línea, línea en blanco, saludo ('Hola [nombre del ${counterpartyLabel}],'), motivo (acabo de revisar el contrato), puntos concretos referenciando las cláusulas reales detectadas, propuesta constructiva, despedida cordial. Tono según las reglas anteriores. Tutea.>",
-
-  "burofax_draft": "<burofax oficial. ~300-500 palabras. Estructura formal jurídica:
-    Línea 1: 'BUROFAX CERTIFICADO CON ACUSE DE RECIBO Y CERTIFICACIÓN DE TEXTO'
-    Bloque REMITENTE: [Nombre completo] / [DNI] / [Domicilio] (usa placeholders entre corchetes)
-    Bloque DESTINATARIO: [Nombre del ${counterpartyLabel}] / [Domicilio]
-    Lugar y fecha: [Ciudad], a [fecha]
-    EXPONE: hechos numerados, cita LAU explícita por cada cláusula problemática real
-    SOLICITA: petición concreta en términos legales
-    INDICA: plazo de respuesta razonable (10-15 días) y consecuencias en caso de no respuesta
-    Despedida formal: 'Atentamente,' + firma. Use Vd. en lugar de tú.>"
+  "email_draft": "<email completo listo para copiar y pegar. ~250-400 palabras. Estructura: 'Asunto: ...' en primera línea, línea en blanco, saludo ('Hola [nombre del ${counterpartyLabel}],'), motivo (acabo de revisar el contrato), puntos concretos referenciando las cláusulas reales detectadas, propuesta constructiva, despedida cordial. Tono según las reglas anteriores. Tutea.>"
 }
 
 REGLAS DE FORMATO ESTRICTAS
@@ -928,27 +917,23 @@ REGLAS DE FORMATO ESTRICTAS
 - NO incluyas comentarios JSON.`;
 }
 
-// Parsea respuesta del modelo intentando extraer los 3 campos. Robusto a code fences y texto extra.
+// Parsea respuesta del modelo intentando extraer los 2 campos. Robusto a code fences y texto extra.
 function parseGuideResponse(raw: string): {
   informative_guide: string | null;
   email_draft: string | null;
-  burofax_draft: string | null;
 } {
-  if (!raw) return { informative_guide: null, email_draft: null, burofax_draft: null };
+  if (!raw) return { informative_guide: null, email_draft: null };
   const stripped = raw
     .replace(/^\s*```(?:json)?\s*/i, "")
     .replace(/\s*```\s*$/i, "")
     .trim();
-  // Try direct parse first
   try {
     const obj = JSON.parse(stripped);
     return {
       informative_guide: typeof obj.informative_guide === "string" ? obj.informative_guide : null,
       email_draft: typeof obj.email_draft === "string" ? obj.email_draft : null,
-      burofax_draft: typeof obj.burofax_draft === "string" ? obj.burofax_draft : null,
     };
   } catch {
-    // Try to find first {...} block
     const match = stripped.match(/\{[\s\S]*\}/);
     if (match) {
       try {
@@ -956,15 +941,13 @@ function parseGuideResponse(raw: string): {
         return {
           informative_guide: typeof obj.informative_guide === "string" ? obj.informative_guide : null,
           email_draft: typeof obj.email_draft === "string" ? obj.email_draft : null,
-          burofax_draft: typeof obj.burofax_draft === "string" ? obj.burofax_draft : null,
         };
       } catch {
         // fall through
       }
     }
   }
-  // Fallback: dump everything as informative_guide
-  return { informative_guide: stripped, email_draft: null, burofax_draft: null };
+  return { informative_guide: stripped, email_draft: null };
 }
 
 serve(async (req) => {
@@ -1414,7 +1397,7 @@ ${sanitizedContractText.substring(0, 4000)}`,
             {
               role: "user",
               content:
-                "Genera los 3 documentos solicitados (informative_guide, email_draft, burofax_draft) en JSON estricto, basados en las cláusulas reales detectadas.",
+                "Genera los 2 documentos solicitados (informative_guide, email_draft) en JSON estricto, basados en las cláusulas reales detectadas.",
             },
           ],
         }),
@@ -1426,9 +1409,8 @@ ${sanitizedContractText.substring(0, 4000)}`,
         const parsed = parseGuideResponse(raw);
         analysis.generated_letter = parsed.informative_guide;
         analysis.generated_email = parsed.email_draft;
-        analysis.generated_burofax = parsed.burofax_draft;
         console.log(
-          `[analyze-contract] Guide generated. guide=${!!parsed.informative_guide} email=${!!parsed.email_draft} burofax=${!!parsed.burofax_draft}`,
+          `[analyze-contract] Guide generated. guide=${!!parsed.informative_guide} email=${!!parsed.email_draft}`,
         );
       } else {
         console.warn("[analyze-contract] Guide generation failed:", await guideResponse.text());

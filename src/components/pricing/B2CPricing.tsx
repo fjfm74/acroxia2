@@ -52,7 +52,6 @@ const plans: Array<{
       { text: "Todo lo del Escaneo Rápido +" },
       { text: "Guía de negociación personalizada (PDF descargable)", kind: "highlight" },
       { text: "Borrador de email listo para enviar al propietario", kind: "highlight" },
-      { text: "Borrador de burofax (si necesitas escalar)", kind: "highlight" },
       { text: "Detalle completo de cada cláusula con argumentación legal" },
     ],
     cta: "Comprar análisis",
@@ -71,7 +70,7 @@ const plans: Array<{
     features: [
       { text: "Análisis Único × 3 contratos" },
       { text: "Comparativa lado a lado de los 3 contratos" },
-      { text: "3× Guía de negociación + Email + Burofax (uno por contrato)" },
+      { text: "3× Guía de negociación + Email (uno por contrato)" },
       { text: "Recomendación del mejor contrato" },
     ],
     cta: "Comprar pack",
