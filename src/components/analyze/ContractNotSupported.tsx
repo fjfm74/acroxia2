@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Calendar, Palmtree, Store, Factory, Car, Building2, Loader2 } from "lucide-react";
+import { Calendar, Palmtree, Building2, Car, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-type NotSupportedType = "temporada" | "vacacional" | "local" | "industrial" | "garaje" | "oficina";
+type NotSupportedType = "temporada" | "vacacional" | "no_residencial" | "garaje";
 
 interface Props {
   type: NotSupportedType;
@@ -47,27 +47,17 @@ const TYPE_CONFIG: Record<
     ),
     waitlistLabel: "vacacionales y turísticos",
   },
-  local: {
-    icon: Store,
-    title: "Por ahora no analizamos contratos de local comercial",
+  no_residencial: {
+    icon: Building2,
+    title: "Por ahora no analizamos contratos de local, nave u oficina",
     description: (
       <>
-        Los locales comerciales se rigen por la LAU Título III (arrendamientos para uso distinto del de vivienda) y por
-        la normativa comercial específica. Su análisis requiere una lógica diferente al alquiler residencial.
+        Los locales comerciales, naves industriales, almacenes y oficinas se rigen por la LAU Título III (uso distinto
+        de vivienda) y por normativa sectorial específica. Su análisis requiere una lógica diferente al alquiler
+        residencial.
       </>
     ),
-    waitlistLabel: "de local comercial",
-  },
-  industrial: {
-    icon: Factory,
-    title: "Por ahora no analizamos contratos industriales",
-    description: (
-      <>
-        Las naves industriales y almacenes se rigen por la LAU Título III y por normativa específica del sector (uso
-        industrial, licencias de actividad). Quedan fuera del régimen de vivienda.
-      </>
-    ),
-    waitlistLabel: "industriales",
+    waitlistLabel: "de local, nave u oficina",
   },
   garaje: {
     icon: Car,
@@ -80,17 +70,6 @@ const TYPE_CONFIG: Record<
       </>
     ),
     waitlistLabel: "de garaje y trastero",
-  },
-  oficina: {
-    icon: Building2,
-    title: "Por ahora no analizamos contratos de oficina",
-    description: (
-      <>
-        Los contratos de oficinas y despachos profesionales se rigen por la LAU Título III (uso distinto de vivienda) y
-        por normativa específica del uso profesional. Su análisis requiere una lógica diferente al alquiler residencial.
-      </>
-    ),
-    waitlistLabel: "de oficina",
   },
 };
 
