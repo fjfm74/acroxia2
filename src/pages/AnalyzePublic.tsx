@@ -55,9 +55,9 @@ const AnalyzePublic = () => {
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [step, setStep] = useState<Step>("selector");
-  const [notSupportedType, setNotSupportedType] = useState<
-    "temporada" | "vacacional" | "local" | "industrial" | "garaje" | "oficina"
-  >("temporada");
+  const [notSupportedType, setNotSupportedType] = useState<"temporada" | "vacacional" | "no_residencial" | "garaje">(
+    "temporada",
+  );
   const [landlordModalOpen, setLandlordModalOpen] = useState(false);
   const landlordEnabled = isAudienceEnabled("propietario");
 
