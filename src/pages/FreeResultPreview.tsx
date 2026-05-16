@@ -217,6 +217,9 @@ const FreeResultPreview = () => {
       toast.error("Marca la casilla de consentimiento antes de continuar al pago.");
       return;
     }
+    // Marca interacción con checkout: evita que el modal de captura salte encima del pago
+    setCheckoutInteracted(true);
+    setShowLeadModal(false);
     const knownEmail = user?.email || analysis?.email || "";
     if (knownEmail) {
       await launchCheckout(knownEmail);
