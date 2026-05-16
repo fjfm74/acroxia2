@@ -873,7 +873,7 @@ function buildNegotiationGuidePrompt(
     )
     .join("\n\n");
 
-  return `Eres un asesor legal experto en LAU (Ley 29/1994 de Arrendamientos Urbanos) en España. Tu tarea: generar 3 documentos para el ${audienceLabel}, basados EXCLUSIVAMENTE en las cláusulas problemáticas REALES detectadas en el contrato analizado.
+  return `Eres un asesor legal experto en LAU (Ley 29/1994 de Arrendamientos Urbanos) en España. Tu tarea: generar 2 documentos para el ${audienceLabel}, basados EXCLUSIVAMENTE en las cláusulas problemáticas REALES detectadas en el contrato analizado.
 
 CONTEXTO
 ========
@@ -891,7 +891,7 @@ INSTRUCCIONES CRÍTICAS
 ======================
 - Cada documento debe REFERENCIAR las cláusulas reales detectadas, una por una. NO uses lenguaje genérico.
 - Cita la LAU cuando proceda (ej: "art. 36 LAU sobre fianza", "art. 9 LAU sobre duración").
-- Trato: "tú" en email, "Vd." en burofax.
+- Trato: "tú" en el email.
 - NO uses emojis, NI **negritas** markdown, NI colores, NI cumplidos vacíos.
 - Números arábigos (1, 2, 3), no romanos.
 
@@ -904,20 +904,9 @@ Devuelve EXACTAMENTE un objeto JSON válido, sin texto fuera del JSON, sin code 
     1) Resumen del análisis (1 párrafo)
     2) Puntos a ${overallRisk === "bajo" ? "revisar" : overallRisk === "medio" ? "negociar" : "exigir"} — UNO por cada cláusula problemática REAL detectada arriba, con sub-secciones 'Qué pone tu contrato' / 'Por qué importa (con cita LAU)' / 'Qué decir o hacer'
     3) Consejos para la conversación (3-4 bullets)
-    4) Plan si no llegáis a acuerdo (burofax, asociaciones, juzgado)
-    5) Disclaimer legal (carácter informativo, no asesoramiento)>",
+    4) Disclaimer legal (carácter informativo, no asesoramiento)>",
 
-  "email_draft": "<email completo listo para copiar y pegar. ~250-400 palabras. Estructura: 'Asunto: ...' en primera línea, línea en blanco, saludo ('Hola [nombre del ${counterpartyLabel}],'), motivo (acabo de revisar el contrato), puntos concretos referenciando las cláusulas reales detectadas, propuesta constructiva, despedida cordial. Tono según las reglas anteriores. Tutea.>",
-
-  "burofax_draft": "<burofax oficial. ~300-500 palabras. Estructura formal jurídica:
-    Línea 1: 'BUROFAX CERTIFICADO CON ACUSE DE RECIBO Y CERTIFICACIÓN DE TEXTO'
-    Bloque REMITENTE: [Nombre completo] / [DNI] / [Domicilio] (usa placeholders entre corchetes)
-    Bloque DESTINATARIO: [Nombre del ${counterpartyLabel}] / [Domicilio]
-    Lugar y fecha: [Ciudad], a [fecha]
-    EXPONE: hechos numerados, cita LAU explícita por cada cláusula problemática real
-    SOLICITA: petición concreta en términos legales
-    INDICA: plazo de respuesta razonable (10-15 días) y consecuencias en caso de no respuesta
-    Despedida formal: 'Atentamente,' + firma. Use Vd. en lugar de tú.>"
+  "email_draft": "<email completo listo para copiar y pegar. ~250-400 palabras. Estructura: 'Asunto: ...' en primera línea, línea en blanco, saludo ('Hola [nombre del ${counterpartyLabel}],'), motivo (acabo de revisar el contrato), puntos concretos referenciando las cláusulas reales detectadas, propuesta constructiva, despedida cordial. Tono según las reglas anteriores. Tutea.>"
 }
 
 REGLAS DE FORMATO ESTRICTAS
