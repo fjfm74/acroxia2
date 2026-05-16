@@ -496,11 +496,21 @@ const AnalysisResult = () => {
               {/* AI Disclaimer - Legal Compliance */}
               <Alert className="mb-6 border-blue-200 bg-blue-50">
                 <Bot className="h-4 w-4 text-blue-600" />
-                <AlertTitle className="text-blue-800">Contenido generado por Inteligencia Artificial</AlertTitle>
+                <AlertTitle className="text-blue-800">
+                  Análisis generado por IA especializada en derecho del alquiler español
+                </AlertTitle>
                 <AlertDescription className="text-blue-700">
-                  Este análisis ha sido generado automáticamente por un sistema de IA y tiene carácter
-                  <strong> meramente informativo</strong>. No constituye asesoramiento legal profesional. Para
-                  decisiones legales importantes, te recomendamos consultar con un abogado colegiado.{" "}
+                  Nuestro sistema de IA está{" "}
+                  <strong>
+                    entrenado específicamente en la Ley de Arrendamientos Urbanos (LAU), la Ley 12/2023 por el Derecho a
+                    la Vivienda y la normativa autonómica vigente
+                  </strong>
+                  . Detecta cláusulas potencialmente abusivas según el marco legal español actualizado a 2026.
+                  <br />
+                  <br />
+                  Este análisis tiene carácter informativo y orientativo, no constituye asesoramiento legal vinculante.
+                  Para decisiones legales importantes, recomendamos consultar con un abogado colegiado especializado en
+                  derecho inmobiliario.{" "}
                   <Link to="/transparencia-ia" className="underline hover:no-underline">
                     Más información sobre nuestra IA
                   </Link>
