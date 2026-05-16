@@ -243,10 +243,7 @@ const AnalysisResult = () => {
     generatePdf(analysis.full_report.generated_letter, "Tu guía de negociación", "Puntos a revisar y consejos", "guia-negociacion");
   };
 
-  const handleDownloadBurofax = () => {
-    if (!analysis?.full_report?.generated_burofax) return;
-    generatePdf(analysis.full_report.generated_burofax, "Borrador de burofax", "Documento formal jurídico", "burofax");
-  };
+
 
   const handleCopyEmail = async () => {
     if (!analysis?.full_report?.generated_email) return;
