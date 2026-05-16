@@ -52,7 +52,7 @@ const plans: Array<{
       { text: "Todo lo del Escaneo Rápido +" },
       { text: "Guía de negociación personalizada (PDF descargable)", kind: "highlight" },
       { text: "Borrador de email listo para enviar al propietario", kind: "highlight" },
-      { text: "Borrador de burofax (si necesitas escalar)", kind: "highlight" },
+      { text: "Detalle completo de cada cláusula con argumentación legal" },
       { text: "Detalle completo de cada cláusula con argumentación legal" },
     ],
     cta: "Comprar análisis",
