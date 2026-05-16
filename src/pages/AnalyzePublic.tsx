@@ -23,7 +23,6 @@ type Step = "selector" | "wizard" | "not_supported" | "upload";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-// Generate or get session ID from localStorage
 const getSessionId = (): string => {
   const key = "acroxia_session_id";
   let sessionId = localStorage.getItem(key);
@@ -82,10 +81,8 @@ const AnalyzePublic = () => {
     }
   };
 
-  // Estimated analysis duration in seconds (based on logs: 30-90s, avg ~60s)
   const ESTIMATED_DURATION = 60;
 
-  // Gradual progress animation during AI analysis
   useEffect(() => {
     if (!analyzing) {
       if (progressIntervalRef.current) {
@@ -200,7 +197,6 @@ const AnalyzePublic = () => {
     setProgress(10);
     setAnalysisStep("Subiendo contrato...");
 
-    // Track free analysis started
     trackConversion("free_analysis_started", {
       file_type: file.type,
       file_size_mb: Math.round((file.size / 1024 / 1024) * 100) / 100,
@@ -210,7 +206,6 @@ const AnalyzePublic = () => {
     const startTime = Date.now();
 
     try {
-      // Upload file to anonymous path
       const filePath = `anonymous/${sessionId}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage.from("contracts").upload(filePath, file);
 
@@ -224,7 +219,6 @@ const AnalyzePublic = () => {
       setProgress(50);
       setAnalysisStep("Extrayendo texto del documento...");
 
-      // Call public analysis edge function (it creates the record internally)
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke("analyze-contract-public", {
         body: {
           filePath,
@@ -239,7 +233,6 @@ const AnalyzePublic = () => {
 
       const analysisId = analysisData?.analysisId;
 
-      // Stop gradual progress and jump to completion
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
@@ -248,7 +241,6 @@ const AnalyzePublic = () => {
       setProgress(100);
       setAnalysisStep("¡Análisis completado!");
 
-      // Track free analysis completed
       trackConversion("free_analysis_completed", {
         analysis_id: analysisId,
         session_id: sessionId,
@@ -260,7 +252,6 @@ const AnalyzePublic = () => {
         description: "Tu contrato ha sido analizado. Revisa los resultados.",
       });
 
-      // Navigate to preview results with perspective
       setTimeout(() => {
         navigate(
           `/resultado-previo/${analysisId}?perspectiva=${perspective === "landlord" ? "propietario" : "inquilino"}`,
@@ -348,7 +339,6 @@ const AnalyzePublic = () => {
                       la LAU.
                     </p>
 
-                    {/* Perspective selector */}
                     <div className="flex justify-center gap-3 mt-6">
                       <button
                         onClick={() => {
@@ -392,7 +382,6 @@ const AnalyzePublic = () => {
                 </FadeIn>
 
                 <div className="grid lg:grid-cols-3 gap-8">
-                  {/* Main Upload Card */}
                   <div className="lg:col-span-2">
                     <FadeIn delay={0.1}>
                       <Card>
@@ -451,7 +440,6 @@ const AnalyzePublic = () => {
                                 )}
                               </div>
 
-                              {/* Third Party Data Declaration */}
                               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                                 <div className="flex items-start gap-3 mb-4">
                                   <ShieldAlert className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -490,7 +478,6 @@ const AnalyzePublic = () => {
                                 </div>
                               </div>
 
-                              {/* AI Disclaimer */}
                               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
                                 <p className="font-medium text-blue-800 mb-2">ℹ️ Información importante</p>
                                 <ul className="text-blue-700 space-y-1 list-disc list-inside">
@@ -534,7 +521,6 @@ const AnalyzePublic = () => {
                     </FadeIn>
                   </div>
 
-                  {/* Sidebar with benefits */}
                   <div className="lg:col-span-1 space-y-6">
                     <FadeIn delay={0.2}>
                       <Card>
