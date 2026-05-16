@@ -9,16 +9,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { 
-  User, 
-  LogOut, 
-  FileText, 
-  LayoutDashboard, 
+  User,
+  LogOut,
+  FileText,
+  LayoutDashboard,
   Menu,
   Building2,
   Briefcase,
@@ -34,7 +30,7 @@ import {
   MapPin,
   Clock,
   BookOpen,
-  Calculator
+  Calculator,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsProfessional } from "@/hooks/useIsProfessional";
@@ -53,7 +49,7 @@ const Header = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -66,37 +62,41 @@ const Header = () => {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? "bg-cream/95 backdrop-blur-sm border-b border-charcoal/5 py-0" : "py-0"
-    }`}>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? "bg-cream/95 backdrop-blur-sm border-b border-charcoal/5 py-0" : "py-0"
+      }`}
+    >
       <div className="container mx-auto px-6 py-6 flex items-center justify-between">
         <Link to="/" className="text-2xl font-serif font-semibold text-foreground tracking-tight">
           ContratoAlquiler
         </Link>
-        
+
         <nav className="hidden lg:flex items-center gap-10">
           <Link to="/" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Inicio
           </Link>
-          
+
           {/* Mega menú Particulares */}
-          <div 
+          <div
             className="relative"
             onMouseEnter={() => setActiveMenu("particulares")}
             onMouseLeave={() => setActiveMenu(null)}
           >
             <button className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
               Particulares
-              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "particulares" ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "particulares" ? "rotate-180" : ""}`}
+              />
             </button>
-            
+
             {/* Puente invisible */}
             <div className="absolute top-full left-0 right-0 h-3" />
-            
+
             {activeMenu === "particulares" && (
               <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50">
-                <Link 
-                  to="/analizar-gratis" 
+                <Link
+                  to="/analizar-gratis"
                   className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                 >
                   <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -107,8 +107,8 @@ const Header = () => {
                     <p className="text-xs text-muted-foreground mt-0.5">Analiza tu contrato de alquiler</p>
                   </div>
                 </Link>
-                <Link 
-                  to="/propietarios" 
+                <Link
+                  to="/propietarios"
                   className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                 >
                   <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
@@ -122,28 +122,33 @@ const Header = () => {
               </div>
             )}
           </div>
-          
-          <Link to="/precios" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
+
+          <Link
+            to="/precios"
+            className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium"
+          >
             Precios
           </Link>
           {/* Mega menú Para Profesionales */}
-          <div 
+          <div
             className="relative"
             onMouseEnter={() => setActiveMenu("profesionales")}
             onMouseLeave={() => setActiveMenu(null)}
           >
             <button className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
               Para Profesionales
-              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "profesionales" ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "profesionales" ? "rotate-180" : ""}`}
+              />
             </button>
-            
+
             {/* Puente invisible */}
             <div className="absolute top-full left-0 right-0 h-3" />
-            
+
             {activeMenu === "profesionales" && (
               <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-80 bg-cream rounded-xl shadow-lg border border-charcoal/5 p-2 z-50">
-                <Link 
-                  to="/profesionales/inmobiliarias" 
+                <Link
+                  to="/profesionales/inmobiliarias"
                   className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                 >
                   <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
@@ -154,8 +159,8 @@ const Header = () => {
                     <p className="text-xs text-muted-foreground mt-0.5">Integra análisis en tu plataforma</p>
                   </div>
                 </Link>
-                <Link 
-                  to="/profesionales/gestorias" 
+                <Link
+                  to="/profesionales/gestorias"
                   className="flex items-start gap-3 p-3 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                 >
                   <div className="w-10 h-10 rounded-lg bg-charcoal/10 flex items-center justify-center flex-shrink-0">
@@ -167,8 +172,8 @@ const Header = () => {
                   </div>
                 </Link>
                 <div className="border-t border-charcoal/10 my-2" />
-                <Link 
-                  to="/precios#b2b" 
+                <Link
+                  to="/precios#b2b"
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
                 >
                   <ArrowRight className="w-4 h-4" />
@@ -179,27 +184,29 @@ const Header = () => {
           </div>
 
           {/* Mega menú Guías */}
-          <div 
+          <div
             className="relative"
             onMouseEnter={() => setActiveMenu("guias")}
             onMouseLeave={() => setActiveMenu(null)}
           >
             <button className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium flex items-center gap-1">
               Guías
-              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "guias" ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3 h-3 transition-transform duration-200 ${activeMenu === "guias" ? "rotate-180" : ""}`}
+              />
             </button>
-            
+
             {/* Puente invisible */}
             <div className="absolute top-full left-0 right-0 h-3" />
-            
+
             {activeMenu === "guias" && (
               <div className="menu-dropdown absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[520px] bg-cream rounded-xl shadow-lg border border-charcoal/5 p-4 z-50">
                 <div className="grid grid-cols-2 gap-4">
                   {/* Columna Inquilinos */}
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Inquilinos</p>
-                    <Link 
-                      to="/clausulas-abusivas-alquiler" 
+                    <Link
+                      to="/clausulas-abusivas-alquiler"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
@@ -210,8 +217,8 @@ const Header = () => {
                         <p className="text-xs text-muted-foreground">Identifica cláusulas ilegales</p>
                       </div>
                     </Link>
-                    <Link 
-                      to="/devolucion-fianza-alquiler" 
+                    <Link
+                      to="/devolucion-fianza-alquiler"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -222,8 +229,8 @@ const Header = () => {
                         <p className="text-xs text-muted-foreground">Recupera tu depósito</p>
                       </div>
                     </Link>
-                    <Link 
-                      to="/subida-alquiler-2026" 
+                    <Link
+                      to="/subida-alquiler-2026"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -234,8 +241,8 @@ const Header = () => {
                         <p className="text-xs text-muted-foreground">Límites IRAV y normativa</p>
                       </div>
                     </Link>
-                    <Link 
-                      to="/calculadora-irav" 
+                    <Link
+                      to="/calculadora-irav"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
@@ -247,12 +254,12 @@ const Header = () => {
                       </div>
                     </Link>
                   </div>
-                  
+
                   {/* Columna Propietarios */}
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-2">Para Propietarios</p>
-                    <Link 
-                      to="/impago-alquiler-propietarios" 
+                    <Link
+                      to="/impago-alquiler-propietarios"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
@@ -263,8 +270,8 @@ const Header = () => {
                         <p className="text-xs text-muted-foreground">Pasos ante morosos</p>
                       </div>
                     </Link>
-                    <Link 
-                      to="/zonas-tensionadas-propietarios" 
+                    <Link
+                      to="/zonas-tensionadas-propietarios"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
@@ -275,8 +282,8 @@ const Header = () => {
                         <p className="text-xs text-muted-foreground">SERPAVI y límites</p>
                       </div>
                     </Link>
-                    <Link 
-                      to="/deposito-fianza-propietarios" 
+                    <Link
+                      to="/deposito-fianza-propietarios"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
@@ -287,8 +294,8 @@ const Header = () => {
                         <p className="text-xs text-muted-foreground">INCASOL, IVIMA...</p>
                       </div>
                     </Link>
-                    <Link 
-                      to="/fin-contrato-alquiler-propietarios" 
+                    <Link
+                      to="/fin-contrato-alquiler-propietarios"
                       className="flex items-start gap-3 p-2 rounded-lg hover:bg-charcoal/5 transition-colors cursor-pointer w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
@@ -301,17 +308,17 @@ const Header = () => {
                     </Link>
                   </div>
                 </div>
-                
+
                 <div className="border-t border-charcoal/10 mt-3 pt-2 flex flex-col">
-                  <Link 
-                    to="/glosario" 
+                  <Link
+                    to="/glosario"
                     className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
                   >
                     <BookOpen className="w-4 h-4" />
                     Glosario legal de alquiler
                   </Link>
-                  <Link 
-                    to="/faq" 
+                  <Link
+                    to="/faq"
                     className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
                   >
                     <HelpCircle className="w-4 h-4" />
@@ -324,11 +331,14 @@ const Header = () => {
           <Link to="/blog" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
             Blog
           </Link>
-          <Link to="/contacto" className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium">
+          <Link
+            to="/contacto"
+            className="text-foreground/70 hover:text-foreground transition-colors text-sm font-medium"
+          >
             Contacto
           </Link>
         </nav>
-        
+
         {/* Menú móvil */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild className="lg:hidden">
@@ -348,16 +358,16 @@ const Header = () => {
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 mt-3">
-                  <Link 
-                    to={(isProfessional || isAdmin) ? "/pro" : "/dashboard"} 
+                  <Link
+                    to={isProfessional || isAdmin ? "/pro" : "/dashboard"}
                     onClick={closeMobileMenu}
                     className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
                   >
                     <LayoutDashboard className="h-4 w-4" />
-                    {(isProfessional || isAdmin) ? "Mi panel Pro" : "Mi panel"}
+                    {isProfessional || isAdmin ? "Mi panel Pro" : "Mi panel"}
                   </Link>
-                  <Link 
-                    to="/perfil" 
+                  <Link
+                    to="/perfil"
                     onClick={closeMobileMenu}
                     className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
                   >
@@ -365,8 +375,8 @@ const Header = () => {
                     Mi perfil
                   </Link>
                   {isAdmin && (
-                    <Link 
-                      to="/admin" 
+                    <Link
+                      to="/admin"
                       onClick={closeMobileMenu}
                       className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
                     >
@@ -374,8 +384,8 @@ const Header = () => {
                       Panel Admin
                     </Link>
                   )}
-                  <Link 
-                    to="/analizar" 
+                  <Link
+                    to="/analizar"
                     onClick={closeMobileMenu}
                     className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
                   >
@@ -388,55 +398,55 @@ const Header = () => {
 
             {/* Navegación con scroll */}
             <nav className="flex flex-col gap-6 mt-6 flex-1 overflow-y-auto">
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 onClick={closeMobileMenu}
                 className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
               >
                 Inicio
               </Link>
-              <Link 
-                to="/precios" 
+              <Link
+                to="/precios"
                 onClick={closeMobileMenu}
                 className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
               >
                 Precios
               </Link>
-              <Link 
-                to="/faq" 
+              <Link
+                to="/faq"
                 onClick={closeMobileMenu}
                 className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
               >
                 FAQ
               </Link>
-              <Link 
-                to="/blog" 
+              <Link
+                to="/blog"
                 onClick={closeMobileMenu}
                 className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
               >
                 Blog
               </Link>
-              <Link 
-                to="/contacto" 
+              <Link
+                to="/contacto"
                 onClick={closeMobileMenu}
                 className="text-foreground/70 hover:text-foreground transition-colors text-base font-medium"
               >
                 Contacto
               </Link>
-              
+
               {/* Particulares en móvil */}
               <div className="pt-4 border-t border-charcoal/10">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Particulares</p>
                 <div className="flex flex-col gap-3">
-                  <Link 
-                    to="/analizar-gratis" 
+                  <Link
+                    to="/analizar-gratis"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Inquilinos
                   </Link>
-                  <Link 
-                    to="/propietarios" 
+                  <Link
+                    to="/propietarios"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
@@ -449,15 +459,15 @@ const Header = () => {
               <div className="pt-4 border-t border-charcoal/10">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Para Profesionales</p>
                 <div className="flex flex-col gap-3">
-                  <Link 
-                    to="/profesionales/inmobiliarias" 
+                  <Link
+                    to="/profesionales/inmobiliarias"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Inmobiliarias y APIs
                   </Link>
-                  <Link 
-                    to="/profesionales/gestorias" 
+                  <Link
+                    to="/profesionales/gestorias"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
@@ -470,22 +480,22 @@ const Header = () => {
               <div className="pt-4 border-t border-charcoal/10">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Guías para Inquilinos</p>
                 <div className="flex flex-col gap-3">
-                  <Link 
-                    to="/clausulas-abusivas-alquiler" 
+                  <Link
+                    to="/clausulas-abusivas-alquiler"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Cláusulas abusivas
                   </Link>
-                  <Link 
-                    to="/devolucion-fianza-alquiler" 
+                  <Link
+                    to="/devolucion-fianza-alquiler"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Devolución de fianza
                   </Link>
-                  <Link 
-                    to="/subida-alquiler-2026" 
+                  <Link
+                    to="/subida-alquiler-2026"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
@@ -498,29 +508,29 @@ const Header = () => {
               <div className="pt-4 border-t border-charcoal/10">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Guías para Propietarios</p>
                 <div className="flex flex-col gap-3">
-                  <Link 
-                    to="/impago-alquiler-propietarios" 
+                  <Link
+                    to="/impago-alquiler-propietarios"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Impago de alquiler
                   </Link>
-                  <Link 
-                    to="/zonas-tensionadas-propietarios" 
+                  <Link
+                    to="/zonas-tensionadas-propietarios"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Zonas tensionadas
                   </Link>
-                  <Link 
-                    to="/deposito-fianza-propietarios" 
+                  <Link
+                    to="/deposito-fianza-propietarios"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
                     Depósito de fianza
                   </Link>
-                  <Link 
-                    to="/fin-contrato-alquiler-propietarios" 
+                  <Link
+                    to="/fin-contrato-alquiler-propietarios"
                     onClick={closeMobileMenu}
                     className="text-foreground/70 hover:text-foreground transition-colors text-sm"
                   >
@@ -529,19 +539,25 @@ const Header = () => {
                 </div>
               </div>
             </nav>
-            
+
             {/* Pie del menú */}
             <div className="pt-4 pb-6 border-t border-charcoal/10 shrink-0">
               {user ? (
                 <button
-                  onClick={() => { handleSignOut(); closeMobileMenu(); }}
+                  onClick={() => {
+                    handleSignOut();
+                    closeMobileMenu();
+                  }}
                   className="flex items-center gap-2 text-red-600 hover:text-red-700 transition-colors text-base font-medium"
                 >
                   <LogOut className="h-4 w-4" />
                   Cerrar sesión
                 </button>
               ) : (
-                <Badge variant="secondary" className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-2 text-center w-full">
+                <Badge
+                  variant="secondary"
+                  className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-2 text-center w-full"
+                >
                   Próximamente
                 </Badge>
               )}
@@ -555,7 +571,10 @@ const Header = () => {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="text-foreground/70 hover:text-foreground hover:bg-transparent text-sm font-medium">
+                  <Button
+                    variant="ghost"
+                    className="text-foreground/70 hover:text-foreground hover:bg-transparent text-sm font-medium"
+                  >
                     <User className="mr-2 h-4 w-4" />
                     {profile?.first_name || "Mi cuenta"}
                   </Button>
@@ -570,9 +589,9 @@ const Header = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to={(isProfessional || isAdmin) ? "/pro" : "/dashboard"} className="cursor-pointer">
+                    <Link to={isProfessional || isAdmin ? "/pro" : "/dashboard"} className="cursor-pointer">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                      {(isProfessional || isAdmin) ? "Mi panel Pro" : "Mi panel"}
+                      {isProfessional || isAdmin ? "Mi panel Pro" : "Mi panel"}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -596,14 +615,20 @@ const Header = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button asChild className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6 text-sm font-medium">
+              <Button
+                asChild
+                className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6 text-sm font-medium"
+              >
                 <Link to="/analizar">Analizar contrato</Link>
               </Button>
             </>
           ) : (
-            <Badge variant="secondary" className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-1.5">
-              Próximamente
-            </Badge>
+            <Button
+              asChild
+              className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6 text-sm font-medium"
+            >
+              <Link to="/analizar-gratis">Analizar gratis</Link>
+            </Button>
           )}
         </div>
       </div>
