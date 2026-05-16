@@ -70,7 +70,7 @@ const plans: Array<{
     features: [
       { text: "Análisis Único × 3 contratos" },
       { text: "Comparativa lado a lado de los 3 contratos" },
-      { text: "3× Guía de negociación + Email + Burofax (uno por contrato)" },
+      { text: "3× Guía de negociación + Email (uno por contrato)" },
       { text: "Recomendación del mejor contrato" },
     ],
     cta: "Comprar pack",
