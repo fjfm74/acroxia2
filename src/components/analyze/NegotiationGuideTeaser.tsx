@@ -101,7 +101,7 @@ const NegotiationGuideTeaser = ({
               <Lock className="h-4 w-4 text-foreground" />
             </div>
             <p className="text-xs font-medium text-foreground/80 text-center px-4">
-              Desbloquea la guía completa + email + burofax
+              Desbloquea la guía completa + email listo para enviar
             </p>
           </div>
         </div>
@@ -118,7 +118,7 @@ const NegotiationGuideTeaser = ({
 
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span>✓ Descarga inmediata</span>
-          <span>✓ PDF + email + burofax</span>
+          <span>✓ PDF + email listo para enviar</span>
           <span>✓ Pago seguro Paddle</span>
         </div>
       </CardContent>
