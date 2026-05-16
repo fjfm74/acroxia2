@@ -1,19 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Home,
-  BedDouble,
-  Calendar,
-  Palmtree,
-  HelpCircle,
-  Check,
-  X,
-  Store,
-  Factory,
-  Car,
-  Building2,
-} from "lucide-react";
+import { Home, BedDouble, Calendar, Palmtree, HelpCircle, Check, X, Building2, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ContractTypeChoice =
@@ -21,10 +9,8 @@ export type ContractTypeChoice =
   | "habitacion"
   | "temporada"
   | "vacacional"
-  | "local"
-  | "industrial"
+  | "no_residencial"
   | "garaje"
-  | "oficina"
   | "no_seguro";
 
 interface Option {
@@ -65,17 +51,10 @@ const OPTIONS: Option[] = [
     badge: { label: "No lo analizamos", tone: "no" },
   },
   {
-    id: "local",
-    icon: Store,
-    title: "Local comercial",
-    description: "Arrendamiento de local para negocio (rige LAU Título III, no Título II)",
-    badge: { label: "No lo analizamos", tone: "no" },
-  },
-  {
-    id: "industrial",
-    icon: Factory,
-    title: "Industrial / Nave",
-    description: "Naves industriales, almacenes, espacios productivos",
+    id: "no_residencial",
+    icon: Building2,
+    title: "Local, nave u oficina",
+    description: "Local comercial, nave industrial, almacén u oficina (LAU Título III, no Título II)",
     badge: { label: "No lo analizamos", tone: "no" },
   },
   {
@@ -83,13 +62,6 @@ const OPTIONS: Option[] = [
     icon: Car,
     title: "Garaje / Trastero",
     description: "Plaza de garaje o trastero independiente (sin vivienda asociada)",
-    badge: { label: "No lo analizamos", tone: "no" },
-  },
-  {
-    id: "oficina",
-    icon: Building2,
-    title: "Oficina",
-    description: "Oficinas o despachos profesionales",
     badge: { label: "No lo analizamos", tone: "no" },
   },
   {
