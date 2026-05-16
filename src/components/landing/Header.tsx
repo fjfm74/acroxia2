@@ -554,12 +554,13 @@ const Header = () => {
                   Cerrar sesión
                 </button>
               ) : (
-                <Badge
-                  variant="secondary"
-                  className="bg-charcoal/10 text-charcoal/70 font-medium px-4 py-2 text-center w-full"
+                <Button
+                  asChild
+                  onClick={closeMobileMenu}
+                  className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-4 py-2 w-full"
                 >
-                  Próximamente
-                </Badge>
+                  <Link to="/analizar-gratis">Analizar gratis</Link>
+                </Button>
               )}
             </div>
           </SheetContent>
