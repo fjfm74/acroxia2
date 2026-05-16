@@ -30,6 +30,7 @@ import {
   Bot,
   MessageSquareHeart,
   Mail,
+  FileWarning,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -82,6 +83,7 @@ interface FullReport {
   overall_assessment?: string;
   generated_letter?: string;
   generated_email?: string;
+  generated_burofax?: string;
   contract_metadata?: ContractMetadata;
   summary?: Summary;
 }
@@ -173,7 +175,12 @@ const AnalysisResult = () => {
       }
     };
 
-    const addText = (text: string, fontSize: number, isBold = false, color: [number, number, number] = [31, 29, 27]) => {
+    const addText = (
+      text: string,
+      fontSize: number,
+      isBold = false,
+      color: [number, number, number] = [31, 29, 27],
+    ) => {
       doc.setFontSize(fontSize);
       doc.setFont("helvetica", isBold ? "bold" : "normal");
       doc.setTextColor(color[0], color[1], color[2]);
@@ -230,7 +237,7 @@ const AnalysisResult = () => {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      doc.text("Generado con ACROXIA - Pagina " + i + " de " + totalPages, margin, pageHeight - 10);
+      doc.text("Generado con ContratoAlquiler - Página " + i + " de " + totalPages, margin, pageHeight - 10);
     }
 
     doc.save(`${fileSuffix}-${fileName}.pdf`);
@@ -238,10 +245,18 @@ const AnalysisResult = () => {
 
   const handleDownloadGuide = () => {
     if (!analysis?.full_report?.generated_letter) return;
-    generatePdf(analysis.full_report.generated_letter, "Tu guía de negociación", "Puntos a revisar y consejos", "guia-negociacion");
+    generatePdf(
+      analysis.full_report.generated_letter,
+      "Tu guía de negociación",
+      "Puntos a revisar y consejos",
+      "guia-negociacion",
+    );
   };
 
-
+  const handleDownloadBurofax = () => {
+    if (!analysis?.full_report?.generated_burofax) return;
+    generatePdf(analysis.full_report.generated_burofax, "Borrador de burofax", "Documento formal jurídico", "burofax");
+  };
 
   const handleCopyEmail = async () => {
     if (!analysis?.full_report?.generated_email) return;
@@ -455,11 +470,24 @@ const AnalysisResult = () => {
                       </div>
                     )}
 
-
+                    {analysis.full_report?.generated_burofax && (
+                      <div className="flex items-start gap-3 p-4 border rounded-lg bg-white">
+                        <FileWarning className="h-5 w-5 text-charcoal mt-1 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold">Borrador de burofax</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Si el email no funciona, escala con este burofax formal (cita LAU explícitamente)
+                          </p>
+                        </div>
+                        <Button onClick={handleDownloadBurofax} variant="outline" size="sm">
+                          Descargar PDF
+                        </Button>
+                      </div>
+                    )}
 
                     <p className="text-xs text-muted-foreground pt-2 border-t">
-                      ℹ️ Estos documentos son orientativos y no sustituyen asesoramiento legal profesional.
-                      Para casos complejos consulta con un abogado.
+                      ℹ️ Estos documentos son orientativos y no sustituyen asesoramiento legal profesional. Para casos
+                      complejos consulta con un abogado.
                     </p>
                   </CardContent>
                 </Card>
