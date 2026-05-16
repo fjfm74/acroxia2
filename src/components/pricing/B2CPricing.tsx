@@ -53,7 +53,6 @@ const plans: Array<{
       { text: "Guía de negociación personalizada (PDF descargable)", kind: "highlight" },
       { text: "Borrador de email listo para enviar al propietario", kind: "highlight" },
       { text: "Detalle completo de cada cláusula con argumentación legal" },
-      { text: "Detalle completo de cada cláusula con argumentación legal" },
     ],
     cta: "Comprar análisis",
     highlighted: true,
