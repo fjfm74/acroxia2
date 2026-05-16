@@ -1397,7 +1397,7 @@ ${sanitizedContractText.substring(0, 4000)}`,
             {
               role: "user",
               content:
-                "Genera los 3 documentos solicitados (informative_guide, email_draft, burofax_draft) en JSON estricto, basados en las cláusulas reales detectadas.",
+                "Genera los 2 documentos solicitados (informative_guide, email_draft) en JSON estricto, basados en las cláusulas reales detectadas.",
             },
           ],
         }),
@@ -1409,9 +1409,8 @@ ${sanitizedContractText.substring(0, 4000)}`,
         const parsed = parseGuideResponse(raw);
         analysis.generated_letter = parsed.informative_guide;
         analysis.generated_email = parsed.email_draft;
-        analysis.generated_burofax = parsed.burofax_draft;
         console.log(
-          `[analyze-contract] Guide generated. guide=${!!parsed.informative_guide} email=${!!parsed.email_draft} burofax=${!!parsed.burofax_draft}`,
+          `[analyze-contract] Guide generated. guide=${!!parsed.informative_guide} email=${!!parsed.email_draft}`,
         );
       } else {
         console.warn("[analyze-contract] Guide generation failed:", await guideResponse.text());
