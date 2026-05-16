@@ -276,12 +276,12 @@ const AnalysisResult = () => {
 
   const handleDownloadGuide = () => {
     if (!analysis?.full_report?.generated_letter) return;
-    generatePdf(
-      analysis.full_report.generated_letter,
-      "Tu guía de negociación",
-      "Puntos a revisar y consejos",
-      "guia-negociacion",
-    );
+    const guideText = extractFromLetterJson(analysis.full_report.generated_letter, "informative_guide");
+    if (!guideText.trim()) {
+      toast.error("No se pudo generar la guía. Inténtalo de nuevo.");
+      return;
+    }
+    generatePdf(guideText, "Tu guía de negociación", "Puntos a revisar y consejos", "guia-negociacion");
   };
 
   const handleDownloadBurofax = () => {
