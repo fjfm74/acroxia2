@@ -84,7 +84,7 @@ const NegotiationGuideTeaser = ({
 
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span>✓ Descarga inmediata</span>
-          <span>✓ PDF + email + burofax</span>
+          <span>✓ PDF + email listo para enviar</span>
           <span>✓ Pago seguro Paddle</span>
         </div>
       </CardContent>
