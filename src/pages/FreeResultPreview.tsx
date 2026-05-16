@@ -63,6 +63,7 @@ const FreeResultPreview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
+  const [checkoutInteracted, setCheckoutInteracted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [waitingForContract, setWaitingForContract] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
