@@ -35,6 +35,37 @@ import {
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 
+// Extrae el campo del JSON que guarda el backend (informative_guide / email_draft).
+// Robust: maneja JSON limpio, JSON con fences ```json...```, y plain text legacy.
+function extractFromLetterJson(raw: string | null | undefined, field: "informative_guide" | "email_draft"): string {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("```")) return raw;
+
+  const cleaned = trimmed
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (parsed && typeof parsed === "object" && typeof parsed[field] === "string") {
+      return parsed[field];
+    }
+  } catch {
+    /* fallback */
+  }
+
+  const regex = new RegExp(`"${field}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, "s");
+  const m = cleaned.match(regex);
+  if (m && m[1]) {
+    return m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\").replace(/\\t/g, "\t");
+  }
+
+  return raw;
+}
+
 interface LegalReference {
   article?: string | null;
   law?: string | null;
