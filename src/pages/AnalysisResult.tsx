@@ -290,9 +290,19 @@ const AnalysisResult = () => {
   };
 
   const handleCopyEmail = async () => {
-    if (!analysis?.full_report?.generated_email) return;
+    // Intenta primero el campo separado generated_email; si está vacío,
+    // extrae el email_draft del JSON guardado en generated_letter.
+    const emailText =
+      (analysis?.full_report?.generated_email && analysis.full_report.generated_email.trim()) ||
+      extractFromLetterJson(analysis?.full_report?.generated_letter, "email_draft");
+
+    if (!emailText || !emailText.trim()) {
+      toast.error("No hay borrador de email disponible.");
+      return;
+    }
+
     try {
-      await navigator.clipboard.writeText(analysis.full_report.generated_email);
+      await navigator.clipboard.writeText(emailText);
       toast.success("Email copiado al portapapeles");
     } catch {
       toast.error("No se pudo copiar. Inténtalo de nuevo.");
