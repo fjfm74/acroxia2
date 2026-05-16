@@ -917,27 +917,23 @@ REGLAS DE FORMATO ESTRICTAS
 - NO incluyas comentarios JSON.`;
 }
 
-// Parsea respuesta del modelo intentando extraer los 3 campos. Robusto a code fences y texto extra.
+// Parsea respuesta del modelo intentando extraer los 2 campos. Robusto a code fences y texto extra.
 function parseGuideResponse(raw: string): {
   informative_guide: string | null;
   email_draft: string | null;
-  burofax_draft: string | null;
 } {
-  if (!raw) return { informative_guide: null, email_draft: null, burofax_draft: null };
+  if (!raw) return { informative_guide: null, email_draft: null };
   const stripped = raw
     .replace(/^\s*```(?:json)?\s*/i, "")
     .replace(/\s*```\s*$/i, "")
     .trim();
-  // Try direct parse first
   try {
     const obj = JSON.parse(stripped);
     return {
       informative_guide: typeof obj.informative_guide === "string" ? obj.informative_guide : null,
       email_draft: typeof obj.email_draft === "string" ? obj.email_draft : null,
-      burofax_draft: typeof obj.burofax_draft === "string" ? obj.burofax_draft : null,
     };
   } catch {
-    // Try to find first {...} block
     const match = stripped.match(/\{[\s\S]*\}/);
     if (match) {
       try {
@@ -945,15 +941,13 @@ function parseGuideResponse(raw: string): {
         return {
           informative_guide: typeof obj.informative_guide === "string" ? obj.informative_guide : null,
           email_draft: typeof obj.email_draft === "string" ? obj.email_draft : null,
-          burofax_draft: typeof obj.burofax_draft === "string" ? obj.burofax_draft : null,
         };
       } catch {
         // fall through
       }
     }
   }
-  // Fallback: dump everything as informative_guide
-  return { informative_guide: stripped, email_draft: null, burofax_draft: null };
+  return { informative_guide: stripped, email_draft: null };
 }
 
 serve(async (req) => {
