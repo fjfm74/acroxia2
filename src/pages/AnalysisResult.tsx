@@ -731,7 +731,9 @@ const AnalysisResult = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-charcoal/80 leading-relaxed">
-                    {summary?.executive_summary || analysis.summary || analysis.full_report?.overall_assessment}
+                    {analysis.full_report?.summary?.executive_summary ||
+                      analysis.summary ||
+                      analysis.full_report?.overall_assessment}
                   </p>
 
                   {summary?.legal_disclaimer && (
