@@ -418,16 +418,70 @@ const AnalysisResult = () => {
                     {analysis.contracts?.file_name}
                   </p>
                 </div>
-                {analysis.full_report?.generated_letter && (
-                  <Button
-                    onClick={handleDownloadGuide}
-                    className="bg-foreground text-background hover:bg-foreground/90"
-                  >
-                    <MessageSquareHeart className="mr-2 h-4 w-4" />
-                    Descargar guía de negociación
-                  </Button>
-                )}
               </div>
+
+              {analysis.full_report?.generated_letter && (
+                <Card className="mb-6 border-2 border-amber-200 bg-amber-50/30">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-amber-700" />
+                      <CardTitle className="font-serif text-2xl">Documentos para actuar</CardTitle>
+                    </div>
+                    <CardDescription>
+                      Hemos preparado documentos basados en tu análisis. Úsalos en este orden:
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-start gap-3 p-4 border rounded-lg bg-white">
+                      <FileText className="h-5 w-5 text-charcoal mt-1 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold">Guía de negociación</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Documento PDF con cada cláusula problemática explicada + plan de acción
+                        </p>
+                      </div>
+                      <Button onClick={handleDownloadGuide} variant="default" size="sm">
+                        Descargar PDF
+                      </Button>
+                    </div>
+
+                    {analysis.full_report?.generated_email && (
+                      <div className="flex items-start gap-3 p-4 border rounded-lg bg-white">
+                        <Mail className="h-5 w-5 text-charcoal mt-1 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold">Borrador de email</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Listo para copiar y enviar a tu propietario. Empieza con un acercamiento amistoso
+                          </p>
+                        </div>
+                        <Button onClick={handleCopyEmail} variant="outline" size="sm">
+                          Copiar texto
+                        </Button>
+                      </div>
+                    )}
+
+                    {analysis.full_report?.generated_burofax && (
+                      <div className="flex items-start gap-3 p-4 border rounded-lg bg-white">
+                        <FileWarning className="h-5 w-5 text-charcoal mt-1 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold">Borrador de burofax</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Si el email no funciona, escala con este burofax formal (cita LAU explícitamente)
+                          </p>
+                        </div>
+                        <Button onClick={handleDownloadBurofax} variant="outline" size="sm">
+                          Descargar PDF
+                        </Button>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground pt-2 border-t">
+                      ℹ️ Estos documentos son orientativos y no sustituyen asesoramiento legal profesional.
+                      Para casos complejos consulta con un abogado.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* AI Disclaimer - Legal Compliance */}
               <Alert className="mb-6 border-blue-200 bg-blue-50">
