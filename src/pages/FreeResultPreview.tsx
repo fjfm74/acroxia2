@@ -153,10 +153,24 @@ const FreeResultPreview = () => {
   }, [analysis?.expires_at]);
 
   useEffect(() => {
-    if (!analysis || analysis.email || isPaid) return;
-    const timer = setTimeout(() => setShowLeadModal(true), 15000);
-    return () => clearTimeout(timer);
-  }, [analysis, isPaid]);
+    if (!analysis || analysis.email || isPaid || checkoutInteracted) return;
+
+    // Trigger por tiempo: 8 segundos
+    const timer = setTimeout(() => setShowLeadModal(true), 8000);
+
+    // Trigger por exit-intent: ratón sale por arriba del viewport
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 0) {
+        setShowLeadModal(true);
+      }
+    };
+    document.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, [analysis, isPaid, checkoutInteracted]);
 
   const handleResendVerificationEmail = async () => {
     if (!user?.email) return;
