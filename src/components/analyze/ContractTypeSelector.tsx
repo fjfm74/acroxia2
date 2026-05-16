@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, BedDouble, Calendar, Palmtree, HelpCircle, Check, X } from "lucide-react";
+import {
+  Home,
+  BedDouble,
+  Calendar,
+  Palmtree,
+  HelpCircle,
+  Check,
+  X,
+  Store,
+  Factory,
+  Car,
+  Building2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ContractTypeChoice =
@@ -9,6 +21,10 @@ export type ContractTypeChoice =
   | "habitacion"
   | "temporada"
   | "vacacional"
+  | "local"
+  | "industrial"
+  | "garaje"
+  | "oficina"
   | "no_seguro";
 
 interface Option {
@@ -49,6 +65,34 @@ const OPTIONS: Option[] = [
     badge: { label: "No lo analizamos", tone: "no" },
   },
   {
+    id: "local",
+    icon: Store,
+    title: "Local comercial",
+    description: "Arrendamiento de local para negocio (rige LAU Título III, no Título II)",
+    badge: { label: "No lo analizamos", tone: "no" },
+  },
+  {
+    id: "industrial",
+    icon: Factory,
+    title: "Industrial / Nave",
+    description: "Naves industriales, almacenes, espacios productivos",
+    badge: { label: "No lo analizamos", tone: "no" },
+  },
+  {
+    id: "garaje",
+    icon: Car,
+    title: "Garaje / Trastero",
+    description: "Plaza de garaje o trastero independiente (sin vivienda asociada)",
+    badge: { label: "No lo analizamos", tone: "no" },
+  },
+  {
+    id: "oficina",
+    icon: Building2,
+    title: "Oficina",
+    description: "Oficinas o despachos profesionales",
+    badge: { label: "No lo analizamos", tone: "no" },
+  },
+  {
     id: "no_seguro",
     icon: HelpCircle,
     title: "No estoy seguro",
@@ -80,24 +124,17 @@ const ContractTypeSelector = ({ onSelect }: Props) => {
           const Icon = opt.icon;
           const isSelected = selected === opt.id;
           return (
-            <button
-              key={opt.id}
-              onClick={() => setSelected(opt.id)}
-              className="w-full text-left"
-              type="button"
-            >
+            <button key={opt.id} onClick={() => setSelected(opt.id)} className="w-full text-left" type="button">
               <Card
                 className={cn(
                   "p-5 flex items-start gap-4 transition-all hover:shadow-md cursor-pointer",
-                  isSelected
-                    ? "ring-2 ring-foreground border-foreground"
-                    : "hover:border-foreground/30"
+                  isSelected ? "ring-2 ring-foreground border-foreground" : "hover:border-foreground/30",
                 )}
               >
                 <div
                   className={cn(
                     "p-2.5 rounded-lg flex-shrink-0",
-                    isSelected ? "bg-foreground text-background" : "bg-muted text-foreground"
+                    isSelected ? "bg-foreground text-background" : "bg-muted text-foreground",
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -110,7 +147,7 @@ const ContractTypeSelector = ({ onSelect }: Props) => {
                         "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap",
                         opt.badge.tone === "ok" && "bg-green-100 text-green-800",
                         opt.badge.tone === "no" && "bg-muted text-muted-foreground",
-                        opt.badge.tone === "info" && "bg-blue-100 text-blue-800"
+                        opt.badge.tone === "info" && "bg-blue-100 text-blue-800",
                       )}
                     >
                       {opt.badge.tone === "ok" && <Check className="h-3 w-3" />}
