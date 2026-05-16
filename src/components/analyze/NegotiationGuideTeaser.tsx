@@ -11,6 +11,37 @@ interface Props {
   disabled?: boolean;
 }
 
+// Extrae el campo del JSON que guarda el backend (informative_guide / email_draft).
+// Robust: maneja JSON limpio, JSON con fences ```json...```, y plain text legacy.
+function extractFromLetterJson(raw: string | null | undefined, field: "informative_guide" | "email_draft"): string {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("```")) return raw;
+
+  const cleaned = trimmed
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (parsed && typeof parsed === "object" && typeof parsed[field] === "string") {
+      return parsed[field];
+    }
+  } catch {
+    /* fallback abajo */
+  }
+
+  const regex = new RegExp(`"${field}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, "s");
+  const m = cleaned.match(regex);
+  if (m && m[1]) {
+    return m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\").replace(/\\t/g, "\t");
+  }
+
+  return raw;
+}
+
 const NegotiationGuideTeaser = ({
   generatedLetter,
   problematicClausesCount,
@@ -21,6 +52,17 @@ const NegotiationGuideTeaser = ({
 }: Props) => {
   const isLandlord = perspective === "landlord";
   const audienceLabel = isLandlord ? "consensuar con tu inquilino" : "reclamar a tu propietario";
+
+  // Extrae el campo informative_guide del JSON antes de limpiar markdown
+  const guideMarkdown = extractFromLetterJson(generatedLetter, "informative_guide");
+
+  // Limpia markdown básico para preview legible
+  const previewClean = guideMarkdown
+    .replace(/^#+\s/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/^---+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 
   // Limpia markdown básico para preview legible
   const previewClean = generatedLetter
@@ -44,9 +86,8 @@ const NegotiationGuideTeaser = ({
               Tu Guía de Negociación está lista
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Hemos preparado{" "}
-              <strong className="text-foreground">{problematicClausesCount} puntos específicos</strong> para{" "}
-              {audienceLabel}.
+              Hemos preparado <strong className="text-foreground">{problematicClausesCount} puntos específicos</strong>{" "}
+              para {audienceLabel}.
             </p>
           </div>
         </div>
@@ -67,7 +108,7 @@ const NegotiationGuideTeaser = ({
               <Lock className="h-4 w-4 text-foreground" />
             </div>
             <p className="text-xs font-medium text-foreground/80 text-center px-4">
-              Desbloquea la guía completa + email listo para enviar
+              Desbloquea la guía completa + email + burofax
             </p>
           </div>
         </div>
@@ -84,7 +125,7 @@ const NegotiationGuideTeaser = ({
 
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span>✓ Descarga inmediata</span>
-          <span>✓ PDF + email listo para enviar</span>
+          <span>✓ PDF + email + burofax</span>
           <span>✓ Pago seguro Paddle</span>
         </div>
       </CardContent>
