@@ -57,13 +57,13 @@ const NegotiationGuideTeaser = ({
   const guideMarkdown = extractFromLetterJson(generatedLetter, "informative_guide");
 
   // Limpia markdown básico para preview legible
-  // Limpia markdown básico para preview legible
   const previewClean = guideMarkdown
     .replace(/^#+\s/gm, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/^---+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+
   const visiblePreview = previewClean.slice(0, 320);
   const blurredPreview = previewClean.slice(320, 800);
 
