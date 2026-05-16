@@ -5,14 +5,94 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Calendar, Palmtree, Loader2 } from "lucide-react";
+import { Calendar, Palmtree, Store, Factory, Car, Building2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+type NotSupportedType = "temporada" | "vacacional" | "local" | "industrial" | "garaje" | "oficina";
+
 interface Props {
-  type: "temporada" | "vacacional";
+  type: NotSupportedType;
   onBack?: () => void;
 }
+
+const TYPE_CONFIG: Record<
+  NotSupportedType,
+  {
+    icon: React.ElementType;
+    title: string;
+    description: React.ReactNode;
+    waitlistLabel: string;
+  }
+> = {
+  temporada: {
+    icon: Calendar,
+    title: "Por ahora no analizamos contratos de temporada",
+    description: (
+      <>
+        Los contratos de temporada se rigen por el art. 3.2 de la LAU y tienen un régimen jurídico distinto al de
+        vivienda habitual. Su análisis requiere una lógica específica que aún no hemos implementado.
+      </>
+    ),
+    waitlistLabel: "de temporada",
+  },
+  vacacional: {
+    icon: Palmtree,
+    title: "Por ahora no analizamos contratos vacacionales y turísticos",
+    description: (
+      <>
+        Las viviendas de uso turístico (VUT/HUT) se regulan por Decretos autonómicos específicos (75/2020 Cataluña,
+        28/2016 Andalucía, etc.) y quedan fuera de la LAU. Su análisis requiere normativa territorial especializada.
+      </>
+    ),
+    waitlistLabel: "vacacionales y turísticos",
+  },
+  local: {
+    icon: Store,
+    title: "Por ahora no analizamos contratos de local comercial",
+    description: (
+      <>
+        Los locales comerciales se rigen por la LAU Título III (arrendamientos para uso distinto del de vivienda) y por
+        la normativa comercial específica. Su análisis requiere una lógica diferente al alquiler residencial.
+      </>
+    ),
+    waitlistLabel: "de local comercial",
+  },
+  industrial: {
+    icon: Factory,
+    title: "Por ahora no analizamos contratos industriales",
+    description: (
+      <>
+        Las naves industriales y almacenes se rigen por la LAU Título III y por normativa específica del sector (uso
+        industrial, licencias de actividad). Quedan fuera del régimen de vivienda.
+      </>
+    ),
+    waitlistLabel: "industriales",
+  },
+  garaje: {
+    icon: Car,
+    title: "Por ahora no analizamos contratos de garaje o trastero",
+    description: (
+      <>
+        Los garajes y trasteros independientes (sin contrato de vivienda asociado) tienen un régimen jurídico propio. Si
+        tu garaje forma parte del contrato de tu vivienda habitual, sube el contrato completo y lo analizamos como
+        contrato LAU.
+      </>
+    ),
+    waitlistLabel: "de garaje y trastero",
+  },
+  oficina: {
+    icon: Building2,
+    title: "Por ahora no analizamos contratos de oficina",
+    description: (
+      <>
+        Los contratos de oficinas y despachos profesionales se rigen por la LAU Título III (uso distinto de vivienda) y
+        por normativa específica del uso profesional. Su análisis requiere una lógica diferente al alquiler residencial.
+      </>
+    ),
+    waitlistLabel: "de oficina",
+  },
+};
 
 const ContractNotSupported = ({ type, onBack }: Props) => {
   const navigate = useNavigate();
@@ -22,8 +102,8 @@ const ContractNotSupported = ({ type, onBack }: Props) => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const Icon = type === "temporada" ? Calendar : Palmtree;
-  const label = type === "temporada" ? "de temporada" : "vacacionales y turísticos";
+  const config = TYPE_CONFIG[type];
+  const Icon = config.icon;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +120,7 @@ const ContractNotSupported = ({ type, onBack }: Props) => {
     setSubmitted(true);
     toast({
       title: "¡Listo!",
-      description: `Te avisaremos cuando lancemos análisis ${label}.`,
+      description: `Te avisaremos cuando lancemos análisis ${config.waitlistLabel}.`,
     });
   };
 
@@ -50,24 +130,8 @@ const ContractNotSupported = ({ type, onBack }: Props) => {
         <div className="inline-flex p-4 rounded-full bg-muted text-muted-foreground mb-4">
           <Icon className="h-10 w-10" />
         </div>
-        <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-4">
-          Por ahora no analizamos contratos {label}
-        </h2>
-        <p className="text-muted-foreground leading-relaxed max-w-xl mx-auto">
-          {type === "temporada" ? (
-            <>
-              Los contratos de temporada se rigen por el art. 3.2 de la LAU y tienen un régimen
-              jurídico distinto al de vivienda habitual. Su análisis requiere una lógica específica
-              que aún no hemos implementado.
-            </>
-          ) : (
-            <>
-              Las viviendas de uso turístico (VUT/HUT) se regulan por Decretos autonómicos
-              específicos (75/2020 Cataluña, 28/2016 Andalucía, etc.) y quedan fuera de la LAU. Su
-              análisis requiere normativa territorial especializada.
-            </>
-          )}
-        </p>
+        <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-4">{config.title}</h2>
+        <p className="text-muted-foreground leading-relaxed max-w-xl mx-auto">{config.description}</p>
       </div>
 
       <Card className="mb-6">
