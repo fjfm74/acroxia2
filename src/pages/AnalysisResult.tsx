@@ -30,7 +30,6 @@ import {
   Bot,
   MessageSquareHeart,
   Mail,
-  FileWarning,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
