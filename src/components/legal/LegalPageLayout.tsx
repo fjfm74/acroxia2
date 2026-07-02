@@ -15,9 +15,9 @@ const LegalPageLayout = ({ title, metaDescription, lastUpdated, children, allowI
   return (
     <>
       <SEOHead
-        title={`${title} | ACROXIA`}
+        title={`${title} | ContratoAlquiler`}
         description={metaDescription}
-        canonical={`https://acroxia.com/${title.toLowerCase().replace(/\s+/g, '-')}`}
+        canonical={`https://contratoalquiler.com/${title.toLowerCase().replace(/\s+/g, '-')}`}
         noindex={!allowIndex}
       />
       

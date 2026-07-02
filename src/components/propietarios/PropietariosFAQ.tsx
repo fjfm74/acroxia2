@@ -13,11 +13,11 @@ const faqs = [
   },
   {
     question: "¿Cómo sé si mi inmueble está en zona tensionada?",
-    answer: "Puedes verificarlo en el Sistema Estatal de Referencia de Precios de Alquiler de Vivienda (SERPAVI) del Ministerio de Vivienda: serpavi.mivau.gob.es. ACROXIA te indica si tu municipio aparece en las listas publicadas, pero la verificación oficial debe hacerse en la fuente.",
+    answer: "Puedes verificarlo en el Sistema Estatal de Referencia de Precios de Alquiler de Vivienda (SERPAVI) del Ministerio de Vivienda: serpavi.mivau.gob.es. ContratoAlquiler te indica si tu municipio aparece en las listas publicadas, pero la verificación oficial debe hacerse en la fuente.",
   },
   {
-    question: "¿Puedo calcular la subida de renta con ACROXIA?",
-    answer: "ACROXIA te informa sobre los límites aplicables (IRAV o tope autonómico), pero el cálculo exacto debe hacerse en la web oficial del INE o de tu Comunidad Autónoma. Te proporcionamos los enlaces directos para que puedas calcularlo fácilmente.",
+    question: "¿Puedo calcular la subida de renta con ContratoAlquiler?",
+    answer: "ContratoAlquiler te informa sobre los límites aplicables (IRAV o tope autonómico), pero el cálculo exacto debe hacerse en la web oficial del INE o de tu Comunidad Autónoma. Te proporcionamos los enlaces directos para que puedas calcularlo fácilmente.",
   },
   {
     question: "¿El generador de contratos es válido legalmente?",
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     question: "¿Qué garantías puedo pedir legalmente?",
-    answer: "Según la LAU 2026: fianza de 1-2 meses (según sea vivienda o uso distinto) y garantías adicionales hasta un máximo de 2 mensualidades de renta en vivienda habitual. ACROXIA verifica que tu contrato no exceda estos límites.",
+    answer: "Según la LAU 2026: fianza de 1-2 meses (según sea vivienda o uso distinto) y garantías adicionales hasta un máximo de 2 mensualidades de renta en vivienda habitual. ContratoAlquiler verifica que tu contrato no exceda estos límites.",
   },
 ];
 
@@ -39,7 +39,7 @@ const PropietariosFAQ = () => {
               Preguntas frecuentes
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Dudas comunes de propietarios sobre ACROXIA
+              Dudas comunes de propietarios sobre ContratoAlquiler
             </p>
           </div>
         </FadeIn>

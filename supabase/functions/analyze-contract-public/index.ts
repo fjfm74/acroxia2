@@ -351,7 +351,7 @@ function buildSystemPrompt(
   detectedProvince: string | null,
   hasZonaTensionadaInfo: boolean,
 ): string {
-  const commonIntro = `Eres el sistema de análisis de ACROXIA, plataforma española de protección de inquilinos.
+  const commonIntro = `Eres el sistema de análisis de ContratoAlquiler, plataforma española de protección de inquilinos.
 Analiza contratos de alquiler de vivienda habitual identificando cláusulas ilegales, abusivas o sospechosas con rigor jurídico.
 El contrato puede estar redactado en español o catalán; interpreta equivalencias jurídicas en ambos idiomas.`;
 
@@ -380,7 +380,7 @@ No se detectó información específica de zonas tensionadas. Si la renta parece
 
   const legalContextSection = hasLegalContext
     ? `
-DOCUMENTOS LEGALES INDEXADOS EN LA BASE DE DATOS ACROXIA
+DOCUMENTOS LEGALES INDEXADOS EN LA BASE DE DATOS ContratoAlquiler
 =========================================================
 Fuentes disponibles: ${availableSources.join(", ")}
 Territorio detectado: ${territorialFilter || "No detectado (aplicar normativa estatal)"}

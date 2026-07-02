@@ -1,4 +1,4 @@
-const CACHE_NAME = 'acroxia-v3';
+const CACHE_NAME = 'contratoalquiler-v4';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -6,8 +6,8 @@ const STATIC_ASSETS = [
 ];
 
 // Assets to cache on first load
-const FONT_CACHE = 'acroxia-fonts-v1';
-const IMAGE_CACHE = 'acroxia-images-v2';
+const FONT_CACHE = 'contratoalquiler-fonts-v2';
+const IMAGE_CACHE = 'contratoalquiler-images-v3';
 
 // Install event - cache critical assets
 self.addEventListener('install', (event) => {
@@ -26,9 +26,9 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames
           .filter((name) => {
-            return name.startsWith('acroxia-') && 
-                   name !== CACHE_NAME && 
-                   name !== FONT_CACHE && 
+            return (name.startsWith('acroxia-') || name.startsWith('contratoalquiler-')) &&
+                   name !== CACHE_NAME &&
+                   name !== FONT_CACHE &&
                    name !== IMAGE_CACHE;
           })
           .map((name) => caches.delete(name))

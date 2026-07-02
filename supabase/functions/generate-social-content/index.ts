@@ -375,7 +375,7 @@ ${truncate(blog?.content, 9000)}`
       : `FUENTE PRINCIPAL (${sourceLabel}):
 - Tema: ${input.custom_topic || ""}
 - Audiencia objetivo: ${audienceLabel}
-- Instruccion editorial: crea una pieza original con el mismo rigor, tono y utilidad practica que un buen post del blog de Acroxia.`;
+- Instruccion editorial: crea una pieza original con el mismo rigor, tono y utilidad practica que un buen post del blog de ContratoAlquiler.`;
 
   return `Eres editor senior de contenido legal-inmobiliario en Espana.
 

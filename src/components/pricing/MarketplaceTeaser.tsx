@@ -25,7 +25,7 @@ const MarketplaceTeaser = () => {
             <div className="inline-flex items-center gap-2 text-charcoal/60 text-sm flex-wrap justify-center">
               <span>Precios especiales</span>
               <span className="w-1 h-1 bg-charcoal/30 rounded-full" />
-              <span>Abogados verificados por ACROXIA</span>
+              <span>Abogados verificados por ContratoAlquiler</span>
               <span className="w-1 h-1 bg-charcoal/30 rounded-full" />
               <span>Respuesta en 24h</span>
             </div>

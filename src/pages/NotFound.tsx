@@ -18,7 +18,7 @@ const NotFound = () => {
     {
       icon: Home,
       label: "Página principal",
-      description: "Vuelve al inicio de ACROXIA",
+      description: "Vuelve al inicio de ContratoAlquiler",
       href: "/",
     },
     {
@@ -44,10 +44,10 @@ const NotFound = () => {
   return (
     <>
       <Helmet>
-        <title>Página no encontrada | ACROXIA</title>
+        <title>Página no encontrada | ContratoAlquiler</title>
         <meta 
           name="description" 
-          content="Lo sentimos, la página que buscas no existe. Explora nuestras guías sobre alquiler o vuelve a la página principal de ACROXIA." 
+          content="Lo sentimos, la página que buscas no existe. Explora nuestras guías sobre alquiler o vuelve a la página principal de ContratoAlquiler." 
         />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>

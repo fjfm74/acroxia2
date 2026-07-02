@@ -152,7 +152,7 @@ const SocialPreviewMockup = ({ platform, slides, caption, hashtags }: SocialPrev
               <span className="text-xs font-bold">A</span>
             </div>
           </div>
-          <span className="text-sm font-semibold">acroxia_es</span>
+          <span className="text-sm font-semibold">contratoalquiler</span>
         </div>
         <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
       </div>
@@ -214,7 +214,7 @@ const SocialPreviewMockup = ({ platform, slides, caption, hashtags }: SocialPrev
         <p className="text-sm font-semibold mb-1">1,234 Me gusta</p>
 
         <div className="text-sm">
-          <span className="font-semibold">acroxia_es </span>
+          <span className="font-semibold">contratoalquiler </span>
           <span className="whitespace-pre-wrap">
             {formattedCaption.length > 150 ? `${formattedCaption.slice(0, 150)}... más` : formattedCaption}
           </span>

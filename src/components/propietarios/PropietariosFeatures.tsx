@@ -90,7 +90,7 @@ const PropietariosFeatures = () => {
                   >
                     web oficial del INE
                   </a>
-                  o en la web de tu Comunidad Autónoma si dispone de índice propio. ACROXIA te indica dónde consultar, pero el cálculo oficial debe hacerse en la fuente correspondiente.
+                  o en la web de tu Comunidad Autónoma si dispone de índice propio. ContratoAlquiler te indica dónde consultar, pero el cálculo oficial debe hacerse en la fuente correspondiente.
                 </p>
               </div>
             </div>

@@ -642,7 +642,7 @@ la aplicabilidad de límites de renta en: https://serpavi.mivau.gob.es/
     : "";
 
   const legalContextSection = hasLegalContext
-    ? `DOCUMENTOS LEGALES INDEXADOS EN LA BASE DE DATOS ACROXIA
+    ? `DOCUMENTOS LEGALES INDEXADOS EN LA BASE DE DATOS ContratoAlquiler
 ===========================================================
 Fuentes disponibles: ${availableSources.join(", ")}
 Territorio detectado: ${territorialFilter || "No detectado (se aplicará normativa estatal)"}
@@ -656,7 +656,7 @@ INSTRUCCIONES CRÍTICAS DE CITACIÓN:
 - Incluye "verification_note" explicando el estado de verificación`
     : `AVISO IMPORTANTE SOBRE LA BASE DE DATOS LEGAL
 ===============================================
-La base de datos legal de ACROXIA está siendo ampliada progresivamente con nueva legislación y jurisprudencia.
+La base de datos legal de ContratoAlquiler está siendo ampliada progresivamente con nueva legislación y jurisprudencia.
 Actualmente no se encontraron documentos indexados específicos para este análisis.
 
 ${legalContext}
@@ -668,7 +668,7 @@ INSTRUCCIONES PARA ESTE CASO:
 
   return `IDENTIDAD Y ROL
 ===============
-Eres el sistema de análisis legal de ACROXIA, la plataforma española líder en protección de inquilinos. Tu misión es analizar contratos de alquiler de vivienda habitual identificando cláusulas ilegales, abusivas o sospechosas con el máximo rigor jurídico.
+Eres el sistema de análisis legal de ContratoAlquiler, la plataforma española líder en protección de inquilinos. Tu misión es analizar contratos de alquiler de vivienda habitual identificando cláusulas ilegales, abusivas o sospechosas con el máximo rigor jurídico.
 El contrato puede estar redactado en español o catalán. Debes interpretar equivalencias jurídicas en ambos idiomas (ej.: fianza/fiança, cédula/cèdula, certificado/certificat).
 
 ${zonaTensionadaSection}
@@ -1208,7 +1208,7 @@ Contenido: ${chunk.content}
       );
     } else {
       legalContext =
-        "AVISO: No se encontraron documentos legales indexados relevantes para este contrato. El análisis se basará en conocimiento general de la LAU y normativa aplicable, pero las referencias NO están verificadas contra la base de datos de ACROXIA.";
+        "AVISO: No se encontraron documentos legales indexados relevantes para este contrato. El análisis se basará en conocimiento general de la LAU y normativa aplicable, pero las referencias NO están verificadas contra la base de datos de ContratoAlquiler.";
       console.log("No legal chunks found - using general knowledge");
     }
 
@@ -1362,7 +1362,7 @@ ${sanitizedContractText.substring(0, 4000)}`,
         ? `Las referencias legales han sido verificadas contra ${availableSources.length} fuentes de nuestra base de datos jurídica.`
         : hasLegalContext && availableSources.length < 3
           ? `Análisis realizado con documentación parcial (${availableSources.length} fuente${availableSources.length > 1 ? "s" : ""}). Algunas referencias pueden requerir verificación adicional.`
-          : "La base de datos legal de ACROXIA está siendo ampliada. Las referencias citadas son de conocimiento general y se recomienda verificarlas con un profesional.";
+          : "La base de datos legal de ContratoAlquiler está siendo ampliada. Las referencias citadas son de conocimiento general y se recomienda verificarlas con un profesional.";
 
     // Ensure contract_metadata exists
     if (!analysis.contract_metadata) {

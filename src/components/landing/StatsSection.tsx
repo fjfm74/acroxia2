@@ -15,7 +15,7 @@ const stats = [
   },
   {
     value: "<2 min",
-    context: "es el tiempo de análisis con tecnología IA de ACROXIA",
+    context: "es el tiempo de análisis con tecnología IA de ContratoAlquiler",
   },
 ];
 
