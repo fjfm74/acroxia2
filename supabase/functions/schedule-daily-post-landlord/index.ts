@@ -1,3 +1,5 @@
+import { isCronAuthorized } from "../_shared/cron-auth.ts";
+import { buildBlogSystemPrompt } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
@@ -419,69 +421,30 @@ async function generateBlogPostWithRetries(
         .join("\n")}`
     : "";
 
-  const systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España, especializado en ayudar a PROPIETARIOS y ARRENDADORES.
+  const systemPrompt = `${buildBlogSystemPrompt("propietario")}
 
-FECHA ACTUAL: ${currentDate} (Enero 2026)
-CONTEXTO: El IRAV ha sustituido al IPC para actualizar rentas desde 2025. Las zonas tensionadas tienen limitaciones específicas.
-
-Tu audiencia son PROPIETARIOS que quieren:
-- Redactar contratos de alquiler seguros y válidos
-- Protegerse ante impagos y morosos
-- Conocer sus derechos y obligaciones según la LAU
-- Gestionar correctamente fianzas y garantías adicionales
-- Estar al día de la normativa vigente
+FECHA ACTUAL: ${currentDate}.
 
 CATEGORÍAS VÁLIDAS: ${LANDLORD_CATEGORIES.join(", ")}
-PRIORIZA la categoría "${leastUsedCategory}" que tiene menos contenido.
-
-FORMATOS DE TÍTULO SUGERIDOS: ${TITLE_FORMATS.join(" | ")}
-
-TÍTULO (OBLIGATORIO - CRÍTICO):
-- MÁXIMO 55 CARACTERES (Google trunca títulos largos en SERPs)
-- Usa SOLO mayúscula inicial (sentence case)
-- NO uses title case
-- Evita tono alarmista o clickbait
-
-Ejemplos correctos (dentro del límite):
-- "Cómo proteger tu contrato ante impagos" (39 chars) ✓
-- "5 cláusulas imprescindibles en contratos" (41 chars) ✓
-- "Qué dice la LAU sobre la fianza" (31 chars) ✓
-
-Ejemplos incorrectos (demasiado largos):
-- "Guía completa sobre cómo proteger tu contrato de alquiler ante inquilinos morosos" ❌
+Prioriza la categoría "${leastUsedCategory}", que tiene menos contenido.
 ${existingTopicsContext}
 
-FAQs (OBLIGATORIO):
-- Incluye 3-5 preguntas frecuentes relacionadas con el tema
-- Las preguntas deben ser en primera persona: "¿Puedo...?", "¿Qué hago si...?", "¿Cuánto tiempo...?"
-- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
-- Deben ser preguntas que alguien haría a Google o a un asistente de IA
-
-Responde SOLO con un JSON válido:
+FORMATO DE SALIDA (JSON):
 {
-  "title": "título informativo en sentence case (máx 55 chars)",
-  "excerpt": "resumen de 2-3 frases del artículo (máx 160 chars)",
+  "title": "título en sentence case (máx 60 caracteres)",
+  "excerpt": "resumen concreto de 140-155 caracteres",
   "category": "una de las categorías válidas",
-  "content": "contenido completo en Markdown",
-  "faqs": [
-    {"question": "¿Pregunta frecuente 1?", "answer": "Respuesta concisa"},
-    {"question": "¿Pregunta frecuente 2?", "answer": "Respuesta concisa"},
-    {"question": "¿Pregunta frecuente 3?", "answer": "Respuesta concisa"}
-  ]
-}`;
+  "content": "cuerpo completo en HTML (h2/h3, sin h1)",
+  "faqs": [{"question": "¿...?", "answer": "respuesta de 2-3 frases"}]
+}
+"faqs" puede ser una lista vacía; úsala solo si el tema lo pide.`;
 
-  const userPrompt = `Genera un artículo de blog NUEVO y ÚNICO para PROPIETARIOS de viviendas en alquiler en España.
+  const userPrompt = `Escribe un artículo original para propietarios que alquilan vivienda en España.
 
-El artículo debe:
-1. Ser útil y práctico para propietarios/arrendadores
-2. Tener un título original que NO esté en la lista de temas cubiertos
-3. Incluir referencias a la LAU y normativa vigente cuando aplique
-4. Tener al menos 800 palabras de contenido
-5. Usar formato Markdown con subtítulos ##, listas y negritas
-6. Incluir ejemplos prácticos y casos reales
-7. Estar escrito desde la perspectiva del propietario
-
-IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no cubiertos.`;
+- Elige un tema distinto de los ya cubiertos, preferiblemente de la categoría "${leastUsedCategory}".
+- Decide la estructura según el tema (caso práctico, paso a paso, comparativa, errores frecuentes, cómo redactar una cláusula...). No uses el esqueleto de siempre.
+- Entre 1.000 y 1.800 palabras, desde el punto de vista del arrendador.
+- Cita el artículo concreto cada vez que afirmes algo legal.`;
 
   let lastError: Error | null = null;
 
@@ -556,6 +519,10 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!(await isCronAuthorized(req))) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   try {

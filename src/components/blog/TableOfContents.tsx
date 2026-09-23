@@ -23,9 +23,17 @@ const TableOfContents = ({ content, className }: TableOfContentsProps) => {
     const items: TOCItem[] = [];
     let match;
 
+    const raw: { level: number; text: string }[] = [];
     while ((match = headingRegex.exec(content)) !== null) {
-      const level = match[1].length;
-      const text = match[2].trim();
+      raw.push({ level: match[1].length, text: match[2].trim() });
+    }
+    // HTML headings (<h2>/<h3>) from newer articles
+    const htmlRegex = /<h([23])[^>]*>([\s\S]*?)<\/h\1>/gi;
+    while ((match = htmlRegex.exec(content)) !== null) {
+      raw.push({ level: Number(match[1]), text: match[2].replace(/<[^>]+>/g, "").trim() });
+    }
+
+    for (const { level, text } of raw) {
       const id = text
         .toLowerCase()
         .normalize("NFD")

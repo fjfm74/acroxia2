@@ -1,3 +1,4 @@
+import { buildBlogSystemPrompt } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
@@ -12,6 +13,7 @@ interface UpdateRequest {
   limit?: number;
   postIds?: string[];
   mode?: "faqs" | "meta_descriptions" | "all";
+  audience?: "inquilino" | "propietario";
 }
 
 interface FAQ {
@@ -70,7 +72,7 @@ function sanitizeJsonString(str: string): string {
     });
 }
 
-async function generateFAQsAndTitle(post: { title: string; excerpt: string; content: string }, needsMetaDescription: boolean): Promise<{ title: string; faqs: FAQ[]; meta_description?: string }> {
+async function generateFAQsAndTitle(post: { title: string; excerpt: string; content: string; audience?: string | null }, needsMetaDescription: boolean): Promise<{ title: string; faqs: FAQ[]; meta_description?: string }> {
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY not configured");
   }
@@ -79,7 +81,7 @@ async function generateFAQsAndTitle(post: { title: string; excerpt: string; cont
 
   const metaDescInstruction = needsMetaDescription ? `
 3. META DESCRIPTION (OBLIGATORIO):
-   - Máximo 155 caracteres
+   - Entre 140 y 155 caracteres
    - Incluye la keyword principal del artículo
    - Debe motivar el clic desde Google (usa beneficio o dato concreto)
    - NO uses comillas dobles dentro del texto
@@ -97,11 +99,11 @@ Contenido (primeros 2000 chars): "${contentPreview}"
 INSTRUCCIONES:
 
 1. TÍTULO OPTIMIZADO (OBLIGATORIO):
-   - Máximo 55 caracteres (CRÍTICO - no exceder nunca)
+   - Máximo 60 caracteres (no exceder nunca)
    - Mantén el significado original del artículo
    - Usa sentence case (primera letra mayúscula, resto minúsculas excepto nombres propios)
    - Si el título actual ya tiene 55 caracteres o menos, puedes devolverlo igual
-   - Incluye el año 2026 si es relevante para la actualidad
+   - Sin año en el título salvo que el tema sea una novedad de ese año
    
 2. FAQs (OBLIGATORIO - genera exactamente 4):
    - 4 preguntas frecuentes basadas en el contenido del artículo
@@ -137,7 +139,7 @@ Responde SOLO con JSON válido (sin markdown, sin backticks):
           messages: [
             {
               role: "system",
-              content: "Eres un experto en SEO y derecho inmobiliario español. Respondes ÚNICAMENTE con JSON válido, sin texto adicional, sin explicaciones, sin markdown."
+              content: buildBlogSystemPrompt(post.audience === "propietario" ? "propietario" : "inquilino")
             },
             { role: "user", content: prompt }
           ],
@@ -265,7 +267,7 @@ serve(async (req: Request): Promise<Response> => {
     // Query posts that need updating - get more to ensure we find enough without FAQs
     let query = supabase
       .from("blog_posts")
-      .select("id, title, excerpt, content, faqs, meta_description")
+      .select("id, title, excerpt, content, faqs, meta_description, audience")
       .eq("status", "published")
       .order("published_at", { ascending: false });
 
@@ -306,6 +308,7 @@ serve(async (req: Request): Promise<Response> => {
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
+          audience: body.audience ?? post.audience ?? "inquilino",
         }, needsMetaDesc);
 
         const titleChanged = generated.title !== post.title;
