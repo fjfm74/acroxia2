@@ -1,3 +1,4 @@
+import { isCronAuthorized } from "../_shared/cron-auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getEmailTemplate } from "../_shared/email-templates.ts";
@@ -56,6 +57,10 @@ function generateUnsubscribeToken(email: string, secret: string): string {
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!(await isCronAuthorized(req))) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   try {
