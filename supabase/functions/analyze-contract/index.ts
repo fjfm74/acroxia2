@@ -955,6 +955,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let creditConsumed = false;
+  let userId: string | null = null;
+
   try {
     const { contractId, filePath, fileType: mimeType } = await req.json();
 
@@ -1003,7 +1006,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = user.id;
+    userId = user.id;
 
     // 2. El contrato debe existir y pertenecer al usuario
     const { data: contractRow } = await supabase
@@ -1022,7 +1025,6 @@ serve(async (req) => {
     const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: userId });
 
     // 4. Consumo atómico del crédito ANTES de descargar el fichero y llamar a la IA
-    let creditConsumed = false;
     if (!isAdmin) {
       const { data: ok } = await supabase.rpc("consume_credit", { p_user_id: userId });
       if (ok !== true) {
