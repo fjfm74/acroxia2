@@ -984,10 +984,64 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // 1. Autenticación obligatoria
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = user.id;
+
+    // 2. El contrato debe existir y pertenecer al usuario
+    const { data: contractRow } = await supabase
+      .from("contracts")
+      .select("id, user_id")
+      .eq("id", contractId)
+      .single();
+    if (!contractRow || contractRow.user_id !== userId) {
+      return new Response(JSON.stringify({ error: "Contrato no encontrado" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. Admin no consume créditos
+    const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: userId });
+
+    // 4. Consumo atómico del crédito ANTES de descargar el fichero y llamar a la IA
+    let creditConsumed = false;
+    if (!isAdmin) {
+      const { data: ok } = await supabase.rpc("consume_credit", { p_user_id: userId });
+      if (ok !== true) {
+        await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
+        return new Response(JSON.stringify({ error: "Sin créditos", code: "NO_CREDITS" }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      creditConsumed = true;
+    }
+
     // Download file
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
 
-    if (downloadError) throw downloadError;
+    if (downloadError) {
+      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
+      throw downloadError;
+    }
 
     // Determine file type and extract text
     const detectedType = getFileType(filePath, mimeType);
@@ -1041,6 +1095,7 @@ serve(async (req) => {
     );
 
     if (!languageDetection.supported) {
+      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
       await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
       return new Response(
         JSON.stringify({
