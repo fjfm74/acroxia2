@@ -5,7 +5,7 @@ export const BLOG_AUTHOR = "Equipo ContratoAlquiler";
 export const BLOG_STYLE_RULES = `REGLAS DE ESTILO (OBLIGATORIAS)
 
 MARCA Y AUTORÍA
-- La marca es "ContratoAlquiler". No escribas nunca "ACROXIA" ni "Acroxia".
+- La única marca es "ContratoAlquiler". No menciones ninguna otra marca ni nombre anterior del producto.
 - El autor es "Equipo ContratoAlquiler".
 
 FORMATO DEL CUERPO (campo content)
