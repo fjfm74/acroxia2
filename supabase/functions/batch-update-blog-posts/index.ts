@@ -176,9 +176,9 @@ Responde SOLO con JSON válido (sin markdown, sin backticks):
         throw new Error("Invalid response structure");
       }
 
-      // Ensure title is max 55 chars
-      if (parsed.title.length > 55) {
-        parsed.title = parsed.title.substring(0, 52) + "...";
+      // Ensure title is max 60 chars
+      if (parsed.title.length > 60) {
+        parsed.title = parsed.title.substring(0, 57) + "...";
       }
 
       // Validate FAQs

@@ -409,7 +409,7 @@ const FreeResultPreview = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                   <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-2">
-                    Resultado del análisis
+                    {isLandlord ? "Informe para el propietario" : "Resultado del análisis"}
                   </h1>
                   <div className="flex items-center gap-2">
                     <p className="text-muted-foreground">{analysis.file_name}</p>
