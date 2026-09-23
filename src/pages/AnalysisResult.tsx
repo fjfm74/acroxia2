@@ -1,3 +1,4 @@
+import { normalizeClauseType } from "@/lib/clauseType";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -79,7 +80,7 @@ interface Clause {
   title?: string;
   category?: string;
   original_text?: string;
-  type: "valid" | "suspicious" | "illegal";
+  type: string;
   risk_level?: number;
   explanation: string;
   legalReference?: string;
@@ -312,8 +313,12 @@ const AnalysisResult = () => {
     }
   };
 
+  const isLandlordReport =
+    analysis?.full_report?.perspective === "landlord" ||
+    analysis?.full_report?.contract_metadata?.perspective === "landlord";
+
   const getClauseIcon = (type: string) => {
-    switch (type) {
+    switch (normalizeClauseType(type)) {
       case "valid":
         return <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />;
       case "suspicious":
@@ -326,7 +331,7 @@ const AnalysisResult = () => {
   };
 
   const getClauseBadge = (type: string) => {
-    switch (type) {
+    switch (normalizeClauseType(type)) {
       case "valid":
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Válida</Badge>;
       case "suspicious":
@@ -466,7 +471,9 @@ const AnalysisResult = () => {
 
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="font-serif text-3xl font-semibold text-charcoal">Resultado del análisis</h1>
+                  <h1 className="font-serif text-3xl font-semibold text-charcoal">
+                    {isLandlordReport ? "Informe para el propietario" : "Resultado del análisis"}
+                  </h1>
                   <p className="text-charcoal/70 mt-1 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     {analysis.contracts?.file_name}
@@ -479,7 +486,9 @@ const AnalysisResult = () => {
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-amber-700" />
-                      <CardTitle className="font-serif text-2xl">Documentos para actuar</CardTitle>
+                      <CardTitle className="font-serif text-2xl">
+                        {isLandlordReport ? "Comunicación al inquilino" : "Documentos para actuar"}
+                      </CardTitle>
                     </div>
                     <CardDescription>
                       Hemos preparado documentos basados en tu análisis. Úsalos en este orden:
@@ -766,9 +775,9 @@ const AnalysisResult = () => {
                         value={`clause-${index}`}
                         className={`
                           border rounded-lg px-4
-                          ${clause.type === "valid" ? "border-green-200 bg-green-50/30" : ""}
-                          ${clause.type === "suspicious" ? "border-amber-200 bg-amber-50/30" : ""}
-                          ${clause.type === "illegal" ? "border-red-200 bg-red-50/30" : ""}
+                          ${normalizeClauseType(clause.type) === "valid" ? "border-green-200 bg-green-50/30" : ""}
+                          ${normalizeClauseType(clause.type) === "suspicious" ? "border-amber-200 bg-amber-50/30" : ""}
+                          ${normalizeClauseType(clause.type) === "illegal" ? "border-red-200 bg-red-50/30" : ""}
                         `}
                       >
                         <AccordionTrigger className="hover:no-underline py-4">

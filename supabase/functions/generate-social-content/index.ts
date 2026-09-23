@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,12 +102,18 @@ function parseJsonResponse(content: string): any {
   return JSON.parse(jsonString);
 }
 
-async function callAI(messages: any[], model = "google/gemini-2.5-pro"): Promise<string> {
+class AiHttpError extends Error {
+  constructor(public status: number, public detail: string) {
+    super(`AI call failed: ${status}`);
+  }
+}
+
+async function callAI(messages: any[], model = MODELS.GEMINI_PRO as string, attempt = 0): Promise<string> {
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY is not configured");
   }
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const response = await fetch(GATEWAY_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -116,14 +123,18 @@ async function callAI(messages: any[], model = "google/gemini-2.5-pro"): Promise
       model,
       messages,
       temperature: 0.2,
+      response_format: { type: "json_object" },
     }),
   });
 
   if (!response.ok) {
-    if (model !== "google/gemini-2.5-flash") {
-      return callAI(messages, "google/gemini-2.5-flash");
+    const detail = await response.text();
+    const transient = response.status === 429 || response.status >= 500;
+    if (transient && attempt === 0) {
+      await new Promise((r) => setTimeout(r, 1500));
+      return callAI(messages, model, 1);
     }
-    throw new Error(`AI call failed: ${response.status}`);
+    throw new AiHttpError(response.status, detail.slice(0, 500));
   }
 
   const data = await response.json();
@@ -456,13 +467,24 @@ serve(async (req) => {
 
     const audience = inferAudience(input);
     const prompt = buildPrompt(input, audience);
-    const aiContent = await callAI([
-      {
-        role: "system",
-        content: "Generas contenido social legal en espanol de Espana. Responde solo con JSON valido.",
-      },
-      { role: "user", content: prompt },
-    ]);
+    let aiContent: string;
+    try {
+      aiContent = await callAI([
+        {
+          role: "system",
+          content: "Generas contenido social legal en espanol de Espana. Responde solo con JSON valido.",
+        },
+        { role: "user", content: prompt },
+      ]);
+    } catch (aiError) {
+      if (aiError instanceof AiHttpError) {
+        return new Response(JSON.stringify({ error: "La IA no respondió", detail: `${aiError.status}: ${aiError.detail}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw aiError;
+    }
 
     let parsed: any = null;
     try {

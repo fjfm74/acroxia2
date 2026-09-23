@@ -40,6 +40,7 @@ const FreeResultPreview = lazy(() => import("./pages/FreeResultPreview"));
 
 // Landlord pages
 const MyContractsPage = lazy(() => import("./pages/landlord/MyContractsPage"));
+const LandlordContractDetail = lazy(() => import("./pages/landlord/LandlordContractDetail"));
 const CreateContractLandlordPage = lazy(() => import("./pages/landlord/CreateContractPage"));
 const AnalyzeLandlordPage = lazy(() => import("./pages/landlord/AnalyzeLandlordPage"));
 
@@ -320,6 +321,16 @@ const App = () => (
                 <LandlordRoute>
                   <Suspense fallback={<PageLoader />}>
                     <MyContractsPage />
+                  </Suspense>
+                </LandlordRoute>
+              }
+            />
+            <Route
+              path="/propietario/contratos/:id"
+              element={
+                <LandlordRoute>
+                  <Suspense fallback={<PageLoader />}>
+                    <LandlordContractDetail />
                   </Suspense>
                 </LandlordRoute>
               }
