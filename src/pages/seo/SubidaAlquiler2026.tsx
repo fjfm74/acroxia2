@@ -11,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 const comparativaIndices = [
   {
-    indice: "IRAV marzo 2026",
+    indice: "IRAV agosto 2026",
     valor: "2,47%",
     descripcion: "Índice de Referencia de Arrendamientos de Vivienda (último publicado por el INE)",
     aplica: true,
@@ -57,7 +57,7 @@ const faqs = [
   {
     question: "¿Cuánto puede subir mi alquiler en 2026?",
     answer:
-      "Máximo el IRAV. El último valor publicado por el INE es el de marzo 2026: 2,47%. La Disposición final 6ª de la Ley de Vivienda 12/2023 establece que desde 2025 se aplica este nuevo índice de referencia, inferior a la evolución del IPC, para evitar subidas desproporcionadas.",
+      "Máximo el IRAV. El último valor publicado por el INE es el de agosto 2026: 2,47%. La Disposición final 6ª de la Ley de Vivienda 12/2023 establece que desde 2025 se aplica este nuevo índice de referencia, inferior a la evolución del IPC, para evitar subidas desproporcionadas.",
   },
   {
     question: "¿Qué es el IRAV y cómo funciona?",
@@ -103,10 +103,10 @@ const SubidaAlquiler2026 = () => {
     "@id": "https://contratoalquiler.com/subida-alquiler-2026",
     name: "Subida de Alquiler 2026 - IRAV y Límites Legales",
     description:
-      "Último IRAV publicado (marzo 2026): 2,47%. Límites legales a la subida del alquiler en España, cómo calcular la actualización según la LAU y qué hacer si la subida es abusiva.",
+      "Último IRAV publicado (agosto 2026): 2,47%. Límites legales a la subida del alquiler en España, cómo calcular la actualización según la LAU y qué hacer si la subida es abusiva.",
     url: "https://contratoalquiler.com/subida-alquiler-2026",
     datePublished: "2026-01-01",
-    dateModified: "2026-04-21",
+    dateModified: "2026-09-24",
     inLanguage: "es-ES",
     publisher: {
       "@type": "Organization",
@@ -141,11 +141,11 @@ const SubidaAlquiler2026 = () => {
     "@context": "https://schema.org",
     "@type": "Article",
     "@id": "https://contratoalquiler.com/subida-alquiler-2026#article",
-    headline: "IRAV 2026: último valor publicado 2,47% (marzo) y cómo afecta a la subida del alquiler",
+    headline: "IRAV 2026: último valor publicado 2,47% (agosto) y cómo afecta a la subida del alquiler",
     description:
-      "El IRAV de marzo 2026 es 2,47%, el último dato publicado por el INE. Cómo se aplica al alquiler, cómo calcular la subida según la LAU y qué hacer si la actualización es abusiva.",
+      "El IRAV de agosto 2026 es 2,47%, el último dato publicado por el INE. Cómo se aplica al alquiler, cómo calcular la subida según la LAU y qué hacer si la actualización es abusiva.",
     datePublished: "2026-01-01",
-    dateModified: "2026-04-21",
+    dateModified: "2026-09-24",
     author: {
       "@type": "Organization",
       name: "ContratoAlquiler",
@@ -174,12 +174,12 @@ const SubidaAlquiler2026 = () => {
   return (
     <>
       <SEOHead
-        title="IRAV marzo 2026: 2,47% — Subida máxima alquiler | ContratoAlquiler"
-        description="Último IRAV publicado (marzo 2026): 2,47%. Cuánto puede subirte el alquiler según la LAU y qué hacer si la subida supera el índice legal."
+        title="IRAV agosto 2026: 2,47% — Subida máxima alquiler | ContratoAlquiler"
+        description="Último IRAV publicado (agosto 2026): 2,47%. Cuánto puede subirte el alquiler según la LAU y qué hacer si la subida supera el índice legal."
         canonical="https://contratoalquiler.com/subida-alquiler-2026"
         ogType="article"
-        keywords="IRAV marzo 2026, IRAV 2026, subida alquiler 2026, límite subida alquiler, actualización renta, índice arrendamientos vivienda"
-        articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-04-21" }}
+        keywords="IRAV agosto 2026, IRAV 2026, subida alquiler 2026, límite subida alquiler, actualización renta, índice arrendamientos vivienda"
+        articleMeta={{ datePublished: "2026-01-01", dateModified: "2026-09-24" }}
         jsonLd={[pageSchema, faqSchema, articleSchema]}
       />
 
@@ -194,12 +194,12 @@ const SubidaAlquiler2026 = () => {
               <FadeIn>
                 <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
                   <TrendingUp className="w-4 h-4" />
-                  Último IRAV publicado: marzo 2026
+                  Último IRAV publicado: agosto 2026
                 </div>
               </FadeIn>
               <FadeIn delay={0.1}>
                 <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground mb-6 leading-tight">
-                  IRAV marzo 2026: 2,47%
+                  IRAV agosto 2026: 2,47%
                 </h1>
               </FadeIn>
               <FadeIn delay={0.2}>
@@ -207,7 +207,7 @@ const SubidaAlquiler2026 = () => {
                 <div className="speakable-summary bg-background/60 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-border">
                   <p className="text-lg text-foreground font-medium">
                     <strong>Resumen rápido:</strong> El último IRAV publicado por el INE es el de{" "}
-                    <strong>marzo 2026: 2,47%</strong>. Esta es la subida máxima legal para contratos de alquiler de
+                    <strong>agosto 2026: 2,47%</strong>. Esta es la subida máxima legal para contratos de alquiler de
                     vivienda habitual que se actualicen con ese índice. Sustituye al IPC. El propietario debe avisarte
                     por escrito con 1 mes de antelación y no puede aplicar subidas superiores aunque el contrato
                     mencione el IPC.
@@ -217,7 +217,7 @@ const SubidaAlquiler2026 = () => {
               <FadeIn delay={0.25}>
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
                   <Calendar className="w-4 h-4" />
-                  <span>Actualizado: 21 de abril de 2026</span>
+                  <span>Actualizado: 24 de septiembre de 2026</span>
                 </div>
               </FadeIn>
               <FadeIn delay={0.3}>
@@ -248,7 +248,7 @@ const SubidaAlquiler2026 = () => {
                 <div className="bg-gradient-to-br from-blue-50 to-green-50 border border-blue-100 rounded-3xl p-8 md:p-12 text-center mb-16">
                   <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-blue-700 mb-6">
                     <Calendar className="w-4 h-4" />
-                    IRAV marzo 2026
+                    IRAV agosto 2026
                   </div>
                   <div className="text-6xl md:text-7xl font-serif font-bold text-foreground mb-4">2,47%</div>
                   <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-6">
@@ -257,9 +257,9 @@ const SubidaAlquiler2026 = () => {
                   </p>
                   <div className="bg-white/70 border border-blue-100 rounded-2xl p-4 text-sm text-muted-foreground max-w-2xl mx-auto text-left">
                     <p>
-                      <strong className="text-foreground">¿Buscabas el IRAV de abril 2026?</strong> Aún no está
-                      publicado. El INE actualiza el IRAV mensualmente; en cuanto salga el dato de abril, esta página se
-                      actualizará. Mientras tanto, el último valor vigente es el de <strong>marzo 2026 (2,47%)</strong>.
+                      <strong className="text-foreground">¿Buscabas el IRAV de septiembre 2026?</strong> Aún no está
+                      publicado. El INE actualiza el IRAV mensualmente; a mediados de octubre publicará el dato de septiembre; esta página se
+                      actualizará. Mientras tanto, el último valor vigente es el de <strong>agosto 2026 (2,47%)</strong>.
                     </p>
                   </div>
                 </div>
@@ -442,7 +442,7 @@ const SubidaAlquiler2026 = () => {
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-foreground flex-shrink-0 mt-0.5" />
                     <span>
-                      El último <strong>IRAV publicado es el de marzo 2026: 2,47%</strong>. Es el tope para la
+                      El último <strong>IRAV publicado es el de agosto 2026: 2,47%</strong>. Es el tope para la
                       actualización anual del alquiler de vivienda habitual; sustituye al IPC (Disposición final 6ª Ley
                       12/2023).
                     </span>

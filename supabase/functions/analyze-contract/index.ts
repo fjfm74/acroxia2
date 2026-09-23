@@ -1041,7 +1041,7 @@ serve(async (req) => {
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
 
     if (downloadError) {
-      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
+      if (creditConsumed) { await supabase.rpc("refund_credit", { p_user_id: userId }); creditConsumed = false; }
       throw downloadError;
     }
 
@@ -1097,7 +1097,7 @@ serve(async (req) => {
     );
 
     if (!languageDetection.supported) {
-      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
+      if (creditConsumed) { await supabase.rpc("refund_credit", { p_user_id: userId }); creditConsumed = false; }
       await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
       return new Response(
         JSON.stringify({
@@ -1333,7 +1333,7 @@ ${sanitizedContractText.substring(0, 4000)}`,
       const errorText = await aiResponse.text();
       console.error("AI error:", errorText);
 
-      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
+      if (creditConsumed) { await supabase.rpc("refund_credit", { p_user_id: userId }); creditConsumed = false; }
 
       if (aiResponse.status === 429) {
         return new Response(

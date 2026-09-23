@@ -1,6 +1,6 @@
 # ContratoAlquiler - Análisis de Contratos de Alquiler con IA
 
-> Última actualización: Febrero 2026 (actualizado 19/02/2026)
+> Última actualización: Septiembre 2026 (actualizado 24/09/2026)
 > Versión dinámica con blog actualizado: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/llms
 
 ## Qué es ContratoAlquiler
