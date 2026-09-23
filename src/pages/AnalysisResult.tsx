@@ -86,6 +86,7 @@ interface Clause {
   legal_reference?: LegalReference;
   recommendation?: string;
   negotiation_tip?: string;
+  quote_verified?: boolean;
 }
 
 interface ContractMetadata {
@@ -95,6 +96,7 @@ interface ContractMetadata {
   estimated_risk_score?: number;
   legal_context_available?: boolean;
   sources_count?: number;
+  perspective?: "tenant" | "landlord";
 }
 
 interface Summary {
@@ -117,6 +119,7 @@ interface FullReport {
   generated_burofax?: string;
   contract_metadata?: ContractMetadata;
   summary?: Summary;
+  perspective?: "tenant" | "landlord";
 }
 
 interface AnalysisData {

@@ -45,11 +45,13 @@ interface AnalysisResult {
   suspicious_clauses: number;
   illegal_clauses: number;
   recommendation?: string;
+  perspective?: "tenant" | "landlord";
   clauses?: Array<{
     category: string;
     type: "legal" | "suspicious" | "illegal";
     original_text: string;
     explanation: string;
+    quote_verified?: boolean;
   }>;
 }
 
