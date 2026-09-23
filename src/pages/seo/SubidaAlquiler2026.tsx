@@ -258,7 +258,7 @@ const SubidaAlquiler2026 = () => {
                   <div className="bg-white/70 border border-blue-100 rounded-2xl p-4 text-sm text-muted-foreground max-w-2xl mx-auto text-left">
                     <p>
                       <strong className="text-foreground">¿Buscabas el IRAV de septiembre 2026?</strong> Aún no está
-                      publicado. El INE actualiza el IRAV mensualmente; a mediados de octubre publicará el dato de septiembre; esta página se
+                      publicado. El INE actualiza el IRAV mensualmente; a mediados de octubre publicará el dato de septiembre y esta página se
                       actualizará. Mientras tanto, el último valor vigente es el de <strong>agosto 2026 (2,47%)</strong>.
                     </p>
                   </div>
