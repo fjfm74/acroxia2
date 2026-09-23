@@ -71,7 +71,7 @@ function sanitizeJsonString(str: string): string {
     });
 }
 
-async function generateFAQsAndTitle(post: { title: string; excerpt: string; content: string }, needsMetaDescription: boolean): Promise<{ title: string; faqs: FAQ[]; meta_description?: string }> {
+async function generateFAQsAndTitle(post: { title: string; excerpt: string; content: string; audience?: string | null }, needsMetaDescription: boolean): Promise<{ title: string; faqs: FAQ[]; meta_description?: string }> {
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY not configured");
   }
@@ -138,7 +138,7 @@ Responde SOLO con JSON válido (sin markdown, sin backticks):
           messages: [
             {
               role: "system",
-              content: "Eres un experto en SEO y derecho inmobiliario español. Respondes ÚNICAMENTE con JSON válido, sin texto adicional, sin explicaciones, sin markdown."
+              content: buildBlogSystemPrompt(post.audience === "propietario" ? "propietario" : "inquilino")
             },
             { role: "user", content: prompt }
           ],
@@ -266,7 +266,7 @@ serve(async (req: Request): Promise<Response> => {
     // Query posts that need updating - get more to ensure we find enough without FAQs
     let query = supabase
       .from("blog_posts")
-      .select("id, title, excerpt, content, faqs, meta_description")
+      .select("id, title, excerpt, content, faqs, meta_description, audience")
       .eq("status", "published")
       .order("published_at", { ascending: false });
 
