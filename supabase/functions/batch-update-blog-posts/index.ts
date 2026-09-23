@@ -1,3 +1,4 @@
+import { buildBlogSystemPrompt } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
@@ -79,7 +80,7 @@ async function generateFAQsAndTitle(post: { title: string; excerpt: string; cont
 
   const metaDescInstruction = needsMetaDescription ? `
 3. META DESCRIPTION (OBLIGATORIO):
-   - Máximo 155 caracteres
+   - Entre 140 y 155 caracteres
    - Incluye la keyword principal del artículo
    - Debe motivar el clic desde Google (usa beneficio o dato concreto)
    - NO uses comillas dobles dentro del texto
@@ -97,11 +98,11 @@ Contenido (primeros 2000 chars): "${contentPreview}"
 INSTRUCCIONES:
 
 1. TÍTULO OPTIMIZADO (OBLIGATORIO):
-   - Máximo 55 caracteres (CRÍTICO - no exceder nunca)
+   - Máximo 60 caracteres (no exceder nunca)
    - Mantén el significado original del artículo
    - Usa sentence case (primera letra mayúscula, resto minúsculas excepto nombres propios)
    - Si el título actual ya tiene 55 caracteres o menos, puedes devolverlo igual
-   - Incluye el año 2026 si es relevante para la actualidad
+   - Sin año en el título salvo que el tema sea una novedad de ese año
    
 2. FAQs (OBLIGATORIO - genera exactamente 4):
    - 4 preguntas frecuentes basadas en el contenido del artículo

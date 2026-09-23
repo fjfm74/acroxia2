@@ -1,3 +1,4 @@
+import { buildBlogSystemPrompt } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
@@ -201,179 +202,44 @@ ${leastUsedCategories.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 Genera el post preferiblemente en una de estas categorías.`;
 
-    // Audience-specific context
-    const audienceContext = audience === "propietario"
-      ? `Tu audiencia son PROPIETARIOS Y ARRENDADORES que quieren:
-- Redactar contratos de alquiler seguros y válidos
-- Protegerse ante impagos y morosos
-- Conocer sus derechos y obligaciones según la LAU
-- Gestionar correctamente fianzas y garantías adicionales
-- Entender la normativa de zonas tensionadas
-- Minimizar riesgos legales en el arrendamiento`
-      : `Tu audiencia son INQUILINOS que quieren:
-- Entender su contrato de alquiler
-- Conocer sus derechos ante cláusulas abusivas
-- Saber cómo reclamar ante problemas con el casero
-- Estar informados sobre límites de subida de renta
-- Proteger su fianza y depósitos
-- Conocer sus derechos durante y al final del contrato`;
 
-    let systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España.
+    const blogAudience: "inquilino" | "propietario" = audience === "propietario" ? "propietario" : "inquilino";
 
-FECHA ACTUAL: ${currentMonth} de ${currentYear}
+    const systemPrompt = `${buildBlogSystemPrompt(blogAudience)}
 
-CONTEXTO TEMPORAL OBLIGATORIO:
-- Estamos en ${currentYear}. NUNCA escribas como si 2024 o 2025 fueran el presente o el futuro.
-- El año 2024 ya pasó. El límite del 3% del IPC de 2024 ya NO está vigente.
-- El año 2025 ya pasó. El IRAV entró en vigor el 1 de enero de 2025 y ya lleva más de un año funcionando.
-- Cuando menciones fechas futuras, usa ${currentYear} o posteriores.
-- Ejemplos correctos:
-  - "Si tu contrato se actualiza en ${currentYear}..."
-  - "Durante ${currentYear}, la normativa vigente establece..."
-  - "Desde la entrada en vigor del IRAV en 2025, que ya lleva más de un año aplicándose..."
-  - "El IRAV, que sustituyó al límite del 3% en enero de 2025..."
-- Ejemplos INCORRECTOS (NO usar):
-  - "Si tu contrato se actualiza en 2025..." (2025 ya pasó)
-  - "A partir del 1 de enero de 2025..." (ya estamos después de esa fecha)
-  - "Durante 2024..." como si fuera presente
-
-Tu tarea es escribir artículos de blog profesionales, informativos y útiles para ${targetAudience}.
-
-${audienceContext}
-
-El artículo debe:
-- Estar escrito en español de España
-- Ser informativo y práctico
-- Citar legislación relevante cuando sea apropiado (LAU, Código Civil, etc.)
-- Tener un tono profesional pero accesible
-- Incluir consejos prácticos
-
-REGLAS DE LENGUAJE LEGAL (OBLIGATORIO):
-- NUNCA uses afirmaciones absolutas como "es ilegal", "es nulo", "está prohibido"
-- USA lenguaje matizado: "según la LAU", "se considera", "podría ser", "generalmente"
-- SIEMPRE incluye referencias legales específicas (ej. "art. 36 LAU", "art. 11 LAU")
-- USA datos numéricos concretos (plazos de 30 días, 4 meses preaviso, 1 mes fianza)
-- NO actúes como asesor legal - el contenido es informativo, no constituye asesoramiento
-- Evita imperativos como "debes" o "tienes que" - usa "es recomendable", "se aconseja"
-- INCLUYE al final del post una sección "En resumen" con 3-5 bullet points clave
-
-Ejemplos de transformación:
-- MAL: "Es ilegal cobrar más de 3 meses de fianza"
-- BIEN: "Según el artículo 36 de la LAU, se considera contrario a la ley exigir más de 3 mensualidades en total"
-- MAL: "Esa cláusula es nula"
-- BIEN: "Esa cláusula podría considerarse nula según la LAU"
-- MAL: "El casero no puede subir la renta"
-- BIEN: "De acuerdo con la normativa vigente, las actualizaciones de renta estarían limitadas al índice IRAV"
-
-VARIEDAD EN TÍTULOS (OBLIGATORIO):
-NO uses siempre "Guía sobre..." o "Guía completa de...". Alterna entre estos formatos:
-${TITLE_FORMATS.map(f => `- ${f}`).join('\n')}
-
-TÍTULO (OBLIGATORIO - CRÍTICO):
-- MÁXIMO 55 CARACTERES (Google trunca títulos largos en SERPs)
-- Usa SOLO mayúscula inicial (sentence case)
-- NO uses title case
-- Evita tono alarmista o clickbait
-- NO abuses de signos de interrogación
-
-Ejemplos correctos (dentro del límite):
-- "Cómo reclamar tu fianza paso a paso" (38 chars) ✓
-- "5 cláusulas abusivas en contratos" (34 chars) ✓
-- "Qué dice la LAU sobre subidas de renta" (39 chars) ✓
-
-Ejemplos incorrectos (demasiado largos):
-- "¿Puede el Casero Retener Parte de tu Fianza Si Hay Daños?" ❌
-- "La guía completa sobre cómo reclamar tu fianza paso a paso" ❌
+FECHA ACTUAL: ${currentMonth} de ${currentYear}.
 ${existingPostsContext}
 ${categoryGuidance}
 
-FAQs (OBLIGATORIO):
-- Incluye 3-5 preguntas frecuentes relacionadas con el tema
-- Las preguntas deben ser en primera persona: "¿Puedo...?", "¿Qué hago si...?", "¿Cuánto tiempo...?"
-- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
-- Deben ser preguntas que alguien haría a Google o a un asistente de IA
-
-Formato de respuesta OBLIGATORIO (JSON válido):
+FORMATO DE SALIDA (JSON):
 {
-  "title": "Título informativo en sentence case (máximo 55 caracteres)",
-  "excerpt": "Resumen corto del artículo en 2-3 frases (máximo 160 caracteres)",
-  "content": "Contenido completo en formato Markdown. Usa ## para subtítulos, listas con -, y **negrita** para énfasis. Mínimo 800 palabras.",
-  "category": "Una de: ${ALL_CATEGORIES.join(', ')}",
-  "read_time": "X min (estimación de lectura)",
-  "meta_description": "Descripción SEO del artículo (máximo 160 caracteres)",
-  "keywords": ["array", "de", "palabras", "clave", "SEO"],
-  "faqs": [
-    {"question": "¿Pregunta frecuente 1?", "answer": "Respuesta concisa"},
-    {"question": "¿Pregunta frecuente 2?", "answer": "Respuesta concisa"},
-    {"question": "¿Pregunta frecuente 3?", "answer": "Respuesta concisa"}
-  ]
-}`;
+  "title": "título en sentence case (máx 60 caracteres)",
+  "excerpt": "resumen concreto de 140-155 caracteres",
+  "content": "cuerpo completo en HTML (h2/h3, sin h1), mínimo 900 palabras",
+  "category": "una de: ${ALL_CATEGORIES.join(", ")}",
+  "read_time": "X min",
+  "meta_description": "140-155 caracteres",
+  "keywords": ["palabras", "clave"],
+  "faqs": [{"question": "¿...?", "answer": "respuesta de 2-3 frases"}]
+}
+"faqs" puede ser una lista vacía; úsala solo si el tema lo pide.`;
 
     let userPrompt: string;
 
     if (mode === "auto") {
-      if (audience === "propietario") {
-        userPrompt = `Escribe un artículo ORIGINAL para PROPIETARIOS sobre un tema actual y relevante del alquiler en España. 
+      userPrompt = `Escribe un artículo original para ${targetAudience} sobre un problema real del alquiler de vivienda en España.
 
-RECUERDA: Estamos en ${currentMonth} de ${currentYear}. El IRAV ya está en vigor desde enero de 2025 (hace más de un año).
-
-REQUISITOS CLAVE:
-1. El tema debe ser DIFERENTE a cualquier post ya publicado
-2. Usa un formato de título CREATIVO (no "Guía sobre...")
-3. Prioriza las categorías con menos contenido: ${leastUsedCategories.join(', ')}
-4. Todas las referencias temporales deben reflejar que estamos en ${currentYear}
-
-Temas sugeridos para PROPIETARIOS (elige uno que NO esté ya cubierto):
-- Cómo redactar un contrato de alquiler seguro en ${currentYear}
-- Qué hacer paso a paso ante un impago del inquilino
-- Cláusulas imprescindibles para proteger tu vivienda
-- Gestión de la fianza y garantías adicionales según la LAU
-- Normativa de zonas tensionadas: qué implica para propietarios
-- Seguros de impago: cuándo y por qué contratarlos
-- Cómo seleccionar inquilinos de forma legal
-- Fiscalidad del alquiler en ${currentYear}
-- Derechos del propietario cuando el inquilino no cuida la vivienda
-- Renovación vs. no renovación: opciones legales
-
-Elige el tema que consideres más útil, actual y DIFERENTE a lo ya publicado.`;
-      } else {
-        userPrompt = `Escribe un artículo ORIGINAL para INQUILINOS sobre un tema actual y relevante del sector inmobiliario español de alquiler. 
-
-RECUERDA: Estamos en ${currentMonth} de ${currentYear}. El IRAV ya está en vigor desde enero de 2025 (hace más de un año).
-
-REQUISITOS CLAVE:
-1. El tema debe ser DIFERENTE a cualquier post ya publicado
-2. Usa un formato de título CREATIVO (no "Guía sobre...")
-3. Prioriza las categorías con menos contenido: ${leastUsedCategories.join(', ')}
-4. Todas las referencias temporales deben reflejar que estamos en ${currentYear}
-
-Temas sugeridos para INQUILINOS (elige uno que NO esté ya cubierto):
-- El IRAV en ${currentYear}: balance tras más de un año de aplicación
-- Novedades legislativas de alquiler en ${currentYear}
-- Derechos poco conocidos de los inquilinos
-- Cómo reclamar ante problemas específicos con el casero
-- Cláusulas abusivas comunes que pasan desapercibidas
-- Consejos para negociar renovación del contrato en ${currentYear}
-- Problemas de convivencia y comunidad
-- Obras y reformas: derechos y obligaciones
-- Suministros y gastos de comunidad
-- Fin de contrato y prórrogas
-
-Elige el tema que consideres más útil, actual y DIFERENTE a lo ya publicado.`;
-      }
+- El tema debe ser distinto de los ya publicados; prioriza estas categorías: ${leastUsedCategories.join(", ")}.
+- Decide la estructura según el tema. No uses el esqueleto de siempre.
+- Cita el artículo concreto cada vez que afirmes algo legal.`;
     } else {
-      userPrompt = `Escribe un artículo de blog sobre el siguiente tema:
+      userPrompt = `Escribe un artículo para ${targetAudience} sobre este tema:
 
 ${prompt}
 
-RECUERDA: Estamos en ${currentMonth} de ${currentYear}. El IRAV ya está en vigor desde enero de 2025.
-
-IMPORTANTE:
-- Usa un título CREATIVO (no "Guía sobre...")
-- El enfoque debe ser original y diferente a posts existentes
-- Todas las referencias temporales deben ser correctas (2024 y 2025 ya pasaron)
-- El artículo está dirigido a ${targetAudience}
-- Asegúrate de que el artículo sea completo, informativo y útil.`;
+- Enfoque propio, distinto de los posts existentes.
+- Decide la estructura según el tema. No uses el esqueleto de siempre.
+- Cita el artículo concreto cada vez que afirmes algo legal.`;
     }
 
     const response = await fetch(GATEWAY_URL, {

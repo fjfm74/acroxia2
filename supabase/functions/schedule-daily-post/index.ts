@@ -1,3 +1,5 @@
+import { isCronAuthorized } from "../_shared/cron-auth.ts";
+import { buildBlogSystemPrompt } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
@@ -201,75 +203,31 @@ async function generateBlogPostWithRetries(
       ? `POSTS YA PUBLICADOS (NO repetir temas similares):\n${existingPosts.map((p: any) => `- "${p.title}" (${p.category})`).join("\n")}`
       : "";
 
-  const systemPrompt = `Eres un experto redactor de contenido legal inmobiliario en España.
+  const systemPrompt = `${buildBlogSystemPrompt("inquilino")}
 
-FECHA ACTUAL: ${currentMonth} de ${currentYear}
-
-CONTEXTO TEMPORAL OBLIGATORIO:
-- Estamos en ${currentYear}. NUNCA escribas como si 2024 o 2025 fueran el presente o el futuro.
-- El IRAV entró en vigor el 1 de enero de 2025 y ya lleva más de un año funcionando.
-
-Tu tarea es escribir artículos de blog profesionales, informativos y útiles para inquilinos.
-
-El artículo debe:
-- Tener entre 1500 y 2500 palabras
-- Usar formato Markdown con headers (##, ###), listas y negritas
-- Ser informativo y práctico
-- Incluir ejemplos concretos cuando sea posible
-- Tener un tono profesional pero accesible
-- NO incluir la imagen principal en el contenido
-- Incluir una sección de conclusiones o resumen final
+FECHA ACTUAL: ${currentMonth} de ${currentYear}.
 
 CATEGORÍAS VÁLIDAS: ${ALL_CATEGORIES.join(", ")}
-CATEGORÍAS PRIORITARIAS (menos contenido): ${leastUsedCategories.join(", ")}
+CATEGORÍAS CON MENOS CONTENIDO (prioritarias): ${leastUsedCategories.join(", ")}
 
 ${existingContext}
 
-FORMATOS DE TÍTULO SUGERIDOS: ${TITLE_FORMATS.join(" | ")}
-
-TÍTULO (OBLIGATORIO - CRÍTICO):
-- MÁXIMO 55 CARACTERES (Google trunca títulos largos en SERPs)
-- Usa SOLO mayúscula inicial (sentence case)
-- NO uses title case
-- Evita tono alarmista o clickbait
-- NO abuses de signos de interrogación
-
-Ejemplos correctos (dentro del límite):
-- "Cómo reclamar tu fianza paso a paso" (38 chars) ✓
-- "5 cláusulas abusivas en contratos" (34 chars) ✓
-- "Qué hacer si el casero no repara" (33 chars) ✓
-
-Ejemplos incorrectos (demasiado largos):
-- "La guía completa sobre cómo reclamar la fianza cuando el casero se niega" ❌
-
-FAQs (OBLIGATORIO):
-- Incluye 3-5 preguntas frecuentes relacionadas con el tema
-- Las preguntas deben ser en primera persona: "¿Puedo...?", "¿Qué hago si...?", "¿Cuánto tiempo...?"
-- Las respuestas deben ser concisas (2-3 frases, máximo 300 caracteres)
-- Deben ser preguntas que alguien haría a Google o a un asistente de IA
-
-Responde SOLO con un JSON válido:
+FORMATO DE SALIDA (JSON):
 {
-  "title": "título informativo en sentence case (máx 55 chars)",
-  "excerpt": "resumen de 2-3 frases del artículo (máx 160 chars)",
+  "title": "título en sentence case (máx 60 caracteres)",
+  "excerpt": "resumen concreto de 140-155 caracteres",
   "category": "una de las categorías válidas",
-  "content": "contenido completo en Markdown",
-  "faqs": [
-    {"question": "¿Pregunta frecuente 1?", "answer": "Respuesta concisa"},
-    {"question": "¿Pregunta frecuente 2?", "answer": "Respuesta concisa"},
-    {"question": "¿Pregunta frecuente 3?", "answer": "Respuesta concisa"}
-  ]
-}`;
+  "content": "cuerpo completo en HTML (h2/h3, sin h1)",
+  "faqs": [{"question": "¿...?", "answer": "respuesta de 2-3 frases"}]
+}
+"faqs" puede ser una lista vacía; úsala solo si el tema lo pide.`;
 
-  const userPrompt = `Escribe un artículo ORIGINAL sobre un tema actual y relevante del sector inmobiliario español de alquiler.
+  const userPrompt = `Escribe un artículo original para inquilinos sobre un problema real del alquiler de vivienda en España.
 
-RECUERDA: Estamos en ${currentMonth} de ${currentYear}. El IRAV ya está en vigor desde enero de 2025.
-
-REQUISITOS:
-1. Tema DIFERENTE a posts existentes
-2. Título CREATIVO
-3. Prioriza categorías: ${leastUsedCategories.join(", ")}
-4. Referencias temporales correctas (estamos en ${currentYear})`;
+- Elige un tema distinto de los ya publicados y, si puedes, de una de las categorías prioritarias: ${leastUsedCategories.join(", ")}.
+- Decide la estructura según el tema (caso práctico, paso a paso, comparativa, errores frecuentes, análisis de una cláusula...). No uses el esqueleto de siempre.
+- Entre 1.200 y 2.000 palabras.
+- Cita el artículo concreto cada vez que afirmes algo legal.`;
 
   let lastError: Error | null = null;
 
@@ -556,6 +514,10 @@ async function sendConfirmationEmail(
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!(await isCronAuthorized(req))) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   try {
