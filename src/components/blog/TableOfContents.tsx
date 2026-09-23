@@ -30,7 +30,11 @@ const TableOfContents = ({ content, className }: TableOfContentsProps) => {
     // HTML headings (<h2>/<h3>) from newer articles
     const htmlRegex = /<h([23])[^>]*>([\s\S]*?)<\/h\1>/gi;
     while ((match = htmlRegex.exec(content)) !== null) {
-      raw.push({ level: Number(match[1]), text: match[2].replace(/<[^>]+>/g, "").trim() });
+      const stripped = match[2].replace(/<[^>]+>/g, "");
+      const decoded = typeof document !== "undefined"
+        ? (() => { const t = document.createElement("textarea"); t.innerHTML = stripped; return t.value; })()
+        : stripped;
+      raw.push({ level: Number(match[1]), text: decoded.trim() });
     }
 
     for (const { level, text } of raw) {
