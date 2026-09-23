@@ -102,7 +102,7 @@ INSTRUCCIONES:
    - Máximo 60 caracteres (no exceder nunca)
    - Mantén el significado original del artículo
    - Usa sentence case (primera letra mayúscula, resto minúsculas excepto nombres propios)
-   - Si el título actual ya tiene 55 caracteres o menos, puedes devolverlo igual
+   - Si el título actual ya tiene 60 caracteres o menos, puedes devolverlo igual
    - Sin año en el título salvo que el tema sea una novedad de ese año
    
 2. FAQs (OBLIGATORIO - genera exactamente 4):
@@ -114,7 +114,7 @@ INSTRUCCIONES:
 ${metaDescInstruction}
 Responde SOLO con JSON válido (sin markdown, sin backticks):
 {
-  "title": "título optimizado (máx 55 chars)",
+  "title": "título optimizado (máx 60 chars)",
   ${metaDescJson}
   "faqs": [
     {"question": "pregunta 1", "answer": "respuesta 1"},
