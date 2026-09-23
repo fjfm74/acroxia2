@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
+import { MODELS } from "../_shared/models.ts";
+import { buildAnalysisSystemPrompt } from "../_shared/analysis-prompt.ts";
+import { AiProviderError, callAnalysisModel, parseAnalysisJson } from "../_shared/ai-client.ts";
+import { verifyClauseQuotes } from "../_shared/analysis-verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,7 +105,7 @@ async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: s
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: MODELS.GEMINI_FAST,
       messages: [
         {
           role: "user",
@@ -130,7 +134,7 @@ async function extractPdfTextWithVision(buffer: ArrayBuffer, apiKey: string): Pr
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: MODELS.GEMINI_FAST,
       temperature: 0,
       messages: [
         {
@@ -338,138 +342,6 @@ function detectTerritory(text: string): string | null {
     if (keywords.some((kw) => lowerText.includes(kw))) return territory;
   }
   return null;
-}
-
-// Build system prompt incluyendo el contexto legal RAG.
-function buildSystemPrompt(
-  perspective: "tenant" | "landlord",
-  legalContext: string,
-  hasLegalContext: boolean,
-  availableSources: string[],
-  territorialFilter: string | null,
-  detectedMunicipality: string | null,
-  detectedProvince: string | null,
-  hasZonaTensionadaInfo: boolean,
-): string {
-  const commonIntro = `Eres el sistema de análisis de ContratoAlquiler, plataforma española de protección de inquilinos.
-Analiza contratos de alquiler de vivienda habitual identificando cláusulas ilegales, abusivas o sospechosas con rigor jurídico.
-El contrato puede estar redactado en español o catalán; interpreta equivalencias jurídicas en ambos idiomas.`;
-
-  const zonaTensionadaSection = detectedMunicipality
-    ? `
-VERIFICACIÓN DE ZONA TENSIONADA
-================================
-Municipio detectado: ${detectedMunicipality}
-${detectedProvince ? `Provincia: ${detectedProvince}` : ""}
-${territorialFilter ? `Comunidad Autónoma: ${territorialFilter}` : ""}
-${
-  hasZonaTensionadaInfo
-    ? `
-HAY información de zonas tensionadas en el contexto legal.
-Si "${detectedMunicipality}" aparece en alguna lista de municipios tensionados:
-- Añade una cláusula con category: "RENTA Y ACTUALIZACIONES", type: "suspicious"
-- En "explanation": indica que el inmueble está en zona de mercado residencial tensionado y la renta puede estar sujeta a límites legales
-- En "recommendation": "Verifique la renta máxima aplicable en https://serpavi.mivau.gob.es/"
-- NO determines automáticamente si la renta es abusiva (depende de superficie, año construcción, etc. que no están en el contrato)
-`
-    : `
-No se detectó información específica de zonas tensionadas. Si la renta parece elevada, sugiere consultar https://serpavi.mivau.gob.es/`
-}
-`
-    : "";
-
-  const legalContextSection = hasLegalContext
-    ? `
-DOCUMENTOS LEGALES INDEXADOS EN LA BASE DE DATOS ContratoAlquiler
-=========================================================
-Fuentes disponibles: ${availableSources.join(", ")}
-Territorio detectado: ${territorialFilter || "No detectado (aplicar normativa estatal)"}
-
-CONTEXTO LEGAL VERIFICADO (extraído de la base de datos):
-${legalContext}
-
-INSTRUCCIONES CRÍTICAS:
-- SOLO marca "verified": true si el artículo aparece literalmente en el contexto anterior
-- Si citas por conocimiento general pero no está en el contexto, marca "verified": false
-- Sé conservador: NO marques cláusulas como ilegales sin base legal sólida
-- En contratos cortos o especiales (habitación, temporal), reconoce las limitaciones del análisis
-`
-    : `
-AVISO: No se encontraron documentos legales específicos en la base de datos para este análisis.
-- Todas las referencias legales deben tener "verified": false
-- Sé conservador, recomienda consultar con un profesional ante dudas
-- Aplica normativa estatal: Ley 29/1994 (LAU), Ley 12/2023, RD 7/2019
-`;
-
-  const commonFormat = `
-FORMATO DE RESPUESTA (JSON estricto):
-{
-  "total_clauses": número,
-  "valid_clauses": número,
-  "suspicious_clauses": número,
-  "illegal_clauses": número,
-  "recommendation": "firmar" | "negociar" | "no_firmar",
-  "clauses": [
-    {
-      "category": "FIANZA Y GARANTÍAS" | "DURACIÓN Y PRÓRROGAS" | "RENTA Y ACTUALIZACIONES" | "GASTOS E IMPUESTOS" | "OBRAS Y REPARACIONES" | "PENALIZACIONES" | "HONORARIOS" | "OTRAS",
-      "type": "legal" | "suspicious" | "illegal",
-      "original_text": "texto exacto del contrato",
-      "explanation": "explicación clara y específica",
-      "legal_reference": "artículo aplicable",
-      "verified": true | false
-    }
-  ]
-}
-
-PRINCIPIOS DE CALIFICACIÓN (CRÍTICOS):
-- "illegal" se reserva ESTRICTAMENTE para cláusulas que contradicen explícitamente una norma imperativa que aplica DIRECTAMENTE a este contrato. Si dudas, usa "suspicious".
-- NUNCA marques como "illegal" la AUSENCIA de cláusulas o información (ej. "no menciona depósito autonómico", "falta referencia catastral", "no informa de la prórroga forzosa"). Las omisiones del CONTRATO, aunque sean obligaciones del ARRENDADOR, son "suspicious" (alertan al user) o ni siquiera se mencionan si el contrato es válido sin esa información.
-- NUNCA marques como "illegal" cláusulas aplicando una norma "por analogía" (ej. aplicar LAU vivienda habitual a un contrato de habitación temporal). Si la norma no aplica directamente, usa "suspicious" y explica el matiz.
-- Si el contrato es claramente uso distinto al de vivienda (habitación, temporal estudiantes, art. 3 LAU), recórdalo en una cláusula "OTRAS" tipo "suspicious" o "legal" indicando que se rige por autonomía de la voluntad y no por LAU vivienda habitual; no apliques restricciones de vivienda habitual como ilegales.
-- Una cláusula que es subóptima, mejorable o discutible NO es ilegal. Es "suspicious".
-- El conteo de "illegal" debe ser conservador. Mejor sub-contar que sobre-contar (un cliente que vea 0-1 ilegales en un contrato razonable confiará más que uno que vea 5 ilegalidades dudosas en un contrato simple).
-- Rigor jurídico real: no infles para "asustar al user". El objetivo es darle información veraz.
-`;
-
-  if (perspective === "landlord") {
-    return `${commonIntro}
-
-Analiza DESDE LA PERSPECTIVA DEL PROPIETARIO/ARRENDADOR:
-- ILEGALES: cláusulas que incumplen LAU y dejarían al propietario desprotegido
-- SOSPECHOSAS: posibles problemas legales o cláusulas ausentes que deberían incluirse
-- LEGALES: conformes y que protegen al arrendador
-${zonaTensionadaSection}
-${legalContextSection}
-
-PUNTOS CRÍTICOS PARA EL PROPIETARIO:
-1. Fianza: 1 mes obligatorio + 2 meses garantías adicionales máximo
-2. Duración mínima y prórrogas correctamente redactadas
-3. Índice de actualización válido (IRAV/IPC según corresponda)
-4. Cláusula de obras: delimita responsabilidades
-5. Penalización por desistimiento del inquilino
-6. Suministros, IBI, comunidad: quién asume cada gasto
-7. Cláusulas protectoras ausentes que deberían incluirse
-${commonFormat}`;
-  }
-
-  return `${commonIntro}
-
-Analiza DESDE LA PERSPECTIVA DEL INQUILINO:
-- ILEGALES: contravienen LAU u otra normativa aplicable
-- SOSPECHOSAS: pueden ser abusivas o perjudiciales
-- LEGALES: conformes a normativa vigente
-${zonaTensionadaSection}
-${legalContextSection}
-
-PUNTOS CRÍTICOS:
-1. Fianza: máximo 1 mensualidad + 2 garantías adicionales
-2. Duración: mínimo 5 años (persona física) o 7 años (jurídica) en vivienda habitual
-3. Honorarios inmobiliaria: a cargo del arrendador si es empresa (Ley 12/2023)
-4. Actualización renta: índice oficial (IRAV), no IPC libre desde 2025
-5. Obras y reparaciones: conservación a cargo del propietario (art. 21 LAU)
-6. Penalizaciones por desistimiento: máximo 1 mes por año restante
-7. IBI, comunidad: por defecto a cargo del propietario salvo pacto explícito
-${commonFormat}`;
 }
 
 // Construye prompt para generar 2 documentos en JSON: guía y email.
@@ -794,7 +666,7 @@ Contenido: ${c.content}
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: MODELS.GEMINI_FAST,
         messages: [
           { role: "system", content: systemPrompt },
           {
@@ -847,7 +719,7 @@ Contenido: ${c.content}
           method: "POST",
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: MODELS.GEMINI_FAST,
             temperature: 0.4,
             messages: [
               { role: "system", content: guidePrompt },
