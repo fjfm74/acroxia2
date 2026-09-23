@@ -157,17 +157,6 @@ const TITLE_FORMATS = [
   "Guía práctica:",
 ];
 
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
-}
-
 function getLeastUsedCategories(existingPosts: Array<{ category: string }>): string[] {
   const categoryCounts: Record<string, number> = {};
   ALL_CATEGORIES.forEach((cat) => (categoryCounts[cat] = 0));

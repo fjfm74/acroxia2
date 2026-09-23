@@ -158,17 +158,6 @@ const TITLE_FORMATS = [
   "X aspectos clave de...",
 ];
 
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
-}
-
 async function generateImage(title: string, excerpt: string, category: string): Promise<string | null> {
   if (!lovableApiKey) {
     console.log("LOVABLE_API_KEY not configured, skipping image generation");
