@@ -1828,6 +1828,7 @@ export type Database = {
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       compute_legal_corpus_hash: { Args: never; Returns: string }
+      consume_credit: { Args: { p_user_id: string }; Returns: boolean }
       decrement_credit: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -1891,6 +1892,8 @@ export type Database = {
           read_ct: number
         }[]
       }
+      redact_analysis_preview: { Args: { full_result: Json }; Returns: Json }
+      refund_credit: { Args: { p_user_id: string }; Returns: undefined }
       search_legal_chunks:
         | {
             Args: { match_count?: number; search_query: string }
