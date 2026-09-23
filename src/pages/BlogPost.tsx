@@ -15,6 +15,8 @@ import SEOHead from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import FadeIn from "@/components/animations/FadeIn";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -399,6 +401,7 @@ const BlogPost = () => {
                       prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
                     ">
                       <ReactMarkdown
+                        rehypePlugins={[rehypeRaw, rehypeSanitize]}
                         components={{
                           h1: ({ children }) => <h2>{children}</h2>,
                           h2: ({ children }) => {
