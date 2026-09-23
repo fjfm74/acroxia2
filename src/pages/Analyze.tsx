@@ -222,6 +222,7 @@ const Analyze = () => {
   };
 
   const handleAnalyze = async () => {
+    if (uploading || analyzing) return;
     if (!file || !user) return;
 
     if (!isAdmin && (!profile || profile.credits < 1)) {
@@ -286,7 +287,40 @@ const Analyze = () => {
         body: { contractId: contract.id, filePath, fileType: file.type },
       });
 
-      if (analysisError) throw analysisError;
+      if (analysisError) {
+        const errBody = (analysisError as any)?.context?.body;
+        let parsed: any = null;
+        try {
+          parsed = typeof errBody === "string" ? JSON.parse(errBody) : errBody;
+        } catch {
+          parsed = null;
+        }
+        const status = (analysisError as any)?.context?.status;
+        if (parsed?.code === "NO_CREDITS" || status === 402) {
+          toast({
+            title: "Sin créditos",
+            description: "No tienes créditos disponibles. Adquiere un plan para continuar.",
+            variant: "destructive",
+          });
+          navigate("/precios");
+          setUploading(false);
+          setAnalyzing(false);
+          setProgress(0);
+          return;
+        }
+        if (status === 401) {
+          toast({
+            title: "Sesión caducada",
+            description: "Vuelve a iniciar sesión para continuar.",
+            variant: "destructive",
+          });
+          setUploading(false);
+          setAnalyzing(false);
+          setProgress(0);
+          return;
+        }
+        throw analysisError;
+      }
 
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
@@ -505,7 +539,7 @@ const Analyze = () => {
 
                       <Button
                         onClick={handleAnalyze}
-                        disabled={!file || !profile || (!isAdmin && profile.credits < 1) || !acceptedThirdPartyData}
+                        disabled={!file || !profile || uploading || analyzing || (!isAdmin && profile.credits < 1) || !acceptedThirdPartyData}
                         className="w-full"
                         size="lg"
                       >
