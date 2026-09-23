@@ -88,30 +88,64 @@ const AnalyzeLandlordPage = () => {
     }
   };
 
+  const readFunctionError = async (err: unknown): Promise<{ status?: number; code?: string }> => {
+    const ctx = (err as { context?: Response & { body?: unknown } })?.context;
+    const status = ctx?.status;
+    let code: string | undefined;
+    try {
+      if (ctx && typeof (ctx as Response).clone === "function") {
+        const j = await (ctx as Response).clone().json();
+        code = j?.code;
+      } else if (typeof ctx?.body === "string") {
+        code = JSON.parse(ctx.body)?.code;
+      }
+    } catch {
+      /* ignore */
+    }
+    return { status, code };
+  };
+
   const handleAnalyze = async () => {
-    if (!file || !hasCredits) return;
+    if (uploading || analyzing) return;
+    if (!file || !hasCredits || !profile?.id) return;
+
+    let landlordContractId: string | null = null;
+
+    const markFailed = async () => {
+      if (landlordContractId) {
+        await supabase.from("landlord_contracts").update({ status: "failed" }).eq("id", landlordContractId);
+      }
+    };
 
     try {
       setUploading(true);
-      
-      // Upload file to storage
-      const fileName = `${Date.now()}-${file.name}`;
-      const filePath = `landlord/${profile?.id}/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("contracts")
-        .upload(filePath, file);
 
+      const filePath = `${profile.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("contracts").upload(filePath, file);
       if (uploadError) throw uploadError;
 
       setUploading(false);
       setAnalyzing(true);
 
-      // Create landlord contract record
+      // Registro de análisis (requerido por analyze-contract para validar propiedad)
+      const { data: analysisContract, error: analysisContractError } = await supabase
+        .from("contracts")
+        .insert({
+          user_id: profile.id,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          status: "processing",
+        })
+        .select()
+        .single();
+      if (analysisContractError) throw analysisContractError;
+
+      // Registro del contrato en el panel del propietario
       const { data: contract, error: contractError } = await supabase
         .from("landlord_contracts")
         .insert({
-          user_id: profile?.id,
+          user_id: profile.id,
           file_name: file.name,
           file_path: filePath,
           file_size: file.size,
@@ -119,42 +153,53 @@ const AnalyzeLandlordPage = () => {
         })
         .select()
         .single();
-
       if (contractError) throw contractError;
+      landlordContractId = contract.id;
 
-      // Call analyze function with landlord perspective
-      const { data: analysisResult, error: analysisError } = await supabase.functions.invoke(
-        "analyze-contract",
-        {
-          body: {
-            contractId: contract.id,
-            filePath: filePath,
-            fileType: file.type,
-            perspective: "landlord", // Perspectiva de propietario
-          },
+      // El crédito se consume en servidor (consume_credit) dentro de analyze-contract
+      const { data: analysisResult, error: analysisError } = await supabase.functions.invoke("analyze-contract", {
+        body: {
+          contractId: analysisContract.id,
+          filePath,
+          fileType: file.type,
+          perspective: "landlord",
+        },
+      });
+
+      if (analysisError) {
+        const { status, code } = await readFunctionError(analysisError);
+        await markFailed();
+        if (code === "NO_CREDITS" || status === 402) {
+          toast.error("Sin créditos", { description: "Adquiere un plan para continuar." });
+          navigate("/precios");
+          return;
         }
-      );
+        if (status === 401) {
+          toast.error("Sesión caducada", { description: "Vuelve a iniciar sesión para continuar." });
+          return;
+        }
+        if (code === "ANALYSIS_PARSE_ERROR" || status === 502) {
+          toast.error("El análisis no devolvió un resultado válido, no se ha consumido crédito");
+          return;
+        }
+        toast.error("Error al analizar el contrato");
+        return;
+      }
 
-      if (analysisError) throw analysisError;
+      const analysis = (analysisResult as { analysis?: unknown })?.analysis ?? analysisResult;
 
-      // Update contract with analysis result
       await supabase
         .from("landlord_contracts")
-        .update({
-          analysis_result: analysisResult,
-        })
+        .update({ analysis_result: analysis as never })
         .eq("id", contract.id);
 
-      // Decrement credit if not admin
-      if (!isAdmin) {
-        await supabase.rpc("decrement_credit");
-        await refreshProfile();
-      }
+      await refreshProfile();
 
       toast.success("Análisis completado");
       navigate(`/propietario/contratos/${contract.id}`);
     } catch (error) {
       console.error("Error analyzing contract:", error);
+      await markFailed();
       toast.error("Error al analizar el contrato");
     } finally {
       setUploading(false);
