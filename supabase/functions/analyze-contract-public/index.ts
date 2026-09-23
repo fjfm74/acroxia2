@@ -650,8 +650,9 @@ Contenido: ${c.content}
     // ========================================================================
     // AI analysis
     // ========================================================================
-    const systemPrompt = buildSystemPrompt(
+    const systemPrompt = buildAnalysisSystemPrompt({
       perspective,
+      tier: "free",
       legalContext,
       hasLegalContext,
       availableSources,
@@ -659,37 +660,64 @@ Contenido: ${c.content}
       detectedMunicipality,
       detectedProvince,
       hasZonaTensionadaInfo,
-    );
-
-    const { coreText, annexText } = splitContractCoreAndAnnexes(contractText);
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: MODELS.GEMINI_FAST,
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Analiza el siguiente contrato de alquiler:\n\nCONTRATO BASE:\n${coreText.substring(0, 13000)}\n\nANEXOS:\n${annexText.substring(0, 3000)}\n\nTEXTO COMPLETO DE RESPALDO:\n${contractText.substring(0, 2000)}`,
-          },
-        ],
-        temperature: 0,
-      }),
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", errorText);
-      throw new Error("Error al procesar el contrato con IA");
+    const { coreText, annexText } = splitContractCoreAndAnnexes(contractText);
+    const userText = `Analiza el siguiente contrato de alquiler siguiendo el formato JSON especificado.
+
+CONTRATO BASE:
+${coreText}
+
+ANEXOS:
+${annexText || "Sin anexos detectados o no diferenciables del cuerpo principal."}`;
+
+    // deno-lint-ignore no-explicit-any
+    let analysisResult: any = null;
+    for (let attempt = 1; attempt <= 2 && !analysisResult; attempt++) {
+      try {
+        const out = await callAnalysisModel({ systemPrompt, userText, tier: "free" });
+        analysisResult = parseAnalysisJson(out.raw);
+        if (!analysisResult || typeof analysisResult !== "object") throw new Error("JSON no es un objeto");
+      } catch (err) {
+        if (err instanceof AiProviderError) {
+          console.error(`AI provider error (${err.provider}/${err.model}) ${err.status}:`, err.message.slice(0, 500));
+          const status = err.status === 429 || err.status === 402 ? err.status : 502;
+          const error =
+            status === 429
+              ? "Servicio temporalmente no disponible. Por favor, intenta de nuevo en unos minutos."
+              : "Error al procesar el contrato con IA";
+          return new Response(JSON.stringify({ error }), {
+            status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        analysisResult = null;
+        console.error(`Parse error on attempt ${attempt}:`, err instanceof Error ? err.message : err);
+      }
+    }
+    if (!analysisResult) {
+      return new Response(
+        JSON.stringify({ error: "El análisis no devolvió un resultado válido", code: "ANALYSIS_PARSE_ERROR" }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    const aiData = await aiResponse.json();
-    let analysisContent = aiData.choices?.[0]?.message?.content || "";
-    const jsonMatch = analysisContent.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Respuesta de IA no válida");
+    const quoteCheck = verifyClauseQuotes(analysisResult, contractText);
+    console.log(`quotes_verified=${quoteCheck.verified} quotes_total=${quoteCheck.total}`);
 
-    const analysisResult = JSON.parse(jsonMatch[0]);
+    // Compatibilidad con la vista previa gratuita (lee contadores en la raíz y type "legal").
+    // deno-lint-ignore no-explicit-any
+    const clausesArr: any[] = Array.isArray(analysisResult.clauses) ? analysisResult.clauses : [];
+    for (const c of clausesArr) if (c?.type === "valid") c.type = "legal";
+    const sum = analysisResult.summary || {};
+    analysisResult.total_clauses = sum.total_analyzed ?? clausesArr.length;
+    analysisResult.valid_clauses = sum.valid_count ?? clausesArr.filter((c) => c.type === "legal").length;
+    analysisResult.suspicious_clauses = sum.suspicious_count ?? clausesArr.filter((c) => c.type === "suspicious").length;
+    analysisResult.illegal_clauses = sum.illegal_count ?? clausesArr.filter((c) => c.type === "illegal").length;
+    const rec = String(sum.recommendation || "");
+    analysisResult.recommendation =
+      rec === "firmar" ? "firmar" : rec === "no_firmar" ? "no_firmar" : rec ? "negociar" : undefined;
+
     analysisResult.perspective = perspective;
     analysisResult.contract_metadata = {
       ...(analysisResult.contract_metadata || {}),
