@@ -37,6 +37,7 @@ import {
   Loader2,
   Mail,
 } from "lucide-react";
+import { normalizeClauseType } from "@/lib/clauseType";
 import NegotiationGuideTeaser from "@/components/analyze/NegotiationGuideTeaser";
 
 interface AnalysisResult {
@@ -48,7 +49,7 @@ interface AnalysisResult {
   perspective?: "tenant" | "landlord";
   clauses?: Array<{
     category: string;
-    type: "legal" | "suspicious" | "illegal";
+    type: string;
     original_text: string;
     explanation: string;
     quote_verified?: boolean;
@@ -507,13 +508,13 @@ const FreeResultPreview = () => {
                         exampleClauses.map((clause, index) => (
                           <div key={index} className="relative border rounded-lg p-4 overflow-hidden">
                             <div className="flex items-start gap-3 mb-2">
-                              {clause.type === "legal" && (
+                              {normalizeClauseType(clause.type) === "valid" && (
                                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                               )}
-                              {clause.type === "suspicious" && (
+                              {normalizeClauseType(clause.type) === "suspicious" && (
                                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                               )}
-                              {clause.type === "illegal" && <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
+                              {normalizeClauseType(clause.type) === "illegal" && <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
                               <div>
                                 <p className="font-medium text-foreground">{clause.category}</p>
                                 <p className="text-sm text-muted-foreground line-clamp-1">
