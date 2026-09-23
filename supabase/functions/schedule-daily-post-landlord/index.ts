@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -186,14 +187,14 @@ Style requirements:
 
 Ultra high resolution.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(GATEWAY_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${lovableApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
+        model: MODELS.GEMINI_IMAGE,
         messages: [{ role: "user", content: imagePrompt }],
         modalities: ["image", "text"],
       }),
@@ -493,14 +494,14 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
 
       console.log(`Attempt ${attempt + 1}: Calling Lovable AI Gateway for landlord post...`);
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const response = await fetch(GATEWAY_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${lovableApiKey}`,
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: MODELS.GEMINI_FAST,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },

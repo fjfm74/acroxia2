@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { authErrorResponse, authorizeRequest } from "../_shared/auth.ts";
+import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
 
 const VALID_RELATION_TYPES = new Set([
   "deroga",
@@ -42,8 +43,8 @@ function territoryKey(doc: any): string | null {
   return entity || null;
 }
 
-async function callAI(messages: any[], model = "google/gemini-2.5-flash"): Promise<string> {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+async function callAI(messages: any[], model = MODELS.GEMINI_FAST as string): Promise<string> {
+  const response = await fetch(GATEWAY_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,12 +102,12 @@ function parseJsonResponse(content: string): any {
   return JSON.parse(jsonString);
 }
 
-async function callAI(messages: any[], model = "google/gemini-2.5-pro"): Promise<string> {
+async function callAI(messages: any[], model = MODELS.GEMINI_PRO as string): Promise<string> {
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY is not configured");
   }
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const response = await fetch(GATEWAY_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -120,8 +121,8 @@ async function callAI(messages: any[], model = "google/gemini-2.5-pro"): Promise
   });
 
   if (!response.ok) {
-    if (model !== "google/gemini-2.5-flash") {
-      return callAI(messages, "google/gemini-2.5-flash");
+    if (model !== MODELS.GEMINI_FAST) {
+      return callAI(messages, MODELS.GEMINI_FAST);
     }
     throw new Error(`AI call failed: ${response.status}`);
   }

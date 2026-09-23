@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 import { authErrorResponse, authorizeRequest } from "../_shared/auth.ts";
+import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -361,8 +362,8 @@ function splitTextIntoBlocks(text: string, maxChars: number = 80000): string[] {
 
 // ============ AI CALL HELPER ============
 
-async function callAI(messages: any[], model: string = "google/gemini-2.5-pro"): Promise<string> {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+async function callAI(messages: any[], model: string = MODELS.GEMINI_PRO as string): Promise<string> {
+  const response = await fetch(GATEWAY_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -373,9 +374,9 @@ async function callAI(messages: any[], model: string = "google/gemini-2.5-pro"):
 
   if (!response.ok) {
     // Fallback to flash if pro fails
-    if (model === "google/gemini-2.5-pro") {
+    if (model === MODELS.GEMINI_PRO) {
       console.log("Pro model failed, falling back to flash...");
-      return callAI(messages, "google/gemini-2.5-flash");
+      return callAI(messages, MODELS.GEMINI_FAST);
     }
     throw new Error(`AI call failed: ${response.status} ${await response.text()}`);
   }
@@ -973,7 +974,7 @@ serve(async (req) => {
         docInfo.jurisdiction,
         docInfo.territorial_entity,
       );
-      const EXTRACTION_MODEL = "google/gemini-2.5-flash";
+      const EXTRACTION_MODEL = MODELS.GEMINI_FAST;
 
       // Determine which block to start from based on existing chunks
       // We track progress via processing_status which contains "bloque X/Y"
@@ -1107,7 +1108,7 @@ serve(async (req) => {
         .join("\n");
 
       const analysisPrompt = buildAnalysisPrompt(docInfo.title, chunksSummary, docInfo.effective_date);
-      const analysisContent = await callAI([{ role: "user", content: analysisPrompt }], "google/gemini-2.5-flash");
+      const analysisContent = await callAI([{ role: "user", content: analysisPrompt }], MODELS.GEMINI_FAST);
 
       const analysisResult = parseJsonResponse(analysisContent);
       const docAnalysis = analysisResult.document_analysis || analysisResult;
