@@ -1331,6 +1331,8 @@ ${sanitizedContractText.substring(0, 4000)}`,
       const errorText = await aiResponse.text();
       console.error("AI error:", errorText);
 
+      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
+
       if (aiResponse.status === 429) {
         return new Response(
           JSON.stringify({
@@ -1486,37 +1488,6 @@ ${sanitizedContractText.substring(0, 4000)}`,
     // Update contract status
     await supabase.from("contracts").update({ status: "completed" }).eq("id", contractId);
 
-    // Deduct credit - skip for admin users
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(token);
-      if (user) {
-        // Check if user is admin
-        const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
-
-        if (isAdmin) {
-          console.log(`Admin user ${user.id} - no credit deducted`);
-        } else {
-          // Decrement credits directly using service_role (bypasses RLS)
-          // First get current credits, then decrement
-          const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
-
-          if (profile && profile.credits > 0) {
-            await supabase
-              .from("profiles")
-              .update({ credits: profile.credits - 1 })
-              .eq("id", user.id);
-            console.log(`Credit deducted for user ${user.id}`);
-          } else {
-            console.log(`User ${user.id} has no credits to deduct`);
-          }
-        }
-      }
-    }
-
     return new Response(JSON.stringify({ success: true, analysis }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -1534,6 +1505,10 @@ ${sanitizedContractText.substring(0, 4000)}`,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
         await sb.from("contracts").update({ status: "failed" }).eq("id", cid);
+        // Devolver el crédito si ya se había descontado
+        if (creditConsumed && userId) {
+          await sb.rpc("refund_credit", { p_user_id: userId });
+        }
       }
     } catch (cleanupErr) {
       console.warn("No se pudo marcar el contract como failed en catch:", cleanupErr);
