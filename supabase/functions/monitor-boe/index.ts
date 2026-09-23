@@ -1,3 +1,5 @@
+import { isCronAuthorized } from "../_shared/cron-auth.ts";
+import { authorizeRequest, authErrorResponse } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -395,6 +397,16 @@ function logAuditSummary(audit: AuditCounters, fromDate: string, toDate: string,
 async function handler(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!(await isCronAuthorized(req))) {
+    const auth = await authorizeRequest({
+      req,
+      supabaseUrl: Deno.env.get("SUPABASE_URL")!,
+      supabaseServiceRoleKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      allowAdminUser: true,
+    });
+    if (!auth.ok) return authErrorResponse(auth, corsHeaders);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
