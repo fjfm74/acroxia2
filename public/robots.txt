@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /inquilino
+Disallow: /perfil
+Disallow: /analizar
+Disallow: /resultado/
+Disallow: /resultado-previo/
+Disallow: /propietario
+Disallow: /pro
+Disallow: /admin
+Disallow: /login
+Disallow: /registro
+Disallow: /recuperar-contrasena
+Disallow: /reset-password
+Disallow: /verificado
+Disallow: /verificacion-pendiente
+Disallow: /aprobar-post/
+Disallow: /unsubscribe
+Disallow: /confirmar-blog
+
+Sitemap: https://vmloiamemddwxyyunphz.supabase.co/functions/v1/sitemap
