@@ -955,6 +955,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let creditConsumed = false;
+  let userId: string | null = null;
+
   try {
     const { contractId, filePath, fileType: mimeType } = await req.json();
 
@@ -984,10 +987,63 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // 1. Autenticación obligatoria
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "No autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    userId = user.id;
+
+    // 2. El contrato debe existir y pertenecer al usuario
+    const { data: contractRow } = await supabase
+      .from("contracts")
+      .select("id, user_id")
+      .eq("id", contractId)
+      .single();
+    if (!contractRow || contractRow.user_id !== userId) {
+      return new Response(JSON.stringify({ error: "Contrato no encontrado" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. Admin no consume créditos
+    const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: userId });
+
+    // 4. Consumo atómico del crédito ANTES de descargar el fichero y llamar a la IA
+    if (!isAdmin) {
+      const { data: ok } = await supabase.rpc("consume_credit", { p_user_id: userId });
+      if (ok !== true) {
+        await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
+        return new Response(JSON.stringify({ error: "Sin créditos", code: "NO_CREDITS" }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      creditConsumed = true;
+    }
+
     // Download file
     const { data: fileData, error: downloadError } = await supabase.storage.from("contracts").download(filePath);
 
-    if (downloadError) throw downloadError;
+    if (downloadError) {
+      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
+      throw downloadError;
+    }
 
     // Determine file type and extract text
     const detectedType = getFileType(filePath, mimeType);
@@ -1041,6 +1097,7 @@ serve(async (req) => {
     );
 
     if (!languageDetection.supported) {
+      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
       await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
       return new Response(
         JSON.stringify({
@@ -1276,6 +1333,8 @@ ${sanitizedContractText.substring(0, 4000)}`,
       const errorText = await aiResponse.text();
       console.error("AI error:", errorText);
 
+      if (creditConsumed) await supabase.rpc("refund_credit", { p_user_id: userId });
+
       if (aiResponse.status === 429) {
         return new Response(
           JSON.stringify({
@@ -1431,37 +1490,6 @@ ${sanitizedContractText.substring(0, 4000)}`,
     // Update contract status
     await supabase.from("contracts").update({ status: "completed" }).eq("id", contractId);
 
-    // Deduct credit - skip for admin users
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(token);
-      if (user) {
-        // Check if user is admin
-        const { data: isAdmin } = await supabase.rpc("is_admin", { check_user_id: user.id });
-
-        if (isAdmin) {
-          console.log(`Admin user ${user.id} - no credit deducted`);
-        } else {
-          // Decrement credits directly using service_role (bypasses RLS)
-          // First get current credits, then decrement
-          const { data: profile } = await supabase.from("profiles").select("credits").eq("id", user.id).single();
-
-          if (profile && profile.credits > 0) {
-            await supabase
-              .from("profiles")
-              .update({ credits: profile.credits - 1 })
-              .eq("id", user.id);
-            console.log(`Credit deducted for user ${user.id}`);
-          } else {
-            console.log(`User ${user.id} has no credits to deduct`);
-          }
-        }
-      }
-    }
-
     return new Response(JSON.stringify({ success: true, analysis }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -1479,6 +1507,10 @@ ${sanitizedContractText.substring(0, 4000)}`,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
         await sb.from("contracts").update({ status: "failed" }).eq("id", cid);
+        // Devolver el crédito si ya se había descontado
+        if (creditConsumed && userId) {
+          await sb.rpc("refund_credit", { p_user_id: userId });
+        }
       }
     } catch (cleanupErr) {
       console.warn("No se pudo marcar el contract como failed en catch:", cleanupErr);
