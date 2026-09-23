@@ -13,6 +13,7 @@ interface UpdateRequest {
   limit?: number;
   postIds?: string[];
   mode?: "faqs" | "meta_descriptions" | "all";
+  audience?: "inquilino" | "propietario";
 }
 
 interface FAQ {
@@ -307,6 +308,7 @@ serve(async (req: Request): Promise<Response> => {
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
+          audience: body.audience ?? post.audience ?? "inquilino",
         }, needsMetaDesc);
 
         const titleChanged = generated.title !== post.title;
