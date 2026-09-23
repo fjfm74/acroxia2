@@ -75,3 +75,43 @@ ${AUDIENCE_FOCUS[a]}
 
 ${BLOG_STYLE_RULES}`;
 }
+
+// ============ SLUG ============
+
+const SLUG_STOPWORDS = new Set([
+  "de", "del", "la", "el", "los", "las", "que", "al", "a", "en", "y", "o", "un", "una",
+  "para", "por", "con", "su", "sus", "se", "es", "qué", "cómo", "cuándo", "dónde",
+  "que", "como", "cuando", "donde",
+]);
+const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+){0,5}$/;
+
+export function slugFromTitle(title: string): string {
+  const words = title
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w && !SLUG_STOPWORDS.has(w.replace(/[^\p{L}\p{N}]/gu, "")))
+    .map((w) => w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ""))
+    .filter((w) => w && !/^(19|20)\d{2}$/.test(w));
+  return words.slice(0, 6).join("-") || "articulo";
+}
+
+/** Usa el slug del modelo si es válido; si no, lo genera desde el título. */
+export function buildSlug(modelSlug: unknown, title: string): string {
+  if (typeof modelSlug === "string") {
+    const s = modelSlug.trim().toLowerCase();
+    if (SLUG_RE.test(s)) return s;
+  }
+  return slugFromTitle(title);
+}
+
+/** Añade sufijo numérico si el slug ya existe en blog_posts. */
+// deno-lint-ignore no-explicit-any
+export async function ensureUniqueSlug(supabase: any, base: string): Promise<string> {
+  let candidate = base;
+  for (let i = 2; i < 50; i++) {
+    const { data } = await supabase.from("blog_posts").select("id").eq("slug", candidate).maybeSingle();
+    if (!data) return candidate;
+    candidate = `${base}-${i}`;
+  }
+  return `${base}-${Date.now()}`;
+}

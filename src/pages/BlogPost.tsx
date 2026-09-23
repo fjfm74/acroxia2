@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
+import { nodeToText } from "@/lib/nodeToText";
 import rehypeSanitize from "rehype-sanitize";
 import FadeIn from "@/components/animations/FadeIn";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -405,7 +406,7 @@ const BlogPost = () => {
                         components={{
                           h1: ({ children }) => <h2>{children}</h2>,
                           h2: ({ children }) => {
-                            const text = String(children);
+                            const text = nodeToText(children).trim();
                             const id = text
                               .toLowerCase()
                               .normalize("NFD")
@@ -416,7 +417,7 @@ const BlogPost = () => {
                             return <h2 id={id}>{children}</h2>;
                           },
                           h3: ({ children }) => {
-                            const text = String(children);
+                            const text = nodeToText(children).trim();
                             const id = text
                               .toLowerCase()
                               .normalize("NFD")
