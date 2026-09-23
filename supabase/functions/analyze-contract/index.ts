@@ -1,6 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
+import { MODELS } from "../_shared/models.ts";
+import { buildAnalysisSystemPrompt } from "../_shared/analysis-prompt.ts";
+import {
+  AiProviderError,
+  bytesToBase64,
+  callAnalysisModel,
+  parseAnalysisJson,
+  pickProvider,
+} from "../_shared/ai-client.ts";
+import { verifyClauseQuotes } from "../_shared/analysis-verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -457,7 +467,7 @@ async function extractImageText(buffer: ArrayBuffer, mimeType: string, apiKey: s
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: MODELS.GEMINI_FAST,
       messages: [
         {
           role: "user",
@@ -499,7 +509,7 @@ async function extractPdfTextWithVision(buffer: ArrayBuffer, apiKey: string): Pr
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: MODELS.GEMINI_FAST,
       temperature: 0,
       messages: [
         {
@@ -714,7 +724,9 @@ serve(async (req) => {
   let userId: string | null = null;
 
   try {
-    const { contractId, filePath, fileType: mimeType } = await req.json();
+    const body = await req.json();
+    const { contractId, filePath, fileType: mimeType } = body;
+    const perspective: "tenant" | "landlord" = body?.perspective === "landlord" ? "landlord" : "tenant";
 
     const ACCEPTED_MIME_TYPES = new Set([
       "application/pdf",
@@ -805,13 +817,19 @@ serve(async (req) => {
     const buffer = await fileData.arrayBuffer();
     let contractText = "";
 
-    console.log(`Processing file as: ${detectedType}`);
+    // Camino PDF nativo: solo con Anthropic activo, PDF y < 30 MB.
+    const useNativePdf =
+      pickProvider("paid") === "anthropic" && detectedType === "pdf" && buffer.byteLength < 30 * 1024 * 1024;
+    let lowQualityExtraction = false;
+
+    console.log(`Processing file as: ${detectedType} (nativePdf=${useNativePdf})`);
 
     switch (detectedType) {
       case "pdf":
         contractText = await extractPdfText(buffer);
-        // Fallback to AI OCR vision if extraction quality is poor
-        if (looksLikeLowQualityPdfExtraction(contractText)) {
+        lowQualityExtraction = looksLikeLowQualityPdfExtraction(contractText);
+        // Fallback to AI OCR vision if extraction quality is poor (solo si no enviamos el PDF nativo)
+        if (!useNativePdf && lowQualityExtraction) {
           console.log("Low-quality PDF text extraction detected, retrying with vision OCR...");
           try {
             const visionText = await extractPdfTextWithVision(buffer, lovableApiKey);
@@ -851,7 +869,7 @@ serve(async (req) => {
       `Language detection: ${languageDetection.detectedLanguage} (es=${languageDetection.esScore}, ca=${languageDetection.caScore})`,
     );
 
-    if (!languageDetection.supported) {
+    if (!languageDetection.supported && !(useNativePdf && lowQualityExtraction)) {
       if (creditConsumed) { await supabase.rpc("refund_credit", { p_user_id: userId }); creditConsumed = false; }
       await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
       return new Response(
@@ -1024,8 +1042,21 @@ Contenido: ${chunk.content}
       console.log("No legal chunks found - using general knowledge");
     }
 
-    // Build optimized system prompt
-    const systemPrompt = buildSystemPrompt(
+    const failAnalysis = async (status: number, payload: Record<string, unknown>) => {
+      if (creditConsumed) {
+        await supabase.rpc("refund_credit", { p_user_id: userId });
+        creditConsumed = false;
+      }
+      await supabase.from("contracts").update({ status: "failed" }).eq("id", contractId);
+      return new Response(JSON.stringify(payload), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    };
+
+    const systemPrompt = buildAnalysisSystemPrompt({
+      perspective,
+      tier: "paid",
       legalContext,
       hasLegalContext,
       availableSources,
@@ -1033,35 +1064,42 @@ Contenido: ${chunk.content}
       detectedMunicipality,
       detectedProvince,
       hasZonaTensionadaInfo,
-    );
+    });
 
-    // Call Lovable AI for contract analysis with enhanced prompt
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: `Analiza el siguiente contrato de alquiler español. Identifica todas las cláusulas relevantes, clasifícalas y proporciona un análisis detallado siguiendo el formato JSON especificado.
+    let pdfBase64: string | undefined;
+    if (useNativePdf) {
+      pdfBase64 = bytesToBase64(new Uint8Array(buffer));
+    }
+
+    const docSignalsBlock = `SEÑALES ESTRUCTURADAS DE DOCUMENTACIÓN OBLIGATORIA (usar como fuente de verdad):
+- cédula de habitabilidad detectada: ${requiredDocSignals.hasCedulaHabitabilidad ? "SI" : "NO"}
+- licencia primera/segunda ocupación detectada: ${requiredDocSignals.hasOccupancyLicense ? "SI" : "NO"}
+- documento de habitabilidad (cédula o licencia) detectado: ${requiredDocSignals.hasHabitabilityDocument ? "SI" : "NO"}
+- certificado/etiqueta de eficiencia energética detectado: ${requiredDocSignals.hasEnergyCertificate ? "SI" : "NO"}`;
+
+    const userText = pdfBase64
+      ? `Analiza el contrato de alquiler español. Identifica todas las cláusulas relevantes, clasifícalas y proporciona un análisis detallado siguiendo el formato JSON especificado.
+
+El contrato completo va adjunto como documento PDF; usa el PDF como fuente principal y el texto extraído solo como apoyo.
+
+NOTA: En el texto extraído algunos datos sensibles (DNI, IBAN, teléfonos) han sido anonimizados por motivos de privacidad. No los reproduzcas en tu respuesta.
+
+${docSignalsBlock}
+${
+  lowQualityExtraction
+    ? "\nLa extracción automática de texto fue de baja calidad, así que no se adjunta: trabaja solo con el PDF."
+    : `
+TEXTO EXTRAÍDO (apoyo):
+=======================
+${sanitizedContractText}`
+}`
+      : `Analiza el siguiente contrato de alquiler español. Identifica todas las cláusulas relevantes, clasifícalas y proporciona un análisis detallado siguiendo el formato JSON especificado.
 
 Si el texto parece incompleto o parcialmente ilegible, analiza las partes que puedas identificar e indica las limitaciones.
 
 NOTA: Algunos datos sensibles (DNI, IBAN, teléfonos) han sido anonimizados por motivos de privacidad. Esto no afecta al análisis de las cláusulas.
 
-SEÑALES ESTRUCTURADAS DE DOCUMENTACIÓN OBLIGATORIA (usar como fuente de verdad):
-- cédula de habitabilidad detectada: ${requiredDocSignals.hasCedulaHabitabilidad ? "SI" : "NO"}
-- licencia primera/segunda ocupación detectada: ${requiredDocSignals.hasOccupancyLicense ? "SI" : "NO"}
-- documento de habitabilidad (cédula o licencia) detectado: ${requiredDocSignals.hasHabitabilityDocument ? "SI" : "NO"}
-- certificado/etiqueta de eficiencia energética detectado: ${requiredDocSignals.hasEnergyCertificate ? "SI" : "NO"}
+${docSignalsBlock}
 
 REGLA DE ESTABILIDAD:
 - Evalúa el contrato principal en base al bloque "CONTRATO BASE".
@@ -1069,95 +1107,50 @@ REGLA DE ESTABILIDAD:
 
 CONTRATO BASE (prioritario para el análisis de cláusulas):
 ==========================================================
-${sanitizedCoreText.substring(0, 22000)}
+${sanitizedCoreText}
 
 ANEXOS / DOCUMENTACIÓN ADICIONAL (solo verificación documental):
 ===============================================================
-${sanitizedAnnexText.substring(0, 6000) || "Sin anexos detectados o no diferenciables del cuerpo principal."}
+${sanitizedAnnexText || "Sin anexos detectados o no diferenciables del cuerpo principal."}`;
 
-TEXTO COMPLETO DE RESPALDO (por si faltan fragmentos clave):
-============================================================
-${sanitizedContractText.substring(0, 4000)}`,
-          },
-        ],
-        temperature: 0,
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI error:", errorText);
-
-      if (creditConsumed) { await supabase.rpc("refund_credit", { p_user_id: userId }); creditConsumed = false; }
-
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({
-            error: "Servicio temporalmente no disponible. Por favor, intenta de nuevo en unos minutos.",
-          }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({
-            error: "Créditos de IA agotados. Por favor, contacta con soporte.",
-          }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      throw new Error("Error en el análisis de IA");
-    }
-
-    const aiData = await aiResponse.json();
-    const analysisText = aiData.choices?.[0]?.message?.content || "{}";
-
-    let analysis;
-    try {
-      // Remove markdown code block wrappers if present
-      let cleanedText = analysisText
-        .replace(/^```(?:json)?\s*\n?/i, "")
-        .replace(/\n?```\s*$/i, "")
-        .trim();
-      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-      const jsonStr = jsonMatch ? jsonMatch[0] : cleanedText;
-      analysis = JSON.parse(jsonStr);
-    } catch (parseError1) {
-      // Second attempt: fix common JSON issues (invalid escape sequences)
+    // deno-lint-ignore no-explicit-any
+    let analysis: any = null;
+    let usedProvider = "";
+    let usedModel = "";
+    for (let attempt = 1; attempt <= 2 && !analysis; attempt++) {
       try {
-        let cleanedText = analysisText
-          .replace(/^```(?:json)?\s*\n?/i, "")
-          .replace(/\n?```\s*$/i, "")
-          .trim();
-        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-        let jsonStr = jsonMatch ? jsonMatch[0] : cleanedText;
-        // Fix invalid escape sequences like \" inside already-quoted strings
-        jsonStr = jsonStr.replace(/\\(?!["\\/bfnrtu])/g, "\\\\");
-        analysis = JSON.parse(jsonStr);
-        console.log("Parsed AI response on second attempt after fixing escape sequences");
-      } catch (parseError2) {
-        console.error("Failed to parse AI response after 2 attempts:", analysisText.substring(0, 500));
-        analysis = {
-          clauses: [],
-          summary: {
-            overall_risk: "desconocido",
-            executive_summary: analysisText,
-            recommendation: "consultar_abogado",
-          },
-          contract_metadata: {
-            legal_context_available: hasLegalContext,
-          },
-        };
+        const out = await callAnalysisModel({ systemPrompt, userText, pdfBase64, tier: "paid" });
+        usedProvider = out.provider;
+        usedModel = out.model;
+        analysis = parseAnalysisJson(out.raw);
+        if (!analysis || typeof analysis !== "object") throw new Error("JSON no es un objeto");
+      } catch (err) {
+        if (err instanceof AiProviderError) {
+          console.error(`AI provider error (${err.provider}/${err.model}) ${err.status}:`, err.message.slice(0, 500));
+          if (err.status === 429) {
+            return await failAnalysis(429, {
+              error: "Servicio temporalmente no disponible. Por favor, intenta de nuevo en unos minutos.",
+            });
+          }
+          if (err.status === 402) {
+            return await failAnalysis(402, { error: "Créditos de IA agotados. Por favor, contacta con soporte." });
+          }
+          return await failAnalysis(502, { error: "Error en el análisis de IA" });
+        }
+        analysis = null;
+        console.error(`Parse error on attempt ${attempt}:`, err instanceof Error ? err.message : err);
       }
     }
+    if (!analysis) {
+      return await failAnalysis(502, {
+        error: "El análisis no devolvió un resultado válido",
+        code: "ANALYSIS_PARSE_ERROR",
+      });
+    }
+    console.log(`Analysis generated by ${usedProvider}/${usedModel}`);
+
+    const quoteCheck = verifyClauseQuotes(analysis, sanitizedContractText);
+    console.log(`quotes_verified=${quoteCheck.verified} quotes_total=${quoteCheck.total}`);
 
     // Extract counts from new format or fallback to old format
     const clauses = analysis.clauses || [];
@@ -1189,13 +1182,16 @@ ${sanitizedContractText.substring(0, 4000)}`,
     analysis.contract_metadata.language_scores = { es: languageDetection.esScore, ca: languageDetection.caScore };
     analysis.contract_metadata.required_docs_detected = requiredDocSignals;
     analysis.contract_metadata.contract_split_applied = splitApplied;
+    analysis.contract_metadata.perspective = perspective;
+    analysis.contract_metadata.ai_provider = usedProvider;
+    analysis.contract_metadata.ai_model = usedModel;
+    analysis.perspective = perspective;
 
     // If there are problematic clauses (illegal or suspicious), generate a negotiation guide
     const problematicClauses = clauses.filter((c: any) => c.type === "illegal" || c.type === "suspicious");
 
     if (problematicClauses.length > 0) {
-      const guidePerspective = (analysis as any)?.perspective === "landlord" ? "landlord" : "tenant";
-      const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysis.summary, guidePerspective);
+      const guidePrompt = buildNegotiationGuidePrompt(problematicClauses, analysis.summary, perspective);
 
       const guideResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -1204,7 +1200,7 @@ ${sanitizedContractText.substring(0, 4000)}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: MODELS.GEMINI_FAST,
           temperature: 0.4,
           messages: [
             { role: "system", content: guidePrompt },
