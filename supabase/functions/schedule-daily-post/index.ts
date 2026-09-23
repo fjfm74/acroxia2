@@ -1,3 +1,4 @@
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 import { isCronAuthorized } from "../_shared/cron-auth.ts";
 import { buildBlogSystemPrompt, buildSlug, ensureUniqueSlug } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -569,11 +570,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Post generated:", post.title);
 
-    // Generate image
-    const imageUrl = await generateImage(post.title, post.excerpt, post.category);
-
-    // Generate slug
-    const slug = generateSlug(post.title);
+    const slug = await ensureUniqueSlug(supabase, buildSlug(post.slug, post.title));
 
     // Save as PUBLISHED (not draft)
     const { data: blogPost, error: insertError } = await supabase
@@ -584,7 +581,7 @@ const handler = async (req: Request): Promise<Response> => {
         content: post.content,
         excerpt: post.excerpt,
         category: post.category,
-        image: imageUrl,
+        image: null,
         status: "published",
         published_at: new Date().toISOString(),
         audience: "inquilino",
@@ -600,63 +597,62 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Post published:", blogPost.id);
 
-    // Create scheduled post record for audit
-    const { data: scheduledPost, error: scheduleError } = await supabase
-      .from("scheduled_posts")
-      .insert({
-        blog_post_id: blogPost.id,
-        status: "auto_published",
-        approved_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
 
-    if (scheduleError) {
-      console.error("Failed to create schedule record:", scheduleError.message);
-      // Don't throw - post is already published
+    // ---- Pasos secundarios: nunca convierten el éxito del insert en error ----
+    let imageUrl: string | null = null;
+    let imageStatus: "ok" | "skipped" | "failed" = "skipped";
+    try {
+      imageUrl = await generateImage(post.title, post.excerpt, post.category);
+      imageStatus = imageUrl ? "ok" : "skipped";
+      if (imageUrl) {
+        await supabase.from("blog_posts").update({ image: imageUrl }).eq("id", blogPost.id);
+      }
+    } catch (imgErr) {
+      imageStatus = "failed";
+      console.error("[schedule-daily-post] Image generation failed (post already published):", imgErr);
     }
 
-    console.log("Scheduled post record created:", scheduledPost?.id);
+    const secondary = (async () => {
+      try {
+        const { data: scheduledPost, error: scheduleError } = await supabase
+          .from("scheduled_posts")
+          .insert({ blog_post_id: blogPost.id, status: "auto_published", approved_at: new Date().toISOString() })
+          .select()
+          .single();
+        if (scheduleError) console.error("[schedule-daily-post] Failed to create schedule record:", scheduleError.message);
 
-    // Send newsletter to subscribers
-    const newsletterStats = await sendNewsletterNotification(blogPost.id);
+        const newsletterStats = await sendNewsletterNotification(blogPost.id);
+        await sendConfirmationEmail(
+          { id: blogPost.id, title: post.title, excerpt: post.excerpt, category: post.category, image: imageUrl, slug },
+          newsletterStats,
+        );
+        if (scheduledPost && newsletterStats.sent > 0) {
+          await supabase.from("scheduled_posts").update({ email_sent_at: new Date().toISOString() }).eq("id", scheduledPost.id);
+        } else if (scheduledPost) {
+          console.warn("[schedule-daily-post] Newsletter produced no successful deliveries; email_sent_at left null", newsletterStats);
+        }
+        console.log("[schedule-daily-post] Secondary steps finished", newsletterStats);
+      } catch (secErr) {
+        console.error("[schedule-daily-post] Secondary steps failed (post already published):", secErr);
+      }
+    })();
 
-    // Send confirmation email
-    await sendConfirmationEmail(
-      {
-        id: blogPost.id,
-        title: post.title,
-        excerpt: post.excerpt,
-        category: post.category,
-        image: imageUrl,
-        slug: slug,
-      },
-      newsletterStats,
-    );
-
-    // Update email sent timestamp only if at least one newsletter was actually delivered
-    if (scheduledPost && newsletterStats.sent > 0) {
-      await supabase
-        .from("scheduled_posts")
-        .update({ email_sent_at: new Date().toISOString() })
-        .eq("id", scheduledPost.id);
-    } else if (scheduledPost) {
-      console.warn(
-        "[schedule-daily-post] Newsletter produced no successful deliveries; email_sent_at left null",
-        newsletterStats,
-      );
+    let newsletter: string = "queued";
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      EdgeRuntime.waitUntil(secondary);
+    } else {
+      await secondary;
+      newsletter = "done";
     }
-
-    console.log("Confirmation email sent to nuriafrancis@gmail.com");
 
     return new Response(
       JSON.stringify({
         success: true,
-        post: { id: blogPost.id, title: post.title, slug: slug },
-        newsletter: newsletterStats,
-        message: "Post publicado automáticamente y newsletter enviado",
+        post: { id: blogPost.id, title: post.title, slug, category: post.category, image: imageUrl },
+        image: imageStatus,
+        newsletter,
       }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: unknown) {
     console.error("Error in schedule-daily-post:", error);

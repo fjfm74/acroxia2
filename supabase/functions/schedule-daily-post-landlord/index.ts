@@ -1,3 +1,4 @@
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 import { isCronAuthorized } from "../_shared/cron-auth.ts";
 import { buildBlogSystemPrompt, buildSlug, ensureUniqueSlug } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -611,11 +612,7 @@ serve(async (req) => {
       postData.title = `${postData.title} (actualizado ${new Date().getFullYear()})`;
     }
 
-    const slug = generateSlug(postData.title);
-
-    // Generate image for the post
-    console.log("Generating image for post...");
-    const imageUrl = await generateImage(postData.title, postData.excerpt || postData.title, postData.category);
+    const slug = await ensureUniqueSlug(supabase, buildSlug(postData.slug, postData.title));
 
     // Insert blog post as PUBLISHED (not draft) with audience = 'propietario'
     const { data: newPost, error: insertError } = await supabase
@@ -632,7 +629,7 @@ serve(async (req) => {
         keywords: ["propietarios", "arrendadores", "alquiler", "LAU", postData.category.toLowerCase()],
         meta_description: postData.excerpt?.substring(0, 160) || postData.title,
         audience: "propietario",
-        image: imageUrl,
+        image: null,
         faqs: postData.faqs || [],
       })
       .select()
@@ -643,67 +640,64 @@ serve(async (req) => {
       throw insertError;
     }
 
-    console.log("Landlord blog post published:", newPost.id, "with image:", imageUrl ? "yes" : "no");
+    console.log("Landlord blog post published:", newPost.id);
 
-    // Create scheduled post entry for audit
-    const { data: scheduledPost, error: scheduleError } = await supabase
-      .from("scheduled_posts")
-      .insert({
-        blog_post_id: newPost.id,
-        status: "auto_published",
-        approved_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
 
-    if (scheduleError) {
-      console.error("Error creating scheduled post:", scheduleError);
-      // Don't throw - post is already published
+    // ---- Pasos secundarios: nunca convierten el éxito del insert en error ----
+    let imageUrl: string | null = null;
+    let imageStatus: "ok" | "skipped" | "failed" = "skipped";
+    try {
+      imageUrl = await generateImage(newPost.title, newPost.excerpt, newPost.category);
+      imageStatus = imageUrl ? "ok" : "skipped";
+      if (imageUrl) {
+        await supabase.from("blog_posts").update({ image: imageUrl }).eq("id", newPost.id);
+      }
+    } catch (imgErr) {
+      imageStatus = "failed";
+      console.error("[schedule-daily-post-landlord] Image generation failed (post already published):", imgErr);
     }
 
-    // Send newsletter to subscribers
-    const newsletterStats = await sendNewsletterNotification(newPost.id);
+    const secondary = (async () => {
+      try {
+        const { data: scheduledPost, error: scheduleError } = await supabase
+          .from("scheduled_posts")
+          .insert({ blog_post_id: newPost.id, status: "auto_published", approved_at: new Date().toISOString() })
+          .select()
+          .single();
+        if (scheduleError) console.error("[schedule-daily-post-landlord] Failed to create schedule record:", scheduleError.message);
 
-    // Send confirmation email
-    await sendConfirmationEmail(
-      {
-        id: newPost.id,
-        title: newPost.title,
-        excerpt: newPost.excerpt,
-        category: newPost.category,
-        image: imageUrl,
-        slug: slug,
-      },
-      newsletterStats,
-    );
+        const newsletterStats = await sendNewsletterNotification(newPost.id);
+        await sendConfirmationEmail(
+          { id: newPost.id, title: newPost.title, excerpt: newPost.excerpt, category: newPost.category, image: imageUrl, slug },
+          newsletterStats,
+        );
+        if (scheduledPost && newsletterStats.sent > 0) {
+          await supabase.from("scheduled_posts").update({ email_sent_at: new Date().toISOString() }).eq("id", scheduledPost.id);
+        } else if (scheduledPost) {
+          console.warn("[schedule-daily-post-landlord] Newsletter produced no successful deliveries; email_sent_at left null", newsletterStats);
+        }
+        console.log("[schedule-daily-post-landlord] Secondary steps finished", newsletterStats);
+      } catch (secErr) {
+        console.error("[schedule-daily-post-landlord] Secondary steps failed (post already published):", secErr);
+      }
+    })();
 
-    // Update email sent timestamp only if at least one newsletter was actually delivered
-    if (scheduledPost && newsletterStats.sent > 0) {
-      await supabase
-        .from("scheduled_posts")
-        .update({ email_sent_at: new Date().toISOString() })
-        .eq("id", scheduledPost.id);
-    } else if (scheduledPost) {
-      console.warn(
-        "[schedule-daily-post-landlord] Newsletter produced no successful deliveries; email_sent_at left null",
-        newsletterStats,
-      );
+    let newsletter: string = "queued";
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      EdgeRuntime.waitUntil(secondary);
+    } else {
+      await secondary;
+      newsletter = "done";
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Landlord blog post published automatically",
-        post: {
-          id: newPost.id,
-          title: newPost.title,
-          slug: newPost.slug,
-          category: newPost.category,
-          image: imageUrl,
-        },
-        newsletter: newsletterStats,
+        post: { id: newPost.id, title: newPost.title, slug, category: newPost.category, image: imageUrl },
+        image: imageStatus,
+        newsletter,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
