@@ -50,7 +50,7 @@ async function callAI(messages: any[], model = MODELS.GEMINI_FAST as string): Pr
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ model, messages, temperature: 0 }),
+    body: JSON.stringify({ model, messages, temperature: 0, response_format: { type: "json_object" } }),
   });
 
   if (!response.ok) {

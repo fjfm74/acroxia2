@@ -369,16 +369,20 @@ async function callAI(messages: any[], model: string = MODELS.GEMINI_PRO as stri
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ model, messages, temperature: 0.1 }),
+    body: JSON.stringify({ model, messages, temperature: 0.1, response_format: { type: "json_object" } }),
   });
 
   if (!response.ok) {
-    // Fallback to flash if pro fails
-    if (model === MODELS.GEMINI_PRO) {
+    // Fallback to flash only on transient errors (429 / 5xx)
+    const transient = response.status === 429 || response.status >= 500;
+    if (transient && model === MODELS.GEMINI_PRO) {
       console.log("Pro model failed, falling back to flash...");
       return callAI(messages, MODELS.GEMINI_FAST);
     }
-    throw new Error(`AI call failed: ${response.status} ${await response.text()}`);
+    const detail = await response.text();
+    const err = new Error(`AI call failed: ${response.status} ${detail}`) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
   }
 
   const data = await response.json();

@@ -507,6 +507,7 @@ IMPORTANTE: No repitas temas. Busca ángulos nuevos o aspectos específicos no c
             { role: "user", content: userPrompt },
           ],
           temperature: 0.8,
+          response_format: { type: "json_object" },
           max_tokens: 4000,
         }),
       });
