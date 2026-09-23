@@ -1,5 +1,5 @@
 import { isCronAuthorized } from "../_shared/cron-auth.ts";
-import { buildBlogSystemPrompt } from "../_shared/blog-prompt.ts";
+import { buildBlogSystemPrompt, buildSlug, ensureUniqueSlug } from "../_shared/blog-prompt.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
@@ -76,14 +76,20 @@ interface PostData {
   category: string;
   content: string;
   faqs: FAQ[];
+  slug?: string;
 }
 
 function parseAiResponse(content: string, fallbackCategory: string): PostData {
   // Strategy 1: Direct JSON.parse after sanitization
   try {
-    const sanitized = sanitizeJsonString(content);
-    if (sanitized) {
-      const parsed = JSON.parse(sanitized);
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(content.trim());
+    } catch {
+      const sanitized = sanitizeJsonString(content);
+      if (sanitized) parsed = JSON.parse(sanitized);
+    }
+    if (parsed) {
       if (parsed.title && parsed.content) {
         // Truncate title to 60 chars if needed
         const title = parsed.title.length > 60 ? parsed.title.substring(0, 57) + "..." : parsed.title;
@@ -103,6 +109,7 @@ function parseAiResponse(content: string, fallbackCategory: string): PostData {
           category: parsed.category || fallbackCategory,
           content: parsed.content,
           faqs,
+          slug: typeof parsed.slug === "string" ? parsed.slug : undefined,
         };
       }
     }
@@ -215,6 +222,7 @@ ${existingContext}
 FORMATO DE SALIDA (JSON):
 {
   "title": "título en sentence case (máx 60 caracteres)",
+  "slug": "slug corto en minúsculas, sin año ni palabras vacías, máx 6 palabras separadas por guiones",
   "excerpt": "resumen concreto de 140-155 caracteres",
   "category": "una de las categorías válidas",
   "content": "cuerpo completo en HTML (h2/h3, sin h1)",
