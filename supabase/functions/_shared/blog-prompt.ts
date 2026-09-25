@@ -2,6 +2,21 @@
 
 export const BLOG_AUTHOR = "Equipo ContratoAlquiler";
 
+export const BLOG_LEGAL_FACTS = `- IRAV del INE de agosto de 2026: 2,47%. Es la referencia para actualizar rentas; el INE publica el dato mensual a mediados del mes siguiente.
+- Fianza obligatoria en vivienda: una mensualidad (art. 36.1 LAU).
+- Garantías adicionales: como máximo dos mensualidades en contratos de hasta cinco años (art. 36.5 LAU).
+- Prórroga obligatoria: hasta cinco años si el arrendador es persona física y siete si es persona jurídica (art. 9 LAU).
+- Prórroga tácita: tres años (art. 10 LAU).
+- Desistimiento del inquilino: a partir de los seis meses, con 30 días de preaviso (art. 11 LAU).
+- Gastos de gestión inmobiliaria y de formalización del contrato: a cargo del arrendador (art. 20.1 LAU, tras la Ley 12/2023).
+- Gran tenedor (art. 3.k Ley 12/2023): persona física o jurídica titular de más de diez inmuebles urbanos de uso residencial o de más de 1.500 m² de uso residencial (sin contar garajes ni trasteros). En zonas de mercado residencial tensionado, la comunidad autónoma puede rebajarlo, de forma motivada, a cinco o más inmuebles en esa zona.
+- Los topes extraordinarios a la actualización de la renta (2% en 2023 y 3% en 2024) fueron transitorios y ya no se aplican. Desde 2025 el índice de referencia para actualizar la renta es el IRAV del INE.`;
+
+export const SATURATED_TOPICS = [
+  "IRAV y actualización anual de la renta",
+  "subida del alquiler y cómo calcularla",
+];
+
 export const BLOG_STYLE_RULES = `REGLAS DE ESTILO (OBLIGATORIAS)
 
 MARCA Y AUTORÍA
@@ -29,13 +44,7 @@ VOCABULARIO PROHIBIDO (no debe aparecer ni una vez)
 CIFRAS
 - Usa solo cifras reales. No inventes porcentajes, importes ni estadísticas.
 - Datos que puedes usar con seguridad:
-  - IRAV del INE de agosto de 2026: 2,47%. Es la referencia para actualizar rentas; el INE publica el dato mensual a mediados del mes siguiente.
-  - Fianza obligatoria en vivienda: una mensualidad (art. 36.1 LAU).
-  - Garantías adicionales: como máximo dos mensualidades en contratos de hasta cinco años (art. 36.5 LAU).
-  - Prórroga obligatoria: hasta cinco años si el arrendador es persona física y siete si es persona jurídica (art. 9 LAU).
-  - Prórroga tácita: tres años (art. 10 LAU).
-  - Desistimiento del inquilino: a partir de los seis meses, con 30 días de preaviso (art. 11 LAU).
-  - Gastos de gestión inmobiliaria y de formalización del contrato: a cargo del arrendador (art. 20.1 LAU, tras la Ley 12/2023).
+${BLOG_LEGAL_FACTS}
 - Si el tema necesita otra cifra que no conoces con certeza, no la des: explica cómo consultarla.
 
 REFERENCIAS LEGALES
@@ -72,6 +81,9 @@ export function buildBlogSystemPrompt(audience: "inquilino" | "propietario"): st
   return `Eres redactor del blog de ContratoAlquiler, una herramienta que analiza contratos de alquiler en España. Escribes artículos útiles, precisos y con criterio propio, que no suenen a texto generado.
 
 ${AUDIENCE_FOCUS[a]}
+
+TEMAS SATURADOS: ${SATURATED_TOPICS.map((t) => `"${t}"`).join(", ")}.
+El blog ya tiene muchos artículos sobre estos temas; no escribas un artículo cuyo tema principal sea uno de ellos (puedes mencionarlos y enlazar a /subida-alquiler-2026).
 
 ${BLOG_STYLE_RULES}`;
 }
