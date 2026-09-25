@@ -4,6 +4,7 @@ import { buildBlogSystemPrompt, buildSlug, ensureUniqueSlug } from "../_shared/b
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { MODELS, GATEWAY_URL } from "../_shared/models.ts";
+import { verifyBlogPost, isSaturatedTopic, pickMetaDescription, renderDraftNoticeHtml, type BlogVerifyResult } from "../_shared/blog-verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,6 +79,7 @@ interface PostData {
   content: string;
   faqs: FAQ[];
   slug?: string;
+  meta_description?: string;
 }
 
 function parseAiResponse(content: string, fallbackCategory: string): PostData {
@@ -111,6 +113,7 @@ function parseAiResponse(content: string, fallbackCategory: string): PostData {
           content: parsed.content,
           faqs,
           slug: typeof parsed.slug === "string" ? parsed.slug : undefined,
+          meta_description: typeof parsed.meta_description === "string" ? parsed.meta_description : undefined,
         };
       }
     }
@@ -302,7 +305,9 @@ async function sendNewsletterNotification(postId: string): Promise<{ sent: numbe
 async function sendConfirmationEmail(
   post: { id: string; title: string; excerpt: string; category: string; image: string | null; slug: string },
   newsletterStats: { sent: number; errors: number },
+  verification?: BlogVerifyResult,
 ): Promise<void> {
+  const isDraft = verification ? !verification.ok : false;
   if (!resendApiKey) {
     console.log("RESEND_API_KEY not configured, skipping email");
     return;
@@ -343,7 +348,7 @@ async function sendConfirmationEmail(
   <div class="container">
     <div class="header">
       <h1>ContratoAlquiler</h1>
-      <span class="success-badge">✓ Post publicado automáticamente</span>
+      ${isDraft ? `<span class="success-badge" style="background:#D97706;">Post en BORRADOR: requiere revisión</span>` : `<span class="success-badge">✓ Post publicado automáticamente</span>`}
       <span class="audience-badge">Propietarios</span>
     </div>
     
@@ -354,18 +359,18 @@ async function sendConfirmationEmail(
       <h2 class="post-title">${post.title}</h2>
       <p class="excerpt">${post.excerpt}</p>
       
-      <div class="stats">
+      ${isDraft && verification ? renderDraftNoticeHtml(verification, adminUrl) : `<div class="stats">
         <p class="stats-text">📧 Newsletter enviado a <strong>${newsletterStats.sent}</strong> suscriptor${newsletterStats.sent !== 1 ? "es" : ""}</p>
-      </div>
+      </div>`}
       
       <div class="actions">
-        <a href="${postUrl}" class="btn btn-primary">Ver post publicado</a>
+        ${isDraft ? `<a href="${adminUrl}" class="btn btn-primary">Revisar en admin</a>` : `<a href="${postUrl}" class="btn btn-primary">Ver post publicado</a>`}
         <a href="${adminUrl}" class="btn btn-secondary">Editar en admin</a>
       </div>
     </div>
     
     <div class="footer">
-      <p>Este post se generó y publicó automáticamente.</p>
+      <p>${isDraft ? "Este post se generó automáticamente y NO se ha publicado." : "Este post se generó y publicó automáticamente."}</p>
       <p>Si encuentras algún error, puedes <a href="${adminUrl}">editarlo desde el panel de admin</a>.</p>
     </div>
   </div>
@@ -383,7 +388,7 @@ async function sendConfirmationEmail(
         from: "ContratoAlquiler <noreply@contratoalquiler.com>",
         to: ["nuriafrancis@gmail.com"],
         reply_to: "info@contratoalquiler.com",
-        subject: `✅ Post publicado: ${post.title}`,
+        subject: isDraft ? `Post en BORRADOR (revisar): ${post.title}` : `✅ Post publicado: ${post.title}`,
         html: emailHtml,
       }),
     });
@@ -431,6 +436,7 @@ FORMATO DE SALIDA (JSON):
   "title": "título en sentence case (máx 60 caracteres)",
   "slug": "slug corto en minúsculas, sin año ni palabras vacías, máx 6 palabras separadas por guiones",
   "excerpt": "resumen concreto de 140-155 caracteres",
+  "meta_description": "meta description concreta de 140 a 155 caracteres",
   "category": "una de las categorías válidas",
   "content": "cuerpo completo en HTML (h2/h3, sin h1)",
   "faqs": [{"question": "¿...?", "answer": "respuesta de 2-3 frases"}]
@@ -462,12 +468,12 @@ FORMATO DE SALIDA (JSON):
           Authorization: `Bearer ${lovableApiKey}`,
         },
         body: JSON.stringify({
-          model: MODELS.GEMINI_FAST,
+          model: MODELS.GEMINI_PRO,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
-          temperature: 0.8,
+          temperature: 0.4,
           response_format: { type: "json_object" },
           max_tokens: 4000,
         }),
@@ -603,6 +609,23 @@ serve(async (req) => {
 
     const slug = await ensureUniqueSlug(supabase, buildSlug(postData.slug, postData.title));
 
+    // ---- Verificación jurídica antes de guardar ----
+    const verification: BlogVerifyResult = await verifyBlogPost({
+      title: postData.title,
+      content: postData.content,
+      audience: "propietario",
+    });
+    if (isSaturatedTopic(postData.title, slug)) {
+      verification.ok = false;
+      verification.issues = [
+        ...verification.issues,
+        { quote: postData.title, problem: "tema saturado", severity: "grave" },
+      ];
+    }
+    const isPublished = verification.ok;
+    console.log("[schedule-daily-post-landlord] Verification result", JSON.stringify({ ok: verification.ok, issues: verification.issues, error: verification.error }));
+    const metaDescription = pickMetaDescription(postData.meta_description, postData.excerpt || postData.title);
+
     // Insert blog post as PUBLISHED (not draft) with audience = 'propietario'
     const { data: newPost, error: insertError } = await supabase
       .from("blog_posts")
@@ -612,11 +635,11 @@ serve(async (req) => {
         excerpt: postData.excerpt || postData.title,
         content: postData.content,
         category: postData.category,
-        status: "published",
-        published_at: new Date().toISOString(),
+        status: isPublished ? "published" : "draft",
+        published_at: isPublished ? new Date().toISOString() : null,
+        meta_description: metaDescription,
         read_time: `${Math.ceil(postData.content.split(/\s+/).length / 200)} min`,
         keywords: ["propietarios", "arrendadores", "alquiler", "LAU", postData.category.toLowerCase()],
-        meta_description: postData.excerpt?.substring(0, 160) || postData.title,
         audience: "propietario",
         image: null,
         faqs: postData.faqs || [],
@@ -648,6 +671,15 @@ serve(async (req) => {
 
     const secondary = (async () => {
       try {
+        if (!isPublished) {
+          await sendConfirmationEmail(
+            { id: newPost.id, title: newPost.title, excerpt: newPost.excerpt, category: newPost.category, image: imageUrl, slug },
+            { sent: 0, errors: 0 },
+            verification,
+          );
+          console.log("[schedule-daily-post-landlord] Draft notice sent; newsletter skipped");
+          return;
+        }
         const { data: scheduledPost, error: scheduleError } = await supabase
           .from("scheduled_posts")
           .insert({ blog_post_id: newPost.id, status: "auto_published", approved_at: new Date().toISOString() })
@@ -684,7 +716,8 @@ serve(async (req) => {
         success: true,
         post: { id: newPost.id, title: newPost.title, slug, category: newPost.category, image: imageUrl },
         image: imageStatus,
-        newsletter,
+        newsletter: isPublished ? newsletter : "skipped",
+        verification: { ok: verification.ok, issues: verification.issues, error: verification.error ?? null },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
